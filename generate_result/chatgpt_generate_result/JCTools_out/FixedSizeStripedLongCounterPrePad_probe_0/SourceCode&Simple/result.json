@@ -1,0 +1,24 @@
+{
+    "project_name": "JCTools",
+    "file_name": "FixedSizeStripedLongCounter.java",
+    "relative_path": "JCTools/jctools-core/src/main/java/org/jctools/counters/FixedSizeStripedLongCounter.java",
+    "execute_path": "JCTools",
+    "package": "org.jctools.counters",
+    "docstring": "/**\n     * Returns the probe value for the current thread.\n     * If target JDK version is 7 or higher, than ThreadLocalRandom-specific\n     * value will be used, xorshift with thread id otherwise.\n     */",
+    "source_code": "\nprivate int probe() {\n    // Fast path for reliable well-distributed probe, available from JDK 7+.\n    // As long as PROBE is final static this branch will be constant folded\n    // (i.e removed).\n    if (PROBE != -1) {\n        int probe;\n        if ((probe = UNSAFE.getInt(Thread.currentThread(), PROBE)) == 0) {\n            ThreadLocalRandom.current(); // force initialization\n            probe = UNSAFE.getInt(Thread.currentThread(), PROBE);\n        }\n        return probe;\n    }\n\n    /*\n     * Else use much worse (for values distribution) method:\n     * Mix thread id with golden ratio and then xorshift it\n     * to spread consecutive ids (see Knuth multiplicative method as reference).\n     */\n    int probe = (int) ((Thread.currentThread().getId() * 0x9e3779b9) & Integer.MAX_VALUE);\n    // xorshift\n    probe ^= probe << 13;\n    probe ^= probe >>> 17;\n    probe ^= probe << 5;\n    return probe;\n}\n\n",
+    "class_name": "FixedSizeStripedLongCounterPrePad",
+    "method_name": "probe",
+    "arguments": [],
+    "generate_test": [
+        "@Test\npublic void probeTest() {\n    int probe = new FixedSizeStripedLongCounter(10).probe();\n    assertTrue(probe > -1, \"Probe value should be greater than -1\");\n}",
+        "int correctProbeValue = 12345; // Replace with the correct value for the probe\nassertEquals(correctProbeValue, probe());",
+        "@Test\npublic void probeTest() {\n  //create a new instance of FixedSizeStripedLongCounter and call the probe() method\n  FixedSizeStripedLongCounter counter = new FixedSizeStripedLongCounter();\n  counter.probe();\n}",
+        "@Test\npublic void probeTest() {\n    FixedSizeStripedLongCounter counter = new FixedSizeStripedLongCounter(16);\n    long expected = counter.probe();\n\n    assertEquals(expected, counter.probe());\n}",
+        "@Test\n    public void probeTest() {\n        FixedSizeStripedLongCounter counter = new FixedSizeStripedLongCounter(4);\n        long result = counter.probe();\n        assertEquals(expectedResult, result);\n    }",
+        "@Test\npublic void probeTest() {\n    int result = probe();\n    assertEquals(expectedResult, result);\n}",
+        "@Test\npublic void probeTest() {\n    int expectedProbe = 12345;\n    int actualProbe = FixedSizeStripedLongCounter.prePad.probe();\n    assertEquals(expectedProbe, actualProbe, \"Probe test failed: incorrect probe value returned\");\n}",
+        "@Test\npublic void probeTest() {\n    // Create an instance of FixedSizeStripedLongCounter\n    FixedSizeStripedLongCounter counter = new FixedSizeStripedLongCounter(10);\n    \n    // Call the probe() method on the counter\n    int result = counter.probe();\n    \n    // Verify that the result is not 0\n    assertNotEquals(0, result);\n}",
+        "@Test\npublic void probeTest() {\n    FixedSizeStripedLongCounter stripedLongCounter = new FixedSizeStripedLongCounter(16);\n    int probeResult = stripedLongCounter.probe();\n    assertEquals(expectedResult, probeResult);\n}",
+        "@Test\npublic void probeTest() {\n    FixedSizeStripedLongCounter counter = new FixedSizeStripedLongCounter(16);\n    long expectedResult = 123456789L; // Replace with expected result\n    long actualResult = counter.probe();\n    assertEquals(expectedResult, actualResult);\n}"
+    ]
+}

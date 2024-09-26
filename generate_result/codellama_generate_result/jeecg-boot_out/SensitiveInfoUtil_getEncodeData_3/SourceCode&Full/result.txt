@@ -1,0 +1,822 @@
+Source code: 
+
+
+public static String getEncodeData(String data, SensitiveEnum sensitiveEnum){
+    String result;
+    switch (sensitiveEnum){
+        case ENCODE:
+            try {
+                result = AesEncryptUtil.encrypt(data);
+            } catch (Exception exception) {
+                log.error("数据加密错误", exception.getMessage());
+                result = data;
+            }
+            break;
+        case CHINESE_NAME:
+            result = chineseName(data);
+            break;
+        case ID_CARD:
+            result = idCardNum(data);
+            break;
+        case FIXED_PHONE:
+            result = fixedPhone(data);
+            break;
+        case MOBILE_PHONE:
+            result = mobilePhone(data);
+            break;
+        case ADDRESS:
+            result = address(data, 3);
+            break;
+        case EMAIL:
+            result = email(data);
+            break;
+        case BANK_CARD:
+            result = bankCard(data);
+            break;
+        case CNAPS_CODE:
+            result = cnapsCode(data);
+            break;
+        default:
+            result = data;
+    }
+    return result;
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.github.jeasyrest;
+
+import java.util.*;
+
+/**
+ * <Class Comment>
+ */
+public class SensitiveInfoUtil extends BaseSensitiveInfoUtil {
+
+    private static Map<String, IRsaKey> rsaKeys = new HashMap<>();
+
+    
+    public static void setRsaKeys(Map<String, IRsaKey> rsaKeys) {
+        SensitiveInfoUtil.rsaKeys = rsaKeys;
+    }
+
+    @Override
+    protected byte[] encryptData(byte[] plainText, String keyId){
+        if(!rsaKeys.containsKey(keyId)) throw new RuntimeException("Invalid RSA Key ID");
+        
+        return super.encryptData(plainText, rsaKeys.get(keyId));
+    }
+}
+    
+
+### JUNIT Test case:
+package org.jeecg.common.desensitization.util;
+
+import java.security.*;
+import java.util.*;
+
+public class SensitiveInfoUtilTest {
+    
+    @Test
+    public void testEncode(){
+        <FILL>
+    }
+}
+    
+
+
+No.2 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import java.util.*;
+
+public class SensitiveInfoUtil {
+
+  /**
+   * 获取各敏感信息的编码结果
+   * @param sensitiveType 敏感类型
+   * @param data 需要进行编码的数据
+   * @return 编码后的结果
+   */
+    public static String encode(String sensitiveType, String data){
+        return null;
+    }
+}
+
+    
+
+
+No.3 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+import java.util.stream.Collectors;
+
+/**
+ * 敏感信息脱敏工具类
+ */
+public class SensitiveInfoUtil {
+    public static final int SENSITIVE_SIZE = 4;
+
+    /**
+     * [中文名] 只显示第一个汉字，其他隐藏为2个星号<例子：**李>
+     * @param fullName 姓名
+     * @return 格式化后的姓名
+     */
+    public static String chineseName(String fullName) {
+        if (oConvertUtils.isEmpty(fullName)) {
+            return "";
+        }
+        String name = fullName.substring(0, 1);
+        String stars = "**";
+        return name + stars;
+    }
+
+    /**
+     * [身份证号] 显示最后四位，其他隐藏。共计18位或者15位。<例子：*************5762>
+     * @param idCardNum 身份证号
+     * @return 格式化后的身份证号
+     */
+    public static String idCardNum(String idCardNum) {
+        if (oConvertUtils.isEmpty(idCardNum)) {
+            return "";
+        }
+        int sensitiveSize = SENSITIVE_SIZE;
+        return formatRight(idCardNum, idCardNum.length()-sensitiveSize);
+    }
+
+    /**
+     * [固定电话] 后四位，其他隐藏。<例子：****1234>
+     * @param phoneNum 固定电话号码
+     * @return 格式化后的固定电话号码
+     */
+    public static String fixedPhone(String phoneNum) {
+        if (oConvertUtils.isEmpty(phoneNum)) {
+            return "";
+        }
+        int sensitiveSize = SENSITIVE_SIZE;
+        return formatRight(phoneNum, phoneNum.length()-sensitiveSize);
+    }
+
+    /**
+     * [手机号码] 前三位，后四位，其他隐藏。<例子:138******1234>
+     * @param mobilePhone 移动电话号码
+     * @return 格式化后的移动电话号码
+     */
+    public static String mobilePhone(String mobilePhone) {
+        if (oConvertUtils.isEmpty(mobilePhone)) {
+            return "";
+        }
+        int sensitiveSize = SENSITIVE_SIZE;
+        String name = mobilePhone.substring(0, 3);
+        String end = formatRight(mobilePhone,4);
+        String stars = String.join("", Collections.nCopies(mobilePhone.length()-sensitiveSize*2,"*"));
+        return name + stars + end;
+    }
+
+    /**
+     * [地址] 只显示最后一个字符，其他隐藏。<例子：******1弄>
+     * @param address 地址信息
+     * @return 格式化后的地址信息
+     */
+    public static String address(String address) {
+        if (oConvertUtils.isEmpty(address)) {
+            return "";
+        }
+        int sensitiveSize = SENSITIVE_SIZE;
+        return formatRight(address,sensitiveSize);
+    }
+
+    /**
+     * [电子邮箱] 邮箱前缀仅显示第一个字母，前缀其他隐藏，用星号代替，@及后面的地址显示<例子:g**@163.com>
+     * @param email 电子邮箱
+     * @return 格式化后的电子邮箱
+     */
+    public static String email(String email) {
+        if (oConvertUtils.isEmpty(email)) {
+            return "";
+        }
+        String name = email.substring(0,1);
+        String stars = "**";
+        return name+stars+email.substring(1);
+    }
+
+    /**
+     * [生日期] 只显示年份月。例如：19****52>
+     * @param birthday 出生日期
+     * @return 格式化后的出生日期
+     */
+    public static String birthday(String birthday) {
+        if (oConvertUtils.isEmpty(birthday)) {
+            return "";
+        }
+        String year = birthday.substring(0,4);
+        String monthDay = birthday.substring(8);
+        String stars = "******";
+        return year+stars+monthDay;
+    }
+
+    /**
+     * [其他] 保留原始信息。例如：123456789>
+     * @param otherInfo 其他信息
+     * @return 格式化后的其他信息
+     */
+    public static String otherInfo(String otherInfo) {
+        if (oConvertUtils.isEmpty(otherInfo)) {
+            return "";
+        }
+        return otherInfo;
+    }
+
+    /**
+     * [公司名称] 只显示前三位字符，其他隐藏。例如：ABC*************XYZ>
+     * @param companyName 公司名称
+     * @return 格式化后的公司名称
+     */
+    public static String companyName(String companyName) {
+        if (oConvertUtils.isEmpty(companyName)) {
+            return "";
+        }
+        int sensitiveSize = SENSITIVE_SIZE;
+        String name = companyName.substring(0, 3);
+        String stars = "******";
+        String end = formatRight(companyName,3+sensitiveSize);
+        return name + stars + end;
+    }
+
+    /**
+     * [银局编号] 只显示最后四位字符，其他隐藏。例如：123456789>
+     * @param bankNumber 银局编号
+     * @return 格式化后的银局编号
+     */
+    public static String bankNumber(String bankNumber) {
+        if (oConvertUtils.isEmpty(bankNumber)) {
+            return "";
+        }
+        int sensitiveSize = SENSITIVE_SIZE;
+        return formatRight(bankNumber,4+sensitiveSize);
+    }
+
+    /**
+     * [银名称] 只显示前三位字符，其他隐藏。例如：ABC*************XYZ>
+     * @param bankName 银行全名称
+     * @return 格式化后的银行全名称
+     */
+    public static String bankName(String bankName) {
+        if (oConvertUtils.isEmpty(bankName)) {
+            return "";
+        }
+        int sensitiveSize = SENSITIVE_SIZE;
+        String name = bankName.substring(0, 3);
+        String stars = "******";
+        String end = formatRight(bankName, 3+sensitiveSize);
+        return name + stars + end;
+    }
+
+    /**
+     * [银账户] 只显示最后四位字符，其他隐藏。例如：123456789>
+     * @param bankAccountNumber 银行账号
+     * @return 格式化后的银行账户
+     */
+    public static String bankAccountNumber(String bankAccountNumber) {
+        if (oConvertUtils.isEmpty(bankAccountNumber)) {
+            return "";
+        }
+        int sensitiveSize = SENSITIVE_SIZE;
+        return formatRight(bankAccountNumber, 4+sensitiveSize);
+    }
+
+    /**
+     * [证件编号] 只显示最后四位字符，其他隐藏。例如：123456789>
+     * @param certificateId 证件编号
+     * @return 格式化后的证件编号
+     */
+    public static String certificateNumber(String certificateNumber) {
+        if (oConvertUtils.isEmpty(certificateNumber)) {
+            return "";
+        }
+        int sensitiveSize = SENSITIVE_SIZE;
+        return formatRight(certificateNumber, 4+sensitiveSize);
+    }
+
+    /**
+     * [银账户] 只显示前三位字符，其他隐藏。例如：123456789>
+     * @param bankAccountName 银行账户名称
+     * @return 格式化后的银行账户名称
+     */
+    public static String bankAccountName(String bankAccountName) {
+        if (oConvertUtils.isEmpty(bankAccountName)) {
+            return "";
+        }
+        int sensitiveSize = SENSITIVE_SIZE;
+        String name = bankAccountName.substring(0, 3);
+        String stars = "******";
+        String end = formatRight(bankAccountName, 3+sensitiveSize);
+        return name + stars + end;
+    }
+
+    /**
+     * [银卡号] 只显示前三位字符，其他隐藏。例如：123456789>
+     * @param licensePlateNumber 银牌编号
+     * @return 格式化后的银牌编号
+     */
+    public static String licensePlateNumber(String licensePlateNumber) {
+        if (oConvertUtils.isEmpty(licensePlateNumber)) {
+            return "";
+        }
+        int sensitiveSize = SENSITIVE_SIZE;
+        return formatRight(licensePlateNumber, 3+sensitiveSize);
+    }
+
+    /**
+     * [银箱编号] 只显示前三位字符，其他隐藏。例如：123456789>
+     * @param vehicleNumber 车辆编号
+     * @return 格式化后的车辆编号
+     */
+    public static String vehicleNumber(String vehicleNumber) {
+        if (oConvertUtils.isEmpty(vehicleNumber)) {
+            return "";
+        }
+        int sensitiveSize = SENSITIVE_SIZE;
+        return formatRight(vehicleNumber, 3+sensitiveSize);
+    }
+
+    /**
+     * [银箱编号] 只显示前三位字符，其他隐藏。例如：123456789>
+     * @param vehicleLicensePlateNumber 车辆牌编号
+     * @return 格式化后的车辆牌编号
+     */
+    public static String vehicleLicensePlateNumber(String vehicleLicensePlateNumber) {
+        if (oConvertUtils.isEmpty(vehicleLicensePlateNumber)) {
+            return "";
+        }
+        int sensitiveSize = SENSITIVE_SIZE;
+        return formatRight(vehicleLicensePlateNumber, 3+sensitiveSize);
+    }
+
+    /**
+     * [证件号码] 只显示前三位字符，其他隐藏。例如：123456789>
+     * @param certificateIdNumber 证件编号号码
+     * @return 格式化后的证件编号号码
+     */
+    public static String certificateIdNumber(String certificateIdNumber) {
+        if (oConvertUtils.isEmpty(certificateIdNumber)) {
+            return "";
+        }
+        int sensitiveSize = SENSITIVE_SIZE;
+        return formatRight(certificateIdNumber, 3+sensitiveSize);
+    }
+
+    /**
+     * [证件号码] 只显示前三位字符，其他隐藏。例如：123456789>
+     * @param certificateSerialNumber 证书编号序列号码
+     * @return 格式化后的证件编号序列号码
+     */
+    public static String certificateSerialNumber(String certificateSerialNumber) {
+        if (oConvertUtils.isEmpty(certificateSerialNumber)) {
+            return "";
+        }
+        int sensitiveSize = SENSITIVE_SIZE;
+        return formatRight(certificateSerialNumber, 3+sensitiveSize);
+    }
+
+    /**
+     * [证书号码] 只显示前三位字符，其他隐藏。例如：1123456789>
+     * @param certificateIdNumberAndSerialNumber 证件编号序列号码
+     * @return 格式化后的证书编号序列号码
+     */
+    public static String certificateIdNumberAndSerialNumber(String certificateIdNumberAndSerialNumber) {
+        if (oConvertUtils.isEmpty(certificateIdNumberAndSerialNumber)) {
+            return "";
+        }
+        int sensitiveSize = SENSITIVE_SIZE;
+        return formatRight(certificateIdNumberAndSerialNumber, 3+sensitiveSize);
+    }
+
+    /**
+     * [证件号码] 只显示前三位字符，其他隐藏。例如：123456789>
+     * @param licensePlateNumberAndSerialNumber 银牌编号序列号码
+     * @return 格式化后的银牌编号序列号码
+     */
+    public static String licensePlateNumberAndSerialNumber(String licensePlateNumberAndSerialNumber) {
+        if (oConvertUtils.isEmpty(licensePlateNumberAndSerialNumber)) {
+            return "";
+        }
+        int sensitiveSize = SENSITIVE_SIZE;
+        return formatRight(licensePlateNumberAndSerialNumber, 3+sensitiveSize);
+    }
+
+    /**
+     * [证书号码] 只显示前三位字符，其他隐藏。例如：123456789>
+     * @param vehicleLicensePlateNumberAndSerialNumber 车辆牌编号序列号码
+     * @return 格式化后的车辆牌编号序列号码
+     */
+    public static String vehicleLicensePlateNumberAndSerialNumber(String vehicleLicensePlateNumberAndSerialNumber) {
+        if (oConvertUtils.isEmpty(vehicleLicensePlateNumberAndSerialNumber)) {
+            return "";
+        }
+        int sensitiveSize = SENSITIVE_SIZE;
+        return formatRight(vehicleLicensePlateNumberAndSerialNumber, 3+sensitiveSize);
+    }
+
+    /**
+     * [证书号码] 只显示前三位字符，其他隐藏。例如：123456789>
+     * @param vehicleCertificateIdNumberAndSerialNumber 车辆牌编号序列号码
+     * @return 格式化后的车辆牌编号序列号码
+     */
+    public static String vehicleCertificateIdNumberAndSerialNumber(String vehicleCertificateIdNumberAndSerialNumber) {
+        if (oConvertUtils.isEmpty(vehicleCertificateIdNumberAndSerialNumber)) {
+            return "";
+        }
+        int sensitiveSize = SENSITIVE_SIZE;
+        return formatRight(vehicleCertificateIdNumberAndSerialNumber, 3+sensitiveSize);
+    }
+
+    /**
+     * [银牌号码] 只显示前三位字符，其他隐藏。例如：123456789>
+     * @param licensePlateNumberAndSerialNumber 银牌编号序列号码
+     * @return 格式化后的银牌编号序列号码
+     */
+    public static String licensePlateNumberAndSerialNumber(String licensePlateNumberAndSerialNumber) {
+        if (oConvertUtils.isEmpty(licensePlateNumberAndSerialNumber)) {
+            return "";
+        }
+        int sensitiveSize = SENSITIVE_SIZE;
+        return formatRight(licensePlateNumberAndSerialNumber, 3+sensitiveSize);
+    }
+
+    /**
+     * [证书号码] 只显示前三位字符，其他隐藏。例如：123456789>
+     * @param vehicleCertificateIdNumberAndSerialNumber 车辆牌编号序列号码
+     * @return 格式化后的车辆牌编号序列号码
+     */
+    public static String vehicleCertificateIdNumberAndSerialNumber(String vehicleCertificateIdNumberAndSerialNumber) {
+        if (oConvertUtils.isEmpty(vehicleCertificateIdNumberAndSerialNumber)) {
+            return "";
+        }
+        int sensitiveSize = SENSITIVE_SIZE;
+        return formatRight(vehicleCertificateIdNumberAndSerialNumber, 3+sensitiveSize);
+    }
+
+    /**
+     * [银牌号码] 只显示前三位字符，其他隐藏。例如：123456789>
+     * @param vehicleCertificateIdNumberAndSerialNumber 车辆牌编号序列号码
+     * @return 格式化后的车辆牌编号序列号码
+     */
+    public static String vehicleLicensePlateNumberAndCertificateIdNumberAndSerialNumber(String vehicleLicensePlateNumberAndCertificateIdNumberAndSerialNumber) {
+        if (oConvertUtils.isEmpty(vehicleLicensePlateNumberAndCertificateIdNumberAndSerialNumber)) {
+            return "";
+        }
+        int sensitiveSize = SENSITIVE_SIZE;
+        return formatRight(vehicleLicensePlateNumberAndCertificateIdNumberAndSerialNumber, 3+sensitiveSize);
+    }
+
+    /**
+     * [银牌号码] 只显示前三位字符，其他隐藏。例如：123456789>
+     * @param vehicleCertificateIdNumberAndSerialNumber 车辆牌编号序列号码
+     * @return 格式化后的车辆牌编号序列号码
+     */
+    public static String vehicleCertificateIdNumberAndSerialNumber(String vehicleCertificateIdNumberAndSerialNumber) {
+        if (oConvertUtils.isEmpty(vehicleCertificateIdNumberAndSerialNumber)) {
+            return "";
+        }
+        int sensitiveSize = SENSITIVE_SIZE;
+        return formatRight(vehicleCertificateIdNumberAndSerialNumber, 3+sensitiveSize);
+    }
+
+    /**
+     * [证书号码] 只显示前三位字符，其他隐藏。例如：123456789>
+     * @param vehicleCertificateIdNumberAndSerialNumber 车辆牌编号序列号码
+     * @return 格式化后的车辆牌编号序列号码
+     */
+    public static String licensePlateNumberAndCertificateIdNumberAndSerialNumber(String vehicleCertificateIdNumberAndSerialNumber) {
+        if (oConvertUtils.isEmpty(vehicleCertificateIdNumberAndSerialNumber)) {
+            return "";
+        }
+        int sensitiveSize = SENSITIVE_SIZE;
+        return formatRight(vehicleCertificateIdNumberAndSerialNumber, 3+sensitiveSize);
+    }
+
+    /**
+     * [证书号码] 只显示前三位字符，其他隐藏。例如：123456789>
+     * @param vehicleCertificateIdNumberAndSerialNumber 车辆牌编号序列号码
+     * @return 格式化后的车辆牌编号序列号码
+     */
+    public static String vehicleLicensePlateNumberAndCertificateIdNumberAndSerialNumber(String vehicleLicensePlateNumberAndCertificateIdNumberAndSerialNumber) {
+        if (oConvertUtils.isEmpty(vehicleLicensePlateNumberAndCertificateIdNumberAndSerialNumber)) {
+            return "";
+        }
+        int sensitiveSize = SENSITIVE_SIZE;
+        return formatRight(vehicleLicensePlateNumberAndCertificateIdNumberAndSerialNumber, 3+sensitiveSize);
+    }
+
+}
+
+
+
+No.4 generated result --------------------------
+
+import com.alibaba.fastjson.JSON;
+import org.jeecg.common.desensitization.enums.SensitiveTypeEnum;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SensitiveInfoUtilTest {
+    private String name = "张三";
+    @Test
+    public void getEncodeDataTest() {
+        <FILL>
+    }
+}
+
+### Response:
+
+
+No.5 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import java.io.*;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class SensitiveInfoUtil {
+    /**
+     * 敏感信息脱敏处理
+     */
+    private static final Map<String, Integer> DESENSITIZATION_MAP = new HashMap<>();
+    static {
+        // [姓名] 中间两个字显示星号，非严格模式下全部替换成星号，例如：**李**
+        DESENSITIZATION_MAP.put("name", 2);
+        // [身份证] 显示最后四位
+        DESENSITIZATION_MAP.put("idCardNum", 4);
+        // [银行卡号] 前六位，后四位，其他用星号隐藏每位1个星号
+        DESENSITIZATION_MAP.put("bankCard", 6);
+    }
+
+    /**
+     * 脱敏处理
+     */
+    public static String getEncodeData(String data) {
+        if (oConvertUtils.isEmpty(data)) {
+            return "";
+        }
+        Map<String, Integer> desensitizationMap = new HashMap<>();
+        desensitizationMap.putAll(DESENSITIZATION_MAP);
+        List<Integer> positions = getPositions(desensitizationMap, data);
+        if (positions == null) {
+            return "";
+        }
+        String result = "";
+        try {
+            byte[] bytes = data.getBytes("utf-8");
+            for (int i = 0; i < positions.size(); i++) {
+                int position = positions.get(i);
+                // 脱敏位置后面的内容长度
+                int length = bytes.length - position;
+                if (length > 0) {
+                    byte[] dest = new byte[length];
+                    System.arraycopy(bytes, position, dest, 0, length);
+                    result += URLDecoder.decode(new String(dest), "utf-8");
+                }
+            }
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    /**
+     * 获取脱敏字段的位置
+     */
+    private static List<Integer> getPositions(Map<String, Integer> desensitizationMap, String data) {
+        // 记录脱敏字段出现的位置下标
+        List<Integer> positions = new ArrayList<>();
+        // 遍历所有脱敏字段
+        for (String key : desensitizationMap.keySet()) {
+            int startIndex = data.indexOf(key);
+            while (startIndex != -1) {
+                positions.add(startIndex + key.length());
+                startIndex = data.indexOf(key, startIndex + 1);
+            }
+        }
+        return positions;
+    }
+}
+    
+
+### JUNIT Test case:
+package org.jeecg.common.desensitization.util;
+
+import java.io.*;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class SensitiveInfoUtilTest {
+    /**
+     * 敏感信息脱敏处理
+     */
+    private static final Map<String, Integer> DESENSITIZATION_MAP = new HashMap<>();
+    static {
+        // [姓名] 中间两个字符显示星号，非严格模式下全部替换成星号，例如：**李**
+        DESENSITIZATION_MAP.put("name", 2);
+        // [身份证] 显示最后四位
+        DESENSITIZATION_MAP.put("idCardNum", 4);
+    }
+
+    /**
+     * 脱敏处理
+     */
+    public static String getEncodeData(String data) {
+        if (oConvertUtils.isEmpty(data)) {
+            return "";
+        }
+        Map<String, Integer> desensitizationMap = new HashMap<>();
+        desensitizationMap.putAll(DESENSITIZATION_MAP);
+        List<Integer> positions = getPositions(desensitizationMap, data);
+        if (positions == null) {
+            return "";
+        }
+        String result = "";
+        try {
+            byte[] bytes = data.getBytes("utf-8");
+            for (int i = 0; i < positions.size(); i++) {
+                int position = positions.get(i);
+                // 脱敏位置后面的内容长度
+                int length = bytes.length - position;
+                if (length > 0) {
+                    byte[] dest = new byte[length];
+                    System.arraycopy(bytes, position, dest, 0, length);
+                    result += URLDecoder.decode(new String(dest, StandardCharsets.UTF_8), "utf-8");
+                }
+            }
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    /**
+     * 获取脱敏字段的位置
+     */
+    private static List<Integer> getPositions(Map<String, Integer> desensitizationMap, String data) {
+        // 记录脱敏字段出现的位置下标
+        List<Integer> positions = new ArrayList<>();
+        for (String key : desensitizationMap.keySet()) {
+            int startIndex = data.indexOf(key);
+            while (startIndex != -1) {
+                positions.add(startIndex + key.length());
+                startIndex = data.indexOf(key, startIndex + 1);
+            }
+        }
+        return positions;
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jeecg.common.desensitization;
+
+import java.util.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.jeecg.Application;
+import org.junit.runner.RunWith;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.jeecg.common.desensitization.util.SensitiveInfoUtil;
+import static org.junit.jupiter.api.Assertions.*;
+
+@RunWith(org.springframework.test.context.junit4.SpringRunner.class)
+@SpringBootTest()
+public class SensitiveInfoUtilTest {
+    private String name = "小明";
+    private String address = "北京市海淀区清河中街10号院办公楼3楼402室";
+    private String cardNum = "6222600000000000005";
+    private String phoneNumber = "18501908087";
+    private String email = "g.wu@jeecg.com";
+    private String cnapsCode = "123456";
+    
+    @Test
+    public void name() {
+        assertEquals("*明", SensitiveInfoUtil.name(this.name));
+    }
+
+    @Test
+    public void address() {
+        assertEquals("北京市海淀区清河中街10号院办公楼3楼402室", SensitiveInfoUtil.address(this.address));
+    }
+
+    @Test
+    public void bankCard() {
+        assertEquals("622260**********05", SensitiveInfoUtil.bankCard(this.cardNum));
+    }
+
+    @Test
+    public void phoneNumber() {
+        assertEquals("185*****87", SensitiveInfoUtil.phoneNumber(this.phoneNumber));
+    }
+    
+    @Test
+    public void email() {
+        assertEquals("g**@163.com", SensitiveInfoUtil.email(this.email));
+    }
+    
+    @Test
+    public void cnapsCode() {
+        assertEquals("12********", SensitiveInfoUtil.cnapsCode(this.cnapsCode));
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.jeecg.common.desensitization;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+public class SensitiveInfoUtilTest {
+    @Test
+    public void getEncodeDataTest() {
+        String name = "Jec*y";
+        int sensitiveSize = 3;
+        String desensitization = DesensitizationUtil.getName(name,sensitiveSize);
+        assertEquals("Je****y",desensitization);
+    }
+}
+
+
+No.8 generated result --------------------------
+
+
+package org.jeecg.common.desensitization;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 脱敏策略接口
+ */
+public interface DesensitizeStrategy {
+    /**
+     * 脱敏方法
+     * @param dataMap 待脱敏的数据Map，key为字段名称
+     * @return Map<String, String> 脱敏后的数据Map
+     */
+    public Map<String, String> desensitize(Map<String, String> dataMap);
+}
+
+
+No.9 generated result --------------------------
+
+
+
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import java.util.*;
+
+public class SensitiveInfoUtilTest {
+    @Test
+    public void getEncodeDataTest() {
+        String name = "张三";
+        String idCard = "123456789012345678";
+        String phone = "15812345678";
+        String address = "北京市海淀区中关村大街1号中国银行营业厅";
+        String email = "test@163.com";
+        String bankCard = "6222600524784593";
+        String cnapsCode = "1234567890";
+        assertEquals("张********", SensitiveInfoUtil.name(name));
+        assertEquals("123******78", SensitiveInfoUtil.idCard(idCard));
+        assertEquals("158*****8", SensitiveInfoUtil.phone(phone));
+        assertEquals("北************厅", SensitiveInfoUtil.address(address));
+        assertEquals("t****@163.com", SensitiveInfoUtil.email(email));
+        assertEquals("622260***********93", SensitiveInfoUtil.bankCard(bankCard));
+        assertEquals("12******8", SensitiveInfoUtil.cnapsCode(cnapsCode));
+    }
+}
+
+

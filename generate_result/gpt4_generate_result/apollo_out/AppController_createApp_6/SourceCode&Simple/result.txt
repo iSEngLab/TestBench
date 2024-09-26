@@ -1,0 +1,898 @@
+Source code: 
+
+
+@Transactional
+@PreAuthorize(value = "@consumerPermissionValidator.hasCreateApplicationPermission(#request)")
+@PostMapping(value = "/apps")
+public void createApp(
+    @RequestBody OpenCreateAppDTO req,
+    HttpServletRequest request
+) {
+  if (null == req.getApp()) {
+    throw new BadRequestException("App is null");
+  }
+  final OpenAppDTO app = req.getApp();
+  if (null == app.getAppId()) {
+    throw new BadRequestException("AppId is null");
+  }
+  // create app
+  this.appOpenApiService.createApp(req);
+  if (req.isAssignAppRoleToSelf()) {
+    long consumerId = this.consumerAuthUtil.retrieveConsumerId(request);
+    consumerService.assignAppRoleToConsumer(consumerId, app.getAppId());
+  }
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.ctrip.framework.apollo.openapi.v1.controller;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.mockito.*;
+import javax.servlet.http.HttpServletRequest;
+
+public class AppControllerTest {
+
+    @InjectMocks
+    private AppController appController;
+    
+    @Mock
+    private AppOpenApiService appOpenApiService;
+
+    @Mock
+    private ConsumerService consumerService;
+
+    @Mock
+    private ConsumerAuthUtil consumerAuthUtil;
+
+    @Mock
+    private HttpServletRequest request;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void createAppTest_withNullApp_ThrowsBadRequestException() {
+        OpenCreateAppDTO nullAppDTO = new OpenCreateAppDTO();
+
+        BadRequestException exception = assertThrows(
+            BadRequestException.class,
+            () -> appController.createApp(nullAppDTO, request),
+            "Expected createApp to throw, but it didn't"
+        );
+
+        assertTrue(exception.getMessage().contains("App is null"));
+    }
+
+    @Test
+    public void createAppTest_withNullAppId_ThrowsBadRequestException() {
+        OpenCreateAppDTO appDTOWithNullAppId = new OpenCreateAppDTO();
+        appDTOWithNullAppId.setApp(new OpenAppDTO());
+
+        BadRequestException exception = assertThrows(
+            BadRequestException.class,
+            () -> appController.createApp(appDTOWithNullAppId, request),
+            "Expected createApp to throw, but it didn't"
+        );
+
+        assertTrue(exception.getMessage().contains("AppId is null"));
+    }
+
+    @Test
+    public void createAppTest_withValidApp_CreatesApp() {
+        OpenAppDTO app = new OpenAppDTO();
+        app.setAppId("my-app-id");
+        OpenCreateAppDTO appDTO = new OpenCreateAppDTO();
+        appDTO.setApp(app);
+        appDTO.setAssignAppRoleToSelf(true);
+        Long consumerId = 123L;
+
+        Mockito.when(consumerAuthUtil.retrieveConsumerId(request)).thenReturn(consumerId);
+        Mockito.doNothing().when(appOpenApiService).createApp(Mockito.any(OpenCreateAppDTO.class));
+        Mockito.doNothing().when(consumerService).assignAppRoleToConsumer(Mockito.anyLong(), Mockito.anyString());
+
+        assertDoesNotThrow(() -> appController.createApp(appDTO, request));
+        Mockito.verify(appOpenApiService, Mockito.times(1)).createApp(appDTO);
+        Mockito.verify(consumerService, Mockito.times(1)).assignAppRoleToConsumer(consumerId, app.getAppId());
+    }
+    
+    // Additional test could be written for the case where 'assignAppRoleToSelf' is false
+    // and the case with successful creation without throwing any exceptions.
+}
+
+
+No.2 generated result --------------------------
+
+package com.ctrip.framework.apollo.openapi.v1.controller;
+
+import com.ctrip.framework.apollo.common.exception.BadRequestException;
+import com.ctrip.framework.apollo.openapi.api.AppOpenApiService;
+import com.ctrip.framework.apollo.openapi.dto.OpenCreateAppDTO;
+import com.ctrip.framework.apollo.openapi.dto.OpenAppDTO;
+import com.ctrip.framework.apollo.openapi.service.ConsumerService;
+import com.ctrip.framework.apollo.openapi.util.ConsumerAuthUtil;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import static org.mockito.Mockito.*;
+
+import javax.servlet.http.HttpServletRequest;
+
+@ExtendWith(MockitoExtension.class)
+public class AppControllerTest {
+
+    @Mock
+    private ConsumerAuthUtil consumerAuthUtil;
+
+    @Mock
+    private ConsumerService consumerService;
+
+    @Mock
+    private AppOpenApiService appOpenApiService;
+
+    @Mock
+    private HttpServletRequest request;
+
+    @InjectMocks
+    private AppController appController;
+
+    @Test
+    public void createAppTest() {
+        // Prepare test data
+        OpenCreateAppDTO createAppDTO = new OpenCreateAppDTO();
+        OpenAppDTO app = new OpenAppDTO();
+        app.setAppId("testAppId");
+        createAppDTO.setApp(app);
+        createAppDTO.setAssignAppRoleToSelf(true);
+        long consumerId = 100L;
+
+        // Mock the dependencies
+        when(consumerAuthUtil.retrieveConsumerId(request)).thenReturn(consumerId);
+        doNothing().when(appOpenApiService).createApp(createAppDTO);
+        doNothing().when(consumerService).assignAppRoleToConsumer(consumerId, app.getAppId());
+
+        // Run the test
+        appController.createApp(createAppDTO, request);
+
+        // Verify the methods calls
+        verify(appOpenApiService, times(1)).createApp(createAppDTO);
+        verify(consumerService, times(1)).assignAppRoleToConsumer(consumerId, "testAppId");
+    }
+
+    @Test
+    public void createAppTest_withNullApp_shouldThrowBadRequest() {
+        // Prepare test data
+        OpenCreateAppDTO createAppDTO = new OpenCreateAppDTO();
+        createAppDTO.setApp(null);
+
+        // Run test and assert the exception
+        BadRequestException exception = assertThrows(BadRequestException.class, () -> {
+           appController.createApp(createAppDTO, request);
+        });
+
+        // Verify error message
+        assertEquals("App is null", exception.getMessage());
+    }
+
+    @Test
+    public void createAppTest_withNullAppId_shouldThrowBadRequest() {
+        // Prepare test data
+        OpenCreateAppDTO createAppDTO = new OpenCreateAppDTO();
+        OpenAppDTO app = new OpenAppDTO();
+        app.setAppId(null);
+        createAppDTO.setApp(app);
+
+        // Run test and assert the exception
+        BadRequestException exception = assertThrows(BadRequestException.class, () -> {
+           appController.createApp(createAppDTO, request);
+        });
+
+        // Verify error message
+        assertEquals("AppId is null", exception.getMessage());
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.ctrip.framework.apollo.openapi.v1.controller;
+
+import com.ctrip.framework.apollo.common.exception.BadRequestException;
+import com.ctrip.framework.apollo.openapi.api.AppOpenApiService;
+import com.ctrip.framework.apollo.openapi.dto.OpenCreateAppDTO;
+import com.ctrip.framework.apollo.openapi.dto.OpenAppDTO;
+import com.ctrip.framework.apollo.openapi.service.ConsumerService;
+import com.ctrip.framework.apollo.openapi.util.ConsumerAuthUtil;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.test.context.support.WithMockUser;
+
+import javax.servlet.http.HttpServletRequest;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+public class AppControllerTest {
+
+    @Mock
+    private AppOpenApiService appOpenApiService;
+
+    @Mock
+    private ConsumerService consumerService;
+
+    @Mock
+    private ConsumerAuthUtil consumerAuthUtil;
+
+    @Mock
+    private HttpServletRequest request;
+
+    @InjectMocks
+    private AppController appController;
+
+    private OpenCreateAppDTO createAppRequest;
+
+    @BeforeEach
+    void setUp() {
+        OpenAppDTO openAppDTO = new OpenAppDTO();
+        openAppDTO.setAppId("myUniqueAppId");
+
+        createAppRequest = new OpenCreateAppDTO();
+        createAppRequest.setApp(openAppDTO);
+
+        when(consumerAuthUtil.retrieveConsumerId(any(HttpServletRequest.class))).thenReturn(123L);
+    }
+
+    @Test
+    @WithMockUser
+    public void shouldThrowExceptionWhenAppIsNull() {
+        OpenCreateAppDTO requestWithNullApp = new OpenCreateAppDTO();
+        BadRequestException thrown = assertThrows(
+                BadRequestException.class,
+                () -> appController.createApp(requestWithNullApp, request),
+                "Expected createApp() to throw, but it didn't"
+        );
+        assertTrue(thrown.getMessage().contains("App is null"));
+    }
+
+    @Test
+    @WithMockUser
+    public void shouldThrowExceptionWhenAppIdIsNull() {
+        OpenAppDTO appWithNullId = new OpenAppDTO();
+        createAppRequest.setApp(appWithNullId);
+
+        BadRequestException thrown = assertThrows(
+                BadRequestException.class,
+                () -> appController.createApp(createAppRequest, request),
+                "Expected createApp() to throw, but it didn't"
+        );
+        assertTrue(thrown.getMessage().contains("AppId is null"));
+    }
+
+    @Test
+    @WithMockUser
+    public void shouldCreateAppSuccessfully() {
+        assertDoesNotThrow(() -> appController.createApp(createAppRequest, request));
+        verify(appOpenApiService, times(1)).createApp(createAppRequest);
+    }
+
+    @Test
+    @WithMockUser
+    public void shouldAssignAppRoleToSelfIfRequested() {
+        createAppRequest.setAssignAppRoleToSelf(true);
+
+        assertDoesNotThrow(() -> appController.createApp(createAppRequest, request));
+        verify(consumerService, times(1)).assignAppRoleToConsumer(123L, "myUniqueAppId");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.ctrip.framework.apollo.openapi.v1.controller;
+
+import com.ctrip.framework.apollo.common.exception.BadRequestException;
+import com.ctrip.framework.apollo.openapi.api.AppOpenApiService;
+import com.ctrip.framework.apollo.openapi.dto.OpenAppDTO;
+import com.ctrip.framework.apollo.openapi.dto.OpenCreateAppDTO;
+import com.ctrip.framework.apollo.openapi.service.ConsumerService;
+import com.ctrip.framework.apollo.openapi.util.ConsumerAuthUtil;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import javax.servlet.http.HttpServletRequest;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+@ExtendWith(MockitoExtension.class)
+public class AppControllerTest {
+
+    @Mock
+    private ConsumerAuthUtil consumerAuthUtil;
+
+    @Mock
+    private ConsumerService consumerService;
+
+    @Mock
+    private AppOpenApiService appOpenApiService;
+
+    @Mock
+    private HttpServletRequest request;
+
+    @InjectMocks
+    private AppController appController;
+
+    private OpenCreateAppDTO openCreateAppDTO;
+    private OpenAppDTO openAppDTO;
+
+    @BeforeEach
+    public void setUp() {
+        openAppDTO = new OpenAppDTO();
+        openCreateAppDTO = new OpenCreateAppDTO();
+        openCreateAppDTO.setApp(openAppDTO);
+    }
+
+    @Test
+    public void createAppTest_nullApp_throwsBadRequestException() {
+        openCreateAppDTO.setApp(null);
+
+        BadRequestException exception = assertThrows(BadRequestException.class, () ->
+            appController.createApp(openCreateAppDTO, request)
+        );
+
+        assertEquals("App is null", exception.getMessage());
+    }
+
+    @Test
+    public void createAppTest_nullAppId_throwsBadRequestException() {
+        openAppDTO.setAppId(null);
+
+        BadRequestException exception = assertThrows(BadRequestException.class, () ->
+            appController.createApp(openCreateAppDTO, request)
+        );
+
+        assertEquals("AppId is null", exception.getMessage());
+    }
+
+    @Test
+    public void createAppTest_validRequest_createsAppSuccessfully() {
+        openAppDTO.setAppId("123");
+        openCreateAppDTO.setAssignAppRoleToSelf(true);
+        long fakeConsumerId = 42L;
+
+        when(consumerAuthUtil.retrieveConsumerId(request)).thenReturn(fakeConsumerId);
+
+        appController.createApp(openCreateAppDTO, request);
+
+        verify(appOpenApiService, times(1)).createApp(openCreateAppDTO);
+        verify(consumerService, times(1))
+            .assignAppRoleToConsumer(fakeConsumerId, openAppDTO.getAppId());
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.ctrip.framework.apollo.openapi.v1.controller;
+
+import com.ctrip.framework.apollo.common.exception.BadRequestException;
+import com.ctrip.framework.apollo.openapi.api.AppOpenApiService;
+import com.ctrip.framework.apollo.openapi.dto.OpenAppDTO;
+import com.ctrip.framework.apollo.openapi.dto.OpenCreateAppDTO;
+import com.ctrip.framework.apollo.openapi.service.ConsumerService;
+import com.ctrip.framework.apollo.openapi.util.ConsumerAuthUtil;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import javax.servlet.http.HttpServletRequest;
+
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+@ExtendWith(MockitoExtension.class)
+public class AppControllerTest {
+
+    @InjectMocks
+    private AppController appController;
+
+    @Mock
+    private AppOpenApiService appOpenApiService;
+    @Mock
+    private ConsumerService consumerService;
+    @Mock
+    private ConsumerAuthUtil consumerAuthUtil;
+    @Mock
+    private HttpServletRequest request;
+
+    private OpenCreateAppDTO openCreateAppDTO;
+    private static final String APP_ID = "testAppId";
+    private static final long CONSUMER_ID = 1L;
+
+    @BeforeEach
+    void setUp() {
+        openCreateAppDTO = new OpenCreateAppDTO();
+        OpenAppDTO app = new OpenAppDTO();
+        app.setAppId(APP_ID);
+        openCreateAppDTO.setApp(app);
+    }
+
+    @Test
+    public void createAppTest_AppIsNull_ThrowsBadRequestException() {
+        OpenCreateAppDTO requestWithNullApp = new OpenCreateAppDTO();
+
+        assertThrows(BadRequestException.class, () -> {
+            appController.createApp(requestWithNullApp, request);
+        });
+    }
+
+    @Test
+    public void createAppTest_AppIdIsNull_ThrowsBadRequestException() {
+        OpenAppDTO appWithoutId = new OpenAppDTO();
+        openCreateAppDTO.setApp(appWithoutId);
+
+        assertThrows(BadRequestException.class, () -> {
+            appController.createApp(openCreateAppDTO, request);
+        });
+    }
+
+    @Test
+    public void createAppTest_ValidRequest_CreatesApp() {
+        doNothing().when(appOpenApiService).createApp(any(OpenCreateAppDTO.class));
+        when(consumerAuthUtil.retrieveConsumerId(any(HttpServletRequest.class))).thenReturn(CONSUMER_ID);
+        doNothing().when(consumerService).assignAppRoleToConsumer(anyLong(), anyString());
+
+        openCreateAppDTO.setAssignAppRoleToSelf(true);
+
+        assertDoesNotThrow(() -> appController.createApp(openCreateAppDTO, request));
+        verify(appOpenApiService, times(1)).createApp(refEq(openCreateAppDTO));
+        verify(consumerService, times(1)).assignAppRoleToConsumer(CONSUMER_ID, APP_ID);
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package com.ctrip.framework.apollo.openapi.v1.controller;
+
+import org.junit.jupiter.api.*;
+import org.mockito.*;
+import static org.mockito.Mockito.*;
+
+import javax.servlet.http.HttpServletRequest;
+
+import com.ctrip.framework.apollo.common.exception.BadRequestException;
+import com.ctrip.framework.apollo.openapi.api.AppOpenApiService;
+import com.ctrip.framework.apollo.openapi.dto.OpenAppDTO;
+import com.ctrip.framework.apollo.openapi.dto.OpenCreateAppDTO;
+import com.ctrip.framework.apollo.openapi.service.ConsumerService;
+import com.ctrip.framework.apollo.openapi.util.ConsumerAuthUtil;
+
+public class AppControllerTest {
+
+    private AppController appController;
+    private ConsumerAuthUtil consumerAuthUtil;
+    private ConsumerService consumerService;
+    private AppOpenApiService appOpenApiService;
+    private HttpServletRequest request;
+    private OpenCreateAppDTO openCreateAppDTO;
+    private OpenAppDTO openAppDTO;
+
+    @BeforeEach
+    public void setUp() {
+        consumerAuthUtil = mock(ConsumerAuthUtil.class);
+        consumerService = mock(ConsumerService.class);
+        appOpenApiService = mock(AppOpenApiService.class);
+        request = mock(HttpServletRequest.class);
+        appController = new AppController(consumerAuthUtil, consumerService, appOpenApiService);
+
+        openAppDTO = new OpenAppDTO();
+        openAppDTO.setAppId("testAppId");
+
+        openCreateAppDTO = new OpenCreateAppDTO();
+        openCreateAppDTO.setApp(openAppDTO);
+    }
+
+    @Test
+    public void createAppTest_Should_ThrowBadRequest_When_AppIsNull() {
+        Exception exception = assertThrows(BadRequestException.class, () -> {
+            openCreateAppDTO.setApp(null);
+            appController.createApp(openCreateAppDTO, request);
+        });
+
+        assertEquals("App is null", exception.getMessage());
+    }
+
+    @Test
+    public void createAppTest_Should_ThrowBadRequest_When_AppIdIsNull() {
+        Exception exception = assertThrows(BadRequestException.class, () -> {
+            openAppDTO.setAppId(null);
+            appController.createApp(openCreateAppDTO, request);
+        });
+
+        assertEquals("AppId is null", exception.getMessage());
+    }
+
+    @Test
+    public void createAppTest_Should_CreateApp_When_ValidRequest() {
+        when(consumerAuthUtil.retrieveConsumerId(request)).thenReturn(1L);
+
+        appController.createApp(openCreateAppDTO, request);
+
+        verify(appOpenApiService, times(1)).createApp(openCreateAppDTO);
+    }
+
+    @Test
+    public void createAppTest_Should_AssignRole_When_AssignAppRoleToSelfIsTrue() {
+        openCreateAppDTO.setAssignAppRoleToSelf(true);
+
+        long consumerId = 1L;
+        when(consumerAuthUtil.retrieveConsumerId(request)).thenReturn(consumerId);
+
+        appController.createApp(openCreateAppDTO, request);
+
+        verify(consumerService, times(1)).assignAppRoleToConsumer(consumerId, openAppDTO.getAppId());
+    }
+
+}
+
+
+No.7 generated result --------------------------
+
+package com.ctrip.framework.apollo.openapi.v1.controller;
+
+import com.ctrip.framework.apollo.common.exception.BadRequestException;
+import com.ctrip.framework.apollo.openapi.api.AppOpenApiService;
+import com.ctrip.framework.apollo.openapi.dto.OpenCreateAppDTO;
+import com.ctrip.framework.apollo.openapi.dto.OpenAppDTO;
+import com.ctrip.framework.apollo.openapi.service.ConsumerService;
+import com.ctrip.framework.apollo.openapi.util.ConsumerAuthUtil;
+import org.junit.jupiter.api.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import static org.mockito.Mockito.*;
+
+import javax.servlet.http.HttpServletRequest;
+
+public class AppControllerTest {
+    
+    @Mock
+    private ConsumerAuthUtil consumerAuthUtil;
+    @Mock
+    private ConsumerService consumerService;
+    @Mock
+    private AppOpenApiService appOpenApiService;
+    @Mock
+    private HttpServletRequest request;
+    
+    @InjectMocks
+    private AppController appController;
+    
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+    
+    @Test
+    public void createAppTest_NullApp_ShouldThrowBadRequestException() {
+        OpenCreateAppDTO req = new OpenCreateAppDTO();
+        req.setApp(null); // App is set to null
+        
+        BadRequestException exception = assertThrows(
+            BadRequestException.class,
+            () -> appController.createApp(req, request),
+            "Expected createApp to throw, but it didn't"
+        );
+        
+        assertTrue(exception.getMessage().contains("App is null"));
+    }
+
+    @Test
+    public void createAppTest_NullAppId_ShouldThrowBadRequestException() {
+        OpenCreateAppDTO req = new OpenCreateAppDTO();
+        OpenAppDTO app = new OpenAppDTO();
+        app.setAppId(null); // AppId is set to null
+        req.setApp(app);
+        
+        BadRequestException exception = assertThrows(
+            BadRequestException.class,
+            () -> appController.createApp(req, request),
+            "Expected createApp to throw, but it didn't"
+        );
+        
+        assertTrue(exception.getMessage().contains("AppId is null"));
+    }
+    
+    @Test
+    public void createAppTest_ValidRequest_ShouldCallCreateAppAndPotentiallyAssignRole() {
+        OpenAppDTO app = new OpenAppDTO();
+        app.setAppId("valid-app-id");
+        OpenCreateAppDTO req = new OpenCreateAppDTO();
+        req.setApp(app);
+        req.setAssignAppRoleToSelf(true);
+        long mockConsumerId = 12345L;
+        
+        when(consumerAuthUtil.retrieveConsumerId(request)).thenReturn(mockConsumerId);
+        
+        appController.createApp(req, request);
+        
+        verify(appOpenApiService, times(1)).createApp(req);
+        verify(consumerService, times(1)).assignAppRoleToConsumer(mockConsumerId, app.getAppId());
+    }
+
+    @AfterEach
+    public void tearDown() {
+        // Cleanup resources if needed
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package com.ctrip.framework.apollo.openapi.v1.controller;
+
+import com.ctrip.framework.apollo.common.exception.BadRequestException;
+import com.ctrip.framework.apollo.openapi.api.AppOpenApiService;
+import com.ctrip.framework.apollo.openapi.dto.OpenAppDTO;
+import com.ctrip.framework.apollo.openapi.dto.OpenCreateAppDTO;
+import com.ctrip.framework.apollo.openapi.service.ConsumerService;
+import com.ctrip.framework.apollo.openapi.util.ConsumerAuthUtil;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import static org.mockito.Mockito.*;
+import javax.servlet.http.HttpServletRequest;
+
+@ExtendWith(MockitoExtension.class)
+public class AppControllerTest {
+
+    @Mock
+    private HttpServletRequest mockRequest;
+
+    @Mock
+    private AppOpenApiService mockAppOpenApiService;
+
+    @Mock
+    private ConsumerAuthUtil mockConsumerAuthUtil;
+
+    @Mock
+    private ConsumerService mockConsumerService;
+
+    @InjectMocks
+    private AppController appController;
+
+    @BeforeEach
+    void setUp() {
+        // Set up necessary mock behavior if required
+    }
+
+    @Test
+    public void createAppTest_WhenAppIsNull_ThrowsBadRequestException() {
+        OpenCreateAppDTO req = new OpenCreateAppDTO();
+        
+        BadRequestException thrown = assertThrows(
+            BadRequestException.class,
+            () -> appController.createApp(req, mockRequest),
+            "Expected createApp() to throw, but it didn't"
+        );
+        
+        assertTrue(thrown.getMessage().contains("App is null"));
+    }
+    
+    @Test
+    public void createAppTest_WhenAppIdIsNull_ThrowsBadRequestException() {
+        OpenAppDTO openAppDTO = new OpenAppDTO();
+        OpenCreateAppDTO req = new OpenCreateAppDTO();
+        req.setApp(openAppDTO);
+        
+        BadRequestException thrown = assertThrows(
+            BadRequestException.class,
+            () -> appController.createApp(req, mockRequest),
+            "Expected createApp() to throw, but it didn't"
+        );
+        
+        assertTrue(thrown.getMessage().contains("AppId is null"));
+    }
+    
+    @Test
+    public void createAppTest_WhenValidRequest_CreatesAppAndAssignsRole() {
+        OpenAppDTO openAppDTO = new OpenAppDTO();
+        openAppDTO.setAppId("test-app-id");
+        OpenCreateAppDTO req = new OpenCreateAppDTO();
+        req.setApp(openAppDTO);
+        req.setAssignAppRoleToSelf(true);
+        
+        when(mockConsumerAuthUtil.retrieveConsumerId(mockRequest)).thenReturn(100L);
+        
+        appController.createApp(req, mockRequest);
+        
+        verify(mockAppOpenApiService, times(1)).createApp(req);
+        verify(mockConsumerService, times(1)).assignAppRoleToConsumer(100L, "test-app-id");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package com.ctrip.framework.apollo.openapi.v1.controller;
+
+import com.ctrip.framework.apollo.common.exception.BadRequestException;
+import com.ctrip.framework.apollo.openapi.api.AppOpenApiService;
+import com.ctrip.framework.apollo.openapi.dto.OpenCreateAppDTO;
+import com.ctrip.framework.apollo.openapi.dto.OpenAppDTO;
+import com.ctrip.framework.apollo.openapi.service.ConsumerService;
+import com.ctrip.framework.apollo.openapi.util.ConsumerAuthUtil;
+import org.junit.jupiter.api.*;
+import org.mockito.*;
+import javax.servlet.http.HttpServletRequest;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class AppControllerTest {
+
+    private AppController appController;
+    private AppOpenApiService appOpenApiService;
+    private ConsumerService consumerService;
+    private ConsumerAuthUtil consumerAuthUtil;
+    private HttpServletRequest request;
+
+    @BeforeEach
+    public void setUp() {
+        appOpenApiService = mock(AppOpenApiService.class);
+        consumerService = mock(ConsumerService.class);
+        consumerAuthUtil = mock(ConsumerAuthUtil.class);
+        request = mock(HttpServletRequest.class);
+        appController = new AppController(consumerAuthUtil, consumerService, appOpenApiService);
+    }
+
+    @Test
+    public void createAppTest_AppIsNull_ThrowsBadRequestException() {
+        OpenCreateAppDTO dto = new OpenCreateAppDTO();
+
+        BadRequestException exception = assertThrows(
+            BadRequestException.class,
+            () -> appController.createApp(dto, request)
+        );
+
+        assertEquals("App is null", exception.getMessage());
+    }
+
+    @Test
+    public void createAppTest_AppIdIsNull_ThrowsBadRequestException() {
+        OpenCreateAppDTO dto = new OpenCreateAppDTO();
+        OpenAppDTO app = new OpenAppDTO();
+        dto.setApp(app);
+
+        BadRequestException exception = assertThrows(
+            BadRequestException.class,
+            () -> appController.createApp(dto, request)
+        );
+
+        assertEquals("AppId is null", exception.getMessage());
+    }
+
+    @Test
+    public void createAppTest_ValidApp_CreatesApp() {
+        OpenCreateAppDTO dto = new OpenCreateAppDTO();
+        OpenAppDTO app = new OpenAppDTO();
+        app.setAppId("someAppId");
+        dto.setApp(app);
+        dto.setAssignAppRoleToSelf(true);
+        long consumerId = 1L;
+        when(consumerAuthUtil.retrieveConsumerId(request)).thenReturn(consumerId);
+
+        appController.createApp(dto, request);
+        
+        verify(appOpenApiService, times(1)).createApp(dto);
+        verify(consumerService, times(1)).assignAppRoleToConsumer(consumerId, app.getAppId());
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.ctrip.framework.apollo.openapi.v1.controller;
+
+import org.junit.jupiter.api.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import static org.mockito.Mockito.*;
+
+import com.ctrip.framework.apollo.common.exception.BadRequestException;
+import com.ctrip.framework.apollo.openapi.api.AppOpenApiService;
+import com.ctrip.framework.apollo.openapi.dto.OpenCreateAppDTO;
+import com.ctrip.framework.apollo.openapi.service.ConsumerService;
+import com.ctrip.framework.apollo.openapi.util.ConsumerAuthUtil;
+import com.ctrip.framework.apollo.openapi.dto.OpenAppDTO;
+
+import javax.servlet.http.HttpServletRequest;
+
+public class AppControllerTest {
+
+    @Mock
+    private ConsumerAuthUtil consumerAuthUtil;
+
+    @Mock
+    private ConsumerService consumerService;
+
+    @Mock
+    private AppOpenApiService appOpenApiService;
+
+    @Mock
+    private HttpServletRequest request;
+
+    @InjectMocks
+    private AppController appController;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void createAppThrowsBadRequestWhenAppIsNull() {
+        OpenCreateAppDTO req = new OpenCreateAppDTO();
+
+        BadRequestException exception = assertThrows(
+            BadRequestException.class,
+            () -> appController.createApp(req, request),
+            "Expected createApp to throw, but it didn't"
+        );
+
+        assertTrue(exception.getMessage().contains("App is null"));
+    }
+
+    @Test
+    public void createAppThrowsBadRequestWhenAppIdIsNull() {
+        OpenCreateAppDTO req = new OpenCreateAppDTO();
+        req.setApp(new OpenAppDTO());
+
+        BadRequestException exception = assertThrows(
+            BadRequestException.class,
+            () -> appController.createApp(req, request),
+            "Expected createApp to throw, but it didn't"
+        );
+
+        assertTrue(exception.getMessage().contains("AppId is null"));
+    }
+
+    @Test
+    public void createAppSuccess() {
+        OpenCreateAppDTO req = new OpenCreateAppDTO();
+        OpenAppDTO appDTO = new OpenAppDTO();
+        appDTO.setAppId("1");
+        req.setApp(appDTO);
+        req.setAssignAppRoleToSelf(true);
+        when(consumerAuthUtil.retrieveConsumerId(request)).thenReturn(100L);
+
+        assertDoesNotThrow(() -> appController.createApp(req, request));
+
+        verify(appOpenApiService, times(1)).createApp(req);
+        verify(consumerService, times(1)).assignAppRoleToConsumer(100L, "1");
+    }
+}
+
+

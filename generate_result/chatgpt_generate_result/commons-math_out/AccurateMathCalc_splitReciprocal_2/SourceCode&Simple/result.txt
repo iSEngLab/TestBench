@@ -1,0 +1,164 @@
+Source code: 
+
+
+static void splitReciprocal(final double[] in, final double[] result) {
+    final double b = 1.0 / 4194304.0;
+    final double a = 1.0 - b;
+
+    if (in[0] == 0.0) {
+        in[0] = in[1];
+        in[1] = 0.0;
+    }
+
+    result[0] = a / in[0];
+    result[1] = (b * in[0] - a * in[1]) / (in[0] * in[0] + in[0] * in[1]);
+
+    if (result[1] != result[1]) { // can happen if result[1] is NAN
+        result[1] = 0.0;
+    }
+
+    /* Resplit */
+    resplit(result);
+
+    for (int i = 0; i < 2; i++) {
+        /* this may be overkill, probably once is enough */
+        double err = 1.0 - result[0] * in[0] - result[0] * in[1] -
+            result[1] * in[0] - result[1] * in[1];
+        /*err = 1.0 - err; */
+        err *= result[0] + result[1];
+        /*printf("err = %16e\n", err); */
+        result[1] += err;
+    }
+}
+
+
+
+No.1 generated result --------------------------
+
+@Test
+public void splitReciprocalTest() {
+    double[] in = {2.0, 3.0};
+    double[] result = new double[2];
+    AccurateMathCalc.splitReciprocal(in, result);
+    assertEquals(0.5, result[0]);
+    assertEquals(-0.16666666666666666, result[1]);
+}
+
+
+No.2 generated result --------------------------
+
+@Test
+public void splitReciprocalTest() {
+    double[] input = {1.0, 2.0};
+    double[] expectedResult = new double[2];
+
+    AccurateMathCalc.splitReciprocal(input, expectedResult);
+
+    double[] actualResult = new double[2];
+    AccurateMathCalc.splitReciprocal(input, actualResult);
+
+    assertArrayEquals(expectedResult, actualResult);
+}
+
+
+No.3 generated result --------------------------
+
+@Test
+public void splitReciprocalTest() {
+    double[] in = {2.0, 3.0};
+    double[] result = new double[2];
+    AccurateMathCalc.splitReciprocal(in, result);
+    assertArrayEquals(new double[] {0.5, -0.16666666666666666}, result, 0.0001);
+}
+
+
+No.4 generated result --------------------------
+
+@Test
+public void splitReciprocalTest() {
+    double[] in = {1.0, 2.0};
+    double[] result = new double[2];
+    AccurateMathCalc.splitReciprocal(in, result);
+    assertArrayEquals(new double[]{1.0, -0.125}, result);
+}
+
+
+No.5 generated result --------------------------
+
+@Test
+public void splitReciprocalTest() {
+    double[] in = {2.0, 4.0};
+    double[] result = new double[2];
+    AccurateMathCalc.splitReciprocal(in, result);
+    double[] expected = {2.227496032249964E-1, -1.0658141036401503E-14};
+    assertArrayEquals(expected, result, 1e-15);
+}
+
+
+No.6 generated result --------------------------
+
+@Test
+public void splitReciprocalTest() {
+    double[] in = {2.0, 3.0};
+    double[] result = new double[2];
+    AccurateMathCalc.splitReciprocal(in, result);
+    
+    double[] expected = {1.0 / in[0], (1.0 / 4194304.0 * in[0] - (1.0 - 1.0 / 4194304.0) * in[1]) / (in[0] * in[0] + in[0] * in[1])};
+    if (expected[1] != expected[1]) {
+        expected[1] = 0.0;
+    }
+    AccurateMathCalc.resplit(expected);
+    for (int i = 0; i < 2; i++) {
+        double err = 1.0 - expected[0] * in[0] - expected[0] * in[1] - expected[1] * in[0] - expected[1] * in[1];
+        err *= expected[0] + expected[1];
+        expected[1] += err;
+    }
+    assertArrayEquals(expected, result);
+}
+
+
+No.7 generated result --------------------------
+
+@Test
+public void splitReciprocalTest() {
+    double[] in = {2.0, 3.0};
+    double[] result = new double[2];
+    AccurateMathCalc.splitReciprocal(in, result);
+    assertArrayEquals(new double[] {0.5, 0.16666666666666666}, result, 0.0000001);
+}
+
+
+No.8 generated result --------------------------
+
+@Test
+public void splitReciprocalTest() {
+    double[] in = {3.0, 4.0};
+    double[] result = new double[2];
+    AccurateMathCalc.splitReciprocal(in, result);
+    assertArrayEquals(new double[] {0.3333333333333333, -0.027777777777777776}, result);
+}
+
+
+No.9 generated result --------------------------
+
+@Test
+public void splitReciprocalTest() {
+    double[] in = {1.0, 2.0};
+    double[] result = new double[2];
+    AccurateMathCalc.splitReciprocal(in, result);
+    assertArrayEquals(new double[] {1.0, -2.0}, result, 0.00001);
+}
+
+
+No.10 generated result --------------------------
+
+@Test
+public void splitReciprocalTest() {
+    double[] in = {1.0, 2.0};
+    double[] result = new double[2];
+    AccurateMathCalc.splitReciprocal(in, result);
+    assertEquals(0.5, result[0], 1e-15);
+    assertEquals(0.0, result[1], 1e-15);
+}
+
+

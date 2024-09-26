@@ -1,0 +1,565 @@
+Source code: 
+
+
+private static void installMplus(QueryWrapper<?> queryWrapper,Object searchObj,Map<String, String[]> parameterMap) {
+	
+	/*
+	 * 注意:权限查询由前端配置数据规则 当一个人有多个所属部门时候 可以在规则配置包含条件 orgCode 包含 #{sys_org_code}
+	但是不支持在自定义SQL中写orgCode in #{sys_org_code} 
+	当一个人只有一个部门 就直接配置等于条件: orgCode 等于 #{sys_org_code} 或者配置自定义SQL: orgCode = '#{sys_org_code}'
+	*/
+	
+	//区间条件组装 模糊查询 高级查询组装 简单排序 权限查询
+	PropertyDescriptor[] origDescriptors = PropertyUtils.getPropertyDescriptors(searchObj);
+	Map<String,SysPermissionDataRuleModel> ruleMap = getRuleMap();
+	
+	//权限规则自定义SQL表达式
+	for (String c : ruleMap.keySet()) {
+		if(oConvertUtils.isNotEmpty(c) && c.startsWith(SQL_RULES_COLUMN)){
+			queryWrapper.and(i ->i.apply(getSqlRuleValue(ruleMap.get(c).getRuleValue())));
+		}
+	}
+	
+	String name, type, column;
+	// update-begin--Author:taoyan  Date:20200923 for：issues/1671 如果字段加注解了@TableField(exist = false),不走DB查询-------
+	//定义实体字段和数据库字段名称的映射 高级查询中 只能获取实体字段 如果设置TableField注解 那么查询条件会出问题
+	Map<String,String> fieldColumnMap = new HashMap<>(5);
+	for (int i = 0; i < origDescriptors.length; i++) {
+		//aliasName = origDescriptors[i].getName();  mybatis  不存在实体属性 不用处理别名的情况
+		name = origDescriptors[i].getName();
+		type = origDescriptors[i].getPropertyType().toString();
+		try {
+			if (judgedIsUselessField(name)|| !PropertyUtils.isReadable(searchObj, name)) {
+				continue;
+			}
+
+			Object value = PropertyUtils.getSimpleProperty(searchObj, name);
+			column = ReflectHelper.getTableFieldName(searchObj.getClass(), name);
+			if(column==null){
+				//column为null只有一种情况 那就是 添加了注解@TableField(exist = false) 后续都不用处理了
+				continue;
+			}
+			fieldColumnMap.put(name,column);
+			//数据权限查询
+			if(ruleMap.containsKey(name)) {
+				addRuleToQueryWrapper(ruleMap.get(name), column, origDescriptors[i].getPropertyType(), queryWrapper);
+			}
+			//区间查询
+			doIntervalQuery(queryWrapper, parameterMap, type, name, column);
+			//判断单值  参数带不同标识字符串 走不同的查询
+			//TODO 这种前后带逗号的支持分割后模糊查询(多选字段查询生效) 示例：,1,3,
+			if (null != value && value.toString().startsWith(COMMA) && value.toString().endsWith(COMMA)) {
+				String multiLikeval = value.toString().replace(",,", COMMA);
+				String[] vals = multiLikeval.substring(1, multiLikeval.length()).split(COMMA);
+				final String field = oConvertUtils.camelToUnderline(column);
+				if(vals.length>1) {
+					queryWrapper.and(j -> {
+                           log.info("---查询过滤器，Query规则---field:{}, rule:{}, value:{}", field, "like", vals[0]);
+						j = j.like(field,vals[0]);
+						for (int k=1;k<vals.length;k++) {
+							j = j.or().like(field,vals[k]);
+							log.info("---查询过滤器，Query规则 .or()---field:{}, rule:{}, value:{}", field, "like", vals[k]);
+						}
+						//return j;
+					});
+				}else {
+					log.info("---查询过滤器，Query规则---field:{}, rule:{}, value:{}", field, "like", vals[0]);
+					queryWrapper.and(j -> j.like(field,vals[0]));
+				}
+			}else {
+				//根据参数值带什么关键字符串判断走什么类型的查询
+				QueryRuleEnum rule = convert2Rule(value);
+				value = replaceValue(rule,value);
+				// add -begin 添加判断为字符串时设为全模糊查询
+				//if( (rule==null || QueryRuleEnum.EQ.equals(rule)) && "class java.lang.String".equals(type)) {
+					// 可以设置左右模糊或全模糊，因人而异
+					//rule = QueryRuleEnum.LIKE;
+				//}
+				// add -end 添加判断为字符串时设为全模糊查询
+				addEasyQuery(queryWrapper, column, rule, value);
+			}
+			
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+	}
+	// 排序逻辑 处理
+	doMultiFieldsOrder(queryWrapper, parameterMap, fieldColumnMap);
+			
+	//高级查询
+	doSuperQuery(queryWrapper, parameterMap, fieldColumnMap);
+	// update-end--Author:taoyan  Date:20200923 for：issues/1671 如果字段加注解了@TableField(exist = false),不走DB查询-------
+	
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jeecg.common.system.query;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import org.apache.commons.beanutils.PropertyUtils;
+import org.junit.jupiter.api.*;
+import java.beans.PropertyDescriptor;
+import java.util.HashMap;
+import java.util.Map;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class QueryGeneratorTest {
+    @Test
+    public void installMplusTest() throws Exception {
+        // Prepare an object for the search (assuming a search object class exists and is called 'TestSearchObject')
+        TestSearchObject searchObj = new TestSearchObject();
+        // Set search criteria on the object (just for example purposes)
+        searchObj.setName("exampleName");
+        
+        // Prepare parameterMap (populate with relevant test parameters)
+        Map<String, String[]> parameterMap = new HashMap<>();
+        
+        // Prepare the query wrapper that will be used in the method
+        QueryWrapper<TestSearchObject> queryWrapper = new QueryWrapper<>();
+        
+        // Obtain the Method object for the private static installMplus method
+        java.lang.reflect.Method method = QueryGenerator.class.getDeclaredMethod("installMplus", QueryWrapper.class, Object.class, Map.class);
+        // Set accessible as true to bypass the "private" access modifier
+        method.setAccessible(true);
+        
+        // Invoke installMplus with our test objects
+        method.invoke(null, queryWrapper, searchObj, parameterMap);
+        
+        // Verify outcomes from queryWrapper (using assertions)
+        // For positive cases
+        assertTrue(queryWrapper.getSqlSegment().contains("exampleName"), "QueryWrapper does not contain the correct query segment.");
+        
+        // For negative cases (making sure that improper segments are not present)
+        assertFalse(queryWrapper.getSqlSegment().contains("<unwanted segment>"), "QueryWrapper contains an incorrect query segment.");
+        
+        // You might want to add further assertions depending on the behavior of installMplus and your specific test cases
+    }
+    
+    // Mock search object class defined for testing purposes
+    // Replace this with the actual search object class if it exists
+    public static class TestSearchObject {
+        private String name;
+        
+        public String getName() {
+            return name;
+        }
+        
+        public void setName(String name) {
+            this.name = name;
+        }
+        
+        // Assuming there is a 'getPropertyDescriptors' method in the real search class.
+        // This mock will always return an array with a single descriptor for the 'name' property.
+        public static PropertyDescriptor[] getPropertyDescriptors(Object obj) {
+            try {
+                return new PropertyDescriptor[] {new PropertyDescriptor("name", TestSearchObject.class)};
+            }
+            catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jeecg.common.system.query;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.HashMap;
+
+// Note: This test class is incomplete and will not function without additional modifications.
+public class QueryGeneratorTest {
+
+    // Placeholder class to act as the searchObj and parameterMap in the method call.
+    private static class SearchObject {}
+
+    @Test
+    public void installMplusTest() {
+        // Dummy objects to fulfill parameter requirements for the method invocation.
+        QueryWrapper<SearchObject> queryWrapper = new QueryWrapper<>();
+        SearchObject searchObj = new SearchObject();
+        HashMap<String, String[]> parameterMap = new HashMap<>();
+
+        // Because installMplus is private and relies on many external elements,
+        // we will use reflection to access and test the method or adjust the test strategy
+        // based on the actual design and behavior of the public API that uses this method.
+
+        // Here you would write the code necessary to set up your test environment,
+        // possibly populating the parameterMap, and then invoking the installMplus
+        // method either directly or by testing the method that uses it.
+
+        // Assertions would be made here based on expected changes to the QueryWrapper
+        // after installMplus is executed with the provided searchObj and parameterMap.
+
+        // Example assuming we have a public method that under-the-hood calls installMplus:
+        // QueryGenerator.initQueryWrapper(searchObj, parameterMap);
+        // assertNotNull(queryWrapper); // Example assertion
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jeecg.common.system.query;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import org.junit.jupiter.api.*;
+import org.jeecg.common.system.vo.LoginUser;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+public class QueryGeneratorTest {
+    private static class MockEntity {
+        private String name;
+        private Integer age;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public Integer getAge() {
+            return age;
+        }
+
+        public void setAge(Integer age) {
+            this.age = age;
+        }
+    }
+
+    private QueryWrapper<MockEntity> queryWrapper;
+    private MockEntity searchObj;
+    private Map<String, String[]> parameterMap;
+
+    @BeforeEach
+    public void setUp() {
+        queryWrapper = new QueryWrapper<>();
+        searchObj = new MockEntity();
+        searchObj.setName("testName");
+        searchObj.setAge(25);
+        parameterMap = new HashMap<>();
+
+        // Mock parameterMap values if needed for more complex scenarios
+        // parameterMap.put("name", new String[]{"testName"});
+        // parameterMap.put("age", new String[]{"25"});
+    }
+
+    @Test
+    public void installMplusTest() {
+        QueryGenerator.installMplus(queryWrapper, searchObj, parameterMap);
+        assertNotNull(queryWrapper);
+        // more assertions to validate queryWrapper contents
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jeecg.common.system.query;
+
+import org.junit.jupiter.api.*;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import java.util.HashMap;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class QueryGeneratorTest {
+    
+    // Create a dummy search object class for test purposes
+    static class DummySearchObj {}
+
+    @Test
+    public void installMplusTest() {
+        // Prepare test data
+        DummySearchObj searchObj = new DummySearchObj();
+        QueryWrapper<?> queryWrapper = new QueryWrapper<>();
+        HashMap<String, String[]> parameterMap = new HashMap<>();
+        
+        // Simulate calling the installMplus method
+        QueryGenerator.installMplus(queryWrapper, searchObj, parameterMap);
+        
+        // Add assertions here to verify the correct behavior of installMplus...
+        // Since installMplus does not return a value and the method is private, its behavior is difficult to verify without access to all its side effects.
+        // One potential test could be to mock the data rules and test if queryWrapper is modified correctly.
+        // However, with the method being private and the lack of return value, it is not testable in a typical unit test sense.
+        
+        // Examples (note: these will not work due to privacy and lack of context):
+        // assertTrue(queryWrapper.getExpression().getNormal());
+        // assertEquals(expected, queryWrapper.getSqlSegment());
+
+        // Simply assert that the method completed without exceptions for this placeholder test
+        assertTrue(true, "Method completed without exceptions.");
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jeecg.common.system.query;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class QueryGeneratorTest {
+
+    public static class ExampleSearch {
+        // Example fields that might be used for searching
+        // These should match with your search object fields
+        private String name;
+        private String description;
+
+        // Getters and setters for each field would be here
+        // ...
+    }
+
+    @Test
+    public void installMplusTest() {
+        // Setup a dummy search object (should match your search object structure)
+        ExampleSearch searchObj = new ExampleSearch();
+        // Setup parameters for testing, if any
+        Map<String, String[]> parameterMap = new HashMap<>();
+
+        // Setup the actual QueryWrapper instance
+        QueryWrapper<ExampleSearch> queryWrapper = new QueryWrapper<>();
+
+        // Wrap the method call to ensure no exceptions, adjust if you expect exceptions
+        assertDoesNotThrow(() -> {
+            QueryGenerator.installMplus(queryWrapper, searchObj, parameterMap);
+        });
+
+        // Perform actual assertions, e.g., ensuring the QueryWrapper has been manipulated as expected
+        // This highly depends on the logic within the installMplus method, and what it's supposed to do
+        // Assertions here need to be designed based on the expected outcomes of installMplus
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jeecg.common.system.query;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import org.junit.jupiter.api.Test;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class QueryGeneratorTest {
+
+    @Test
+    public void installMplusTest() {
+        // Create a mock QueryWrapper instance
+        QueryWrapper<?> queryWrapper = new QueryWrapper<>();
+        
+        // Create a mock search object, e.g., an instance of a hypothetical entity class
+        Object searchObj = new Object(); // Should be replaced with a real search object
+
+        // Create a mock parameter map
+        Map<String, String[]> parameterMap = new HashMap<>();
+
+        // Try to install Mplus -- this is the method under test
+        Throwable exception = assertDoesNotThrow(() ->
+                QueryGenerator.installMplus(queryWrapper, searchObj, parameterMap),
+                "installMplus should not throw any exceptions"
+        );
+
+        // Assuming no output check, as no behavior or transformation is provided to be verified
+        assertNull(exception, "Method executed without exceptions");
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jeecg.common.system.query;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import java.util.HashMap;
+import java.util.Map;
+
+public class QueryGeneratorTest {
+    
+    private static class SearchObject {
+        // NOTE: Simplified example search object. Adjust fields accordingly
+    }
+    
+    @Test
+    public void installMplusTest() {
+        // Instantiate the QueryWrapper and SearchObject with sample data
+        QueryWrapper<SearchObject> queryWrapper = new QueryWrapper<>();
+        SearchObject searchObj = new SearchObject();
+
+        // Create a mock parameter map (adjust the mock data as necessary)
+        Map<String, String[]> parameterMap = new HashMap<>();
+        parameterMap.put("testKey", new String[]{"testValue"});
+
+        // Invoke the installMplus method
+        QueryGenerator.installMplus(queryWrapper, searchObj, parameterMap);
+
+        // Validate that the QueryWrapper has been modified as expected
+        // Note: This will depend on your search object and would need appropriate checks here
+        // For example, if a condition has been added to the QueryWrapper, you could assert true
+        assertTrue(queryWrapper.getExpression().getNormal().size() > 0, "QueryWrapper should have conditions set by installMplus");
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.jeecg.common.system.query;
+
+import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.beanutils.PropertyUtilsBean;
+import org.junit.jupiter.api.*;
+import org.junit.runner.RunWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import static org.mockito.Mockito.*;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
+
+// Note: MockitoExtension is used here to showcase possible mocking of static methods.
+// It requires Mockito version 3.4.0 or higher. Including this for the example, but you could use other mocking frameworks if necessary.
+@RunWith(MockitoExtension.class)
+public class QueryGeneratorTest {
+    
+    // Mocked object for property descriptors, typically you would replace this with a concrete class matching the one used in the `installMplus` method.
+    Object searchObj = new Object();
+
+    // Here we are assuming a map for the test - you would populate it with the fields you expect to query on.
+    Map<String, String[]> parameterMap = new HashMap<>();
+    
+    QueryWrapper<Object> queryWrapper = new QueryWrapper<>();
+
+    @BeforeEach
+    public void beforeEach() throws Exception {
+        PropertyDescriptor pd = mock(PropertyDescriptor.class);
+        when(pd.getName()).thenReturn("testProperty");
+        when(pd.getPropertyType()).thenReturn(Class.forName("java.lang.String"));
+
+        PropertyUtilsBean propertyUtilsBean = mock(PropertyUtilsBean.class);
+        when(propertyUtilsBean.getPropertyDescriptors(searchObj)).thenReturn(new PropertyDescriptor[]{pd});
+        when(propertyUtilsBean.isReadable(searchObj, "testProperty")).thenReturn(true);
+        when(propertyUtilsBean.getSimpleProperty(searchObj, "testProperty")).thenReturn("testValue");
+
+        // You would need to adjust the mocking to match the static methods used in your source code.
+        when(PropertyUtils.getPropertyDescriptors(searchObj)).thenReturn(new PropertyDescriptor[]{pd});
+        when(PropertyUtils.isReadable(searchObj, "testProperty")).thenReturn(true);
+        when(PropertyUtils.getSimpleProperty(searchObj, "testProperty")).thenReturn("testValue");
+    }
+
+    @Test
+    public void installMplusTest() throws Exception {
+        // Here, using reflection to call private method during the test (if you haven't changed the method visibility)
+        Method installMplus = QueryGenerator.class.getDeclaredMethod("installMplus", QueryWrapper.class, Object.class, Map.class);
+        installMplus.setAccessible(true);
+
+        // Calling the private method with reflection. We pass the prepared queryWrapper, searchObj and parameterMap.
+        installMplus.invoke(null, queryWrapper, searchObj, parameterMap);
+
+        // Perform assertions here to check the conditions of the test pass.
+        // For example, you could verify that 'queryWrapper' now contains the expected conditions set by 'installMplus'
+        assertFalse(queryWrapper.isEmptyOfWhere(), "QueryWrapper should have conditions defined after installMplus method execution.");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jeecg.common.system.query;
+
+import org.junit.jupiter.api.*;
+import org.springframework.beans.BeanUtils;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class QueryGeneratorTest {
+    @Test
+    public void installMplusTest() {
+        // Create a mock QueryWrapper and mock SearchObject
+        QueryWrapper<Object> queryWrapper = mock(QueryWrapper.class);
+        Object searchObj = mock(Object.class);
+        
+        // Setup a dummy parameterMap, emulating a real parameter map that might be passed
+        Map<String, String[]> parameterMap = new LinkedHashMap<>();
+        parameterMap.put("testParam", new String[]{"testValue"});
+        
+        // Call the method under test
+        QueryGenerator.installMplus(queryWrapper, searchObj, parameterMap);
+        
+        // Since QueryGenerator.installMplus() is void, we verify that certain methods are called
+        // However, the actual logic is complex and might require a more detailed setup and assertions
+        verify(queryWrapper, atLeastOnce()).eq(anyString(), any());
+        
+        // Following assertions will depend on the content of the installMplus method and the mock setup.
+        // One should create relevant mocks or spies and assertions to ensure the method behavior is as expected.
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.common.system.query;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+
+import java.util.HashMap;
+
+public class QueryGeneratorTest {
+    @Test
+    public void installMplusTest() {
+        QueryWrapper<?> queryWrapper = new QueryWrapper<>();
+        Object searchObj = new Object();
+        HashMap<String, String[]> parameterMap = new HashMap<>();
+
+        // Assuming that the getRuleMap method returns an empty map for testing purposes
+        MockedStatic<QueryGenerator> mocked = Mockito.mockStatic(QueryGenerator.class);
+        mocked.when(QueryGenerator::getRuleMap).thenReturn(new HashMap<>());
+
+        // Assuming that PropertyUtils and ReflectHelper also provide mock behaviour
+        // Here, we are not going into details of how the object properties are obtained
+        // For the actual test, Mocks should be written for all external dependencies used within `installMplus`
+
+        QueryGenerator.installMplus(queryWrapper, searchObj, parameterMap);
+
+        // Add assertions to check for expected outcomes of the method execution
+        // Assertions depend on what the method is supposed to do
+        // For example, if we know a specific queryWrapper condition should be set:
+        // assertNotNull(queryWrapper);
+        // assertTrue(queryWrapper.getExpression().contains("your_expected_condition"));
+
+        // Make sure to properly release the mock after use
+        mocked.close();
+    }
+}
+
+

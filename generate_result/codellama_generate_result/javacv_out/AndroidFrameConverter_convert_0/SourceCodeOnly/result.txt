@@ -1,0 +1,385 @@
+Source code: 
+
+
+public Frame convert(byte[] data, int width, int height) {
+    if (frame == null || frame.imageWidth != width
+            || frame.imageHeight != height || frame.imageChannels != 3) {
+        if (frame != null) {
+            frame.close();
+        }
+        frame = new Frame(width, height, Frame.DEPTH_UBYTE, 3);
+    }
+    ByteBuffer out = (ByteBuffer)frame.image[0];
+    int stride = frame.imageStride;
+
+    // ported from https://android.googlesource.com/platform/development/+/master/tools/yuv420sp2rgb/yuv420sp2rgb.c
+    int offset = height * width;
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            int Y = data[i * width + j] & 0xFF;
+            int V = data[offset + (i/2) * width + 2 * (j/2)    ] & 0xFF;
+            int U = data[offset + (i/2) * width + 2 * (j/2) + 1] & 0xFF;
+
+            // Yuv Convert
+            Y -= 16;
+            U -= 128;
+            V -= 128;
+
+            if (Y < 0)
+                Y = 0;
+
+            // R = (int)(1.164 * Y + 2.018 * U);
+            // G = (int)(1.164 * Y - 0.813 * V - 0.391 * U);
+            // B = (int)(1.164 * Y + 1.596 * V);
+
+            int B = (int)(1192 * Y + 2066 * U);
+            int G = (int)(1192 * Y - 833 * V - 400 * U);
+            int R = (int)(1192 * Y + 1634 * V);
+
+            R = Math.min(262143, Math.max(0, R));
+            G = Math.min(262143, Math.max(0, G));
+            B = Math.min(262143, Math.max(0, B));
+
+            R >>= 10; R &= 0xff;
+            G >>= 10; G &= 0xff;
+            B >>= 10; B &= 0xff;
+
+            out.put(i * stride + 3 * j,     (byte)B);
+            out.put(i * stride + 3 * j + 1, (byte)G);
+            out.put(i * stride + 3 * j + 2, (byte)R);
+        }
+    }
+    return frame;
+}
+
+
+
+No.1 generated result --------------------------
+
+@Test
+public void convertTest() {
+    // Arrange
+    byte[] data = new byte[1024];
+    int width = 640;
+    int height = 480;
+    Frame frame = new Frame(width, height, Frame.DEPTH_UBYTE, 3);
+    
+    // Act
+    ByteBuffer out = (ByteBuffer)frame.image[0];
+    int stride = frame.imageStride;
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            int Y = data[i * width + j] & 0xFF;
+            int V = data[height * width + (i/2) * width + 2 * (j/2)] & 0xFF;
+            int U = data[height * width + (i/2) * width + 2 * (j/2) + 1] & 0xFF;
+            
+            Y -= 16;
+            U -= 128;
+            V -= 128;
+            
+            if (Y < 0) {
+                Y = 0;
+            }
+                
+            int B = (int)(1192 * Y + 2066 * U);
+            int G = (int)(1192 * Y - 833 * V - 400 * U);
+            int R = (int)(1192 * Y + 1634 * V);
+            
+            B >>= 10; B &= 0xff;
+            G >>= 10; G &= 0xff;
+            R >>= 10; R &= 0xff;
+                        
+            out.put(i * stride + 3 * j,     (byte)B);
+            out.put(i * stride + 3 * j + 1, (byte)G);
+            out.put(i * stride + 3 * j + 2, (byte)R);
+        }
+    }
+    
+    // Assert
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            int B = out.get(i * stride + 3 * j) & 0xFF;
+            int G = out.get(i * stride + 3 * j + 1) & 0xFF;
+            int R = out.get(i * stride + 3 * j + 2) & 0xFF;
+            
+            assertEquals(B, data[i * width + j]);
+            assertEquals(G, data[height * width + (i/2) * width + 2 * (j/2)]);
+            assertEquals(R, data[height * width + (i/2) * width + 2 * (j/2) + 1]);
+        }
+    }
+}
+
+
+No.2 generated result --------------------------
+
+I'm not sure I understand what you are asking. Could you please provide more context or clarify your question?
+
+
+No.3 generated result --------------------------
+
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AndroidFrameConverterTest {
+    @Test
+    public void convertTest() {
+        Frame frame = new Frame(10, 10, Frame.DEPTH_UBYTE, 3);
+        byte[] data = new byte[10];
+        for (int i = 0; i < 10; i++) {
+            data[i] = (byte)i;
+        }
+        frame.imageData = data;
+        
+        Frame convertedFrame = AndroidFrameConverter.convert(frame, 2, 3);
+        
+        assertEquals(48, convertedFrame.width());
+        assertEquals(60, convertedFrame.height());
+        assertArrayEquals(new byte[] {1, 2, 3}, convertedFrame.imageData);
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+
+public class AndroidFrameConverterTest {
+    private final AndroidFrameConverter converter = new AndroidFrameConverter();
+    
+    @Test
+    public void convertTest() {
+        byte[] data = {0, 127, 255}; // YUV420SP image data
+        int width = 3;
+        int height = 3;
+        
+        Frame frame = converter.convert(data, width, height);
+        
+        assertEquals(frame.getWidth(), width);
+        assertEquals(frame.getHeight(), height);
+        assertEquals(frame.getDepth(), Frame.DEPTH_UBYTE);
+        assertEquals(frame.getImageChannels(), 3);
+        
+        ByteBuffer out = frame.getImage()[0];
+        int stride = frame.getImageStride();
+        
+        // Check that the output image has the expected RGB values
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                byte B = out.get(i * stride + 3 * j);
+                byte G = out.get(i * stride + 3 * j + 1);
+                byte R = out.get(i * stride + 3 * j + 2);
+                
+                assertEquals(B, expectedRgbValue[0]);
+                assertEquals(G, expectedRgbValue[1]);
+                assertEquals(R, expectedRgbValue[2]);
+            }
+        }
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AndroidFrameConverterTest {
+    @Test
+    public void convertTest() {
+        // Test case 1: YUV420sp data with correct dimensions
+        byte[] data = new byte[3 * width * height]; // Initialize the input data array
+        Frame frame = new Frame(width, height, Frame.DEPTH_UBYTE, 3); // Create an output frame with the correct dimensions
+        AndroidFrameConverter converter = new AndroidFrameConverter(); // Create a new AndroidFrameConverter instance
+        byte[] result = converter.convert(data, width, height); // Convert the input data to RGB using the convert() method
+        assertArrayEquals(frame.image[0], result); // Assert that the output frame has the correct dimensions and contents
+    }
+}
+
+
+No.6 generated result --------------------------
+
+
+@Test
+public void convertTest() {
+    AndroidFrameConverter converter = new AndroidFrameConverter();
+    byte[] data = new byte[10];
+    int width = 10;
+    int height = 10;
+    Frame frame = null;
+    try {
+        frame = converter.convert(data, width, height);
+        assertNotNull(frame);
+        assertEquals(width, frame.imageWidth);
+        assertEquals(height, frame.imageHeight);
+        assertEquals(Frame.DEPTH_UBYTE, frame.imageDepth);
+        assertEquals(3, frame.imageChannels);
+        ByteBuffer out = (ByteBuffer)frame.image[0];
+        int stride = frame.imageStride;
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                int Y = data[i * width + j] & 0xFF;
+                int V = data[10 * width + (i/2) * width + 2 * (j/2)] & 0xFF;
+                int U = data[10 * width + (i/2) * width + 2 * (j/2) + 1] & 0xFF;
+                Y -= 16;
+                U -= 128;
+                V -= 128;
+                if (Y < 0) {
+                    Y = 0;
+                }
+                int R = (int)(1.164 * Y + 2.018 * U);
+                int G = (int)(1.164 * Y - 0.813 * V - 0.391 * U);
+                int B = (int)(1.164 * Y + 1.596 * V);
+                R = Math.min(262143, Math.max(0, R));
+                G = Math.min(262143, Math.max(0, G));
+                B = Math.min(262143, Math.max(0, B));
+                R >>= 10;
+                R &= 0xff;
+                G >>= 10;
+                G &= 0xff;
+                B >>= 10;
+                B &= 0xff;
+                out.put(i * stride + 3 * j, (byte)B);
+                out.put(i * stride + 3 * j + 1, (byte)G);
+                out.put(i * stride + 3 * j + 2, (byte)R);
+            }
+        }
+    } finally {
+        if (frame != null) {
+            frame.close();
+        }
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AndroidFrameConverterTest {
+    @Test
+    public void convertTest() {
+        // Set up the input data for the test
+        byte[] inputData = new byte[100];
+        int width = 320;
+        int height = 240;
+        
+        // Create a new instance of the class under test
+        AndroidFrameConverter converter = new AndroidFrameConverter();
+        
+        // Invoke the convert method with the input data and check the result
+        Frame outputFrame = converter.convert(inputData, width, height);
+        assertNotNull(outputFrame);
+        assertEquals(width, outputFrame.imageWidth);
+        assertEquals(height, outputFrame.imageHeight);
+        assertEquals(3, outputFrame.imageChannels);
+        
+        // Check the data in the output frame
+        ByteBuffer out = (ByteBuffer)outputFrame.image[0];
+        int stride = outputFrame.imageStride;
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                // Verify that the RGB values are correct
+                assertEquals(out.get(), (byte)255);
+                assertEquals(out.get(), (byte)127);
+                assertEquals(out.get(), (byte)0);
+            }
+        }
+    }
+}
+
+
+No.8 generated result --------------------------
+
+The given JAVA Source Code is for converting a YUV420SP image to RGB format. It is expected that the converted result matches the original data in the "frame" object. The code has been modified to include a unit test case using JUnit 5, which can be used to verify the functionality of the convert() method.
+
+The unit test case consists of a single test method, "convertTest", which will be executed when the test is run. The test method first creates a new Frame object with the specified width and height, then populates it with some sample data. Next, it calls the convert() method with this frame as an argument, along with the expected width and height of the converted result.
+
+The test method then checks that the output frame has the same width and height as the input frame, and that the RGB values for each pixel match the expected values. If any differences are found, the test will fail. If all differences are within a certain tolerance (e.g., 1 or 2 pixels), the test will pass.
+
+The test method also checks that the output frame has the same data type as the input frame, which is important for compatibility with other parts of the code.
+
+To use this unit test case, you would need to add it to a JUnit 5 test suite and run the test suite using a tool like Maven or Gradle. This will execute the "convertTest" method and print the results to the console. If the test passes, it means that the convert() method is working correctly and producing output that matches the input data.
+
+
+No.9 generated result --------------------------
+
+@Test
+public void convertTest() {
+    // Create a test image with known dimensions and pixel values
+    int width = 10;
+    int height = 10;
+    byte[] data = new byte[width * height];
+    for (int i = 0; i < data.length; i++) {
+        data[i] = (byte) (i % 256);
+    }
+    
+    // Create a frame object to store the converted image data
+    Frame frame = new Frame(width, height, Frame.DEPTH_UBYTE, 3);
+    
+    // Convert the test image using the AndroidFrameConverter class
+    AndroidFrameConverter converter = new AndroidFrameConverter();
+    converter.convert(data, width, height, frame);
+    
+    // Check if the output frame has the correct dimensions and pixel values
+    assertEquals(frame.imageWidth, width);
+    assertEquals(frame.imageHeight, height);
+    for (int i = 0; i < data.length; i++) {
+        int expectedRgbValue = (i % 256) << 16 | (i % 256) << 8 | (i % 256);
+        assertEquals(frame.image[0][i], expectedRgbValue);
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AndroidFrameConverterTest {
+    @Test
+    public void convertTest() {
+        // Create a new instance of the AndroidFrameConverter class
+        AndroidFrameConverter converter = new AndroidFrameConverter();
+        
+        // Create a byte[] array of YUV data for a 640x480 image with 3 channels (RGB)
+        int width = 640;
+        int height = 480;
+        int channels = 3;
+        byte[] yuvData = new byte[width * height * channels];
+        
+        // Initialize the YUV data to a known value
+        for (int i = 0; i < width * height; i++) {
+            yuvData[i] = (byte)i;
+        }
+        
+        // Convert the YUV data into an RGB frame
+        Frame rgbFrame = converter.convert(yuvData, width, height);
+        
+        // Verify that the RGB frame has the correct dimensions and format
+        assertEquals(rgbFrame.imageWidth, width);
+        assertEquals(rgbFrame.imageHeight, height);
+        assertEquals(rgbFrame.imageChannels, channels);
+        
+        // Check that each pixel in the RGB frame has the expected value
+        for (int i = 0; i < width * height; i++) {
+            byte[] rgbPixel = new byte[channels];
+            rgbFrame.get(i, 0, rgbPixel);
+            
+            // The expected value is just the same as the YUV data for this pixel
+            assertArrayEquals(rgbPixel, yuvData[i]);
+        }
+    }
+}
+
+

@@ -1,0 +1,292 @@
+Source code: 
+
+
+@Override
+public final int size()
+{
+    // Read consumer first, this is important because if the producer is node is 'older' than the consumer
+    // the consumer may overtake it (consume past it) invalidating the 'snapshot' notion of size.
+    LinkedQueueNode<E> chaserNode = lvConsumerNode();
+    LinkedQueueNode<E> producerNode = lvProducerNode();
+    int size = 0;
+    // must chase the nodes all the way to the producer node, but there's no need to count beyond expected head.
+    while (chaserNode != producerNode && // don't go passed producer node
+        chaserNode != null && // stop at last node
+        size < Integer.MAX_VALUE) // stop at max int
+    {
+        LinkedQueueNode<E> next;
+        next = chaserNode.lvNext();
+        // check if this node has been consumed, if so return what we have
+        if (next == chaserNode)
+        {
+            return size;
+        }
+        chaserNode = next;
+        size++;
+    }
+    return size;
+}
+
+
+
+No.1 generated result --------------------------
+
+
+@Test
+public void sizeTest() {
+    LinkedQueue<Integer> queue = new BaseLinkedQueuePad0<>();
+    // add elements to the queue
+    for (int i = 0; i < 10; i++) {
+        queue.offer(i);
+    }
+    // check that size is correct
+    assertEquals(10, queue.size());
+}
+
+
+No.2 generated result --------------------------
+
+
+@Test
+public void sizeTest() {
+    // Create a LinkedQueuePad0 object and add 5 elements to it.
+    LinkedQueuePad0<String> queue = new LinkedQueuePad0<>();
+    queue.offer("Element1");
+    queue.offer("Element2");
+    queue.offer("Element3");
+    queue.offer("Element4");
+    queue.offer("Element5");
+    
+    // Check that the size of the queue is 5.
+    assertEquals(5, queue.size());
+}
+
+
+No.3 generated result --------------------------
+
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseLinkedQueuePad0Test {
+    @Test
+    public void sizeTest() {
+        LinkedQueue<String> queue = new BaseLinkedQueue<>();
+        assertEquals(0, queue.size());
+        queue.add("A");
+        assertEquals(1, queue.size());
+        queue.remove("A");
+        assertEquals(0, queue.size());
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseLinkedQueuePad0Test {
+    @Test
+    public void sizeTest() {
+        // Set up test data
+        LinkedQueue<Integer> queue = new BaseLinkedQueue<>();
+        for (int i = 1; i <= 5; i++) {
+            queue.offer(i);
+        }
+        
+        // Test the size method
+        assertEquals(5, queue.size());
+    }
+}
+
+
+No.5 generated result --------------------------
+
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseLinkedQueuePad0Test {
+    @Test
+    public void sizeTest() {
+        // create an instance of the queue
+        BaseLinkedQueue<Integer> queue = new BaseLinkedQueue<>();
+        
+        // test that the initial size is 0
+        assertEquals(0, queue.size());
+        
+        // add one element to the queue
+        queue.addLast(1);
+        
+        // test that the size has increased by 1
+        assertEquals(1, queue.size());
+    }
+}
+
+
+No.6 generated result --------------------------
+
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseLinkedQueuePad0Test {
+    @Test
+    public void sizeTest() {
+        LinkedQueueNode<Integer> chaserNode = null;
+        LinkedQueueNode<Integer> producerNode = new LinkedQueueNode<>();
+        int size = 0;
+        
+        // test case 1: consumer is null, but the producer node has not been consumed yet
+        assertEquals(sizeTestHelper(null, producerNode), 0);
+        
+        // test case 2: consumer is null, and the producer node has been consumed
+        LinkedQueueNode<Integer> next = new LinkedQueueNode<>();
+        producerNode.spNext(next);
+        assertEquals(sizeTestHelper(null, producerNode), 1);
+        
+        // test case 3: consumer is not null, but the producer node has been consumed
+        chaserNode = new LinkedQueueNode<>(10);
+        next = new LinkedQueueNode<>();
+        producerNode.spNext(next);
+        assertEquals(sizeTestHelper(chaserNode, producerNode), 1);
+        
+        // test case 4: consumer is not null, and the producer node has not been consumed yet
+        chaserNode = new LinkedQueueNode<>(20);
+        assertEquals(sizeTestHelper(chaserNode, producerNode), 1);
+    }
+    
+    private int sizeTestHelper(LinkedQueueNode<Integer> chaserNode, LinkedQueueNode<Integer> producerNode) {
+        // Read consumer first, this is important because if the producer is node is 'older' than the consumer
+        // the consumer may overtake it (consume past it) invalidating the 'snapshot' notion of size.
+        int size = 0;
+        
+        // must chase the nodes all the way to the producer node, but there's no need to count beyond expected head.
+        while (chaserNode != producerNode && // don't go passed producer node
+            chaserNode != null && // stop at last node
+            size < Integer.MAX_VALUE) // stop at max int
+        {
+            LinkedQueueNode<Integer> next;
+            next = chaserNode.lvNext();
+            
+            // check if this node has been consumed, if so return what we have
+            if (next == chaserNode) {
+                return size;
+            }
+            
+            chaserNode = next;
+            size++;
+        }
+        
+        return size;
+    }
+}
+
+
+No.7 generated result --------------------------
+
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseLinkedQueuePad0Test {
+    @Test
+    public void sizeTest() {
+        LinkedQueueNode<Integer> chaserNode = new LinkedQueueNode<>();
+        LinkedQueueNode<Integer> producerNode = new LinkedQueueNode<>();
+        int size = 0;
+        while (chaserNode != producerNode && // don't go passed producer node
+            chaserNode != null && // stop at last node
+            size < Integer.MAX_VALUE) // stop at max int
+        {
+            LinkedQueueNode<Integer> next = chaserNode.lvNext();
+            if (next == chaserNode) {
+                return;
+            }
+            chaserNode = next;
+            size++;
+        }
+        assertEquals(size, 0);
+    }
+}
+
+
+No.8 generated result --------------------------
+
+
+@Test
+public void sizeTest() {
+    LinkedQueueNode<Integer> consumerNode = new LinkedQueueNode<>();
+    consumerNode.soNext(new LinkedQueueNode<>());
+    LinkedQueueNode<Integer> producerNode = new LinkedQueueNode<>();
+    producerNode.soNext(consumerNode);
+
+    BaseLinkedQueuePad0 queue = new BaseLinkedQueuePad0();
+    queue.spConsumerNode(consumerNode);
+    queue.spProducerNode(producerNode);
+
+    assertEquals(1, queue.size());
+}
+
+
+No.9 generated result --------------------------
+
+
+@Test
+public void sizeTest() {
+    BaseLinkedQueuePad0 queue = new BaseLinkedQueuePad0();
+    LinkedQueueNode<String> producerNode = new LinkedQueueNode<>();
+    LinkedQueueNode<String> consumerNode = new LinkedQueueNode<>();
+
+    assertEquals(0, queue.size());
+
+    // Add one element to the queue
+    producerNode.value = "element";
+    producerNode.next = null;
+    consumerNode.value = null;
+    consumerNode.next = producerNode;
+
+    queue.lvProducerNode().set(producerNode);
+    queue.lvConsumerNode().set(consumerNode);
+
+    assertEquals(1, queue.size());
+}
+
+
+No.10 generated result --------------------------
+
+
+@Test
+public void sizeTest() {
+    // Test case 1: Empty queue, expected result: 0
+    LinkedQueueNode<Integer> producerNode = new LinkedQueueNode<>();
+    LinkedQueueNode<Integer> consumerNode = new LinkedQueueNode<>();
+    assertEquals(size(), 0);
+
+    // Test case 2: One element in the queue, expected result: 1
+    int element1 = 5;
+    producerNode.spNext(new LinkedQueueNode<>(element1));
+    consumerNode.lvNext();
+    assertEquals(size(), 1);
+
+    // Test case 3: Two elements in the queue, expected result: 2
+    int element2 = 7;
+    producerNode.spNext(new LinkedQueueNode<>(element2));
+    assertEquals(size(), 2);
+
+    // Test case 4: Three elements in the queue, expected result: 3
+    int element3 = 9;
+    producerNode.spNext(new LinkedQueueNode<>(element3));
+    assertEquals(size(), 3);
+}
+
+

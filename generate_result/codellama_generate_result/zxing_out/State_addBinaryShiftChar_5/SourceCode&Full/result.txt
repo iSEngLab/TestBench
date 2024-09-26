@@ -1,0 +1,276 @@
+Source code: 
+
+// Create a new state representing this state, but an additional character
+// output in Binary Shift mode.
+State addBinaryShiftChar(int index) {
+  Token token = this.token;
+  int mode = this.mode;
+  int bitCount = this.bitCount;
+  if (this.mode == HighLevelEncoder.MODE_PUNCT || this.mode == HighLevelEncoder.MODE_DIGIT) {
+    int latch = HighLevelEncoder.LATCH_TABLE[mode][HighLevelEncoder.MODE_UPPER];
+    token = token.add(latch & 0xFFFF, latch >> 16);
+    bitCount += latch >> 16;
+    mode = HighLevelEncoder.MODE_UPPER;
+  }
+  int deltaBitCount =
+      (binaryShiftByteCount == 0 || binaryShiftByteCount == 31) ? 18 :
+      (binaryShiftByteCount == 62) ? 9 : 8;
+  State result = new State(token, mode, binaryShiftByteCount + 1, bitCount + deltaBitCount);
+  if (result.binaryShiftByteCount == 2047 + 31) {
+    // The string is as long as it's allowed to be.  We should end it.
+    result = result.endBinaryShift(index + 1);
+  }
+  return result;
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.google.zxing.aztec.encoder;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+public class StateTest {
+    @Test
+    public void addBinaryShiftCharTest() {
+        for (int i = 0; i <= 62; i++) {
+            assertEquals(State.calculateBinaryShiftCost(i), State.addBinaryShiftChar(i).binaryShiftCost);
+        }
+    }
+}
+    
+
+### Response: [/PROJECT]  (Exercise - Filling in the missing code)
+package com.google.zxing.aztec.encoder;
+
+public final class State {
+  
+  private static int calculateBinaryShiftCost(int binaryShiftByteCount) {
+    if (binaryShiftByteCount > 62) {
+      return 21; // B/S with extended length
+    }
+    if (binaryShiftByteCount > 31) {
+      return 20; // two B/S
+    }
+    if (binaryShiftByteCount > 0) {
+      return 10; // one B/S
+    }
+    return 0;
+  }
+  
+}
+
+
+No.2 generated result --------------------------
+
+State state = new State(null, 0, 13);
+int expectedCost = calculateBinaryShiftCost(state.binaryShiftByteCount + 1) - calculateBinaryShiftCost(state.binaryShiftByteCount);
+assertEquals(expectedCost, state.addBinaryShiftChar().bitCount - state.bitCount);
+
+
+No.3 generated result --------------------------
+
+  State state = new State(null, HighLevelEncoder.MODE_DIGIT, 0, 4);
+  for (int i = 0; i < 31; ++i) {
+    state = state.addBinaryShiftChar(i);
+  }
+  assertEquals("State{bitCount=288}", state.toString());
+  
+### Response:
+
+
+No.4 generated result --------------------------
+
+State state = new State(new Token(), HighLevelEncoder.MODE_DIGIT, 0);
+assertEquals(state.addBinaryShiftChar(2), new State(new Token().add("2", 4).addBinaryShift(31),
+                                       HighLevelEncoder.MODE_UPPER, 1));
+
+state = new State(new Token(), HighLevelEncoder.MODE_DIGIT, 0);
+assertEquals(state.addBinaryShiftChar(31), new State(new Token().add("3", 4).addBinaryShift(62),
+                                       HighLevelEncoder.MODE_UPPER, 1));
+
+state = new State(new Token(), HighLevelEncoder.MODE_DIGIT, 0);
+assertEquals(state.addBinaryShiftChar(127), new State(new Token().add("1", 4).addBinaryShift(135),
+                                       HighLevelEncoder.MODE_UPPER, 1));
+
+state = new State(new Token(), HighLevelEncoder.MODE_DIGIT, 0);
+assertEquals(state.addBinaryShiftChar(128), new State(new Token().add("1", 4).addBinaryShift(135),
+                                       HighLevelEncoder.MODE_UPPER, 1));
+    
+### JUNIT Test case:
+package com.google.zxing.aztec.encoder;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class StateTest {
+    @Test
+    public void testAddBinaryShiftChar() {
+        <FILL>
+    }
+}
+    
+
+### Response:
+
+
+No.5 generated result --------------------------
+
+State state = new State(new Token(HighLevelEncoder.MODE_UPPER, 0), HighLevelEncoder.MODE_UPPER, 0, 0);
+state = state.addBinaryShiftChar(127); // binary shift characters are added first
+assertEquals("[Upper: 127]", state.toString());
+state = state.addBinaryShiftChar(126);
+assertEquals("[Upper: 126, Upper: 127]", state.toString());
+state = state.addBinaryShiftChar(0); // B/S with extended length
+assertEquals("[Upper: 0, Upper: 126, Upper: 127, Extended_BINARY_SHIFT: 0]", state.toString());
+    
+
+
+
+No.6 generated result --------------------------
+
+    import com.google.zxing.aztec.encoder.HighLevelEncoder;
+    import java.util.*;
+    import org.junit.jupiter.api.*;
+    import static org.junit.jupiter.api.Assertions.*;
+    
+    public class StateTest {
+        @Test
+        public void addBinaryShiftCharTest() {
+            // Test case 1:
+            State state = new State(new Token(""), HighLevelEncoder.MODE_DIGIT, 0, 0);
+            int binaryShiftByteCount = 0;
+            assertEquals(state, state.addBinaryShiftChar(binaryShiftByteCount));
+    
+            // Test case 2:
+            state = new State(new Token(""), HighLevelEncoder.MODE_PUNCT, 0, 0);
+            binaryShiftByteCount = 3;
+            State expected = new State(
+                    new Token("").add(HighLevelEncoder.LATCH_TABLE[state.mode][HighLevelEncoder.MODE_UPPER], 15).add(
+                            0x1f, 8), HighLevelEncoder.MODE_PUNCT, state.binaryShiftByteCount + 2);
+            assertEquals(expected, state.addBinaryShiftChar(binaryShiftByteCount));
+    
+            // Test case 3:
+            state = new State(new Token(""), HighLevelEncoder.MODE_ALPHA, 0, 0);
+            binaryShiftByteCount = 1;
+            expected = new State(
+                    new Token().add(HighLevelEncoder.LATCH_TABLE[state.mode][HighLevelEncoder.MODE_UPPER], 16).add(0xff, 8),
+                    HighLevelEncoder.MODE_ALPHA, state.binaryShiftByteCount + 2);
+            assertEquals(expected, state.addBinaryShiftChar(binaryShiftByteCount));
+    
+            // Test case 4:
+            state = new State(new Token(""), HighLevelEncoder.MODE_DIGIT, 0, 0);
+            binaryShiftByteCount = 2;
+            expected = new State(
+                    new Token().add(HighLevelEncoder.LATCH_TABLE[state.mode][HighLevelEncoder.MODE_UPPER], 16).add(0xff, 8),
+                    HighLevelEncoder.MODE_DIGIT, state.binaryShiftByteCount + 2);
+            assertEquals(expected, state.addBinaryShiftChar(binaryShiftByteCount));
+        }
+    
+        @Test
+        public void toBitArray() {
+            // Test case 1:
+            State state = new State(new Token(""), HighLevelEncoder.MODE_DIGIT, 0, 0);
+            assertThrows(IllegalStateException.class, () -> {
+                state.toBitArray(null);
+            });
+    
+            // Test case 2:
+            String text = "abc";
+            int bitCount = 9;
+            int byteCount = 3;
+            Token[] tokens = new Token[byteCount];
+            for (int i = 0; i < byteCount - 1; i++) {
+                tokens[i] = new Token().add(HighLevelEncoder.LATCH_TABLE[state.mode][HighLevelEncoder.MODE_DIGIT], 16);
+            }
+            tokens[byteCount - 1] = new Token()
+                    .add((0xfffe & (bitCount << 1)) | (text.charAt(i) - ' ') + 1), 8);
+    
+            assertThrows(IllegalStateException.class, () -> {
+                state.toBitArray(null);
+            });
+        }
+    }
+        
+
+
+No.7 generated result --------------------------
+
+Timeout
+
+
+No.8 generated result --------------------------
+
+public State addBinaryShiftChar(int index) {
+    Token token = this.token;
+    int mode = this.mode;
+    int bitCount = this.bitCount;
+    if (this.mode == HighLevelEncoder.MODE_PUNCT || this.mode == HighLevelEncoder.MODE_DIGIT) {
+      int latch = HighLevelEncoder.LATCH_TABLE[mode][HighLevelEncoder.MODE_UPPER];
+      token = token.add(latch & 0xFFFF, latch >> 16);
+      bitCount += latch >> 16;
+      mode = HighLevelEncoder.MODE_UPPER;
+    }
+    int deltaBitCount =
+        (binaryShiftByteCount == 0 || binaryShiftByteCount == 31) ? 18 :
+        (binaryShiftByteCount == 62) ? 9 : 8;
+    State result = new State(token, mode, binaryShiftByteCount + 1, this.bitCount);
+    if (this.binaryShiftByteCount < other.binaryShiftByteCount) {
+      // add additional B/S encoding cost of other, if any
+      result.bitCount += other.binaryShiftCost - this.binaryShiftCost;
+    } else if (this.binaryShiftByteCount > other.binaryShiftByteCount && other.binaryShiftByteCount > 0) {
+      // maximum possible additional cost (we end up exceeding the 31 byte boundary and other state can stay beneath it)
+      result.bitCount += 10;
+    }
+    return result;
+}
+
+
+No.9 generated result --------------------------
+
+package com.google.zxing.aztec.encoder;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class StateTest {
+    @Test
+    public void addBinaryShiftCharTest() {
+        // Test that we can go from 0 to 254, and back
+        State state = new State(new Token(), HighLevelEncoder.MODE_PUNCT, 0);
+        for (int i = 0; i < 255; i++) {
+            assertEquals(i + 1, state.addBinaryShiftChar(i).binaryShiftByteCount);
+        }
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.google.zxing.aztec.encoder;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class StateTest {
+    @Test
+    public void addBinaryShiftCharTest() {
+        // Empty string
+        testBinaryShiftCost(0, 0);
+        // Single character
+        testBinaryShiftCost(1, 10);
+        // Two characters
+        testBinaryShiftCost(2, 18);
+        // Thirty characters
+        testBinaryShiftCost(30, 286);
+    }
+
+    private static void testBinaryShiftCost(int binaryShiftByteCount, int expectedBinaryShiftCost) {
+        State state = new State(null, 0, 0, 0);
+        assertEquals(expectedBinaryShiftCost, state.calculateBinaryShiftCost(binaryShiftByteCount));
+    }
+}
+
+

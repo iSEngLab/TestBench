@@ -1,0 +1,742 @@
+Source code: 
+
+
+@Override
+public final int size()
+{
+    // Read consumer first, this is important because if the producer is node is 'older' than the consumer
+    // the consumer may overtake it (consume past it) invalidating the 'snapshot' notion of size.
+    LinkedQueueNode<E> chaserNode = lvConsumerNode();
+    LinkedQueueNode<E> producerNode = lvProducerNode();
+    int size = 0;
+    // must chase the nodes all the way to the producer node, but there's no need to count beyond expected head.
+    while (chaserNode != producerNode && // don't go passed producer node
+        chaserNode != null && // stop at last node
+        size < Integer.MAX_VALUE) // stop at max int
+    {
+        LinkedQueueNode<E> next;
+        next = chaserNode.lvNext();
+        // check if this node has been consumed, if so return what we have
+        if (next == chaserNode)
+        {
+            return size;
+        }
+        chaserNode = next;
+        size++;
+    }
+    return size;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseLinkedQueuePad0Test {
+
+    // Assuming the existence of a 'BaseLinkedQueuePad0' class that includes the 'size' method above
+    // and a constructor. We also assume the existence of a 'LinkedQueueNode' class, and methods
+    // 'lvConsumerNode' and 'lvProducerNode' which we'll simulate with mocks or dummy implementations.
+    
+    private BaseLinkedQueuePad0<Integer> queue;
+    
+    @BeforeEach
+    public void setUp() {
+        queue = new BaseLinkedQueuePad0<>();
+    }
+    
+    @Test
+    public void sizeTest() {
+        // Assuming we can add elements
+        queue.add(1);
+        queue.add(2);
+        queue.add(3);
+        
+        // The expected size after adding three elements
+        int expectedSize = 3;
+        
+        // Assert that the size method returns the correct number
+        assertEquals(expectedSize, queue.size(), "The size method should count the number of elements in the queue.");
+        
+        // Assuming we can remove elements, and the queue has proper 'remove' functionality
+        queue.remove();
+        
+        // The expected size after removing one element
+        expectedSize = 2;
+        
+        // Assert that the size method returns the correct number after removing an element
+        assertEquals(expectedSize, queue.size(), "The size method should count the correct number of elements after removing one.");
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseLinkedQueuePad0Test {
+
+    private BaseLinkedQueuePad0<Object> queue;
+
+    @BeforeEach
+    public void setUp() {
+        queue = new BaseLinkedQueuePad0<>();
+    }
+
+    @Test
+    public void sizeTest() {
+        assertEquals(0, queue.size(), "Queue size should be 0 after initialization");
+
+        queue.offer(new Object());
+        assertEquals(1, queue.size(), "Queue size should be 1 after adding one element");
+
+        queue.offer(new Object());
+        queue.offer(new Object());
+        assertEquals(3, queue.size(), "Queue size should be 3 after adding three elements");
+
+        queue.poll();
+        assertEquals(2, queue.size(), "Queue size should be 2 after polling one element");
+
+        queue.clear();
+        assertEquals(0, queue.size(), "Queue size should be 0 after clearing the queue");
+    }
+
+    // Additional helper methods (e.g., offer, poll, clear) would be defined in the BaseLinkedQueuePad0 class.
+    // If required, simulate these operations accordingly.
+}
+
+
+No.3 generated result --------------------------
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+class LinkedQueueNode<E> {
+    private LinkedQueueNode<E> next;
+    private E value;
+    
+    // Assume methods `lvNext`, `soNext` and constructors are defined for this class.
+    public LinkedQueueNode<E> lvNext() {
+        return next;
+    }
+
+    public void soNext(LinkedQueueNode<E> n) {
+        next = n;
+    }
+}
+
+// Mock BaseLinkedQueue to expose the `size` method for testing
+class BaseLinkedQueue<E> {
+    private LinkedQueueNode<E> consumerNode;
+    private LinkedQueueNode<E> producerNode;
+    
+    public BaseLinkedQueue() {
+        LinkedQueueNode<E> node = new LinkedQueueNode<>();
+        spConsumerNode(node);
+        spProducerNode(node);
+    }
+
+    protected LinkedQueueNode<E> lvConsumerNode() {
+        return consumerNode;
+    }
+  
+    protected LinkedQueueNode<E> lvProducerNode() {
+        return producerNode;
+    }
+
+    protected void spConsumerNode(LinkedQueueNode<E> node) {
+        consumerNode = node;
+    }
+
+    protected void spProducerNode(LinkedQueueNode<E> node) {
+        producerNode = node;
+    }
+    
+    public final int size() {
+        // ... (size method as given in the original problem)
+    }
+
+    // ... (Assuming implementations of other methods exists as well)
+}
+
+public class BaseLinkedQueuePad0Test {
+
+    @Test
+    public void sizeTest() {
+        BaseLinkedQueue<Integer> queue = new BaseLinkedQueue<>();
+        assertEquals(0, queue.size(), "The size of the queue should initially be 0.");
+
+        // Simulate adding nodes
+        LinkedQueueNode<Integer> firstNode = new LinkedQueueNode<>();
+        LinkedQueueNode<Integer> secondNode = new LinkedQueueNode<>();
+        firstNode.soNext(secondNode); // link first -> second
+        queue.spProducerNode(secondNode); // producer now at second node
+
+        assertEquals(1, queue.size(), "The size of the queue should be 1 after adding one element.");
+
+        // Simulate adding another node
+        LinkedQueueNode<Integer> thirdNode = new LinkedQueueNode<>();
+        secondNode.soNext(thirdNode); // link second -> third
+        queue.spProducerNode(thirdNode); // producer now at third node
+
+        assertEquals(2, queue.size(), "The size of the queue should be 2 after adding two elements.");
+
+        // Simulate consumption of a node (making the consumer catch up)
+        queue.spConsumerNode(secondNode); // consumer now at second node
+
+        assertEquals(1, queue.size(), "The size should be 1 after consuming one element.");
+
+        // Test for edge case if consumerNode reaches producerNode
+        queue.spConsumerNode(thirdNode); // consumer now at third node (equal to producer)
+
+        assertEquals(0, queue.size(), "The size should be 0 when consumer node equals producer node.");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseLinkedQueuePad0Test {
+
+    private BaseLinkedQueuePad0<Integer> queue;
+
+    @BeforeEach
+    public void setUp() {
+        // Assuming a constructor exists for the queue.
+        queue = new BaseLinkedQueuePad0<>();
+    }
+
+    @Test
+    public void sizeTestEmpty() {
+        // Test the size of the queue when it's empty.
+        assertEquals(0, queue.size());
+    }
+
+    @Test
+    public void sizeTestOneElement() {
+        // Assuming a method to add elements to the queue.
+        queue.offer(1);
+        assertEquals(1, queue.size());
+    }
+
+    @Test
+    public void sizeTestMultipleElements() {
+        // Assuming a method to add elements to the queue.
+        queue.offer(1);
+        queue.offer(2);
+        queue.offer(3);
+        assertEquals(3, queue.size());
+    }
+
+    @Test
+    public void sizeTestAtMaxInt() {
+        // This is a theoretical test that could be used if the queue could be huge. 
+        // In practice, this test isn't feasible because it requires Integer.MAX_VALUE elements.
+        // However, you could mock the internal state of the queue nodes to mimic such a scenario.
+        // This test serves as an example and is not actually practical to run.
+        // queue = a mocked queue with Integer.MAX_VALUE elements
+        // assertEquals(Integer.MAX_VALUE, queue.size());
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseLinkedQueuePad0Test {
+
+    private static class TestQueue<E> extends BaseLinkedQueuePad0<E> {
+        // A simple stub for BaseLinkedQueuePad0
+        // Override lvConsumerNode and lvProducerNode to return controlled nodes for testing
+        
+        private LinkedQueueNode<E> stubConsumerNode;
+        private LinkedQueueNode<E> stubProducerNode;
+
+        public void setStubConsumerNode(LinkedQueueNode<E> node) {
+            this.stubConsumerNode = node;
+        }
+
+        public void setStubProducerNode(LinkedQueueNode<E> node) {
+            this.stubProducerNode = node;
+        }
+
+        @Override
+        protected LinkedQueueNode<E> lvConsumerNode() {
+            return stubConsumerNode;
+        }
+
+        @Override
+        protected LinkedQueueNode<E> lvProducerNode() {
+            return stubProducerNode;
+        }
+    }
+
+    private TestQueue<Integer> queue;
+    private LinkedQueueNode<Integer> node1;
+    private LinkedQueueNode<Integer> node2;
+    private LinkedQueueNode<Integer> node3;
+
+    @BeforeEach
+    void setUp() {
+        queue = new TestQueue<>();
+        node1 = new LinkedQueueNode<>();
+        node2 = new LinkedQueueNode<>();
+        node3 = new LinkedQueueNode<>();
+        
+        node1.soNext(node2); // node1.next = node2
+        node2.soNext(node3); // node2.next = node3
+    }
+
+    @Test
+    public void sizeTest() {
+        // Test for a queue with nodes
+        
+        // Arrange the stub nodes
+        queue.setStubConsumerNode(node1);
+        queue.setStubProducerNode(node3);
+
+        // Act
+        int size = queue.size();
+
+        // Assert
+        assertEquals(2, size, "Queue should have a size of 2");
+
+        // Test for an empty queue
+        queue.setStubConsumerNode(node3);
+        queue.setStubProducerNode(node3);
+
+        // Act
+        size = queue.size();
+
+        // Assert
+        assertEquals(0, size, "Queue should be empty");
+        
+        // Test for a queue with MAX_INT size limitation
+        queue.setStubConsumerNode(node1);
+        queue.setStubProducerNode(new LinkedQueueNode<>()){
+            @Override 
+            public LinkedQueueNode<Integer> lvNext() {
+                // Make it look like a huge list
+                return new LinkedQueueNode<>();
+            }
+        };
+
+        // Act
+        size = queue.size();
+
+        // Assert that size returned is MAX_INT
+        assertEquals(Integer.MAX_VALUE, size, "Queue size should be limited to Integer.MAX_VALUE");
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseLinkedQueuePad0Test {
+
+    private BaseLinkedQueue<Integer> queue;
+
+    @BeforeEach
+    public void setUp() {
+        // Assuming BaseLinkedQueue is the class that contains the size method.
+        queue = new BaseLinkedQueue<>();
+    }
+
+    @Test
+    public void sizeTest() {
+        assertTrue(queue.isEmpty(), "New queue should be empty.");
+        assertEquals(0, queue.size(), "New queue size should be 0.");
+        
+        queue.offer(1);
+        assertEquals(1, queue.size(), "Queue size should be 1 after offering one element.");
+        
+        queue.offer(2);
+        assertEquals(2, queue.size(), "Queue size should increase to 2 after offering another element.");
+        
+        queue.poll(); // Assuming poll method removes the element
+        assertEquals(1, queue.size(), "Queue size should decrease to 1 after polling one element.");
+        
+        queue.clear(); // Assuming clear method is present to empty the queue
+        assertEquals(0, queue.size(), "Queue size should be 0 after clearing.");
+    }
+    
+    @Test
+    public void sizeBoundaryTest() {
+        // Fill the queue to the boundary condition
+        for (int i = 0; i < Integer.MAX_VALUE; i++) {
+            // Might need to control the memory usage, as adding MAX_VALUE elements is impractical
+            queue.offer(i);
+        }
+        assertEquals(Integer.MAX_VALUE, queue.size(), "Queue size should be Integer.MAX_VALUE at boundary.");
+    }
+    
+    // Add more tests as needed to cover edge cases like concurrent modifications,
+    // size calculation correctness when elements are added and removed in parallel, etc.
+
+    @AfterEach
+    public void tearDown() {
+        queue = null;
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+class LinkedQueueNode<E> {
+    private LinkedQueueNode<E> next;
+    private E value;
+
+    public LinkedQueueNode(E value) {
+        this.value = value;
+    }
+
+    public LinkedQueueNode<E> lvNext() {
+        return this.next;
+    }
+
+    public void soNext(LinkedQueueNode<E> n) {
+        this.next = n;
+    }
+}
+
+class BaseLinkedQueuePad0<E> {
+    private LinkedQueueNode<E> consumerNode;
+    private LinkedQueueNode<E> producerNode;
+
+    public BaseLinkedQueuePad0() {
+        this.consumerNode = new LinkedQueueNode<>(null);
+        this.producerNode = this.consumerNode;
+    }
+
+    public void offer(E value) {
+        LinkedQueueNode<E> newNode = new LinkedQueueNode<>(value);
+        producerNode.soNext(newNode);
+        producerNode = newNode;
+    }
+
+    public final int size() {
+        LinkedQueueNode<E> chaserNode = lvConsumerNode();
+        LinkedQueueNode<E> producerNode = lvProducerNode();
+        int size = 0;
+        while (chaserNode != producerNode &&
+               chaserNode != null &&
+               size < Integer.MAX_VALUE) {
+            LinkedQueueNode<E> next;
+            next = chaserNode.lvNext();
+            if (next == chaserNode) {
+                return size;
+            }
+            chaserNode = next;
+            size++;
+        }
+        return size;
+    }
+
+    public LinkedQueueNode<E> lvConsumerNode() {
+        return this.consumerNode;
+    }
+
+    public LinkedQueueNode<E> lvProducerNode() {
+        return this.producerNode;
+    }
+}
+
+public class BaseLinkedQueuePad0Test {
+    @Test
+    public void sizeTest() {
+        BaseLinkedQueuePad0<Integer> queue = new BaseLinkedQueuePad0<>();
+        assertEquals(0, queue.size(), "Initial queue size must be 0.");
+
+        queue.offer(1);
+        assertEquals(1, queue.size(), "Queue size after offering one element must be 1.");
+
+        queue.offer(2);
+        assertEquals(2, queue.size(), "Queue size after offering two elements must be 2.");
+
+        queue.offer(3);
+        assertEquals(3, queue.size(), "Queue size after offering three elements must be 3.");
+  
+        for (int i = 4; i <= 10; i++) {
+            queue.offer(i);
+        }
+        assertEquals(10, queue.size(), "Queue size after offering ten elements must be 10.");
+    }
+}
+
+
+No.8 generated result --------------------------
+
+// Pseudo mock-up of required classes
+class LinkedQueueNode<E> {
+    private LinkedQueueNode<E> next;
+    private E value;
+
+    public LinkedQueueNode(E value) {
+        this.next = null; // New nodes are not linked
+        this.value = value;
+    }
+
+    public void setNext(LinkedQueueNode<E> next) {
+        this.next = next;
+    }
+
+    public LinkedQueueNode<E> lvNext() { // "lv" might stand for "load volatile" in a concurrent setting
+        return next;
+    }
+}
+
+class BaseLinkedQueuePad0<E> { // Assuming BaseLinkedQueuePad0 should have this structure
+    private LinkedQueueNode<E> consumerNode;
+    private LinkedQueueNode<E> producerNode;
+
+    public BaseLinkedQueuePad0() {
+        this.producerNode = new LinkedQueueNode<E>(null); // Dummy node
+        this.consumerNode = this.producerNode;
+    }
+
+    public void append(E element) {
+        LinkedQueueNode<E> newNode = new LinkedQueueNode<>(element);
+        this.producerNode.setNext(newNode);
+        this.producerNode = newNode;
+    }
+
+    @Override
+    public final int size() {
+        LinkedQueueNode<E> chaserNode = consumerNode;
+        int size = 0;
+        while (chaserNode != producerNode && chaserNode != null && size < Integer.MAX_VALUE) {
+            LinkedQueueNode<E> next = chaserNode.lvNext();
+            if (next == chaserNode) {
+                return size;
+            }
+            chaserNode = next;
+            size++;
+        }
+        return size;
+    }
+
+    // Helper methods to simulate internal state changes for the test
+    protected LinkedQueueNode<E> lvConsumerNode() {
+        return consumerNode;
+    }
+
+    protected LinkedQueueNode<E> lvProducerNode() {
+        return producerNode;
+    }
+}
+
+// JUNIT Test case:
+package org.jctools.queues;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseLinkedQueuePad0Test {
+
+    @Test
+    public void sizeTest() {
+        BaseLinkedQueuePad0<Integer> queue = new BaseLinkedQueuePad0<>();
+
+        // Initially the size should be zero
+        assertEquals(0, queue.size(), "Empty queue should have size 0");
+
+        // Add items to the queue
+        queue.append(1);
+        assertEquals(1, queue.size(), "Queue with one item should have size 1");
+
+        queue.append(2);
+        assertEquals(2, queue.size(), "Queue with two items should have size 2");
+
+        // Simulate the consumer consuming an item
+        queue.lvConsumerNode().setNext(queue.lvConsumerNode().lvNext());
+        assertEquals(1, queue.size(), "Queue after consuming one item should have size 1");
+
+        // Continue adding items
+        queue.append(3);
+        queue.append(4);
+        assertEquals(3, queue.size(), "Queue should have size 3 after adding two more items");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseLinkedQueuePad0Test {
+    @Test
+    public void sizeTest() {
+        BaseLinkedQueue<Integer> queue = new BaseLinkedQueue<>();
+        assertTrue(queue.size() == 0, "Queue should be initially empty");
+
+        queue.offer(1);
+        queue.offer(2);
+        queue.offer(3);
+
+        assertEquals(3, queue.size(), "Queue size should be 3 after adding three elements");
+
+        queue.lvConsumerNode(); // Assuming this mimics consuming an element
+        assertEquals(2, queue.size(), "Queue size should be 2 after consuming one element");
+
+        queue.offer(4);
+        assertEquals(3, queue.size(), "Queue size should be 3 after adding another element");
+        
+        // Test up to max integer values
+        for (int i = 0; i < Integer.MAX_VALUE - 3; i++) {
+            if (!queue.offer(i)) {
+                break;
+            }
+        }
+        assertEquals(Integer.MAX_VALUE, queue.size(), "Queue size should be Integer.MAX_VALUE");
+    }
+}
+
+class BaseLinkedQueue<E> {
+    // Assume this is a simplified version of the actual queue class with necessary methods.
+    private LinkedQueueNode<E> consumerNode;
+    private LinkedQueueNode<E> producerNode;
+
+    public BaseLinkedQueue() {
+        // Initialize consumerNode and producerNode
+    }
+    
+    public boolean offer(E element) {
+        // Simplified logic to add an element
+        return true;
+    }
+    
+    public void lvConsumerNode() {
+        // Simulate consuming an element
+    }
+    
+    public int size() {
+        // Size calculation as per JAVA Source Code provided
+        return 0; // Placeholder return value
+    }
+}
+
+class LinkedQueueNode<E> {
+    private E value;
+    private LinkedQueueNode<E> next;
+    
+    public LinkedQueueNode(E value) {
+        this.value = value;
+    }
+    
+    public void setNext(LinkedQueueNode<E> next) {
+        this.next = next;
+    }
+    
+    public LinkedQueueNode<E> lvNext() {
+        return this.next;
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseLinkedQueuePad0Test {
+
+    BaseLinkedQueue<Integer> queue;
+
+    @BeforeEach
+    public void setUp() {
+        queue = new BaseLinkedQueue<>();
+    }
+
+    @Test
+    public void sizeTestWhenEmpty() {
+        assertEquals(0, queue.size(), "Size should be 0 when the queue is empty");
+    }
+
+    @Test
+    public void sizeTestWithOneElement() {
+        queue.offer(1);
+        assertEquals(1, queue.size(), "Size should be 1 when the queue has one element");
+    }
+
+    @Test
+    public void sizeTestWithMultipleElements() {
+        for (int i = 0; i < 5; i++) {
+            queue.offer(i);
+        }
+        assertEquals(5, queue.size(), "Size should be 5 when the queue has five elements");
+    }
+
+    @Test
+    public void sizeTestAtCapacity() {
+        for (int i = 0; i < Integer.MAX_VALUE; i++) {
+            if (!queue.offer(i)) {
+                break;
+            }
+        }
+        int size = queue.size();
+        assertTrue(size <= Integer.MAX_VALUE, "Size should be at most MAX_VALUE");
+    }
+
+    // Assuming the BaseLinkedQueue is the class where the size() method is implemented.
+    // We would need to implement or mock the lvConsumerNode() and lvProducerNode() methods.
+    private class BaseLinkedQueue<E> {
+        LinkedQueueNode<E> lvConsumerNode() {
+            // Implementation or Mock
+            return null; // Placeholder to satisfy compilation
+        }
+
+        LinkedQueueNode<E> lvProducerNode() {
+            // Implementation or Mock
+            return null; // Placeholder to satisfy compilation
+        }
+
+        public boolean offer(E item) {
+            // Implementation or Mock
+            return false; // Placeholder to satisfy compilation
+        }
+
+        // size() method implementation from the provided source code goes here.
+    }
+
+    private class LinkedQueueNode<E> {
+        LinkedQueueNode<E> lvNext() {
+            // Implementation or Mock
+            return null; // Placeholder to satisfy compilation
+        }
+    }
+}
+
+

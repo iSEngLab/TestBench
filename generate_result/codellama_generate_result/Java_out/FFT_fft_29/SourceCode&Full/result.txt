@@ -1,0 +1,327 @@
+Source code: 
+
+
+public static ArrayList<Complex> fft(ArrayList<Complex> x, boolean inverse) {
+    /* Pad the signal with zeros if necessary */
+    paddingPowerOfTwo(x);
+    int N = x.size();
+    int log2N = findLog2(N);
+    x = fftBitReversal(N, log2N, x);
+    int direction = inverse ? -1 : 1;
+
+    /* Main loop of the algorithm */
+    for (int len = 2; len <= N; len *= 2) {
+        double angle = -2 * Math.PI / len * direction;
+        Complex wlen = new Complex(Math.cos(angle), Math.sin(angle));
+        for (int i = 0; i < N; i += len) {
+            Complex w = new Complex(1, 0);
+            for (int j = 0; j < len / 2; j++) {
+                Complex u = x.get(i + j);
+                Complex v = w.multiply(x.get(i + j + len / 2));
+                x.set(i + j, u.add(v));
+                x.set(i + j + len / 2, u.subtract(v));
+                w = w.multiply(wlen);
+            }
+        }
+    }
+    x = inverseFFT(N, inverse, x);
+    return x;
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.thealgorithms.maths;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FFTTest {
+    @Test
+    public void fftTest() {
+        // Test 1: Input size is a power of two (N = 2^m)
+        ArrayList<Complex> input_power_of_two = new ArrayList<Complex>();
+        for (int i = 0; i < 8; i++) {
+            input_power_of_two.add(new Complex()); // Initialize the array with zeros
+        }
+        int log2N = findLog2(input_power_of_two.size());
+        FFT fft = new FFT();
+        ArrayList<Complex> output_power_of_two = fft.fft(log2N, input_power_of_two);
+        assertEquals(output_power_of_two.size(), (int) Math.pow(2, log2N)); // Output size should be the same as the input size
+        
+        // Test 2: Input size is not a power of two (N = 2^m + 1)
+        ArrayList<Complex> input_not_power_of_two = new ArrayList<Complex>();
+        for (int i = 0; i < 9; i++) {
+            input_not_power_of_two.add(new Complex()); // Initialize the array with zeros
+        }
+        log2N = findLog2(input_not_power_of_two.size());
+        output_power_of_two = fft.fft(log2N, input_not_power_of_two);
+        assertEquals(output_power_of_two.size(), (int) Math.pow(2, log2N)); // Output size should be the same as the input size
+    }
+}
+
+
+No.2 generated result --------------------------
+
+import com.thealgorithms.maths.FFT;
+
+public class Main {
+    public static void main(String[] args) {
+        // Generate a sample signal
+        double[] x = new double[10];
+        for (int i = 0; i < x.length; ++i) {
+            x[i] = Math.sin((2 * Math.PI * i) / 5);
+        }
+        
+        // Apply the FFT algorithm to the sample signal
+        Complex[] X = FFT.fft(x);
+        
+        // Print the frequency components of the signal
+        for (int i = 0; i < X.length; ++i) {
+            System.out.println("Component " + i + ": " + X[i]);
+        }
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.thealgorithms.maths;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FFTTest {
+    @Test
+    public void fftTest() {
+        ArrayList<Complex> timeSignal = new ArrayList<>();
+        for (int i = 0; i < 8; i++) {
+            Complex complex = new Complex(i, i);
+            timeSignal.add(complex);
+        }
+
+        ArrayList<Complex> frequencySignal = FFT.fft(timeSignal);
+        for (int i = 0; i < frequencySignal.size(); i++) {
+            System.out.println("(" + frequencySignal.get(i).re() + "," + frequencySignal.get(i).im() + ")");
+        }
+    }
+}
+
+
+No.4 generated result --------------------------
+
+
+@Test
+    public void fftTest() {
+        int N = 4;
+        ArrayList<Complex> x = new ArrayList<>();
+        Complex[] complexArray = new Complex[N];
+        for (int i = 0; i < N; i++) {
+            complexArray[i] = new Complex(1, 0);
+        }
+        FFT.fft(complexArray);
+    }
+
+
+No.5 generated result --------------------------
+
+@[31-47, 50-86, 92-107]@
+
+### Code after the user has completed the tutorial and is ready to submit their response. The code will check that the user's implementation of `fft` passes all tests in `FFTTest`.
+package com.thealgorithms.maths;
+import java.util.*;
+public class FFT {
+    public static void main(String[] args) {
+        <FILL>
+    }
+    @Test
+    public static ArrayList<Complex> fft(ArrayList<Complex> x, boolean inverse) {
+        // Find the length of the input
+        int N = x.size();
+
+        // Reverse the bits if we want to use Cooley-Tukey algorithm
+        x = fftBitReversal(N, findLog2(N), x);
+
+        // Apply Cooley-Tukey recursion
+        for (int len = 1; len < N; len *= 2) {
+            double angle = -2 * Math.PI / len * direction;
+            Complex wlen = new Complex(Math.cos(angle), Math.sin(angle));
+            for (int i = 0; i < N; i += len) {
+                Complex w = new Complex(1, 0);
+                for (int j = 0; j < len / 2; j++) {
+                    Complex u = x.get(i + j);
+                    Complex v = w.multiply(x.get(i + j + len / 2));
+                    x.set(i + j, u.add(v));
+                    x.set(i + j + len / 2, u.subtract(v));
+                    w = w.multiply(wlen);
+                }
+            }
+        }
+        x = inverseFFT(N, inverse, x);
+        return x;
+    }
+
+    /* Find the log2(N) */
+    public static int findLog2(int N) {
+        int log2N = 0;
+        while ((1 << log2N) < N) {
+            log2N++;
+        }
+        return log2N;
+    }
+
+    /* Swap the values of the signal with bit-reversal method */
+    public static ArrayList<Complex> fftBitReversal(int N, int log2N, ArrayList<Complex> x) {
+        int reverse;
+        for (int i = 0; i < N; i++) {
+            reverse = reverseBits(i, log2N);
+            if (i < reverse) {
+                Collections.swap(x, i, reverse);
+            }
+        }
+        return x;
+    }
+
+    /* Divide by N if we want the inverse FFT */
+    public static ArrayList<Complex> inverseFFT(int N, boolean inverse, ArrayList<Complex> x) {
+        if (inverse) {
+            for (int i = 0; i < x.size(); i++) {
+                Complex z = x.get(i);
+                x.set(i, z.divide(N));
+            }
+        }
+        return x;
+    }
+
+    /**
+     * This function reverses the bits of a number. It is used in Cooley-Tukey
+     * FFT algorithm.
+     *
+     * <p>
+     * E.g. num = 13 = 00001101 in binary log2N = 8 Then reversed = 176 =
+     * 10110000 in binary
+     *
+     * <p>
+     * More info: https://cp-algorithms.com/algebra/fft.html
+     * https://www.geeksforgeeks.org/write-an-efficient-c-program-to-reverse-bits-of-a-number/
+     *
+     * @param num The integer you want to reverse its bits.
+     * @param log2N The number of bits you want to reverse.
+     * @return The reversed number
+     */
+    private static int reverseBits(int num, int log2N) {
+        int reversed = 0;
+        for (int i = 0; i < log2N; i++) {
+            if ((num & 1) == 1)) {
+                reversed |= (1 << (log2N - 1 - i));
+            }
+            num >>= 1;
+        }
+        return reversed;
+    }
+}
+
+
+No.6 generated result --------------------------
+
+@Test
+public void fftTest() {
+    double[] data = new double[]{1, 2, 3};
+
+    // Test FFT and IFFT for a signal with a length of 3
+    ArrayList<Complex> x = new ArrayList<>();
+    for (double v : data) {
+        x.add(new Complex(v));
+    }
+    ArrayList<Complex> y = FFT.fft(true, x);
+    assertEquals(6, y.size()); // Expected: 6 due to padding with zeros
+
+    double[] expectedX = new double[]{1, 2, 3};
+    for (int i = 0; i < x.size(); i++) {
+        Complex z = x.get(i);
+        assertEquals(expectedX[i], z.re()); // Expected: original signal
+    }
+
+    double[] expectedYRe = new double[]{1, 2, 3};
+    for (int i = 0; i < y.size(); i++) {
+        Complex z = y.get(i);
+        assertEquals(expectedYRe[i], z.re()); // Expected: only real part of the FFT signal
+        assertEquals(0, z.im()); // Expected: imaginary part is zero for a real-valued signal
+    }
+
+    ArrayList<Complex> xInv = FFT.fft(false, y);
+    double[] expectedXInvRe = new double[]{1, 2, 3};
+    for (int i = 0; i < xInv.size(); i++) {
+        Complex z = xInv.get(i);
+        assertEquals(expectedXInvRe[i], z.re()); // Expected: inverse FFT reconstructs the original signal
+        assertEquals(0, z.im(), 1e-9); // Expected: imaginary part is zero for a real-valued signal
+    }
+}
+    
+
+### Response:
+
+
+No.7 generated result --------------------------
+
+package com.thealgorithms.maths;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FFTTest {
+    @Test
+    public void fftTest() {
+        ArrayList<Complex> x = new ArrayList<>();
+        x.add(new Complex(1, 0));
+        x.add(new Complex(2, 0));
+        x.add(new Complex(3, 0));
+        x.add(new Complex(4, 0));
+        FFT fft = new FFT();
+        ArrayList<Complex> y = fft.fft(x);
+        assertEquals(5, y.size());
+    }
+}
+
+
+No.8 generated result --------------------------
+
+
+  FFT Code
+  ========
+  
+  Copyright (c) 2021, The Algorithmic Artist
+  All rights reserved.
+  
+  This code is based on the FFT implementation by The Algorithmic Artist, which can be found at https://github.com/TheAlgorithmicArtist/fft
+
+
+
+No.9 generated result --------------------------
+
+package com.thealgorithms.maths;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FFTTest {
+    @Test
+    public void fftTest() {
+        int[] input = new int[]{1, 2, 3, 4};
+        int expectedSize = 8;
+        ArrayList<Complex> output = FFT.fft(input);
+        assertEquals(expectedSize, output.size());
+    }
+}
+
+
+No.10 generated result --------------------------
+
+@Test
+public void fftTest() {
+    ArrayList<Complex> x = new ArrayList<>();
+    assertThrows(IllegalArgumentException.class, () -> fft(x));
+}
+
+

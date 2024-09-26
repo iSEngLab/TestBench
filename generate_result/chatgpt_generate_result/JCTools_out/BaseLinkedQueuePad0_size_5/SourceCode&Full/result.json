@@ -1,0 +1,24 @@
+{
+    "project_name": "JCTools",
+    "file_name": "BaseLinkedQueue.java",
+    "relative_path": "JCTools/jctools-core/src/main/java/org/jctools/queues/BaseLinkedQueue.java",
+    "execute_path": "JCTools",
+    "package": "org.jctools.queues",
+    "docstring": "/**\n     * {@inheritDoc} <br>\n     * <p>\n     * IMPLEMENTATION NOTES:<br>\n     * This is an O(n) operation as we run through all the nodes and count them.<br>\n     * The accuracy of the value returned by this method is subject to races with producer/consumer threads. In\n     * particular when racing with the consumer thread this method may under estimate the size.<br>\n     *\n     * @see java.util.Queue#size()\n     */",
+    "source_code": "\n@Override\npublic final int size()\n{\n    // Read consumer first, this is important because if the producer is node is 'older' than the consumer\n    // the consumer may overtake it (consume past it) invalidating the 'snapshot' notion of size.\n    LinkedQueueNode<E> chaserNode = lvConsumerNode();\n    LinkedQueueNode<E> producerNode = lvProducerNode();\n    int size = 0;\n    // must chase the nodes all the way to the producer node, but there's no need to count beyond expected head.\n    while (chaserNode != producerNode && // don't go passed producer node\n        chaserNode != null && // stop at last node\n        size < Integer.MAX_VALUE) // stop at max int\n    {\n        LinkedQueueNode<E> next;\n        next = chaserNode.lvNext();\n        // check if this node has been consumed, if so return what we have\n        if (next == chaserNode)\n        {\n            return size;\n        }\n        chaserNode = next;\n        size++;\n    }\n    return size;\n}\n",
+    "class_name": "BaseLinkedQueuePad0",
+    "method_name": "size",
+    "arguments": [],
+    "generate_test": [
+        "\n@Test\npublic void sizeTest() {\n    BaseLinkedQueuePad0<String> queue = new BaseLinkedQueuePad0<>();\n    int expected = 0;\n    int actual = queue.size();\n    assertEquals(expected, actual);\n}\n",
+        "LinkedQueueNode<Integer> node = new LinkedQueueNode<>();\nnode.setRaw(123);\nLinkedQueueNode<Integer> node2 = new LinkedQueueNode<>();\nnode.soNext(node2);\nBaseLinkedQueue<Integer> queue = new BaseLinkedQueue<Integer>() {\n    public Iterator<Integer> iterator()\n    {\n        return null;\n    }\n    public int capacity()\n    {\n        return 0;\n    }\n};\nqueue.spConsumerNode(node);\nqueue.spProducerNode(node2);\nassertEquals(1, queue.size());",
+        "BaseLinkedQueuePad0<Integer> queue = new BaseLinkedQueuePad0<Integer>() {\n    public int size()\n    {\n        return super.size();\n    }\n};\nint size = queue.size();\nassertEquals(0, size);",
+        "import org.junit.jupiter.api.Test;\nimport static org.junit.jupiter.api.Assertions.*;\n\npublic class BaseLinkedQueuePad0Test {\n    @Test\n    public void sizeTest() {\n        BaseLinkedQueue<Integer> queue = new BaseLinkedQueue<Integer>() {};\n        int size = queue.size();\n        assertEquals(0, size);\n    }\n}",
+        "@Test\npublic void sizeTest() {\n    // Create a BaseLinkedQueuePad0 object\n    BaseLinkedQueuePad0<Object> queue = new BaseLinkedQueuePad0<Object>() {\n        @Override\n        public int size() {\n            return super.size();\n        }\n    };\n    // Perform the unit test\n    int size = queue.size();\n    assertTrue(size >= 0);\n}",
+        "BaseLinkedQueuePad0<String> queue = new BaseLinkedQueuePad0<>();\nint size = queue.size();\nassertEquals(0, size);",
+        "// Given\nBaseLinkedQueuePad0<Integer> queue = new BaseLinkedQueuePad0<>();\n\n// When\nint size = queue.size();\n\n// Then\nassertEquals(0, size);",
+        "@Test\npublic void sizeTest() {\n    BaseLinkedQueuePad0<String> queue = new BaseLinkedQueuePad0<>();\n    int expectedSize = 0; // add expected size here\n    int actualSize = queue.size();\n    assertEquals(expectedSize, actualSize);\n}",
+        "// initialize the BaseLinkedQueuePad0 instance for testing\nBaseLinkedQueuePad0<Object> queue = new BaseLinkedQueuePad0<Object>() {\n    // Override any abstract methods if necessary\n};\n\n// Add elements to the queue for testing\n// ...\n\n// Perform the size test\nint expectedSize = 3; // Replace with the expected size based on the elements added\nint actualSize = queue.size();\nassertEquals(expectedSize, actualSize);",
+        "assertEquals(0, queue.size());"
+    ]
+}

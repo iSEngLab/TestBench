@@ -1,0 +1,645 @@
+Source code: 
+
+
+public synchronized String update(RouteDefinition definition) {
+    try {
+        log.info("gateway update route {}", definition);
+    } catch (Exception e) {
+        return "update fail,not find route  routeId: " + definition.getId();
+    }
+    try {
+        repository.save(Mono.just(definition)).subscribe();
+        this.publisher.publishEvent(new RefreshRoutesEvent(this));
+        return "success";
+    } catch (Exception e) {
+        return "update route fail";
+    }
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jeecg.loader.repository;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import org.springframework.cloud.gateway.route.RouteDefinition;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.cloud.gateway.event.RefreshRoutesEvent;
+
+public class DynamicRouteServiceTest {
+
+    private MyInMemoryRouteDefinitionRepository repository;
+    private ApplicationEventPublisher publisher;
+    private DynamicRouteService dynamicRouteService;
+    private RouteDefinition routeDefinition;
+
+    @BeforeEach
+    public void setUp() {
+        repository = mock(MyInMemoryRouteDefinitionRepository.class);
+        publisher = mock(ApplicationEventPublisher.class);
+        dynamicRouteService = new DynamicRouteService();
+        dynamicRouteService.setApplicationEventPublisher(publisher);
+        dynamicRouteService.setRepository(repository);
+        
+        // Create a mock RouteDefinition for testing
+        routeDefinition = new RouteDefinition();
+        routeDefinition.setId("test-route");
+    }
+
+    @Test
+    public void updateTest() {
+        // Assume the repository and event publishing operations succeed
+        when(repository.save(any())).thenReturn(Mono.empty());
+        doNothing().when(publisher).publishEvent(any(RefreshRoutesEvent.class));
+
+        String result = dynamicRouteService.update(routeDefinition);
+
+        // Verify the interactions
+        verify(repository).save(Mono.just(routeDefinition));
+        verify(publisher).publishEvent(any(RefreshRoutesEvent.class));
+
+        // Check that the string "success" is returned on a successful update
+        assertEquals("success", result);
+    }
+
+    @Test
+    public void updateTestWhenRouteNotFound() {
+        // Throw an exception when trying to update a route that doesn't exist
+        when(repository.save(any())).thenThrow(new RuntimeException("Route not found"));
+
+        String result = dynamicRouteService.update(routeDefinition);
+
+        // Verify that an exception was thrown during repository.save
+        verify(repository).save(Mono.just(routeDefinition));
+
+        // Since an exception was thrown, the result should indicate the failure to update
+        assertEquals("update fail,not find route  routeId: " + routeDefinition.getId(), result);
+    }
+
+    @Test
+    public void updateTestWhenPublishEventFails() {
+        // Assume repository operation succeeds but event publishing fails
+        when(repository.save(any())).thenReturn(Mono.empty());
+        doThrow(new RuntimeException("Event publishing failed")).when(publisher).publishEvent(any(RefreshRoutesEvent.class));
+
+        String result = dynamicRouteService.update(routeDefinition);
+
+        // Verify the interactions
+        verify(repository).save(Mono.just(routeDefinition));
+        verify(publisher).publishEvent(any(RefreshRoutesEvent.class));
+
+        // Check that the string asserts update publish event failed
+        assertEquals("update route fail", result);
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jeecg.loader.repository;
+
+import org.junit.jupiter.api.*;
+import org.mockito.*;
+import org.springframework.cloud.gateway.event.RefreshRoutesEvent;
+import org.springframework.cloud.gateway.route.RouteDefinition;
+import reactor.core.publisher.Mono;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DynamicRouteServiceTest {
+
+  @Mock
+  private MyInMemoryRouteDefinitionRepository repository;
+
+  @Mock
+  private ApplicationEventPublisher publisher;
+
+  @InjectMocks
+  private DynamicRouteService dynamicRouteService;
+
+  @BeforeEach
+  public void setUp() {
+    MockitoAnnotations.openMocks(this);
+  }
+
+  @Test
+  public void updateTest() {
+    // Arrange
+    RouteDefinition definition = new RouteDefinition();
+    definition.setId("test-route");
+    when(repository.save(any(Mono.class))).thenReturn(Mono.empty());
+
+    // Act
+    String updateResult = dynamicRouteService.update(definition);
+
+    // Assert
+    assertEquals("success", updateResult);
+    verify(repository).save(any(Mono.class));
+    verify(publisher).publishEvent(any(RefreshRoutesEvent.class));
+  }
+
+  @Test
+  public void updateTest_Failure() {
+    // Arrange
+    RouteDefinition definition = new RouteDefinition();
+    definition.setId("test-route");
+    when(repository.save(any(Mono.class))).thenThrow(new RuntimeException("Database exception"));
+
+    // Act
+    String updateResult = dynamicRouteService.update(definition);
+
+    // Assert
+    assertEquals("update route fail", updateResult);
+    verify(repository).save(any(Mono.class)); // repo.save(...) should still be called
+    verify(publisher, never()).publishEvent(any(RefreshRoutesEvent.class));
+  }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jeecg.loader.repository;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import org.springframework.cloud.gateway.route.RouteDefinition;
+import org.springframework.context.ApplicationEventPublisher;
+import reactor.core.publisher.Mono;
+
+public class DynamicRouteServiceTest {
+
+    private DynamicRouteService dynamicRouteService;
+    private MyInMemoryRouteDefinitionRepository repository;
+    private ApplicationEventPublisher publisher;
+    private RouteDefinition definition;
+
+    @BeforeEach
+    void setUp() {
+        repository = mock(MyInMemoryRouteDefinitionRepository.class);
+        publisher = mock(ApplicationEventPublisher.class);
+        dynamicRouteService = new DynamicRouteService();
+        dynamicRouteService.setApplicationEventPublisher(publisher);
+        dynamicRouteService.setRepository(repository);
+        definition = mock(RouteDefinition.class);
+        when(definition.getId()).thenReturn("testRouteId");
+    }
+
+    @Test
+    public void updateTest() {
+        // success scenario
+        doNothing().when(repository).save(Mono.just(definition));
+        doNothing().when(publisher).publishEvent(any(RefreshRoutesEvent.class));
+        
+        String updateResult = dynamicRouteService.update(definition);
+        assertEquals("success", updateResult);
+        
+        // repository update failure scenario
+        doThrow(new RuntimeException()).when(repository).save(Mono.just(definition));
+        
+        updateResult = dynamicRouteService.update(definition);
+        assertEquals("update route fail", updateResult);
+        
+        // invalid route scenario
+        when(definition.getId()).thenReturn(null);
+        updateResult = dynamicRouteService.update(definition);
+        assertTrue(updateResult.startsWith("update fail,not find route  routeId:"));
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jeecg.loader.repository;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.cloud.gateway.event.RefreshRoutesEvent;
+import org.springframework.cloud.gateway.route.RouteDefinition;
+import reactor.core.publisher.Mono;
+
+public class DynamicRouteServiceTest {
+
+    @InjectMocks
+    private DynamicRouteService dynamicRouteService;
+
+    @Mock
+    private MyInMemoryRouteDefinitionRepository repository;
+
+    @Mock
+    private ApplicationEventPublisher publisher;
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    public void updateTestSuccess() {
+        // Arrange
+        RouteDefinition routeDefinition = new RouteDefinition();
+        routeDefinition.setId("test-route");
+        when(repository.save(any(Mono.class))).thenReturn(Mono.empty());
+
+        // Act
+        String result = dynamicRouteService.update(routeDefinition);
+
+        // Assert
+        assertEquals("success", result);
+        verify(repository, times(1)).save(Mono.just(routeDefinition));
+        verify(publisher, times(1)).publishEvent(any(RefreshRoutesEvent.class));
+    }
+
+    @Test
+    public void updateTestFail() {
+        // Arrange
+        RouteDefinition routeDefinition = new RouteDefinition();
+        routeDefinition.setId("non-existent-route");
+        when(repository.save(any(Mono.class))).thenThrow(new RuntimeException("Save operation failed"));
+
+        // Act
+        String result = dynamicRouteService.update(routeDefinition);
+
+        // Assert
+        assertEquals("update route fail", result);
+        verify(repository, times(1)).save(Mono.just(routeDefinition));
+        verify(publisher, never()).publishEvent(any(RefreshRoutesEvent.class));
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jeecg.loader.repository;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.mockito.Mockito;
+import org.springframework.cloud.gateway.event.RefreshRoutesEvent;
+import org.springframework.cloud.gateway.route.RouteDefinition;
+import org.springframework.context.ApplicationEventPublisher;
+import reactor.core.publisher.Mono;
+
+public class DynamicRouteServiceTest {
+
+    private DynamicRouteService service;
+    private MyInMemoryRouteDefinitionRepository repository;
+    private ApplicationEventPublisher publisher;
+    private RouteDefinition definition;
+
+    @BeforeEach
+    public void setUp() {
+        // Initialize the necessary mocks and the service to be tested
+        repository = Mockito.mock(MyInMemoryRouteDefinitionRepository.class);
+        publisher = Mockito.mock(ApplicationEventPublisher.class);
+        service = new DynamicRouteService();
+
+        // Setup the mocks within the service
+        service.setRepository(repository);
+        service.setApplicationEventPublisher(publisher);
+
+        // Initialize a RouteDefinition instance (assuming that it has a constructor and setId method)
+        definition = new RouteDefinition();
+        definition.setId("testRoute");
+    }
+
+    @Test
+    public void updateTest() {
+        // Arrange
+        String expectedSuccessMessage = "success";
+        Mockito.when(repository.save(Mockito.any(Mono.class))).thenReturn(Mono.empty());
+
+        // Act
+        String result = service.update(definition);
+
+        // Assert
+        assertEquals(expectedSuccessMessage, result, "The update method should return the success message");
+        Mockito.verify(repository).save(Mockito.any(Mono.class));
+        Mockito.verify(publisher).publishEvent(Mockito.any(RefreshRoutesEvent.class));
+    }
+
+    @Test
+    public void updateTestFailsToFindRoute() {
+        // Arrange
+        String expectedErrorMessage = "update fail,not find route  routeId: " + definition.getId();
+        Mockito.doThrow(new RuntimeException("Route not found")).when(repository).save(Mockito.any(Mono.class));
+
+        // Act
+        String result = service.update(definition);
+
+        // Assert
+        assertEquals(expectedErrorMessage, result, "The update method should return the error message when the route is not found");
+    }
+
+    @Test
+    public void updateTestFailsToUpdateRoute() {
+        // Arrange
+        String expectedErrorMessage = "update route fail";
+        // Mock the save method to be successful
+        Mockito.when(repository.save(Mockito.any(Mono.class))).thenReturn(Mono.empty());
+        // Cause the publishEvent to throw an exception
+        Mockito.doThrow(new RuntimeException("Event publishing failed")).when(publisher).publishEvent(Mockito.any(RefreshRoutesEvent.class));
+
+        // Act
+        String result = service.update(definition);
+
+        // Assert
+        assertEquals(expectedErrorMessage, result, "The update method should return the generic error message when updating route fails");
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jeecg.loader.repository;
+
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+import static org.mockito.Mockito.*;
+import org.springframework.cloud.gateway.route.RouteDefinition;
+import org.springframework.context.ApplicationEventPublisher;
+import reactor.core.publisher.Mono;
+
+public class DynamicRouteServiceTest {
+    private DynamicRouteService dynamicRouteService;
+    private MyInMemoryRouteDefinitionRepository repository;
+    private ApplicationEventPublisher publisher;
+
+    @BeforeEach
+    public void setUp() {
+        dynamicRouteService = new DynamicRouteService();
+        repository = mock(MyInMemoryRouteDefinitionRepository.class);
+        publisher = mock(ApplicationEventPublisher.class);
+        dynamicRouteService.setRepository(repository);
+        dynamicRouteService.setApplicationEventPublisher(publisher);
+    }
+
+    @Test
+    public void updateTest() {
+        RouteDefinition definition = new RouteDefinition();
+        definition.setId("testRouteId");
+
+        when(repository.save(Mockito.<Mono<RouteDefinition>>any())).thenReturn(Mono.empty());
+        doNothing().when(publisher).publishEvent(any(RefreshRoutesEvent.class));
+
+        String result = dynamicRouteService.update(definition);
+
+        verify(repository).save(Mono.just(definition));
+        verify(publisher).publishEvent(any(RefreshRoutesEvent.class));
+        assertEquals("success", result);
+    }
+
+    // Additional test case to handle the exception scenario
+    @Test
+    public void updateFailsWhenRouteNotFound() {
+        RouteDefinition definition = new RouteDefinition();
+        definition.setId("nonExistingRouteId");
+
+        when(repository.save(Mockito.<Mono<RouteDefinition>>any())).thenThrow(new RuntimeException("Not Found"));
+        
+        String result = dynamicRouteService.update(definition);
+        
+        assertEquals("update route fail", result);
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jeecg.loader.repository;
+
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+import org.springframework.cloud.gateway.event.RefreshRoutesEvent;
+import org.springframework.cloud.gateway.route.RouteDefinition;
+import static org.mockito.Mockito.*;
+import reactor.core.publisher.Mono;
+
+public class DynamicRouteServiceTest {
+
+    private DynamicRouteService dynamicRouteService;
+    private MyInMemoryRouteDefinitionRepository repository;
+    private ApplicationEventPublisher publisher;
+
+    @BeforeEach
+    public void setUp() {
+        repository = Mockito.mock(MyInMemoryRouteDefinitionRepository.class);
+        publisher = Mockito.mock(ApplicationEventPublisher.class);
+        dynamicRouteService = new DynamicRouteService();
+        dynamicRouteService.setApplicationEventPublisher(publisher);
+        dynamicRouteService.setRepository(repository);
+    }
+
+    @Test
+    public void updateTest() {
+        // Arrange
+        RouteDefinition definition = new RouteDefinition();
+        definition.setId("test-route");
+        String expectedSuccessMessage = "success";
+        String expectedFailureMessage = "update route fail";
+        Mockito.when(repository.save(Mockito.any(Mono.class))).thenReturn(Mono.empty());
+        
+        // Act
+        String resultSuccess = dynamicRouteService.update(definition);
+        
+        // Assert success case
+        assertEquals(expectedSuccessMessage, resultSuccess);
+        Mockito.verify(repository).save(Mono.just(definition));
+        Mockito.verify(publisher).publishEvent(any(RefreshRoutesEvent.class));
+        
+        // Act & Assert failure case
+        Mockito.doThrow(new RuntimeException("Repository exception")).when(repository).save(Mockito.any(Mono.class));
+        String resultFailure = dynamicRouteService.update(definition);
+        assertEquals(expectedFailureMessage, resultFailure);
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.jeecg.loader.repository;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+import org.springframework.cloud.gateway.route.RouteDefinition;
+import org.springframework.context.ApplicationEventPublisher;
+import reactor.core.publisher.Mono;
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public class DynamicRouteServiceTest {
+
+    private DynamicRouteService dynamicRouteService;
+    private MyInMemoryRouteDefinitionRepository repository;
+    private ApplicationEventPublisher publisher;
+    private RouteDefinition routeDefinition;
+
+    @BeforeAll
+    public void setUp() {
+        // Mock the required dependencies
+        repository = mock(MyInMemoryRouteDefinitionRepository.class);
+        publisher = mock(ApplicationEventPublisher.class);
+        dynamicRouteService = new DynamicRouteService();
+       
+        // Set the mocks into the service
+        dynamicRouteService.setRepository(repository);
+        dynamicRouteService.setApplicationEventPublisher(publisher);
+        
+        // Create a mock RouteDefinition
+        routeDefinition = mock(RouteDefinition.class);
+        when(routeDefinition.getId()).thenReturn("test-route");
+    }
+
+    @Test
+    public void updateTest() {
+        // Arrange: Prepares the expected behavior and inputs
+        when(repository.save(Mono.just(routeDefinition))).thenReturn(Mono.empty());
+        doNothing().when(publisher).publishEvent(any(RefreshRoutesEvent.class));
+
+        // Act: Call the method to be tested
+        String result = dynamicRouteService.update(routeDefinition);
+
+        // Assert: Verify the outcomes of the method call
+        assertEquals("success", result);
+        
+        // Verify interactions with the mock objects
+        verify(repository, times(1)).save(Mono.just(routeDefinition));
+        verify(publisher, times(1)).publishEvent(any(RefreshRoutesEvent.class));
+    }
+    
+    // If you want to further test expected failures or other behaviors, you could add more test methods here
+}
+
+
+No.9 generated result --------------------------
+
+package org.jeecg.loader.repository;
+
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.cloud.gateway.route.RouteDefinition;
+import org.springframework.context.ApplicationEventPublisher;
+
+import reactor.core.publisher.Mono;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+public class DynamicRouteServiceTest {
+    
+    @Mock
+    private MyInMemoryRouteDefinitionRepository repository;
+    
+    @Mock
+    private ApplicationEventPublisher publisher;
+    
+    @InjectMocks
+    private DynamicRouteService dynamicRouteService;
+
+    @Test
+    public void updateTest() {
+        // Prepare test data
+        String routeId = "1";
+        RouteDefinition definition = new RouteDefinition();
+        definition.setId(routeId);
+        
+        // Mock repository call
+        when(repository.save(Mono.just(definition)))
+            .thenReturn(Mono.empty());
+        doNothing().when(publisher).publishEvent(any(RefreshRoutesEvent.class));
+        
+        // Simulate a successful update
+        String result = dynamicRouteService.update(definition);
+        
+        // Verify the interactions
+        verify(repository, times(1)).save(Mono.just(definition));
+        verify(publisher, times(1)).publishEvent(any(RefreshRoutesEvent.class));
+        
+        // Assert the outcome
+        assertEquals("success", result);
+    }
+
+    // Additional test cases could be added for failure scenarios, such as when the repository or publisher throw exceptions.
+}
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.loader.repository;
+
+import org.junit.jupiter.api.*;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.springframework.cloud.gateway.route.RouteDefinition;
+import org.springframework.context.ApplicationEventPublisher;
+import reactor.core.publisher.Mono;
+
+@Slf4j
+public class DynamicRouteServiceTest {
+
+    private DynamicRouteService dynamicRouteService;
+    private MyInMemoryRouteDefinitionRepository repository;
+    private ApplicationEventPublisher publisher;
+    private RouteDefinition definition;
+
+    @BeforeEach
+    public void setUp() {
+        repository = mock(MyInMemoryRouteDefinitionRepository.class);
+        publisher = mock(ApplicationEventPublisher.class);
+        dynamicRouteService = new DynamicRouteService();
+        dynamicRouteService.setRepository(repository);
+        dynamicRouteService.setApplicationEventPublisher(publisher);
+        definition = mock(RouteDefinition.class);
+    }
+
+    @Test
+    public void updateTest() {
+        // Assume the definition has an ID and does exist in the repository
+        when(definition.getId()).thenReturn("test-route-id");
+        doNothing().when(repository).save(any(Mono.class));
+        doNothing().when(publisher).publishEvent(any(RefreshRoutesEvent.class));
+
+        // Call the method under test
+        String result = dynamicRouteService.update(definition);
+
+        // Verify interactions
+        verify(repository, times(1)).save(any(Mono.class));
+        verify(publisher, times(1)).publishEvent(any(RefreshRoutesEvent.class));
+
+        // Assert the correct status
+        assertEquals("success", result, "The update method should return 'success'");
+    }
+
+    @Test
+    public void updateTestRouteNotFound() {
+        // Now testing the exception scenario -- when a route is not found
+        when(definition.getId()).thenReturn("nonexistent-route-id");
+        doThrow(new RuntimeException("Route not found")).when(repository).save(any(Mono.class));
+
+        // Call the method under test
+        String result = dynamicRouteService.update(definition);
+
+        // Verify that the save method was called
+        verify(repository, times(1)).save(any(Mono.class));
+        
+        // Since the repository would throw an exception, the result should be an error message
+        assertTrue(result.startsWith("update fail,not find route  routeId: "), "The update method should return failure message starting with 'update fail,not find route  routeId: '");
+    }
+}
+
+

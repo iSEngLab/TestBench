@@ -1,0 +1,741 @@
+Source code: 
+
+
+public static double calculatePieDatasetTotal(PieDataset dataset) {
+    Args.nullNotPermitted(dataset, "dataset");
+    List keys = dataset.getKeys();
+    double totalValue = 0;
+    Iterator iterator = keys.iterator();
+    while (iterator.hasNext()) {
+        Comparable current = (Comparable) iterator.next();
+        if (current != null) {
+            Number value = dataset.getValue(current);
+            double v = 0.0;
+            if (value != null) {
+                v = value.doubleValue();
+            }
+            if (v > 0) {
+                totalValue = totalValue + v;
+            }
+        }
+    }
+    return totalValue;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jfree.data.general;
+import java.util.ArrayList;
+import java.util.Arrays;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+public class DatasetUtilsTest {
+    @Test
+    public void calculatePieDatasetTotal() {
+        PieDataset dataset = new DefaultPieDataset();
+        // Empty dataset should return 0
+        assertEquals(DatasetUtils.calculatePieDatasetTotal(dataset), 0);
+        
+        String item1 = "Item1";
+        double value1 = 50;
+        String item2 = "Item2";
+        double value2 = 75;
+        // Dataset with one item should return the same number
+        dataset.setValue(item1, value1);
+        assertEquals(DatasetUtils.calculatePieDatasetTotal(dataset), value1);
+        
+        // Dataset with two items should add them up
+        dataset.setValue(item2, value2);
+        double expected = value1 + value2;
+        assertEquals(DatasetUtils.calculatePieDatasetTotal(dataset), expected);
+    }
+}
+
+
+No.2 generated result --------------------------
+
+<FILL>
+
+    @Test
+    public void calculatePieDatasetTotal() {
+        DefaultPieDataset dataset = new DefaultPieDataset();
+        assertEquals(0.0, DatasetUtils.calculatePieDatasetTotal(dataset));
+        dataset.setValue("Item 1", 1.0);
+        assertEquals(1.0, DatasetUtils.calculatePieDatasetTotal(dataset));
+        dataset.setValue("Item 2", 2.0);
+        assertEquals(3.0, DatasetUtils.calculatePieDatasetTotal(dataset));
+    }
+
+}
+
+
+No.3 generated result --------------------------
+
+package org.jfree.data.general;
+import java.util.*;
+public class DatasetUtils {
+    /**
+     * Calculates the total value for a PieDataset.
+     * @param dataset  the dataset ({@code null} not permitted).
+     * 
+     * @return The total.
+     */
+    public static double calculatePieDatasetTotal(PieDataset dataset) {
+        Args.nullNotPermitted(dataset, "dataset");
+        List<String> keys = new ArrayList<>();
+        for (int s = 0; s < dataset.getItemCount(); s++) {
+            String key = dataset.getKey(s);
+            if (!keys.contains(key)) {
+                keys.add(key);
+            }
+        }
+        double total = 0.0;
+        for (String k : keys) {
+            total += dataset.getValue(k);
+        }
+        return total;
+    }
+}
+
+
+No.4 generated result --------------------------
+
+public class DatasetUtilsTest {
+    @Test
+    public void calculatePieDatasetTotalTest() {
+        DefaultPieDataset dataset = new DefaultPieDataset();
+        assertEquals(0.0, DatasetUtils.calculatePieDatasetTotal(dataset), 0.0);
+    
+        dataset.setValue("First", 1.23);
+        assertEquals(1.23, DatasetUtils.calculatePieDatasetTotal(dataset), 0.0);
+    
+        dataset.setValue("Second", -2.46);
+        assertEquals(-1.23, DatasetUtils.calculatePieDatasetTotal(dataset), 0.0);
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jfree.data.general;
+
+import java.util.Arrays;
+import java.util.List;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+
+public class DatasetUtilsTest {
+    @Test
+    public void calculatePieDatasetTotalTest() {
+        // CASE 1: test a normal dataset with no missing values
+        PieDataset dataset = createNormalPieDataset();
+        double expectedValue = 25.0 + 43.0 + 76.5 + 82.8;
+        assertEquals(expectedValue, DatasetUtils.calculatePieDatasetTotal(dataset),
+                0.001);
+        
+        // CASE 2: test a dataset with missing values
+        PieDataset datasetWithMissingValues = createPieDatasetWithMissingValues();
+        expectedValue = 25.0 + 43.0 + 76.5;
+        assertEquals(expectedValue, DatasetUtils.calculatePieDatasetTotal(datasetWithMissingValues),
+                0.001);
+    }
+    
+    private PieDataset createNormalPieDataset() {
+        DefaultPieDataset dataset = new DefaultPieDataset();
+        dataset.setValue("Section 1", 25.0);
+        dataset.setValue("Section 2", 43.0);
+        dataset.setValue("Section 3", 76.5);
+        dataset.setValue("Section 4", 82.8);
+        return dataset;
+    }
+    
+    private PieDataset createPieDatasetWithMissingValues() {
+        DefaultPieDataset dataset = new DefaultPieDataset();
+        dataset.setValue("Section 1", 25.0);
+        dataset.setValue("Section 2", null); // missing value
+        dataset.setValue("Section 3", 76.5);
+        dataset.setValue("Section 4", Double.NaN); // NaN is considered a missing value
+        return dataset;
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jfree.data.general;
+
+import java.util.Arrays;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+public class DatasetUtilsTest {
+
+    @Test
+    public void calculatePieDatasetTotal_nullArgument() {
+        // given
+        PieDataset dataset = null;
+        
+        // when
+        double total = DatasetUtils.calculatePieDatasetTotal(dataset);
+        
+        // then
+        assertEquals(-1.0, total);
+    }
+    
+    @Test
+    public void calculatePieDatasetTotal_emptyArgument() {
+        // given
+        PieDataset dataset = new DefaultPieDataset();
+        
+        // when
+        double total = DatasetUtils.calculatePieDatasetTotal(dataset);
+        
+        // then
+        assertEquals(0.0, total);
+    }
+    
+    @Test
+    public void calculatePieDatasetTotal_oneItem() {
+        // given
+        PieDataset dataset = new DefaultPieDataset();
+        dataset.setValue("A", 1.23456789d);
+        
+        // when
+        double total = DatasetUtils.calculatePieDatasetTotal(dataset);
+        
+        // then
+        assertEquals(1.23456789, total);
+    }
+    
+    @Test
+    public void calculatePieDatasetTotal_multipleItems() {
+        // given
+        PieDataset dataset = new DefaultPieDataset();
+        dataset.setValue("A", 1.23456789d);
+        dataset.setValue("B", 2.34567890123d);
+        dataset.setValue("C", -100d);
+        
+        // when
+        double total = DatasetUtils.calculatePieDatasetTotal(dataset);
+        
+        // then
+        assertEquals(2.10507689, total);
+    }
+    
+    @Test
+    public void calculateStackedBarDatasetTotal_nullArgument() {
+        // given
+        StackedBarDataset dataset = null;
+        
+        // when
+        double[] totals = DatasetUtils.calculateStackedBarDatasetTotal(dataset);
+        
+        // then
+        assertEquals(-1, totals[0]);
+    }
+    
+    @Test
+    public void calculateStackedBarDatasetTotal_emptyArgument() {
+        // given
+        StackedBarDataset dataset = new DefaultStackedBarDataset();
+        
+        // when
+        double[] totals = DatasetUtils.calculateStackedBarDatasetTotal(dataset);
+        
+        // then
+        assertEquals(-1, totals[0]);
+    }
+    
+    @Test
+    public void calculateStackedBarDatasetTotal_oneItem() {
+        // given
+        StackedBarDataset dataset = new DefaultStackedBarDataset();
+        dataset.setValue("A", 1d);
+        
+        // when
+        double[] totals = DatasetUtils.calculateStackedBarDatasetTotal(dataset);
+        
+        // then
+        assertEquals(1, totals[0]);
+    }
+    
+    @Test
+    public void calculateStackedBarDatasetTotal_multipleItems() {
+        // given
+        StackedBarDataset dataset = new DefaultStackedBarDataset();
+        dataset.setValue("A", 1d);
+        dataset.setValue("B", -234567890123d);
+        
+        // when
+        double[] totals = DatasetUtils.calculateStackedBarDatasetTotal(dataset);
+        
+        // then
+        assertEquals(-2.3456789E11, totals[0]);
+    }
+    
+    @Test
+    public void calculateStackedBarDatasetTotal_multipleItemsAndSeries() {
+        // given
+        StackedBarDataset dataset = new DefaultStackedBarDataset();
+        dataset.setValue("A", 1d);
+        dataset.addChangeListener(null);
+        
+        // when
+        double[] totals = DatasetUtils.calculateStackedBarDatasetTotal(dataset);
+        
+        // then
+        assertEquals(1, totals[0]);
+    }
+    
+    @ParameterizedTest
+    @ValueSource(ints = {-1, 0, 1})
+    public void calculateStackedBarDatasetTotal_invalidSeriesIndex(int series) {
+        // given
+        StackedBarDataset dataset = new DefaultStackedBarDataset();
+        
+        // when
+        double[] totals = DatasetUtils.calculateStackedBarDatasetTotal(dataset, series);
+        
+        // then
+        assertEquals(-1, totals[0]);
+    }
+    
+    @Test
+    public void calculateStackedBarDatasetTotal_oneItemAndSeriesIndex() {
+        // given
+        StackedBarDataset dataset = new DefaultStackedBarDataset();
+        dataset.setValue("A", 1d);
+        
+        // when
+        double[] totals = DatasetUtils.calculateStackedBarDatasetTotal(dataset, 0);
+        
+        // then
+        assertEquals(1, totals[0]);
+    }
+    
+    @Test
+    public void calculateStackedBarDatasetTotal_multipleItemsAndSeriesIndex() {
+        // given
+        StackedBarDataset dataset = new DefaultStackedBarDataset();
+        dataset.setValue("A", 1d);
+        dataset.addChangeListener(null);
+        
+        // when
+        double[] totals = DatasetUtils.calculateStackedBarDatasetTotal(dataset, 0);
+        
+        // then
+        assertEquals(1, totals[0]);
+    }
+    
+    @Test
+    public void calculateCategoryDatasetTotal_nullArgument() {
+        // given
+        CategoryDataset dataset = null;
+        
+        // when
+        double total = DatasetUtils.calculateCategoryDatasetTotal(dataset);
+        
+        // then
+        assertEquals(-1, total);
+    }
+    
+    @Test
+    public void calculateCategoryDatasetTotal_emptyArgument() {
+        // given
+        CategoryDataset dataset = new DefaultCategoryDataset();
+        
+        // when
+        double total = DatasetUtils.calculateCategoryDatasetTotal(dataset);
+        
+        // then
+        assertEquals(-1, total);
+    }
+    
+    @Test
+    public void calculateCategoryDatasetTotal_oneItem() {
+        // given
+        CategoryDataset dataset = new DefaultCategoryDataset();
+        dataset.setValue("A", "B", 1d);
+        
+        // when
+        double total = DatasetUtils.calculateCategoryDatasetTotal(dataset);
+        
+        // then
+        assertEquals(1, total);
+    }
+    
+    @Test
+    public void calculateCategoryDatasetTotal_multipleItems() {
+        // given
+        CategoryDataset dataset = new DefaultCategoryDataset();
+        dataset.setValue("A", "B", 1d);
+        dataset.addChangeListener(null);
+        
+        // when
+        double total = DatasetUtils.calculateCategoryDatasetTotal(dataset);
+        
+        // then
+        assertEquals(1, total);
+    }
+    
+    @Test
+    public void calculateTableXYDataset_nullArgument() {
+        // given
+        TableXYDataset dataset = null;
+        
+        // when
+        double[] totals = DatasetUtils.calculateTableXYDatasetTotal(dataset);
+        
+        // then
+        assertEquals(-1, totals[0]);
+    }
+    
+    @Test
+    public void calculateTableXYDataset_emptyArgument() {
+        // given
+        TableXYDataset dataset = new DefaultTableXYDataset();
+        
+        // when
+        double[] totals = DatasetUtils.calculateTableXYDatasetTotal(dataset);
+        
+        // then
+        assertEquals(-1, totals[0]);
+    }
+    
+    @Test
+    public void calculateTableXYDataset_oneItem() {
+        // given
+        TableXYDataset dataset = new DefaultTableXYDataset();
+        dataset.addValue(1d, "A", "B");
+        
+        // when
+        double[] totals = DatasetUtils.calculateTableXYDatasetTotal(dataset);
+        
+        // then
+        assertEquals(1, totals[0]);
+    }
+    
+    @Test
+    public void calculateTableXYDataset_multipleItems() {
+        // given
+        TableXYDataset dataset = new DefaultTableXYDataset();
+        dataset.addValue(1d, "A", "B");
+        dataset.addChangeListener(null);
+        
+        // when
+        double[] totals = DatasetUtils.calculateTableXYDatasetTotal(dataset);
+        
+        // then
+        assertEquals(1, totals[0]);
+    }
+    
+    @Test
+    public void calculateXYSeriesDataset_nullArgument() {
+        // given
+        XYSeriesCollection dataset = null;
+        
+        // when
+        double[] totals = DatasetUtils.calculateXYSeriesDatasetTotal(dataset);
+        
+        // then
+        assertEquals(-1, totals[0]);
+    }
+    
+    @Test
+    public void calculateXYSeriesDataset_emptyArgument() {
+        // given
+        XYSeriesCollection dataset = new XYSeriesCollection();
+        
+        // when
+        double[] totals = DatasetUtils.calculateXYSeriesDatasetTotal(dataset);
+        
+        // then
+        assertEquals(-1, totals[0]);
+    }
+    
+    @Test
+    public void calculateXYSeriesDataset_oneItem() {
+        // given
+        XYSeriesCollection dataset = new XYSeriesCollection();
+        dataset.add(new XYSeries("A"));
+        
+        // when
+        double[] totals = DatasetUtils.calculateXYSeriesDatasetTotal(dataset);
+        
+        // then
+        assertEquals(-1, totals[0]);
+    }
+    
+    @Test
+    public void calculateXYSeriesDataset_multipleItems() {
+        // given
+        XYSeriesCollection dataset = new XYSeriesCollection();
+        dataset.add(new XYSeries("A"));
+        
+        // when
+        double[] totals = DatasetUtils.calculateXYSeriesDatasetTotal(dataset);
+        
+        // then
+        assertEquals(-1, totals[0]);
+    }
+    
+    @Test
+    public void calculateXYSeriesDataset_oneItemAndSeriesIndex() {
+        // given
+        XYSeriesCollection dataset = new XYSeriesCollection();
+        dataset.add(new XYSeries("A"));
+        
+        // when
+        double[] totals = DatasetUtils.calculateXYSeriesDatasetTotal(dataset, 0);
+        
+        // then
+        assertEquals(-1, totals[0]);
+    }
+    
+    @Test
+    public void calculateXYSeriesDataset_multipleItemsAndSeriesIndex() {
+        // given
+        XYSeriesCollection dataset = new XYSeriesCollection();
+        dataset.add(new XYSeries("A"));
+        
+        // when
+        double[] totals = DatasetUtils.calculateXYSeriesDatasetTotal(dataset, 0);
+        
+        // then
+        assertEquals(-1, totals[0]);
+    }
+    
+    @Test
+    public void calculateIntervalXYDataSet_nullArgument() {
+        // given
+        IntervalXYDataset dataset = null;
+        
+        // when
+        double[] totals = DatasetUtils.calculateIntervalXYDataSetTotal(dataset);
+        
+        // then
+        assertEquals(-1, totals[0]);
+    }
+    
+    @Test
+    public void calculateIntervalXYDataSet_emptyArgument() {
+        // given
+        IntervalXYDataset dataset = new DefaultIntervalXYDataset();
+        
+        // when
+        double[] totals = DatasetUtils.calculateIntervalXYDataSetTotal(dataset);
+        
+        // then
+        assertEquals(-1, totals[0]);
+    }
+    
+    @Test
+    public void calculateIntervalXYDataSet_oneItem() {
+        // given
+        IntervalXYDataset dataset = new DefaultIntervalXYDataset();
+        dataset.add(1d, 2d);
+        
+        // when
+        double[] totals = DatasetUtils.calculateIntervalXYDataSetTotal(dataset);
+        
+        // then
+        assertEquals(-1, totals[0]);
+    }
+    
+    @Test
+    public void calculateIntervalXYDataSet_multipleItems() {
+        // given
+        IntervalXYDataset dataset = new DefaultIntervalXYDataset();
+        dataset.add(1d, 2d);
+        
+        // when
+        double[] totals = DatasetUtils.calculateIntervalXYDataSetTotal(dataset);
+        
+        // then
+        assertEquals(-1, totals[0]);
+    }
+    
+    @Test
+    public void calculateCategoryTableXYDataset_nullArgument() {
+        // given
+        CategoryTableXYDataset dataset = null;
+        
+        // when
+        double[] totals = DatasetUtils.calculateCategoryTableXYDatasetTotal(dataset);
+        
+        // then
+        assertEquals(-1, totals[0]);
+    }
+    
+    @Test
+    public void calculateCategoryTableXYDataset_emptyArgument() {
+        // given
+        CategoryTableXYDataset dataset = new DefaultCategoryTableXYDataset();
+        
+        // when
+        double[] totals = DatasetUtils.calculateCategoryTableXYDatasetTotal(dataset);
+        
+        // then
+        assertEquals(-1, totals[0]);
+    }
+    
+    @Test
+    public void calculateCategoryTableXYDataset_oneItem() {
+        // given
+        CategoryTableXYDataset dataset = new DefaultCategoryTableXYDataset();
+        dataset.addValue(1d, "A", "B");
+        
+        // when
+        double[] totals = DatasetUtils.calculateCategoryTableXYDatasetTotal(dataset);
+        
+        // then
+        assertEquals(-1, totals[0]);
+    }
+    
+    @Test
+    public void calculateCategoryTableXYDataset_multipleItems() {
+        // given
+        CategoryTableXYDataset dataset = new DefaultCategoryTableXYDataset();
+        dataset.addValue(1d, "A", "B");
+        
+        // when
+        double[] totals = DatasetUtils.calculateCategoryTableXYDatasetTotal(dataset);
+        
+        // then
+        assertEquals(-1, totals[0]);
+    }
+    
+    @Test
+    public void calculateIntervalCategoryDataset_nullArgument() {
+        // given
+        IntervalCategoryDataset dataset = null;
+        
+        // when
+        double[] totals = DatasetUtils.calculateIntervalCategoryDatasetTotal(dataset);
+        
+        // then
+        assertEquals(-1, totals[0]);
+    }
+    
+    @Test
+    public void calculateIntervalCategoryDataset_emptyArgument() {
+        // given
+        IntervalCategoryDataset dataset = new DefaultIntervalCategoryDataset();
+        
+        // when
+        double[] totals = DatasetUtils.calculateIntervalCategoryDatasetTotal(dataset);
+        
+        // then
+        assertEquals(-1, totals[0]);
+    }
+    
+    @Test
+    public void calculateIntervalCategoryDataset_oneItem() {
+        // given
+        IntervalCategoryDataset dataset = new DefaultIntervalCategoryDataset();
+        dataset.addValue(1d, "A", "B");
+        
+        // when
+        double[] totals = DatasetUtils.calculateIntervalCategoryDatasetTotal(dataset);
+        
+        // then
+        assertEquals(-1, totals[0]);
+    }
+    
+    @Test
+    public void calculateIntervalCategoryDataset_multipleItems() {
+        // given
+        IntervalCategoryDataset dataset = new DefaultIntervalCategoryDataset();
+        dataset.addValue(1d, "A", "B");
+        
+        // when
+        double[] totals = DatasetUtils.calculateIntervalCategoryDatasetTotal(dataset);
+        
+        // then
+        assertEquals(-1, totals[0]);
+    }
+    
+}
+
+
+No.7 generated result --------------------------
+
+package org.jfree.data.general;
+
+import java.util.Arrays;
+import static org.junit.Assert.*;
+import org.junit.Test;
+
+public class DatasetUtilsTest {
+    
+    @Test
+    public void calculatePieDatasetTotalTest() {
+        DefaultPieDataset dataset = new DefaultPieDataset();
+        assertEquals(0, DatasetUtils.calculatePieDatasetTotal(dataset), 0);
+        
+        dataset.setValue("Key 1", 5.0);
+        dataset.setValue("Key 2", -4.9);
+        double total = DatasetUtils.calculatePieDatasetTotal(dataset);
+        assertEquals(5.0, total, 0);
+    }
+}
+
+
+No.8 generated result --------------------------
+
+
+@Test
+    public void calculatePieDatasetTotalTest() {
+        PieDataset dataset = new DefaultPieDataset();
+        double total = DatasetUtils.calculatePieDatasetTotal(dataset);
+        assertEquals(0, total);
+        
+        dataset.setValue("A", 1.23456789);
+        total = DatasetUtils.calculatePieDatasetTotal(dataset);
+        assertEquals(1.23456789, total);
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jfree.data.general;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DatasetUtilsTest {
+    @Test
+    public void calculatePieDatasetTotalTest() {
+        PieDataset dataset = new DefaultPieDataset();
+        assertEquals(0, DatasetUtils.calculatePieDatasetTotal(dataset), 1e-6);
+        dataset.setValue("A", 23.4);
+        dataset.setValue("B", -56.78);
+        assertEquals(17.38, DatasetUtils.calculatePieDatasetTotal(dataset), 1e-6);
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jfree.data;
+
+import org.junit.jupiter.api.*;
+
+public class DatasetUtilsTest {
+    @Test
+    public void calculatePieDatasetTotal() {
+        PieDataset dataset = new DefaultPieDataset();
+        assertEquals(0, DatasetUtils.calculatePieDatasetTotal(dataset), 0.1);
+        
+        dataset.setValue("Series 1", "Category 1", 25.0);
+        assertEquals(25, DatasetUtils.calculatePieDatasetTotal(dataset), 0.1);
+    }
+}
+
+
+

@@ -1,0 +1,133 @@
+Source code: 
+
+
+private int probe() {
+    // Fast path for reliable well-distributed probe, available from JDK 7+.
+    // As long as PROBE is final static this branch will be constant folded
+    // (i.e removed).
+    if (PROBE != -1) {
+        int probe;
+        if ((probe = UNSAFE.getInt(Thread.currentThread(), PROBE)) == 0) {
+            ThreadLocalRandom.current(); // force initialization
+            probe = UNSAFE.getInt(Thread.currentThread(), PROBE);
+        }
+        return probe;
+    }
+
+    /*
+     * Else use much worse (for values distribution) method:
+     * Mix thread id with golden ratio and then xorshift it
+     * to spread consecutive ids (see Knuth multiplicative method as reference).
+     */
+    int probe = (int) ((Thread.currentThread().getId() * 0x9e3779b9) & Integer.MAX_VALUE);
+    // xorshift
+    probe ^= probe << 13;
+    probe ^= probe >>> 17;
+    probe ^= probe << 5;
+    return probe;
+}
+
+
+
+
+No.1 generated result --------------------------
+
+@Test
+public void probeTest() {
+    int probe = new FixedSizeStripedLongCounter(10).probe();
+    assertTrue(probe > -1, "Probe value should be greater than -1");
+}
+
+
+No.2 generated result --------------------------
+
+int correctProbeValue = 12345; // Replace with the correct value for the probe
+assertEquals(correctProbeValue, probe());
+
+
+No.3 generated result --------------------------
+
+@Test
+public void probeTest() {
+  //create a new instance of FixedSizeStripedLongCounter and call the probe() method
+  FixedSizeStripedLongCounter counter = new FixedSizeStripedLongCounter();
+  counter.probe();
+}
+
+
+No.4 generated result --------------------------
+
+@Test
+public void probeTest() {
+    FixedSizeStripedLongCounter counter = new FixedSizeStripedLongCounter(16);
+    long expected = counter.probe();
+
+    assertEquals(expected, counter.probe());
+}
+
+
+No.5 generated result --------------------------
+
+@Test
+    public void probeTest() {
+        FixedSizeStripedLongCounter counter = new FixedSizeStripedLongCounter(4);
+        long result = counter.probe();
+        assertEquals(expectedResult, result);
+    }
+
+
+No.6 generated result --------------------------
+
+@Test
+public void probeTest() {
+    int result = probe();
+    assertEquals(expectedResult, result);
+}
+
+
+No.7 generated result --------------------------
+
+@Test
+public void probeTest() {
+    int expectedProbe = 12345;
+    int actualProbe = FixedSizeStripedLongCounter.prePad.probe();
+    assertEquals(expectedProbe, actualProbe, "Probe test failed: incorrect probe value returned");
+}
+
+
+No.8 generated result --------------------------
+
+@Test
+public void probeTest() {
+    // Create an instance of FixedSizeStripedLongCounter
+    FixedSizeStripedLongCounter counter = new FixedSizeStripedLongCounter(10);
+    
+    // Call the probe() method on the counter
+    int result = counter.probe();
+    
+    // Verify that the result is not 0
+    assertNotEquals(0, result);
+}
+
+
+No.9 generated result --------------------------
+
+@Test
+public void probeTest() {
+    FixedSizeStripedLongCounter stripedLongCounter = new FixedSizeStripedLongCounter(16);
+    int probeResult = stripedLongCounter.probe();
+    assertEquals(expectedResult, probeResult);
+}
+
+
+No.10 generated result --------------------------
+
+@Test
+public void probeTest() {
+    FixedSizeStripedLongCounter counter = new FixedSizeStripedLongCounter(16);
+    long expectedResult = 123456789L; // Replace with expected result
+    long actualResult = counter.probe();
+    assertEquals(expectedResult, actualResult);
+}
+
+

@@ -1,0 +1,605 @@
+Source code: 
+
+
+public static double homogToRt(CvMat H,
+        CvMat R1, CvMat t1, CvMat n1,
+        CvMat R2, CvMat t2, CvMat n2) {
+    CvMat S = S3x3.get(), U = U3x3.get(), V = V3x3.get();
+    cvSVD(H, S, U, V, 0);
+    double zeta = homogToRt(S, U, V, R1, t1, n1, R2, t2, n2);
+    return zeta;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.bytedeco.opencv.opencv_core.CvMat;
+import org.junit.jupiter.api.*;
+import static org.bytedeco.opencv.global.opencv_core.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JavaCVTest {
+    
+    @Test
+    public void homogToRtTest() {
+        // Create a homography matrix (3x3) to be tested
+        CvMat H = CvMat.create(3, 3, CV_64F);
+        H.put(new double[]{
+            1.0, 0.0, 0.0,
+            0.0, 1.0, 0.0,
+            0.0, 0.0, 1.0
+        });
+        
+        // Create matrices to hold the expected outputs (3x3 Rotations and 3x1 Translations)
+        CvMat R1 = CvMat.create(3, 3, CV_64F);
+        CvMat t1 = CvMat.create(3, 1, CV_64F);
+        CvMat n1 = CvMat.create(3, 1, CV_64F);
+        CvMat R2 = CvMat.create(3, 3, CV_64F);
+        CvMat t2 = CvMat.create(3, 1, CV_64F);
+        CvMat n2 = CvMat.create(3, 1, CV_64F);
+        
+        // Call the method under test
+        double zeta = JavaCV.homogToRt(H, R1, t1, n1, R2, t2, n2);
+        
+        // Check that the expected values are equal to the actual values within a small delta (error margin)
+        double delta = 1e-6;
+        
+        // Since homogToRt does not alter rotations R1 and R2 for an identity homography, we check that these remain identities
+        assertArrayEquals(new double[]{1.0, 0.0, 0.0}, new double[]{R1.get(0), R1.get(1), R1.get(2)}, delta);
+        assertArrayEquals(new double[]{0.0, 1.0, 0.0}, new double[]{R1.get(3), R1.get(4), R1.get(5)}, delta);
+        assertArrayEquals(new double[]{0.0, 0.0, 1.0}, new double[]{R1.get(6), R1.get(7), R1.get(8)}, delta);
+        
+        // Since the translations t1 and t2 result from an identity homography, they too should be zero
+        assertArrayEquals(new double[]{0.0}, new double[]{t1.get(0)}, delta);
+        assertArrayEquals(new double[]{0.0}, new double[]{t1.get(1)}, delta);
+        assertArrayEquals(new double[]{0.0}, new double[]{t1.get(2)}, delta);
+        
+        assertArrayEquals(new double[]{0.0}, new double[]{t2.get(0)}, delta);
+        assertArrayEquals(new double[]{0.0}, new double[]{t2.get(1)}, delta);
+        assertArrayEquals(new double[]{0.0}, new double[]{t2.get(2)}, delta);
+        
+        // The returned zeta value for an identity homography should be 0
+        assertEquals(0.0, zeta, delta);
+        
+        // Lastly, ensure proper cleanup of the allocated resources
+        cvReleaseMat(H);
+        cvReleaseMat(R1);
+        cvReleaseMat(t1);
+        cvReleaseMat(n1);
+        cvReleaseMat(R2);
+        cvReleaseMat(t2);
+        cvReleaseMat(n2);
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.bytedeco.opencv.opencv_core.CvMat;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.bytedeco.opencv.global.opencv_core.*;
+
+public class JavaCVTest {
+    @Test
+    public void homogToRtTest() {
+        // Create a mock transformation matrix H as an example
+        CvMat H = cvCreateMat(3, 3, CV_64F);
+        cvSetIdentity(H);  // Set it to the identity matrix for simplicity
+        
+        // Create matrices for R1, t1, n1, R2, t2, n2 which will be filled by the method
+        CvMat R1 = cvCreateMat(3, 3, CV_64F);
+        CvMat t1 = cvCreateMat(3, 1, CV_64F);
+        CvMat n1 = cvCreateMat(3, 1, CV_64F);
+        CvMat R2 = cvCreateMat(3, 3, CV_64F);
+        CvMat t2 = cvCreateMat(3, 1, CV_64F);
+        CvMat n2 = cvCreateMat(3, 1, CV_64F);
+
+        // Run the homogToRt function
+        double zeta = JavaCV.homogToRt(H, R1, t1, n1, R2, t2, n2);
+        
+        // Assert that the matrices R1 and R2 are set to identity (since H was identity)
+        assertCvMatEquals(R1, H, 1e-6);  // Helper method for checking equality of CvMat(s)
+        assertCvMatEquals(R2, H, 1e-6);
+
+        // Assert that the zeta value is equal to the expected zeta when using an identity matrix
+        assertEquals(zeta, 1.0, 1e-6);
+        
+        // Release CvMat resources
+        H.release();
+        R1.release();
+        t1.release();
+        n1.release();
+        R2.release();
+        t2.release();
+        n2.release();
+    }
+
+    private static void assertCvMatEquals(CvMat actual, CvMat expected, double delta) {
+        assertNotNull(actual);
+        assertNotNull(expected);
+        assertEquals(expected.rows(), actual.rows());
+        assertEquals(expected.cols(), actual.cols());
+        
+        // Verify each element in the matrices
+        for (int i = 0; i < actual.rows(); i++) {
+            for (int j = 0; j < actual.cols(); j++) {
+                assertEquals(expected.get(i, j), actual.get(i, j), delta, 
+                    "The element at (" + i + "," + j + ") does not match.");
+            }
+        }
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.bytedeco.opencv.opencv_core.CvMat;
+import org.junit.jupiter.api.*;
+import static org.bytedeco.opencv.global.opencv_core.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JavaCVTest {
+
+    @Test
+    public void homogToRtTest() {
+        // Create a mock homography matrix (3x3)
+        double[] dataH = {1, 0, 0, 0, 1, 0, 0, 0, 1};
+        CvMat H = CvMat.create(3, 3);
+        H.put(dataH);
+        
+        // Create matrices to hold the results
+        CvMat R1 = CvMat.create(3, 3);
+        CvMat t1 = CvMat.create(3, 1);
+        CvMat n1 = CvMat.create(3, 1);
+        CvMat R2 = CvMat.create(3, 3);
+        CvMat t2 = CvMat.create(3, 1);
+        CvMat n2 = CvMat.create(3, 1);
+
+        // Call the method under test
+        double zeta = JavaCV.homogToRt(H, R1, t1, n1, R2, t2, n2);
+
+        // Since the homography matrix H is the identity matrix,
+        // We can assume that one of the valid decompositions should be
+        // R1 or R2 equals the identity matrix.
+        // t1, t2, n1, and n2 should contain zeros.
+        // zeta should be equal to zero.
+
+        double[] identityMatrix = {1, 0, 0, 0, 1, 0, 0, 0, 1};
+
+        // Check if either R1 or R2 is close to the identity matrix
+        assertArrayEquals(identityMatrix, R1.get(), 1e-5, "R1 is not the identity matrix.");
+        assertArrayEquals(identityMatrix, R2.get(), 1e-5, "R2 is not the identity matrix.");
+
+        // Check if t1, t2, n1, and n2 are close to the zero matrix
+        double[] zeroVector = {0, 0, 0};
+        assertArrayEquals(zeroVector, t1.get(), 1e-5, "t1 is not a zero vector.");
+        assertArrayEquals(zeroVector, t2.get(), 1e-5, "t2 is not a zero vector.");
+        assertArrayEquals(zeroVector, n1.get(), 1e-5, "n1 is not a zero vector.");
+        assertArrayEquals(zeroVector, n2.get(), 1e-5, "n2 is not a zero vector.");
+
+        // Check zeta
+        assertEquals(0, zeta, 1e-5, "zeta is not zero.");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.bytedeco.opencv.opencv_core.CvMat;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.bytedeco.opencv.global.opencv_core.*;
+
+public class JavaCVTest {
+    
+    @Test
+    public void homogToRtTest() {
+        // Create sample homography matrix (mock values)
+        CvMat H = cvCreateMat(3, 3, CV_64F);
+        double[] Hdata = {1.0, 0.0, 0.0,
+                          0.0, 1.0, 0.0,
+                          0.0, 0.0, 1.0};
+        H.put(Hdata);
+
+        // Mock matrices for rotation (R1, R2) and translation (t1, t2).
+        CvMat R1 = cvCreateMat(3, 3, CV_64F);
+        CvMat t1 = cvCreateMat(3, 1, CV_64F);
+        CvMat n1 = cvCreateMat(3, 1, CV_64F);
+
+        CvMat R2 = cvCreateMat(3, 3, CV_64F);
+        CvMat t2 = cvCreateMat(3, 1, CV_64F);
+        CvMat n2 = cvCreateMat(3, 1, CV_64F);
+
+        // Call the method under test
+        double zeta = JavaCV.homogToRt(H, R1, t1, n1, R2, t2, n2);
+
+        // Perform assertions to validate expected behavior
+        double epsilon = 1e-6; // tolerance for floating-point comparisons
+
+        // Expect identity rotation since H is an identity matrix
+        assertArrayEquals(new double[] {1.0, 0.0, 0.0}, R1.get(), epsilon);
+        assertArrayEquals(new double[] {1.0, 0.0, 0.0}, R2.get(), epsilon);
+
+        // Expect zero translation since H is an identity matrix
+        assertArrayEquals(new double[] {0.0}, t1.get(), epsilon);
+        assertArrayEquals(new double[] {0.0}, t2.get(), epsilon);
+
+        // Expect zero normals since H is an identity matrix
+        assertArrayEquals(new double[] {0.0}, n1.get(), epsilon);
+        assertArrayEquals(new double[] {0.0}, n2.get(), epsilon);
+
+        // Expect zeta to be 0 since all singular values would be 1 (identity matrix)
+        assertEquals(0.0, zeta, epsilon);
+
+        // Release resources
+        cvReleaseMat(H);
+        cvReleaseMat(R1);
+        cvReleaseMat(t1);
+        cvReleaseMat(n1);
+        cvReleaseMat(R2);
+        cvReleaseMat(t2);
+        cvReleaseMat(n2);
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.bytedeco.opencv.opencv_core.CvMat;
+import org.junit.jupiter.api.*;
+import static org.bytedeco.opencv.global.opencv_core.cvCreateMat;
+import static org.bytedeco.opencv.global.opencv_core.cvSetIdentity;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JavaCVTest {
+    @Test
+    public void homogToRtTest() {
+        // Create an identity homography matrix which should
+        // result in zeros for the rotation matrix and translation vector
+        CvMat H = cvCreateMat(3, 3, CvMat.CV_64F);
+        CvMat R1 = cvCreateMat(3, 3, CvMat.CV_64F);
+        CvMat t1 = cvCreateMat(3, 1, CvMat.CV_64F);
+        CvMat n1 = cvCreateMat(3, 1, CvMat.CV_64F);
+        CvMat R2 = cvCreateMat(3, 3, CvMat.CV_64F);
+        CvMat t2 = cvCreateMat(3, 1, CvMat.CV_64F);
+        CvMat n2 = cvCreateMat(3, 1, CvMat.CV_64F);
+
+        cvSetIdentity(H);
+
+        double zeta = JavaCV.homogToRt(H, R1, t1, n1, R2, t2, n2);
+
+        // Since the homography matrix H is an identity matrix,
+        // both rotation matrices should be identity and both
+        // translation vectors should be zero vectors.
+        assertIdentityMatrix(R1);
+        assertZeroVector(t1);
+        assertIdentityMatrix(R2);
+        assertZeroVector(t2);
+
+        // n1 and n2 should be normalized and their direction should be aligned
+        // with the 3rd column of R1 and R2 respectively which for an identity
+        // rotation matrix is [0, 0, 1]
+        assertEquals(0, n1.get(0), 1e-9);
+        assertEquals(0, n1.get(1), 1e-9);
+        assertEquals(1, n1.get(2), 1e-9);
+
+        assertEquals(0, n2.get(0), 1e-9);
+        assertEquals(0, n2.get(1), 1e-9);
+        assertEquals(1, n2.get(2), 1e-9);
+
+        // The returned zeta should be zero as the matrix H is identity
+        assertEquals(0, zeta, 1e-9);
+    }
+
+    // Utility function to assert that the given matrix is an identity matrix
+    private void assertIdentityMatrix(CvMat matrix) {
+        assertNotNull(matrix);
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                assertEquals(i == j ? 1 : 0, matrix.get(i, j), 1e-9);
+            }
+        }
+    }
+
+    // Utility function to assert that the given vector is zero
+    private void assertZeroVector(CvMat vector) {
+        assertNotNull(vector);
+        for (int i = 0; i < vector.rows(); i++) {
+            assertEquals(0, vector.get(i), 1e-9);
+        }
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.bytedeco.opencv.opencv_core.*;
+import org.junit.jupiter.api.*;
+import static org.bytedeco.opencv.global.opencv_core.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JavaCVTest {
+    @Test
+    public void homogToRtTest() {
+        // Creating test homography, rotation, translation, and normal matrices
+        CvMat H = CvMat.create(3, 3, CV_64F);
+        CvMat R1 = CvMat.create(3, 3, CV_64F);
+        CvMat t1 = CvMat.create(3, 1, CV_64F);
+        CvMat n1 = CvMat.create(3, 1, CV_64F);
+        CvMat R2 = CvMat.create(3, 3, CV_64F);
+        CvMat t2 = CvMat.create(3, 1, CV_64F);
+        CvMat n2 = CvMat.create(3, 1, CV_64F);
+
+        // Fill the homography matrix with some test values (not a meaningful homography)
+        H.put(0, 1.0);
+        H.put(1, 0.0);
+        H.put(2, 0.0);
+        H.put(3, 0.0);
+        H.put(4, 1.0);
+        H.put(5, 0.0);
+        H.put(6, 0.0);
+        H.put(7, 0.0);
+        H.put(8, 1.0);
+
+        // Expected values after the operation (arbitrary for test purposes)
+        double expectedZeta = 1.0;
+
+        // Call the method under test
+        double actualZeta = JavaCV.homogToRt(H, R1, t1, n1, R2, t2, n2);
+
+        // Check the result for an arbitrary tolerance
+        double delta = 0.001;
+
+        // Assert zeta value and dummy checks for now (since the test values are arbitrary)
+        assertEquals(expectedZeta, actualZeta, delta, "Zeta value does not match expected.");
+        assertTrue(R1.rows() == 3 && R1.cols() == 3, "Rotation matrix R1 not of size 3x3.");
+        assertTrue(t1.rows() == 3 && t1.cols() == 1, "Translation matrix t1 not of size 3x1.");
+        assertTrue(n1.rows() == 3 && n1.cols() == 1, "Normal matrix n1 not of size 3x1.");
+        assertTrue(R2.rows() == 3 && R2.cols() == 3, "Rotation matrix R2 not of size 3x3.");
+        assertTrue(t2.rows() == 3 && t2.cols() == 1, "Translation matrix t2 not of size 3x1.");
+        assertTrue(n2.rows() == 3 && n2.cols() == 1, "Normal matrix n2 not of size 3x1.");
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.bytedeco.opencv.opencv_core.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JavaCVTest {
+
+    @Test
+    public void homogToRtTest() {
+        CvMat H = CvMat.create(3, 3);
+        CvMat R1 = CvMat.create(3, 3);
+        CvMat t1 = CvMat.create(3, 1);
+        CvMat n1 = CvMat.create(3, 1);
+        CvMat R2 = CvMat.create(3, 3);
+        CvMat t2 = CvMat.create(3, 1);
+        CvMat n2 = CvMat.create(3, 1);
+
+        // Populate your H matrix with test data
+        H.put(0, 1.0); H.put(1, 0.0); H.put(2, 0.0);
+        H.put(3, 0.0); H.put(4, 1.0); H.put(5, 0.0);
+        H.put(6, 0.0); H.put(7, 0.0); H.put(8, 1.0);
+
+        // Call the method under test
+        double zeta = JavaCV.homogToRt(H, R1, t1, n1, R2, t2, n2);
+
+        // We need to determine what the expected values are.
+        // For this test case, let's assume we expect zeta to be zero.
+        // The exact expected values depend on the input matrices.
+        double expectedZeta = 0.0;
+
+        // Assert the result with some tolerance
+        assertEquals(expectedZeta, zeta, 1e-9, "The zeta values should be close to the expected value.");
+
+        // Additionally, we could verify R1, t1, n1, R2, t2, and n2 if needed.
+        // This is just an example of how you might perform such checks.
+        // Replace with actual expected values:
+        CvMat expectedR1 = CvMat.create(3, 3); // put expected values
+        CvMat expectedt1 = CvMat.create(3, 1); // put expected values
+        // ...do this for the rest of the matrices...
+
+        // Compare matrices
+        assertTrue(equalsMat(expectedR1, R1), "R1 should match the expected matrix.");
+        assertTrue(equalsMat(expectedt1, t1), "t1 should match the expected matrix.");
+        // ... do this for the rest of the matrices...
+    }
+
+    private boolean equalsMat(CvMat mat1, CvMat mat2) {
+        if (mat1.rows() != mat2.rows() || mat1.cols() != mat2.cols()) {
+            return false;
+        }
+        for (int i = 0; i < mat1.rows(); i++) {
+            for (int j = 0; j < mat1.cols(); j++) {
+                if (Math.abs(mat1.get(i, j) - mat2.get(i, j)) > 1e-9) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.bytedeco.opencv.opencv_core.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.bytedeco.opencv.global.opencv_core.*;
+
+public class JavaCVTest {
+
+    @Test
+    public void homogToRtTest() {
+        // Create a fake homography matrix and output matrices
+        CvMat H = CvMat.create(3, 3);
+        CvMat R1 = CvMat.create(3, 3);
+        CvMat t1 = CvMat.create(3, 1);
+        CvMat n1 = CvMat.create(3, 1);
+        CvMat R2 = CvMat.create(3, 3);
+        CvMat t2 = CvMat.create(3, 1);
+        CvMat n2 = CvMat.create(3, 1);
+
+        // Set the homography matrix with some arbitrary values
+        float[] Hvalues = {
+            1.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 1.0f
+        };
+        for (int i = 0; i < Hvalues.length; i++) {
+            H.put(i, Hvalues[i]);
+        }
+
+        // Call the method to test
+        double zeta = JavaCV.homogToRt(H, R1, t1, n1, R2, t2, n2);
+
+        // Validate the results
+        assertEquals(0, zeta, 0.0001, "Zeta should be 0 for an identity homography");
+        assertCvMatEquals(R1, R2, 0.0001, "R1 and R2 should be equal for an identity homography");
+        assertCvMatEquals(t1, t2, 0.0001, "t1 and t2 should be equal for an identity homography");
+        assertCvMatEquals(n1, n2, 0.0001, "n1 and n2 should be equal for an identity homography");
+    }
+
+    // Utility method to compare CvMat data with a given accuracy
+    private static void assertCvMatEquals(CvMat expected, CvMat actual, double epsilon, String message) {
+        assertNotNull(expected, "Expected CvMat should not be null");
+        assertNotNull(actual, "Actual CvMat should not be null");
+
+        assertEquals(expected.rows(), actual.rows(), "Number of rows should be equal");
+        assertEquals(expected.cols(), actual.cols(), "Number of columns should be equal");
+
+        for (int i = 0; i < expected.rows(); i++) {
+            for (int j = 0; j < expected.cols(); j++) {
+                assertEquals(expected.get(i, j), actual.get(i, j), epsilon, 
+                             message + " (mismatch at (" + i + ", " + j + "))");
+            }
+        }
+    }
+
+    // Setter for homography matrix values
+    private void setHomographyMatrix(CvMat matrix, double... values) {
+        for (int i = 0; i < values.length; i++) {
+            matrix.put(i, values[i]);
+        }
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.bytedeco.opencv.opencv_core.CvMat;
+import org.junit.jupiter.api.*;
+import static org.bytedeco.opencv.global.opencv_core.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JavaCVTest {
+    @Test
+    public void homogToRtTest() {
+        // Create dummy data for testing
+        int size = 3; // Assuming a 3x3 matrix for homography
+        CvMat H = cvCreateMat(size, size, CV_64F); // Homography matrix
+        cvSetIdentity(H); // Simplify to an identity matrix for testing
+        CvMat R1 = cvCreateMat(size, size, CV_64F);
+        CvMat n1 = cvCreateMat(size, 1, CV_64F);
+        CvMat t1 = cvCreateMat(size, 1, CV_64F);
+        CvMat R2 = cvCreateMat(size, size, CV_64F);
+        CvMat n2 = cvCreateMat(size, 1, CV_64F);
+        CvMat t2 = cvCreateMat(size, 1, CV_64F);
+
+        // Perform the operation
+        double zeta = JavaCV.homogToRt(H, R1, t1, n1, R2, t2, n2);
+
+        // Start constructing the expected results manually
+        CvMat expectedR1 = cvCreateMat(size, size, CV_64F);
+        CvMat expectedt1 = cvCreateMat(size, 1, CV_64F);
+        CvMat expectedn1 = cvCreateMat(size, 1, CV_64F);
+        CvMat expectedR2 = cvCreateMat(size, size, CV_64F);
+        CvMat expectedt2 = cvCreateMat(size, 1, CV_64F);
+        CvMat expectedn2 = cvCreateMat(size, 1, CV_64F);
+
+        // Fill in the expected values based on what homogToRt should output with an identity matrix
+        cvSetIdentity(expectedR1);
+        cvSetIdentity(expectedR2);
+        cvZero(expectedt1); // t should be zero since homography is an identity matrix
+        cvZero(expectedt2);
+        cvZero(expectedn1); // n should be zero since homography is an identity matrix
+        cvZero(expectedn2);
+
+        // Check if the resulting matrices are close enough to the expected identity matrices
+        assertTrue(cvNorm(R1, expectedR1) < 1e-10, "R1 is not as expected");
+        assertTrue(cvNorm(R2, expectedR2) < 1e-10, "R2 is not as expected");
+        assertTrue(cvNorm(t1, expectedt1) < 1e-10, "t1 is not as expected");
+        assertTrue(cvNorm(t2, expectedt2) < 1e-10, "t2 is not as expected");
+        assertTrue(cvNorm(n1, expectedn1) < 1e-10, "n1 is not as expected");
+        assertTrue(cvNorm(n2, expectedn2) < 1e-10, "n2 is not as expected");
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JavaCVTest {
+    @Test
+    public void homogToRtTest() {
+        // Create mock matrices for the test
+        CvMat H = CvMat.create(3, 3, CV_64F);
+        CvMat R1 = CvMat.create(3, 3, CV_64F);
+        CvMat t1 = CvMat.create(3, 1, CV_64F);
+        CvMat n1 = CvMat.create(3, 1, CV_64F);
+        CvMat R2 = CvMat.create(3, 3, CV_64F);
+        CvMat t2 = CvMat.create(3, 1, CV_64F);
+        CvMat n2 = CvMat.create(3, 1, CV_64F);
+
+        // Initialize with example values or load from actual data for realistic test
+        H.put(0, 0, 0.9);
+        H.put(0, 1, 0.0);
+        H.put(0, 2, 0.1);
+        H.put(1, 0, 0.1);
+        H.put(1, 1, 0.9);
+        H.put(1, 2, 0.2);
+        H.put(2, 0, 0.0);
+        H.put(2, 1, 0.0);
+        H.put(2, 2, 1.0);
+
+        // Expected zeta value (This should be based on expected calculation results)
+        double expectedZeta = 1.0;
+        
+        // Call the method to test
+        double zeta = JavaCV.homogToRt(H, R1, t1, n1, R2, t2, n2);
+        
+        // Perform assertions
+        assertEquals(expectedZeta, zeta, 1e-6, "The zeta value should be close to the expected value");
+    }
+}
+
+

@@ -1,0 +1,315 @@
+Source code: 
+
+
+private Point getMatrixCenter() {
+
+  ResultPoint pointA;
+  ResultPoint pointB;
+  ResultPoint pointC;
+  ResultPoint pointD;
+
+  //Get a white rectangle that can be the border of the matrix in center bull's eye or
+  try {
+
+    ResultPoint[] cornerPoints = new WhiteRectangleDetector(image).detect();
+    pointA = cornerPoints[0];
+    pointB = cornerPoints[1];
+    pointC = cornerPoints[2];
+    pointD = cornerPoints[3];
+
+  } catch (NotFoundException e) {
+
+    // This exception can be in case the initial rectangle is white
+    // In that case, surely in the bull's eye, we try to expand the rectangle.
+    int cx = image.getWidth() / 2;
+    int cy = image.getHeight() / 2;
+    pointA = getFirstDifferent(new Point(cx + 7, cy - 7), false, 1, -1).toResultPoint();
+    pointB = getFirstDifferent(new Point(cx + 7, cy + 7), false, 1, 1).toResultPoint();
+    pointC = getFirstDifferent(new Point(cx - 7, cy + 7), false, -1, 1).toResultPoint();
+    pointD = getFirstDifferent(new Point(cx - 7, cy - 7), false, -1, -1).toResultPoint();
+
+  }
+
+  //Compute the center of the rectangle
+  int cx = MathUtils.round((pointA.getX() + pointD.getX() + pointB.getX() + pointC.getX()) / 4.0f);
+  int cy = MathUtils.round((pointA.getY() + pointD.getY() + pointB.getY() + pointC.getY()) / 4.0f);
+
+  // Redetermine the white rectangle starting from previously computed center.
+  // This will ensure that we end up with a white rectangle in center bull's eye
+  // in order to compute a more accurate center.
+  try {
+    ResultPoint[] cornerPoints = new WhiteRectangleDetector(image, 15, cx, cy).detect();
+    pointA = cornerPoints[0];
+    pointB = cornerPoints[1];
+    pointC = cornerPoints[2];
+    pointD = cornerPoints[3];
+  } catch (NotFoundException e) {
+    // This exception can be in case the initial rectangle is white
+    // In that case we try to expand the rectangle.
+    pointA = getFirstDifferent(new Point(cx + 7, cy - 7), false, 1, -1).toResultPoint();
+    pointB = getFirstDifferent(new Point(cx + 7, cy + 7), false, 1, 1).toResultPoint();
+    pointC = getFirstDifferent(new Point(cx - 7, cy + 7), false, -1, 1).toResultPoint();
+    pointD = getFirstDifferent(new Point(cx - 7, cy - 7), false, -1, -1).toResultPoint();
+  }
+
+  // Recompute the center of the rectangle
+  cx = MathUtils.round((pointA.getX() + pointD.getX() + pointB.getX() + pointC.getX()) / 4.0f);
+  cy = MathUtils.round((pointA.getY() + pointD.getY() + pointB.getY() + pointC.getY()) / 4.0f);
+
+  return new Point(cx, cy);
+}
+
+
+
+No.1 generated result --------------------------
+
+The `getMatrixCenter()` method is used to find the center of the matrix in the Aztec code. The method first tries to detect a white rectangle that can be the border of the matrix using the `WhiteRectangleDetector` class. If it fails, it tries to expand the rectangle and re-detect it.
+
+The center of the rectangle is then computed by taking the average of the X and Y coordinates of the four corner points. Finally, the method returns a new `Point` object representing the center of the matrix.
+
+To test this method, you can create a mock `image` object that represents the Aztec code, and call the `getMatrixCenter()` method with it. You can then check the returned `Point` object to make sure it has the correct X and Y coordinates.
+
+
+No.2 generated result --------------------------
+
+package com.google.zxing.aztec.detector;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DetectorTest {
+    @Test
+    public void getMatrixCenterTest() {
+        // Create a new instance of the Detector class
+        Detector detector = new Detector(null);
+        
+        // Set up the necessary mocks for the `getBullsEyeCorners()` method
+        ResultPoint topLeft = Mockito.mock(ResultPoint.class);
+        ResultPoint topRight = Mockito.mock(ResultPoint.class);
+        ResultPoint bottomRight = Mockito.mock(ResultPoint.class);
+        ResultPoint bottomLeft = Mockito.mock(ResultPoint.class);
+        
+        // Create a mock for the `image` field of the Detector class
+        BitMatrix image = Mockito.mock(BitMatrix.class);
+        detector.setImage(image);
+        
+        // Call the `getBullsEyeCorners()` method with the appropriate parameters
+        ResultPoint bullsEyeCorners = detector.getBullsEyeCorners(new Point(10, 10));
+        
+        // Assert that the `getMatrixCenter()` method returns the correct center point of the matrix
+        assertEquals(new Point(35, 35), detector.getMatrixCenter());
+    }
+}
+
+
+No.3 generated result --------------------------
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DetectorTest {
+    @Test
+    public void getMatrixCenterTest() {
+        // Create a mock instance of the WhiteRectangleDetector class
+        WhiteRectangleDetector rectangleDetector = Mockito.mock(WhiteRectangleDetector.class);
+        
+        // Set up the mock to return a valid rectangle
+        RectangleF rect = new RectangleF(0, 0, 100, 100);
+        when(rectangleDetector.detect()).thenReturn(rect);
+        
+        // Create an instance of the Detector class with the mock WhiteRectangleDetector
+        Detector detector = new Detector(new BitMatrix(200, 200), rectangleDetector);
+        
+        // Test that the getMatrixCenter method returns a valid Point object when given a valid rectangle
+        assertEquals(50, detector.getMatrixCenter().x);
+        assertEquals(50, detector.getMatrixCenter().y);
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.google.zxing.aztec.detector;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DetectorTest {
+    @Test
+    public void getMatrixCenterTest() {
+        // Test case 1: Successfully find the center of a matrix
+        BitMatrix image = new BitMatrix(30, 25);
+        Point expectedCenter = new Point(14, 12);
+        Detector detector = new Detector(image);
+        ResultPoint bullsEyeCorners = detector.getBullsEyeCorners(expectedCenter);
+        assertEquals(detector.getMatrixCenter(), expectedCenter);
+        
+        // Test case 2: Fail to find a white rectangle and recompute its center
+        image = new BitMatrix(10, 15);
+        detector = new Detector(image);
+        bullsEyeCorners = detector.getBullsEyeCorners(new Point(3, 4));
+        expectedCenter = new Point(8, 6);
+        assertEquals(detector.getMatrixCenter(), expectedCenter);
+    }
+}
+
+
+No.5 generated result --------------------------
+
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DetectorTest {
+    @Test
+    public void getMatrixCenterTest() {
+        // Scenario 1: Initial rectangle is not white, and there are no exceptions thrown during the detection process
+        BitMatrix image = new BitMatrix(30);
+        Point center = new Point(15, 15);
+        Detector detector = new Detector(image);
+        assertEquals(center, detector.getMatrixCenter());
+
+        // Scenario 2: Initial rectangle is white, and an exception is thrown during the detection process due to the expanded rectangle being outside the image bounds
+        center = new Point(15, 15);
+        detector = new Detector(image);
+        assertThrows(NotFoundException.class, () -> detector.getMatrixCenter());
+
+        // Scenario 3: Initial rectangle is white, and no exceptions are thrown during the detection process
+        center = new Point(15, 15);
+        detector = new Detector(image);
+        assertEquals(center, detector.getMatrixCenter());
+    }
+}
+
+
+
+No.6 generated result --------------------------
+
+@Test
+public void getMatrixCenterTest() {
+    // Create an instance of the Detector class
+    Detector detector = new Detector(image);
+    
+    // Call the getMatrixCenter method and store the returned point in a variable
+    Point centerPoint = detector.getMatrixCenter();
+    
+    // Assert that the returned point is equal to the expected center point of the Aztec matrix
+    assertEquals(expectedCenterX, centerPoint.x);
+    assertEquals(expectedCenterY, centerPoint.y);
+}
+
+
+No.7 generated result --------------------------
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DetectorTest {
+    private Detector detector;
+
+    @BeforeEach
+    public void setUp() {
+        // Set up the detector with mock data for each scenario
+        detector = new Detector();
+    }
+
+    @Test
+    public void testGetMatrixCenter_nullImage() {
+        assertNull(detector.getMatrixCenter(null));
+    }
+
+    @Test
+    public void testGetMatrixCenter_emptyImage() {
+        BitMatrix image = new BitMatrix(0, 0);
+        assertNull(detector.getMatrixCenter(image));
+    }
+
+    @Test
+    public void testGetMatrixCenter_validWhiteRectangle() {
+        // Set up the mock data for a valid white rectangle
+        Point p1 = new Point(0, 0);
+        Point p2 = new Point(50, 0);
+        Point p3 = new Point(50, 50);
+        Point p4 = new Point(0, 50);
+
+        // Create a mock image with the white rectangle
+        BitMatrix image = new BitMatrix(100, 100);
+        image.setRegion(p1, p2, p3, p4);
+
+        // Run the getMatrixCenter method and assert that it returns the expected result
+        ResultPoint center = detector.getMatrixCenter(image);
+        assertNotNull(center);
+    }
+}
+
+
+No.8 generated result --------------------------
+
+private Point getMatrixCenter() {
+  // Get the center point from the corner points
+  int cx = (pointA.getX() + pointD.getX()) / 2;
+  int cy = (pointA.getY() + pointD.getY()) / 2;
+
+  return new Point(cx, cy);
+}
+
+
+No.9 generated result --------------------------
+
+
+package com.google.zxing.aztec.detector;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DetectorTest {
+    private final Detector detector = new Detector();
+
+    @Test
+    public void getMatrixCenterTest() {
+        // Set up the matrix with an even number of rows and columns
+        int[][] matrix = {{0, 0, 0}, {0, 1, 2}, {0, 3, 4}};
+        detector.image = new BitMatrix(matrix);
+
+        // Calculate the center of the matrix
+        ResultPoint center = detector.getMatrixCenter();
+
+        // Check that the center is calculated correctly
+        assertEquals(1, center.x);
+        assertEquals(2, center.y);
+    }
+}
+
+
+
+No.10 generated result --------------------------
+
+The response to the instruction is as follows:
+
+public class DetectorTest {
+
+    private final static int[] EXPECTED_CORNER_BITS = new int[]{1, 0, 0, 0, 1, 1, 0};
+    private final static GenericGF GF = new GenericGF(256, 0x11d);
+    
+    @Test
+    public void getMatrixCenterTest() {
+        // Arrange
+        Detector detector = new Detector();
+        int[] corners = EXPECTED_CORNER_BITS;
+        
+        // Act
+        ResultPoint center = detector.getMatrixCenter(corners);
+        
+        // Assert
+        assertEquals(center.x, 127, "The x-coordinate of the matrix center is not correct.");
+        assertEquals(center.y, 127, "The y-coordinate of the matrix center is not correct.");
+    }
+}
+
+In this test case, we are testing the `getMatrixCenter()` method of the `Detector` class. We have set up a mock `Detector` object and initialized it with an array of corner bits that will be used as input for the method under test.
+
+We then call the `getMatrixCenter()` method on the mock detector object, passing in the array of corner bits. This method should return a `ResultPoint` object representing the center of the matrix.
+
+In the assertion section, we check that the x-coordinate and y-coordinate of the returned `ResultPoint` object are equal to the expected values (127) for both coordinates. If the test passes, it means that the method under test has successfully identified the center of the Aztec matrix based on the input corner bits.
+
+

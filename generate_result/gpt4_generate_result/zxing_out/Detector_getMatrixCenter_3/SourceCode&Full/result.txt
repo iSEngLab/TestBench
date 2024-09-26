@@ -1,0 +1,619 @@
+Source code: 
+
+
+private Point getMatrixCenter() {
+
+  ResultPoint pointA;
+  ResultPoint pointB;
+  ResultPoint pointC;
+  ResultPoint pointD;
+
+  //Get a white rectangle that can be the border of the matrix in center bull's eye or
+  try {
+
+    ResultPoint[] cornerPoints = new WhiteRectangleDetector(image).detect();
+    pointA = cornerPoints[0];
+    pointB = cornerPoints[1];
+    pointC = cornerPoints[2];
+    pointD = cornerPoints[3];
+
+  } catch (NotFoundException e) {
+
+    // This exception can be in case the initial rectangle is white
+    // In that case, surely in the bull's eye, we try to expand the rectangle.
+    int cx = image.getWidth() / 2;
+    int cy = image.getHeight() / 2;
+    pointA = getFirstDifferent(new Point(cx + 7, cy - 7), false, 1, -1).toResultPoint();
+    pointB = getFirstDifferent(new Point(cx + 7, cy + 7), false, 1, 1).toResultPoint();
+    pointC = getFirstDifferent(new Point(cx - 7, cy + 7), false, -1, 1).toResultPoint();
+    pointD = getFirstDifferent(new Point(cx - 7, cy - 7), false, -1, -1).toResultPoint();
+
+  }
+
+  //Compute the center of the rectangle
+  int cx = MathUtils.round((pointA.getX() + pointD.getX() + pointB.getX() + pointC.getX()) / 4.0f);
+  int cy = MathUtils.round((pointA.getY() + pointD.getY() + pointB.getY() + pointC.getY()) / 4.0f);
+
+  // Redetermine the white rectangle starting from previously computed center.
+  // This will ensure that we end up with a white rectangle in center bull's eye
+  // in order to compute a more accurate center.
+  try {
+    ResultPoint[] cornerPoints = new WhiteRectangleDetector(image, 15, cx, cy).detect();
+    pointA = cornerPoints[0];
+    pointB = cornerPoints[1];
+    pointC = cornerPoints[2];
+    pointD = cornerPoints[3];
+  } catch (NotFoundException e) {
+    // This exception can be in case the initial rectangle is white
+    // In that case we try to expand the rectangle.
+    pointA = getFirstDifferent(new Point(cx + 7, cy - 7), false, 1, -1).toResultPoint();
+    pointB = getFirstDifferent(new Point(cx + 7, cy + 7), false, 1, 1).toResultPoint();
+    pointC = getFirstDifferent(new Point(cx - 7, cy + 7), false, -1, 1).toResultPoint();
+    pointD = getFirstDifferent(new Point(cx - 7, cy - 7), false, -1, -1).toResultPoint();
+  }
+
+  // Recompute the center of the rectangle
+  cx = MathUtils.round((pointA.getX() + pointD.getX() + pointB.getX() + pointC.getX()) / 4.0f);
+  cy = MathUtils.round((pointA.getY() + pointD.getY() + pointB.getY() + pointC.getY()) / 4.0f);
+
+  return new Point(cx, cy);
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.google.zxing.aztec.detector;
+
+import com.google.zxing.NotFoundException;
+import com.google.zxing.common.BitMatrix;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DetectorTest {
+
+    @Test
+    public void getMatrixCenterTest() {
+        int matrixWidth = 100;
+        int matrixHeight = 100;
+        
+        // create a mock image which represents BitMatrix
+        BitMatrix mockImage = new BitMatrix(matrixWidth, matrixHeight);
+        // fill the matrix with a pattern that Detector can understand
+        for (int y = 0; y < matrixHeight; y++) {
+            for (int x = 0; x < matrixWidth; x++) {
+                mockImage.set(x, y, (x+y) % 2 == 0);
+            }
+        }
+        
+        // create detector using the mock image
+        Detector detector = new Detector(mockImage);
+        
+        // invoke the method to test
+        Detector.Point matrixCenter = null;
+        try {
+            matrixCenter = detector.getMatrixCenter();
+        } catch (NotFoundException e) {
+            fail("Detector did not find the matrix center.");
+        }
+        
+        // we expect the center to be in the middle of the BitMatrix for this test's mock image.
+        assertNotNull(matrixCenter, "The matrix center should not be null");
+        assertEquals(matrixWidth / 2, matrixCenter.getX(), "Matrix center X coordinate is incorrect");
+        assertEquals(matrixHeight / 2, matrixCenter.getY(), "Matrix center Y coordinate is incorrect");
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package com.google.zxing.aztec.detector;
+
+import com.google.zxing.common.BitMatrix;
+import org.junit.jupiter.api.*;
+import java.lang.reflect.Method;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DetectorTest {
+    @Test
+    public void getMatrixCenterTest() {
+        // Setup BitMatrix and Detector instance
+        int size = 21; // This size should correspond to a valid BitMatrix size for an Aztec Code.
+        BitMatrix matrix = new BitMatrix(size);
+        Detector detector = new Detector(matrix);
+
+        try {
+            // Reflectively access the getMatrixCenter method as it's private
+            Method getMatrixCenterMethod = Detector.class.getDeclaredMethod("getMatrixCenter");
+            getMatrixCenterMethod.setAccessible(true);
+            
+            // Expecting the center of the matrix to be the center of the BitMatrix.
+            int expectedX = size / 2;
+            int expectedY = size / 2;
+
+            // Invoke the getMatrixCenter method and check the result
+            Detector.Point center = (Detector.Point) getMatrixCenterMethod.invoke(detector);
+
+            assertEquals(expectedX, center.getX(), "X coordinate of center is incorrect");
+            assertEquals(expectedY, center.getY(), "Y coordinate of center is incorrect");
+        } catch (Exception e) {
+            fail("Exception occurred during testing: " + e.getMessage());
+        }
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.google.zxing.aztec.detector;
+
+import com.google.zxing.NotFoundException;
+import com.google.zxing.ResultPoint;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.common.detector.WhiteRectangleDetector;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
+
+public class DetectorTest {
+
+    private BitMatrix image;
+    private Detector detector;
+
+    @BeforeEach
+    public void setUp() {
+        image = new BitMatrix(100, 100); // Create a mock image of 100x100 pixels
+        detector = new Detector(image);
+    }
+
+    @Test
+    public void getMatrixCenterTest() throws NotFoundException {
+        // Assume that the WhiteRectangleDetector.detect method returns a known set of points
+        ResultPoint pointA = new ResultPoint(30, 30);
+        ResultPoint pointB = new ResultPoint(70, 30);
+        ResultPoint pointC = new ResultPoint(70, 70);
+        ResultPoint pointD = new ResultPoint(30, 70);
+
+        // Create mock WhiteRectangleDetector and inject using Mockito
+        WhiteRectangleDetector mockDetector = Mockito.mock(WhiteRectangleDetector.class);
+        when(mockDetector.detect()).thenReturn(new ResultPoint[]{pointA, pointB, pointC, pointD});
+
+        // Replace the actual WhiteRectangleDetector with the mock
+        detector = new Detector(image) {
+            @Override
+            protected WhiteRectangleDetector getWhiteRectangleDetector() {
+                return mockDetector;
+            }
+        };
+
+        Detector.Point expectedCenter = new Detector.Point(50, 50); // Expected center point
+        Detector.Point center = detector.getMatrixCenter();
+
+        assertEquals(expectedCenter.getX(), center.getX(), "The X coordinate of the center should be correct.");
+        assertEquals(expectedCenter.getY(), center.getY(), "The Y coordinate of the center should be correct.");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.google.zxing.aztec.detector;
+
+import com.google.zxing.NotFoundException;
+import com.google.zxing.ResultPoint;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.common.detector.MathUtils;
+import com.google.zxing.common.detector.WhiteRectangleDetector;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class DetectorTest {
+    
+    @Test
+    public void getMatrixCenterTest() {
+        // Assuming the image is a square of 100x100 pixels
+        BitMatrix mockImage = mock(BitMatrix.class);
+        when(mockImage.getWidth()).thenReturn(100);
+        when(mockImage.getHeight()).thenReturn(100);
+        
+        // Assuming that a valid white rectangle is found by the WhiteRectangleDetector
+        WhiteRectangleDetector mockDetector = mock(WhiteRectangleDetector.class);
+        ResultPoint[] mockPoints = new ResultPoint[]{
+                new ResultPoint(30, 30),
+                new ResultPoint(70, 30),
+                new ResultPoint(70, 70),
+                new ResultPoint(30, 70)
+        };
+        try {
+            when(mockDetector.detect()).thenReturn(mockPoints);
+        } catch (NotFoundException e) {
+            // This block should not be executed in this scenario
+            fail("Detector mock threw NotFoundException.");
+        }
+        
+        // Creating the Detector object with the mocked BitMatrix
+        Detector detector = new Detector(mockImage);
+        
+        // Attempt to retrieve the center point
+        Detector.Point centerPoint = null;
+        try {
+            centerPoint = detector.getMatrixCenter();
+        } catch (NotFoundException e) {
+            fail("getMatrixCenter() threw NotFoundException");
+        }
+        
+        // Verify the expected center is at (50,50)
+        assertNotNull(centerPoint, "Center Point should not be null");
+        assertEquals(50, centerPoint.getX(), "X coordinate of center should be 50");
+        assertEquals(50, centerPoint.getY(), "Y coordinate of center should be 50");
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.google.zxing.aztec.detector;
+
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.ResultPoint;
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+
+public class DetectorTest {
+    
+    private Detector detector;
+    private BitMatrix image;
+
+    @BeforeEach
+    public void setUp() {
+        // Assuming a valid mock BitMatrix is used here. The details of how to create
+        // this mock will depend on the specifics of the image and its expected contents.
+        image = Mockito.mock(BitMatrix.class);
+        detector = new Detector(image);
+    }
+
+    @Test
+    public void getMatrixCenterTest() {
+        // Assuming specific behavior and return values from the BitMatrix
+        // that result in a default case without throwing NotFoundException
+        when(image.getWidth()).thenReturn(100);
+        when(image.getHeight()).thenReturn(100);
+        when(image.get(anyInt(), anyInt())).thenReturn(true);
+      
+        // Assuming that we get a mocked white rectangle detector which returns some points
+        WhiteRectangleDetector mockDetector = Mockito.mock(WhiteRectangleDetector.class);
+        ResultPoint[] mockCornerPoints = {
+            new ResultPoint(30.0f, 20.0f),
+            new ResultPoint(70.0f, 20.0f),
+            new ResultPoint(70.0f, 80.0f),
+            new ResultPoint(30.0f, 80.0f)
+        };
+        try {
+            when(mockDetector.detect()).thenReturn(mockCornerPoints);
+
+            // Use reflection or factory patterns to utilize mockDetector instead of a real one inside Detector
+            // Here, reflection is used for simplicity
+            java.lang.reflect.Field field = detector.getClass().getDeclaredField("image");
+            field.setAccessible(true);
+            field.set(detector, mockDetector);
+            
+            // Invoke the method
+            Detector.Point center = detector.getMatrixCenter();
+      
+            // Validating that the center is correctly calculated
+            assertNotNull(center);
+            assertEquals(50, center.getX());
+            assertEquals(50, center.getY());
+
+        } catch (Exception e) {
+            fail("Exception should not be thrown in this test case.");
+        }
+    }
+}
+
+
+
+No.6 generated result --------------------------
+
+package com.google.zxing.aztec.detector;
+
+import com.google.zxing.NotFoundException;
+import com.google.zxing.ResultPoint;
+import com.google.zxing.common.BitMatrix;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DetectorTest {
+
+    private BitMatrix mockImage;
+    private Detector detector;
+    
+    @BeforeEach
+    public void setUp() {
+        // Mock the BitMatrix (image) with a simple 10x10 black image
+        int dimension = 10;
+        mockImage = new BitMatrix(dimension, dimension);
+        for (int i = 0; i < dimension; i++) {
+            for (int j = 0; j < dimension; j++) {
+                mockImage.set(i, j);
+            }
+        }
+        detector = new Detector(mockImage);
+    }
+
+    @Test
+    public void getMatrixCenterTest() {
+        // Mock a scenario where the WhiteRectangleDetector throws NotFoundException
+        // and we obtain the center points manually in the catch block.
+        Detector.Point expectedCenter = detector.new Point(5, 5); // Assuming center of the image is at (5,5)
+        Detector.Point actualCenter = null;
+        try {
+            actualCenter = detector.getMatrixCenter();
+        } catch (NotFoundException e) {
+            fail("NotFoundException should not be thrown");
+        }
+
+        assertNotNull(actualCenter, "Center should not be null");
+        assertEquals(expectedCenter.getX(), actualCenter.getX(), "X coordinate of center should match");
+        assertEquals(expectedCenter.getY(), actualCenter.getY(), "Y coordinate of center should match");
+    }
+
+    // Additional test methods can be created to cover more scenarios.
+}
+
+
+
+No.7 generated result --------------------------
+
+package com.google.zxing.aztec.detector;
+
+import com.google.zxing.NotFoundException;
+import com.google.zxing.common.BitMatrix;
+import org.junit.jupiter.api.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class DetectorTest {
+
+    @Test
+    public void getMatrixCenterTest() {
+        // Assuming that createMockedBitMatrix() is a method that makes a BitMatrix we can use for testing
+        BitMatrix mockMatrix = createMockedBitMatrix();
+        Detector detector = new Detector(mockMatrix);
+
+        // Mock the WhiteRectangleDetector behavior
+        WhiteRectangleDetector mockDetector = mock(WhiteRectangleDetector.class);
+        when(mockDetector.detect()).thenReturn(new ResultPoint[]{
+                new ResultPoint(1f, 2f),
+                new ResultPoint(3f, 4f),
+                new ResultPoint(5f, 6f),
+                new ResultPoint(7f, 8f)
+        });
+
+        try {
+            // Call the method to test
+            Point center = invokeGetMatrixCenter(detector, mockDetector);
+
+            // Assertions
+            assertNotNull(center, "Center point should not be null");
+            assertEquals(4, center.getX(), "Center X coordinate mismatch");
+            assertEquals(5, center.getY(), "Center Y coordinate mismatch");
+        } catch (NotFoundException e) {
+            fail("NotFoundException should not be thrown");
+        }
+    }
+
+    // Helper method to create a mock BitMatrix with predefined behavior
+    private BitMatrix createMockedBitMatrix() {
+        BitMatrix matrix = mock(BitMatrix.class);
+        when(matrix.getWidth()).thenReturn(100);
+        when(matrix.getHeight()).thenReturn(100);
+        return matrix;
+    }
+
+    // Helper method to bypass access to private method getMatrixCenter
+    private Point invokeGetMatrixCenter(Detector detector, WhiteRectangleDetector mockedDetector) throws NotFoundException {
+        try {
+            // Use reflection to access the private method getMatrixCenter()
+            java.lang.reflect.Method method = Detector.class.getDeclaredMethod("getMatrixCenter");
+            method.setAccessible(true);
+            return (Point) method.invoke(detector); // Replace with proper parameters if needed
+        } catch (Exception e) {
+            throw new RuntimeException("Reflection operation failed", e);
+        }
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package com.google.zxing.aztec.detector;
+
+import com.google.zxing.NotFoundException;
+import com.google.zxing.ResultPoint;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.common.detector.WhiteRectangleDetector;
+import org.junit.jupiter.api.*;
+import org.mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class DetectorTest {
+
+    @Test
+    public void getMatrixCenterTest() throws NotFoundException {
+        // Mock the BitMatrix and other dependencies necessary for the method
+        BitMatrix mockImage = mock(BitMatrix.class);
+        WhiteRectangleDetector mockDetector = mock(WhiteRectangleDetector.class);
+        Detector detector = new Detector(mockImage);
+        
+        // Mock the image dimensions
+        when(mockImage.getWidth()).thenReturn(100);
+        when(mockImage.getHeight()).thenReturn(100);
+
+        // Mock the result of the WhiteRectangleDetector
+        ResultPoint[] mockCornerPoints = {
+            new ResultPoint(30.0f, 20.0f),
+            new ResultPoint(30.0f, 80.0f),
+            new ResultPoint(70.0f, 80.0f),
+            new ResultPoint(70.0f, 20.0f)
+        };
+        when(mockDetector.detect()).thenReturn(mockCornerPoints);
+
+        // Spy on the Detector to intercept the call to getMatrixCenter and use the mocked detector
+        Detector spyDetector = Mockito.spy(detector);
+        doReturn(mockDetector).when(spyDetector).createWhiteRectangleDetector(any(BitMatrix.class));
+
+        // Invoke the method under test
+        Detector.Point centerPoint = spyDetector.getMatrixCenter();
+        
+        // Define expected Point for the center
+        Detector.Point expectedPoint = detector.new Point(50, 50);
+        
+        // Check if the calculated center is as expected
+        assertNotNull(centerPoint);
+        assertEquals(expectedPoint.getX(), centerPoint.getX(), "X coordinate of center is not as expected.");
+        assertEquals(expectedPoint.getY(), centerPoint.getY(), "Y coordinate of center is not as expected.");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package com.google.zxing.aztec.detector;
+
+import com.google.zxing.NotFoundException;
+import com.google.zxing.ResultPoint;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.common.detector.MathUtils;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DetectorTest {
+
+    private Detector detector;
+    private BitMatrix mockImage;
+
+    @BeforeEach
+    public void setUp() {
+        // You should create a mock BitMatrix that the getMatrixCenter() function can interact with.
+        // This could include a valid setup where getMatrixCenter successfully finds the matrix center
+        // as well as a setup that throws NotFoundException indicating the center could not be found.
+        // Here, the creation of this mockImage depends on the structure and data of the barcode image.
+        // For the purpose of this example, it will be initialized to a certain size with a fictional
+        // pattern that the getMatrixCenter() method can handle.
+        int size = 100; // Example size, will need to be adjusted for an actual test
+        mockImage = new BitMatrix(size, size);
+        
+        // Simulate a center with a perfect rectangle for the mockImage
+        for (int i = size / 2 - 10; i<= size / 2 + 10; i++) {
+            mockImage.set(i, size / 2 - 10);
+            mockImage.set(i, size / 2 + 10);
+            mockImage.set(size / 2 - 10, i);
+            mockImage.set(size / 2 + 10, i);
+        }
+        
+        detector = new Detector(mockImage);
+    }
+
+    @Test
+    public void getMatrixCenterWithValidCenter() {
+        try {
+            // Act
+            Detector.Point center = detector.getMatrixCenter();
+
+            // Assert
+            assertNotNull(center);
+            assertEquals(50, center.getX(), "The X-coordinate of the center should be 50.");
+            assertEquals(50, center.getY(), "The Y-coordinate of the center should be 50.");
+        } catch (NotFoundException e) {
+            fail("NotFoundException should not be thrown with a valid center point.");
+        }
+    }
+
+    @Test
+    public void getMatrixCenterWithInvalidCenter() {
+        BitMatrix wrongImage = new BitMatrix(100, 100);
+        Detector wrongDetector = new Detector(wrongImage);
+        Exception exception = assertThrows(NotFoundException.class, wrongDetector::getMatrixCenter);
+
+        String expectedMessage = "Could not detect white rectangle in center";
+        String actualMessage = exception.getMessage();
+
+        assertTrue(actualMessage.contains(expectedMessage),
+                "NotFoundException with the proper message should be thrown when unable to find valid center point.");
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.google.zxing.aztec.detector;
+
+import com.google.zxing.common.BitMatrix;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+public class DetectorTest {
+    // Sample size of the BitMatrix for mock image
+    private static final int MATRIX_SIZE = 100;
+    
+    private BitMatrix mockImage;
+    private Detector detector;
+
+    @BeforeEach
+    public void setUp() {
+        // Creating a mock BitMatrix
+        mockImage = new BitMatrix(MATRIX_SIZE, MATRIX_SIZE);
+        // Fill the BitMatrix with a pattern or leave it blank based on the needs of getMatrixCenter
+
+        // Instantiate the Detector with the mock image
+        detector = new Detector(mockImage);
+    }
+
+    @Test
+    public void getMatrixCenterTest() {
+        // Expected point from manually calculating the center or from previous knowledge
+        Point expected = new Point(MATRIX_SIZE / 2, MATRIX_SIZE / 2);
+
+        try {
+            // Access the private method getMatrixCenter via reflection
+            Method getMatrixCenter = Detector.class.getDeclaredMethod("getMatrixCenter");
+            getMatrixCenter.setAccessible(true);
+            
+            // Invoke the method and obtain result
+            Point actual = (Point) getMatrixCenter.invoke(detector);
+
+            // Assert that the points match
+            assertNotNull(actual, "Method getMatrixCenter returned null");
+            assertEquals(expected.getX(), actual.getX(), "X coordinate is not as expected");
+            assertEquals(expected.getY(), actual.getY(), "Y coordinate is not as expected");
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            fail("Exception during reflection access of method 'getMatrixCenter': " + e.getMessage());
+        }
+    }
+
+    // Additional cleanup if necessary
+    @AfterEach
+    public void tearDown() {
+        mockImage = null;
+        detector = null;
+    }
+}
+
+

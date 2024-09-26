@@ -1,0 +1,1001 @@
+Source code: 
+
+
+private Boolean checkRoute(String routeId) {
+    Boolean hasRoute = false;
+    try {
+        //修复使用带命名空间启动网关swagger看不到接口文档的问题
+        Properties properties=new Properties();
+        properties.setProperty("serverAddr",serverAddr);
+        if(namespace!=null && !"".equals(namespace)){
+            log.info("nacos.discovery.namespace = {}", namespace);
+            properties.setProperty("namespace",namespace);
+        }
+        if(username!=null && !"".equals(username)){
+            properties.setProperty("username",username);
+        }
+        if(password!=null && !"".equals(password)){
+            properties.setProperty("password",password);
+        }
+        //【issues/5115】因swagger文档导致gateway内存溢出
+        if (this.naming == null) {
+            this.naming = NamingFactory.createNamingService(properties);
+        }
+        log.info(" config.group : {}", group);
+        List<Instance> list = this.naming.selectInstances(routeId, group , true);
+        if (ObjectUtil.isNotEmpty(list)) {
+            hasRoute = true;
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return hasRoute;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jeecg.handler.swagger;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.gateway.route.RouteLocator;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
+import springfox.documentation.swagger.web.*;
+import java.util.*;
+
+/**
+ * @author zyf
+ * @date: 2021-11-15 23:46
+ */
+@Slf4j
+@Primary
+@Component
+public class MySwaggerResourceProvider implements SwaggerResourcesProvider {
+    private final RouteLocator routeLocator;
+    /**
+     * nacos serverAddr
+     */
+    @Value("${spring.cloud.nacos.discovery.server-addr:#{null}}")
+    private String serverAddr;
+    /**
+     * nacos namespace
+     */
+    @Value("${spring.cloud.nacos.discovery.namespace:#{null}}")
+    private String namespace;
+    /**
+     * nacos username
+     */
+    @Value("${spring.cloud.nacos.discovery.username:#{null}}")
+    private String username;
+    /**
+     * nacos password
+     */
+    @Value("${spring.cloud.nacos.discovery.password:#{null}}")
+    private String password;
+    
+    /**
+     * Swagger中需要排除的服务
+     */
+    private String[] excludeServiceIds=new String[]{"jeecg-cloud-monitor"};
+
+
+    /**
+     * 网关应用名称
+     */
+    @Value("${spring.application.name}")
+    private String self;
+
+    @Autowired
+    public MySwaggerResourceProvider(RouteLocator routeLocator) {
+        this.routeLocator = routeLocator;
+    }
+
+    @Override
+    public List<SwaggerResource> get() {
+        List<SwaggerResource> resources = new ArrayList<>();
+        List<String> routeHosts = new ArrayList<>();
+        // 获取所有可用的host：serviceId
+        routeLocator.getRoutes().filter(route -> route.getUri().getHost() != null)
+                .filter(route -> !self.equals(route.getUri().getHost()))
+                .subscribe(route ->{
+                    //update-begin---author:zyf ---date:20220413 for：过滤掉无效路由,避免接口文档报错无法打开
+                    boolean hasRoute=checkRoute(route.getId());
+                    if(hasRoute){
+                        routeHosts.add(route.getUri().getHost());
+                    }
+                    //update-end---author:zyf ---date:20220413 for：过滤掉无效路由,避免接口文档报错无法打开
+                });
+
+        // 记录已经添加过的server，存在同一个应用注册了多个服务在nacos上
+        Set<String> dealed = new HashSet<>();
+        routeHosts.forEach(instance -> {
+            // 拼接url
+            String url = "/" + instance.toLowerCase() + SWAGGER2URL;
+            if (!dealed.contains(url)) {
+                dealed.add(url);
+                log.info(" Gateway add SwaggerResource: {}",url);
+                SwaggerResource swaggerResource = new SwaggerResource();
+swaggeraggerResource.setUrl(url);
+resources.add(swaggeraggerResource);
+        });
+        
+        return resources;
+    }
+    
+    public boolean checkRoute(String routeId) {
+        try {
+            NacosDubbo nacosDubbo = nacosRegistry.get(routeId);
+            if (nacosDubbo == null){
+                log.error("NacosDubbo does not exist: " + routeId);
+                 return false;
+            } else {
+                RouteDefinition routeDefination = nacosDubbo.getRoute();
+                URL url = new URL(routeDefination.getUri());
+                String host = url.getHost();
+                if (nacosDubbo.isValid() && "localhost".equalsIgnoreCase(host)) {
+                    return true;
+                } else {
+                    log.error("NacosDubbo is invalid: " + routeId);
+                        return false;
+                }
+            }
+        } catch (Exception e) {
+            log.error("Could not find NacosDubbo: " + routeId, e);
+            return false;
+        }
+    }
+    
+}
+
+
+No.2 generated result --------------------------
+
+package org.jeecg.handler.swagger;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.gateway.route.RouteLocator;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
+import springfox.documentation.swagger.web.SwaggerResource;
+import springfox.documentation.swagger.web.SwaggerResourcesProvider;
+
+import java.util.*;
+
+@Slf4j
+@Primary //需要配置为主,否则报错，原因是有多个SwaggerResourcesProvider 类实现了 SwaggerResourcesProvider接口
+@Component
+public class MySwaggerResourceProvider implements SwaggerResourcesProvider {
+    @Autowired
+    private RouteLocator routeLocator;
+    
+    /**
+     * Swagger中需要排除的服务
+     */
+    private String[] excludeServiceIds=new String[]{"jeecg-cloud-monitor"};
+
+    /**
+     * 网关应用名称
+     */
+    @Value("${spring.application.name}")
+    private String self;
+
+    public MySwaggerResourceProvider(RouteLocator routeLocator) {
+        this.routeLocator = routeLocator;
+    }
+
+    @Override
+    public List<SwaggerResource> get() {
+        List<SwaggerResource> resources = new ArrayList<>();
+        List<String> routeHosts = new ArrayList<>();
+        // 获取所有可用的host：serviceId
+        routeLocator.getRoutes().filter(route -> route.getUri().getHost() != null)
+                .filter(route -> !self.equals(route.getUri().getHost()))
+                .subscribe(route ->{
+                    //update-begin---author:zyf ---date:20220413 for：过滤掉无效路由,避免接口文档报错无法打开
+                    boolean hasRoute=checkRoute(route.getId());
+                    if(hasRoute){
+                        routeHosts.add(route.getUri().getHost());
+                    }
+                    //update-end---author:zyf ---date:20220413 for：过滤掉无效路由,避免接口文档报错无法打开
+                });
+        // 记录已经添加过的server，存在同一个应用注册了多个服务在nacos上
+        Set<String> dealed = new HashSet<>();
+        routeHosts.forEach(instance -> {
+            // 拼接url
+            String url = "/" + instance.toLowerCase() + SWAGGER2URL;
+            if (!dealed.contains(url)) {
+                dealed.add(url);
+                log.info(" Gateway add SwaggerResource: {}",url);
+                SwaggerResource swaggerResource = new SwaggerResource();
+                swaggerResource.setUrl(url);
+                swaggerResource.setSwaggerVersion("2.0");
+                swaggerResource.setName(instance);
+                //Swagger排除不展示的服务
+                if(!ArrayUtil.contains(excludeServiceIds,instance)){
+                    resources.add(swaggerResource);
+                }
+            }
+        });
+        return resources;
+    }
+    
+    /**
+     * 检测nacos中是否有健康实例
+     * @param routeId
+     * @return
+     */
+    private Boolean checkRoute(String routeId) {
+        <FILL>
+    }
+}
+    
+
+### Response:
+
+
+No.3 generated result --------------------------
+
+package org.jeecg.handler.swagger;
+
+import io.swagger.annotations.*;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * 演示报表-RESTFul接口
+ */
+@Slf4j
+@RestController
+@Api(value = "/swagger", tags = "swagger")
+public class SwaggerResource {
+    /**
+     * nacos服务发现地址
+     */
+    @Value("${spring.cloud.nacos.discovery.server-addr}")
+    private String serverAddr;
+    /**
+     * nacos namespace
+     */
+    @Value("${spring.cloud.nacos.discovery.namespace:#{null}}")
+    private String namespace;
+    /**
+     * nacos username
+     */
+    @Value("${spring.cloud.nacos.discovery.username:#{null}}")
+    private String username;
+    /**
+     * nacos password
+     */
+    @Value("${spring.cloud.nacos.discovery.password:#{null}}")
+    private String password;
+    
+    /**
+     * Swagger中需要排除的服务
+     */
+    private String[] excludeServiceIds=new String[]{"jeecg-cloud-monitor"};
+
+
+    @Autowired
+    public MySwaggerResourceProvider(RouteLocator routeLocator) {
+        this.routeLocator = routeLocator;
+    }
+
+    @Override
+    public List<SwaggerResource> get() {
+        List<SwaggerResource> resources = new ArrayList<>();
+        List<String> routeHosts = new ArrayList<>();
+        // 获取所有可用的host：serviceId
+        routeLocator.getRoutes().filter(route -> route.getUri().getHost() != null)
+                .filter(route -> !self.equals(route.getUri().getHost()))
+                .subscribe(route ->{
+                    //update-begin---author:zyf ---date:20220413 for：过滤掉无效路由,避免接口文档报错无法打开
+                    boolean hasRoute=checkRoute(route.getId());
+                    if(hasRoute){
+                        routeHosts.add(route.getUri().getHost());
+                    }
+                    //update-end---author:zyf ---date:20220413 for：过滤掉无效路由,避免接口文档报错无法打开
+                });
+
+        // 记录已经添加过的server，存在同一个应用注册了多个服务在nacos上
+        Set<String> dealed = new HashSet<>();
+        routeHosts.forEach(instance -> {
+            // 拼接url
+            String url = "/" + instance.toLowerCase() + SWAGGER2URL;
+            if (!dealed.contains(url)) {
+                dealed.add(url);
+                log.info(" Gateway add SwaggerResource: {}",url);
+                SwaggerResource swaggerResource = new SwaggerResource();
+                swaggerResource.setUrl(url);
+                swaggerResource.setSwaggerVersion("2.0");
+                swaggerResource.setName(instance);
+                //Swagger排除不展示的服务
+                                                                  resources = new HashMap<>();
+                                                                                        resources.put("inst", instance);
+                                                                                        return resources;
+            }
+            }
+            
+            /**
+             * 获取当前应用下面的所有Swagger资源
+             *
+             * @param request
+             * @return
+             */
+    @GetMapping("/instances")
+    public Map<String, Object> instances(HttpServletRequest request) {
+        return getRouteResources(request);
+    }
+    
+    /**
+     * 获取所有Swagger资源
+     *
+     * @param request
+     * @return
+     */
+    @GetMapping("/resources")
+    public Map<String, Object> resources(HttpServletRequest request) {
+        return getRouteResources(request);
+    }
+    
+    /**
+     * 获取Swagger资源
+     *
+     * @param name
+     * @return
+     */
+    @GetMapping("/resources/{name}")
+    public Map<String, Object> resource(@PathVariable String name) {
+        return getRouteResources(name);
+    }
+    
+    /**
+     * 获取所有应用下的Swagger资源
+     *
+     * @param request
+     * @return
+     */
+    @GetMapping("/applications/{application}/resources")
+    public Map<String, Object> applicationResources(HttpServletRequest request) {
+        return getRouteResources(request);
+    }
+    
+    /**
+     * 获取应用下的所有Swagger资源
+     *
+     * @param name
+     * @return
+     */
+    @GetMapping("/applications/{application}/instances")
+    public Map<String, Object> applicationResources(HttpServletRequest request) {
+        return getRouteResources(request);
+    }
+    
+    /**
+     * 获取Swagger资源
+     *
+     * @param name
+     * @return
+     */
+    @GetMapping("/applications/{application}/resources/{name}")
+    public Map<String, Object> applicationResource(HttpServletRequest request) {
+        return getRouteResources(request);
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jeecg.handler.swagger;
+
+import java.util.*;
+
+import com.alibaba.cloud.nacos.NacosConfigManager;
+import com.alibaba.nacos.api.naming.pojo.Instance;
+import lombok.extern.slf4j.Slf4j;
+import org.jeecg.common.util.oConvertUtils;
+import org.junit.*;
+import static org.mockito.Mockito.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.gateway.route.RouteLocator;
+import org.springframework.context.ApplicationContext;
+import reactor.core.publisher.Mono;
+
+@Slf4j
+public class MySwaggerResourceProviderTest {
+    private NacosConfigManager nacosConfigManager = mock(NacosConfigManager.class);
+    private ApplicationContext applicationContext = mock(ApplicationContext.class);
+    private RouteLocator routeLocator = mock(RouteLocator.class);
+    private MySwaggerResourceProvider mySwaggerResourceProvider;
+    
+    @BeforeEach
+    public void setUp() {
+        // 准备mock数据
+        when(nacosConfigManager.getConfigService()).thenReturn(null);
+        
+        // 构造MySwaggerResourceProvider对象
+        mySwaggerResourceProvider = new MySwaggerResourceProvider(routeLocator);
+    }
+    
+    @Test
+    public void testCheckRoute() {
+        assertEquals("
+
+
+No.5 generated result --------------------------
+
+package com.example;
+
+import java.util.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.jeecg.handler.swagger.MySwaggerResourceProvider;
+
+public class MySwaggerResourceProviderTest {
+    @Test
+    public void checkRouteTest() {
+        Boolean hasRoute = new MySwaggerResourceProvider().checkRoute(<FILL>);
+        assertTrue(hasRoute, "Nacos中不存在该服务");
+    }
+}
+    
+
+
+
+No.6 generated result --------------------------
+
+package ${basePackage}.handler.swagger;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.alibaba.fastjson.JSONObject;
+import lombok.extern.slf4j.Slf4j;
+import org.jeecg.boot.starter.lock.client.api.DistributedLock;
+import org.jeecg.handler.swagger.MySwaggerResourceProvider;
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Rollback;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.Transactional;
+
+@Slf4j
+@RunWith(SpringRunner.class)
+@SpringBootTest
+public class MySwaggerResourceProviderTest {
+    @Autowired
+    private DistributedLock distributedLock;
+    
+    @Test
+    public void checkRouteTest() throws InterruptedException {
+        MySwaggerResourceProvider mySwaggerResourceProvider = new MySwaggerResourceProvider(null);
+        
+        //正常
+        JSONObject json = new JSONObject();
+        String routeId="test";
+        json.put("routeId",routeId);
+        Assert.assertTrue(mySwaggerResourceProvider.checkRoute(json));
+        //非法格式
+        json.put("routeId","");
+        Assert.assertFalse(mySwaggerResourceProvider.checkRoute(json));
+        //无实例
+        json.put("routeId","error");
+        Assert.assertFalse(mySwaggerResourceProvider.checkRoute(json));
+    }
+}
+    
+
+### Code for the Controller:
+
+
+No.7 generated result --------------------------
+
+package org.jeecg.handler.swagger;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.gateway.route.RouteLocator;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
+import springfox.documentation.swagger.web.*;
+import java.util.*;
+
+/**
+ * Swagger资源配置
+ */
+@Slf4j
+@Component
+@Primary
+public class MySwaggerResourceProvider implements SwaggerResourcesProvider {
+    private final RouteLocator routeLocator;
+    
+    /**
+     * nacos地址
+     */
+    @Value("${spring.cloud.nacos.discovery.server-addr}")
+    private String serverAddr;
+    /**
+     * nacos namespace
+     */
+    @Value("${spring.cloud.nacos.discovery.namespace:#{null}}")
+    private String namespace;
+    /**
+     * nacos username
+     */
+    @Value("${spring.cloud.nacos.discovery.username:#{null}}")
+    private String username;
+    /**
+     * nacos password
+     */
+    @Value("${spring.cloud.nacos.discovery.password:#{null}}")
+    private String password;
+    
+    /**
+     * Swagger中需要排除的服务
+     */
+    private String[] excludeServiceIds=new String[]{"jeecg-cloud-monitor"};
+
+
+    /**
+     * 网关应用名称
+     */
+    @Value("${spring.application.name}")
+    private String self;
+
+    @Autowired
+    public MySwaggerResourceProvider(RouteLocator routeLocator) {
+        this.routeLocator = routeLocator;
+    }
+
+    @Override
+    public List<SwaggerResource> get() {
+        List<SwaggerResource> resources = new ArrayList<>();
+        List<String> routeHosts = new ArrayList<>();
+        // 获取所有可用的host：serviceId
+        routeLocator.getRoutes().filter(route -> route.getUri().getHost() != null)
+                .filter(route -> !self.equals(route.getUri().getHost()))
+                .subscribe(route ->{
+                    //update-begin---author:zyf ---date:20220413 for：过滤掉无效路由,避免接口文档报错无法打开
+                    boolean hasRoute=checkRoute(route.getId());
+                    if(hasRoute){
+                        routeHosts.add(route.getUri().getHost());
+                    }
+                    //update-end---author:zyf ---date:20220413 for：过滤掉无效路由,避免接口文档报错无法打开
+                });
+
+        // 记录已经添加过的server，存在同一个应用注册了多个服务在nacos上
+        Set<String> dealed = new HashSet<>();
+        routeHosts.forEach(instance -> {
+            // 拼接url
+            String url = "/" + instance.toLowerCase() + SWAGGER2URL;
+            if (!dealed.contains(url)) {
+                dealed.add(url);
+                log.info(" Gateway add SwaggerResource: {}",url);
+                SwaggerResource swaggerResource = new SwaggerResource();
+                swaggerResource.setUrl(url);
+                swaggerResourceProvider swaggerResources = this.swaggerResources();
+        for (SwaggerResource swaggerResource : swaggerResources) {
+            resources.add(swaggerResource);
+        }
+        return resources;
+    }
+    
+    private List<SwaggerResource> swaggerResources() {
+        List<SwaggerResource> resources = new ArrayList<>();
+        routeLocator.getRoutes().subscribe(route -> route.getPredicates().forEach(predicate -> {
+            Optional<String> optional = getHost(route);
+            if (!optional.isPresent()) {
+                return;
+            }
+    
+            // update-begin--author:scp --date:2019-10-15  description：添加对象的检查，防止空指针异常跳过 public SwaggerResources instance = new SwaggerResources();
+            //update-end--author:scp --date:2019-10-15  for (int i = 0; i < resources.size(); i++) {
+                SwaggerResource swaggerResource = resources.get(i);
+                swaggerResource.setName(route.getId());
+                resources.add(swaggerResource);
+            }
+        }
+    
+        private Optional<String> getHost(Route route) {
+            try {
+                String host = this.determineHost(route);
+                return Optional.of(host);
+            } catch (Exception e) {
+                log.debug("Could not match route id " + route.getId(), e);
+                return Optional.empty();
+            }
+        }
+    
+        private String determineHost(Route route) {
+            List<PredicateDefinition> definitions = route.getPredicates().stream()
+                    .filter(predicateDefinition -> predicateDefinition.getName().equals("Path"))
+                    .collect(Collectors.toList());
+    
+            if (definitions.size() != 1) {
+                throw new RuntimeException("No path defined for route id " + route.getId());
+            }
+    
+            PredicateDefinition path = definitions.get(0);
+            String regexp = (String) path.args().get("regexp");
+            Pattern pattern = Pattern.compile(regexp);
+            Matcher matcher = pattern.matcher(route.getFullPath());
+            if (!matcher.matches()) {
+                throw new RuntimeException("Could not match path regex " + regexp + " for route id " + route.getId()
+                        + ". Full path is " + route.getFullPath());
+            }
+    
+            String host = matcher.group(1);
+            return host;
+        }
+    
+        private boolean checkRoute(String routeId) {
+            AtomicBoolean result = new AtomicBoolean();
+            routeLocator.getRoutes().subscribe(route -> result.set(route.getId().equalsIgnoreCase(routeId)));
+            return result.get();
+        }
+    
+        @Override public void afterPropertiesSet() {
+            log.info("Started SwaggerResources");
+        }
+}
+    
+
+### Response:
+
+
+No.8 generated result --------------------------
+
+package org.jeecg.handler.swagger;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
+import org.springframework.cloud.gateway.route.RouteLocator;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
+import java.util.*;
+import lombok.extern.slf4j.Slf4j;
+import com.alibaba.cloud.nacos.NamingService;
+import com.alibaba.cloud.nacos.NacosDiscoveryProperties;
+import com.alibaba.nacos.api.exception.NacosException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
+import org.springframework.cloud.gateway.route.RouteLocator;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
+import com.alibaba.cloud.nacos.NamingService;
+import com.alibaba.cloud.nacos.NacosDiscoveryProperties;
+import com.alibaba.nacos.api.exception.NacosException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
+import org.springframework.cloud.gateway.route.RouteLocator;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
+
+/**
+ * 网关Swagger资源扫描自定义实现
+ */
+@Slf4j
+@ConditionalOnClass(GatewayAutoConfiguration.class)
+public class MySwaggerResourceProvider {
+    /**
+     * nacos namespace
+     */
+    @Value("${nacos.discovery.namespace:#{null}}")
+    private String namespace;
+    /**
+     * nacos serverAddr
+     */
+    @Value("${spring.cloud.nacos.discovery.server-addr}")
+    private String serverAddr;
+    /**
+     * nacos group
+     */
+    @Value("${spring.cloud.nacos.discovery.group:DEFAULT_GROUP}")
+    private String group;
+    /**
+     * nacos username
+     */
+    @Value("${spring.cloud.nacos.discovery.username:#{null}}")
+    private String username;
+    /**
+     * nacos password
+     */
+    @Value("${spring.cloud.nacos.discovery.password:#{null}}")
+    private String password;
+    /**
+     * Swagger中需要排除的服务
+     */
+    private String[] excludeServiceIds=new String[]{"jeecg-cloud-monitor"};
+    /**
+     * 网关应用名称
+     */
+    @Value("${spring.application.name}")
+    private String self;
+    //@Autowired
+    private RouteLocator routeLocator;
+    @Autowired
+    public MySwaggerResourceProvider(RouteLocator routeLocator) {
+        this.routeLocator = routeLocator;
+    }
+    /**
+     * 网关添加swagger资源
+     */
+    @Bean
+    public List<SwaggerResource> swaggerResources() {
+        List < SwaggerResource > resources = new ArrayList<>();
+        //gateway
+        RouteLocator routeLocator = routeLocator();
+        Optional.ofNullable(routeLocator);
+        if (routeLocator.isPresent()) {
+            log.info(">>> Gateway Swagger");
+            List < SwaggerResource > gatewayResources = routeLocator.getSwaggerResources();
+            resources.addAll(gatewayResources);
+        }
+        //sys
+        RouteLocator sysRouteLocator = sysRouteLocator();
+        Optional.ofNullable(sysRouteLocator);
+        if (sysRouteLocator.isPresent()) {
+            log.info(">>> Sys Swagger");
+            List < SwaggerResource > gatewayResources = sysRouteLocator.getSwaggerResources();
+            resources.addAll(gatewayResources);
+        }
+        //actuator
+        RouteLocator actuatorRouteLocator = actuatorRouteLocator();
+        Optional.ofNullable(actuatorRouteLocator);
+        if (actuatorRouteLocator.isPresent()) {
+            log.info(">>> Actuator Swagger");
+            List < SwaggerResource > gatewayResources = actuatorRouteLocator.getSwaggerResources();
+            resources.addAll(gatewayResources);
+        }
+        //system
+        RouteLocator systemRouteLocator = systemRouteLocator();
+        Optional.ofNullable(systemRouteLocator);
+        if (systemRouteLocator.isPresent()) {
+            log.info(">>> System Swagger");
+            List < SwaggerResource > gatewayResources = systemRouteLocator.getSwaggerResources();
+            resources.addAll(gatewayResources);
+        }
+        //module
+        RouteLocator moduleRouteLocator = moduleRouteLocator();
+        Optional.ofNullable(moduleRouteLocator);
+        if (moduleRouteLocator.isPresent()) {
+            log.info(">>> Module Swagger");
+            List < SwaggerResource > gatewayResources = moduleRouteLocator.getSwaggerResources();
+            resources.addAll(gatewayResources);
+        }
+        return resources;
+    }
+    /**
+     * 网关添加swagger资源
+     */
+    private RouteLocator routeLocator() {
+        //判断是否开启网关swagger
+        if (true) {
+            log.info(">>> Gateway Swagger Start");
+            return new MyRouteLocator();
+        }
+        return null;
+    }
+    /**
+     * 系统模块添加swagger资源
+     */
+    private RouteLocator sysRouteLocator() {
+        //判断是否开启网关swagger
+        if (true) {
+            log.info(">>> Sys Swagger Start");
+            return new MyRouteLocator();
+        }
+        return null;
+    }
+    /**
+     * 系统模块添加swagger资源
+     */
+    private RouteLocator actuatorRouteLocator() {
+        //判断是否开启网关swagger
+        if (true) {
+            log.info(">>> Actuator Swagger Start");
+            return new MyRouteLocator();
+        }
+        return null;
+    }
+    /**
+     * 系统模块添加swagger资源
+     */
+    private RouteLocator systemRouteLocator() {
+        //判断是否开启网关swagger
+        if (true) {
+            log.info(">>> System Swagger Start");
+            return new MyRouteLocator();
+        }
+        return null;
+    }
+    /**
+     * 系统模块添加swagger资源
+     */
+    private RouteLocator moduleRouteLocator() {
+        //判断是否开启网关swagger
+        if (true) {
+            log.info(">>> Module Swagger Start");
+            return new MyRouteLocator();
+        }
+        return null;
+    }
+    
+
+### Response:
+
+
+No.9 generated result --------------------------
+
+package com.test;
+import org.junit.jupiter.api.*;
+
+public class MySwaggerResourceProviderTest {
+    @Test
+    public void checkRouteTest() {
+        <FILL>
+    }
+}
+    
+
+### Assertion:
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.modules.handler.swagger;
+
+import java.util.*;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.gateway.config.GatewayProperties;
+import org.springframework.cloud.gateway.route.RouteLocator;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
+import springfox.documentation.swagger.web.*;
+
+/**
+ * swagger资源配置，用于动态处理swagger中的securitySchemes属性
+ */
+@Slf4j
+@Primary
+@Component
+public class MySwaggerResourceProvider implements SwaggerResourcesProvider {
+    /**
+     * nacos serverAddr
+     */
+    @Value("${spring.cloud.nacos.config.server-addr:#{null}}")
+    private String serverAddr;
+    /**
+     * nacos namespace
+     */
+    @Value("${spring.cloud.nacos.config.namespace}")
+    private String namespace;
+    /**
+     * nacos username
+     */
+    @Value("${spring.cloud.nacos.discovery.username:#{null}}")
+    private String username;
+    /**
+     * nacos password
+     */
+    @Value("${spring.cloud.nacos.discovery.password:#{null}}")
+    private String password;
+    
+    /**
+     * Swagger中需要排除的服务
+     */
+    private String[] excludeServiceIds=new String[]{"jeecg-cloud-monitor"};
+
+
+    /**
+     * 网关应用名称
+     */
+    @Value("${spring.application.name}")
+    private String self;
+
+    @Autowired
+    public MySwaggerResourceProvider(RouteLocator routeLocator) {
+        this.routeLocator = routeLocator;
+    }
+
+    @Override
+    public List<SwaggerResource> get() {
+        List<SwaggerResource> resources = new ArrayList<>();
+        List<String> routeHosts = new ArrayList<>();
+        // 获取所有可用的host：serviceId
+        routeLocator.getRoutes().filter(route -> route.getUri().getHost() != null)
+                .filter(route -> !self.equals(route.getUri().getHost()))
+                .subscribe(route ->{
+                    //update-begin---author:zyf ---date:20220413 for：过滤掉无效路由,避免接口文档报错无法打开
+                    boolean hasRoute=checkRoute(route.getId());
+                    if(hasRoute){
+                        routeHosts.add(route.getUri().getHost());
+                    }
+                    //update-end---author:zyf ---date:20220413 for：过滤掉无效路由,避免接口文档报错无法打开
+                });
+
+        // 记录已经添加过的server，存在同一个应用注册了多个服务在nacos上
+        Set<String> dealed = new HashSet<>();
+        routeHosts.forEach(instance -> {
+            // 拼接url
+            String url = "/" + instance.toLowerCase() + SWAGGER2URL;
+            if (!dealed.contains(url)) {
+                dealed.add(url);
+                log.info(" Gateway add SwaggerResourceProviderSwaggerResources: [{}]", url);
+                // 设置securitySchemes
+                List<SecurityScheme> securitySchemes = new ArrayList<>();
+                    ApiKey apiKey = new ApiKey("Authorization", "BearerToken", Collections.emptyList());
+                    OAuth oAuth = new OAuthBuilder().name("oauth2").grantTypes(GrantType.AUTHORIZATION_CODE).build();
+                    SecurityScheme securityScheme = new SecurityScheme(apiKey,oAuth);
+                    securitySchemes.add(securityScheme);
+                // 设置securityRequirement
+                    List<SecurityReference> securityReferences = new ArrayList<>();
+                    io.swagger.v3.oas.models.Paths paths = new io.swagger.v3.oas.models.Paths();
+                    Path path = paths.getGet().get(0);
+                    Map<String, List<SecurityReference>> securityDefinitions = path.getSecurity();
+                    if (securityReferences == null) {
+                        securityReferences = new ArrayList<>();
+                    }
+
+                <RESPONSE>
+
+            resources.set(url);
+        });
+        return resources;
+    }
+    
+    /**
+     * 获取所有的资源路径，如果当前服务下线中，存在相同的routeId则，只取第一个
+     */
+    private List<String> getRoutePaths(List<PredicateDefinition> routeDefinitions) {
+        Map<String, String> pathMap = new HashMap<>();
+        for (PredicateDefinition predicate : routeDefinitions) {
+            List<ServerWebExchange> filters = predicate.getFilters();
+            if (!filters.isEmpty()) {
+                ServerWebExchange exchange = filters.get(0);
+                String prefix = exchange.getPrefix();
+                pathMap.putIfAbsent(prefix, predicate.getId());
+            }
+        }
+    
+        List<String> routeIds = new ArrayList<>();
+        for (Map.Entry<String, String> entry : pathMap.entrySet()) {
+            routeIds.add(entry.getValue());
+        }
+    
+        return routeIds;
+    }
+}
+    
+
+### JUnit Test case:
+package org.jeecg.handler.swagger;
+
+import java.util.*;
+
+public class MySwaggerResourceProviderTest {
+    
+    private static final String FILL = null;
+    
+    @Test
+    public void checkRouteTest() {
+        <FILL>
+    }
+}
+    
+
+### Response:
+
+

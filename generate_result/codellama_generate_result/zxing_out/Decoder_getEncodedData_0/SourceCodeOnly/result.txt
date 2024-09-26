@@ -1,0 +1,313 @@
+Source code: 
+
+
+private static String getEncodedData(boolean[] correctedBits) throws FormatException {
+  int endIndex = correctedBits.length;
+  Table latchTable = Table.UPPER; // table most recently latched to
+  Table shiftTable = Table.UPPER; // table to use for the next read
+
+  // Final decoded string result
+  // (correctedBits-5) / 4 is an upper bound on the size (all-digit result)
+  StringBuilder result = new StringBuilder((correctedBits.length - 5) / 4);
+
+  // Intermediary buffer of decoded bytes, which is decoded into a string and flushed
+  // when character encoding changes (ECI) or input ends.
+  ByteArrayOutputStream decodedBytes = new ByteArrayOutputStream();
+  Charset encoding = DEFAULT_ENCODING;
+
+  int index = 0;
+  while (index < endIndex) {
+    if (shiftTable == Table.BINARY) {
+      if (endIndex - index < 5) {
+        break;
+      }
+      int length = readCode(correctedBits, index, 5);
+      index += 5;
+      if (length == 0) {
+        if (endIndex - index < 11) {
+          break;
+        }
+        length = readCode(correctedBits, index, 11) + 31;
+        index += 11;
+      }
+      for (int charCount = 0; charCount < length; charCount++) {
+        if (endIndex - index < 8) {
+          index = endIndex;  // Force outer loop to exit
+          break;
+        }
+        int code = readCode(correctedBits, index, 8);
+        decodedBytes.write((byte) code);
+        index += 8;
+      }
+      // Go back to whatever mode we had been in
+      shiftTable = latchTable;
+    } else {
+      int size = shiftTable == Table.DIGIT ? 4 : 5;
+      if (endIndex - index < size) {
+        break;
+      }
+      int code = readCode(correctedBits, index, size);
+      index += size;
+      String str = getCharacter(shiftTable, code);
+      if ("FLG(n)".equals(str)) {
+        if (endIndex - index < 3) {
+          break;
+        }
+        int n = readCode(correctedBits, index, 3);
+        index += 3;
+        //  flush bytes, FLG changes state
+        try {
+          result.append(decodedBytes.toString(encoding.name()));
+        } catch (UnsupportedEncodingException uee) {
+          throw new IllegalStateException(uee);
+        }
+        decodedBytes.reset();
+        switch (n) {
+          case 0:
+            result.append((char) 29);  // translate FNC1 as ASCII 29
+            break;
+          case 7:
+            throw FormatException.getFormatInstance(); // FLG(7) is reserved and illegal
+          default:
+            // ECI is decimal integer encoded as 1-6 codes in DIGIT mode
+            int eci = 0;
+            if (endIndex - index < 4 * n) {
+              break;
+            }
+            while (n-- > 0) {
+              int nextDigit = readCode(correctedBits, index, 4);
+              index += 4;
+              if (nextDigit < 2 || nextDigit > 11) {
+                throw FormatException.getFormatInstance(); // Not a decimal digit
+              }
+              eci = eci * 10 + (nextDigit - 2);
+            }
+            CharacterSetECI charsetECI = CharacterSetECI.getCharacterSetECIByValue(eci);
+            if (charsetECI == null) {
+              throw FormatException.getFormatInstance();
+            }
+            encoding = charsetECI.getCharset();
+        }
+        // Go back to whatever mode we had been in
+        shiftTable = latchTable;
+      } else if (str.startsWith("CTRL_")) {
+        // Table changes
+        // ISO/IEC 24778:2008 prescribes ending a shift sequence in the mode from which it was invoked.
+        // That's including when that mode is a shift.
+        // Our test case dlusbs.png for issue #642 exercises that.
+        latchTable = shiftTable;  // Latch the current mode, so as to return to Upper after U/S B/S
+        shiftTable = getTable(str.charAt(5));
+        if (str.charAt(6) == 'L') {
+          latchTable = shiftTable;
+        }
+      } else {
+        // Though stored as a table of strings for convenience, codes actually represent 1 or 2 *bytes*.
+        byte[] b = str.getBytes(StandardCharsets.US_ASCII);
+        decodedBytes.write(b, 0, b.length);
+        // Go back to whatever mode we had been in
+        shiftTable = latchTable;
+      }
+    }
+  }
+  try {
+    result.append(decodedBytes.toString(encoding.name()));
+  } catch (UnsupportedEncodingException uee) {
+    // can't happen
+    throw new IllegalStateException(uee);
+  }
+  return result.toString();
+}
+
+
+
+No.1 generated result --------------------------
+
+@Test
+public void getEncodedDataTest() {
+    // Arrange
+    Decoder decoder = new Decoder();
+    boolean[] correctedBits = {true, false, true, false, true};  // Sample input bits
+
+    // Act
+    String encodedData = decoder.getEncodedData(correctedBits);
+
+    // Assert
+    assertEquals("Hello World!", encodedData);  // Expected output
+}
+
+
+No.2 generated result --------------------------
+
+@Test
+public void getEncodedDataTest() {
+    // Create some sample input data for testing
+    boolean[] correctedBits = new boolean[]{true, false, true, false, true};
+    
+    // Call the getEncodedData method and assert that it returns the expected result
+    String encodedData = Decoder.getEncodedData(correctedBits);
+    assertEquals("01000", encodedData);
+}
+
+
+No.3 generated result --------------------------
+
+package com.google.zxing.aztec.decoder;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DecoderTest {
+    @Test
+    public void getEncodedDataTest() {
+        // Create a boolean array containing the data to be decoded
+        boolean[] correctedBits = new boolean[10];
+        
+        // Set the values of the boolean array as appropriate for your test case
+        correctedBits[0] = true;
+        correctedBits[1] = false;
+        correctedBits[2] = true;
+        correctedBits[3] = false;
+        correctedBits[4] = true;
+        correctedBits[5] = false;
+        correctedBits[6] = true;
+        correctedBits[7] = false;
+        correctedBits[8] = true;
+        correctedBits[9] = false;
+        
+        // Create a Decoder instance and call its getEncodedData method with the boolean array as input
+        Decoder decoder = new Decoder();
+        String encodedData = decoder.getEncodedData(correctedBits);
+        
+        // Check that the returned string contains the expected data
+        assertEquals("Hello World", encodedData);
+    }
+}
+
+
+No.4 generated result --------------------------
+
+
+I'm not sure what you are trying to do with the code provided. It seems like a method for encoding data using a specific format, but it is not clear how this method should be used or what it does exactly. Could you please provide more context or clarify your question? I would be happy to help if you have any questions or need assistance with anything else.
+
+
+No.5 generated result --------------------------
+
+@Test
+public void getEncodedDataTest() {
+    boolean[] correctedBits = new boolean[] { true, false, true, false, true };
+    Decoder decoder = new Decoder();
+    String result = decoder.getEncodedData(correctedBits);
+    assertEquals("Hello World", result);
+}
+
+
+No.6 generated result --------------------------
+
+package com.google.zxing.aztec.decoder;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DecoderTest {
+    @Test
+    public void getEncodedDataTest() {
+        // Test case 1: correct data with all-digit encoding
+        boolean[] correctedBits = new boolean[8];
+        for (int i = 0; i < 8; i++) {
+            correctedBits[i] = true;
+        }
+        String expectedResult = "01234567";
+        assertEquals(expectedResult, getEncodedData(correctedBits));
+        
+        // Test case 2: correct data with binary encoding
+        correctedBits = new boolean[8];
+        for (int i = 0; i < 8; i++) {
+            correctedBits[i] = true;
+        }
+        expectedResult = "01234567";
+        assertEquals(expectedResult, getEncodedData(correctedBits));
+        
+        // Test case 3: correct data with upper table encoding
+        correctedBits = new boolean[8];
+        for (int i = 0; i < 8; i++) {
+            correctedBits[i] = true;
+        }
+        expectedResult = "01234567";
+        assertEquals(expectedResult, getEncodedData(correctedBits));
+        
+        // Test case 4: correct data with lower table encoding
+        correctedBits = new boolean[8];
+        for (int i = 0; i < 8; i++) {
+            correctedBits[i] = true;
+        }
+        expectedResult = "01234567";
+        assertEquals(expectedResult, getEncodedData(correctedBits));
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.google.zxing.aztec.decoder;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DecoderTest {
+    @Test
+    public void getEncodedDataTest() {
+        // Test case 1: Input = [true, false, true, false, true], Expected output = "HELLO"
+        boolean[] input1 = new boolean[]{true, false, true, false, true};
+        String expectedOutput1 = "HELLO";
+        assertEquals(expectedOutput1, Decoder.getEncodedData(input1));
+        
+        // Test case 2: Input = [false, true, false, true, false], Expected output = "WORLD"
+        boolean[] input2 = new boolean[]{false, true, false, true, false};
+        String expectedOutput2 = "WORLD";
+        assertEquals(expectedOutput2, Decoder.getEncodedData(input2));
+        
+        // Test case 3: Input = [true, true, true, false, false], Expected output = "" (empty string)
+        boolean[] input3 = new boolean[]{true, true, true, false, false};
+        String expectedOutput3 = "";
+        assertEquals(expectedOutput3, Decoder.getEncodedData(input3));
+    }
+}
+
+
+No.8 generated result --------------------------
+
+The `getEncodedData` method appears to be a part of an Aztec code decoding algorithm, which is used to decode binary data that has been encoded using the Aztec Code symbology. The method takes a `boolean[]` array as input, which represents the corrected bits of the encoded message, and returns a string containing the decoded message.
+
+The method starts by initializing several variables: `endIndex`, which is set to the length of the input `correctedBits` array; `latchTable`, which is set to the upper table (as it will be used for most of the encoded data); and `shiftTable`, which is also set to the upper table. The method then initializes a `StringBuilder` object, which will be used to build the decoded string result, and an `ByteArrayOutputStream` object, which will be used to store the decoded bytes.
+
+The main loop of the method starts at index 0 and iterates until it reaches the endIndex. For each iteration, the method checks whether the shiftTable is set to binary mode (this means that a binary code has been detected). If so, the method reads a 5-bit code from the input array using the `readCode` method, and then decodes the code using the `getCharacter` method. The resulting string is appended to the `decodedBytes` stream using the `write()` method.
+
+If the shiftTable is not set to binary mode, the method checks whether it is set to digit mode (this means that a numeric code has been detected). If so, the method reads a 4-bit code from the input array using the `readCode` method, and then decodes the code using the `getCharacter` method. The resulting string is appended to the `decodedBytes` stream using the `write()` method.
+
+If neither of these conditions are met (i.e., the shiftTable is not set to binary or digit mode), the method checks whether the current character is a control code (this means that a special instruction has been detected). If so, the method reads the next 3 bits from the input array using the `readCode` method, and then decodes the code using the `getCharacter` method. The resulting string is appended to the `decodedBytes` stream using the `write()` method.
+
+If none of the above conditions are met (i.e., the current character is not a control code), the method simply appends the current byte to the `decodedBytes` stream using the `write()` method.
+
+After the main loop has finished, the method appends the contents of the `decodedBytes` stream to the `result` string builder using the `append()` method. Finally, the method returns the `result` string as the decoded message.
+
+It seems that this method is responsible for decoding the binary data encoded using the Aztec Code symbology and returning the decoded message. The input array represents the corrected bits of the encoded message, and the output string contains the decoded message.
+
+
+No.9 generated result --------------------------
+
+The `getEncodedData` method is a private method that takes an array of booleans as input and returns a string. The method first initializes some variables, including two tables (`Table.UPPER` and `Table.DIGIT`) and a StringBuilder to store the final decoded result.
+
+The method then starts an infinite loop that continues until it reaches the end of the input array. For each iteration, it checks if the current table is `BINARY`. If so, it reads a code from the input array using the `readCode` method and appends the corresponding character to the decoded result.
+
+If the current table is not `BINARY`, the method first checks if the next five bits in the input array are a termination sequence (`00000`). If so, it sets the code length to 0 and increments the index by 5. Otherwise, it reads a code from the input array using the `readCode` method and appends the corresponding character to the decoded result.
+
+The loop continues until the end of the input array is reached. Once the loop exits, the method returns the final decoded result as a string.
+
+In order to write a unit test for this method, you will need to create an instance of the `Decoder` class and call its `getEncodedData` method with a suitable input array. You can then compare the returned value against the expected output to ensure that the method is working correctly.
+
+
+No.10 generated result --------------------------
+
+I'm not sure what you're asking for with the code provided. It looks like a method that returns a string based on the input parameters, but I don't see any actual test cases or assertions in your code. Could you please clarify what you're trying to accomplish and provide more information about the issue you're facing?
+
+

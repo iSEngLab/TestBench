@@ -1,0 +1,269 @@
+Source code: 
+
+
+public int decodeWithECCount(int[] received, int twoS) throws ReedSolomonException {
+  GenericGFPoly poly = new GenericGFPoly(field, received);
+  int[] syndromeCoefficients = new int[twoS];
+  boolean noError = true;
+  for (int i = 0; i < twoS; i++) {
+    int eval = poly.evaluateAt(field.exp(i + field.getGeneratorBase()));
+    syndromeCoefficients[syndromeCoefficients.length - 1 - i] = eval;
+    if (eval != 0) {
+      noError = false;
+    }
+  }
+  if (noError) {
+    return 0;
+  }
+  GenericGFPoly syndrome = new GenericGFPoly(field, syndromeCoefficients);
+  GenericGFPoly[] sigmaOmega =
+      runEuclideanAlgorithm(field.buildMonomial(twoS, 1), syndrome, twoS);
+  GenericGFPoly sigma = sigmaOmega[0];
+  GenericGFPoly omega = sigmaOmega[1];
+  int[] errorLocations = findErrorLocations(sigma);
+  int[] errorMagnitudes = findErrorMagnitudes(omega, errorLocations);
+  for (int i = 0; i < errorLocations.length; i++) {
+    int position = received.length - 1 - field.log(errorLocations[i]);
+    if (position < 0) {
+      throw new ReedSolomonException("Bad error location");
+    }
+    received[position] = GenericGF.addOrSubtract(received[position], errorMagnitudes[i]);
+  }
+  return errorLocations.length;
+}
+
+
+
+No.1 generated result --------------------------
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ReedSolomonDecoderTest {
+    @Test
+    public void decodeWithECCountTest() {
+        int[] received = new int[] { 2, 3, 5, 7 }; // Sample data to be decoded
+        int twoS = 4; // The number of error-correcting codewords (ECCs) in the data
+        ReedSolomonDecoder decoder = new ReedSolomonDecoder(new GenericGF());
+        
+        assertEquals(decoder.decodeWithECCount(received, twoS), 0); // Expected output: no error
+    }
+}
+
+
+No.2 generated result --------------------------
+
+import com.google.zxing.common.reedsolomon.ReedSolomonDecoder;
+import org.junit.jupiter.api.Test;
+
+public class ReedSolomonDecoderTest {
+    @Test
+    public void decodeWithECCountTest() {
+        int[] received = new int[]{1, 2, 3, 4}; // a sample received data array
+        int twoS = 5; // the total number of symbols in the received data array
+        ReedSolomonDecoder decoder = new ReedSolomonDecoder(new GenericGFPoly());
+        int numErrors = decoder.decodeWithECCount(received, twoS);
+        assertEquals(numErrors, 0); // check that no errors were detected in the received data array
+    }
+}
+
+
+No.3 generated result --------------------------
+
+@Test
+public void decodeWithECCountTest() {
+    // Setup the test data and parameters
+    int[] received = new int[] {1, 2, 3};
+    int twoS = 2;
+    ReedSolomonDecoder decoder = new ReedSolomonDecoder(new GenericGFPoly());
+    
+    // Call the method to be tested
+    int result = decoder.decodeWithECCount(received, twoS);
+    
+    // Verify that the result is correct
+    assertEquals(0, result);
+}
+
+
+No.4 generated result --------------------------
+
+
+package com.google.zxing.common.reedsolomon;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ReedSolomonDecoderTest {
+    @Test
+    public void decodeWithECCountTest() {
+        GenericGF field = new GenericGF(256, 255);
+        int[] received = new int[8];
+        for (int i = 0; i < 8; i++) {
+            received[i] = (byte) i;
+        }
+        ReedSolomonDecoder decoder = new ReedSolomonDecoder(field);
+        assertEquals(0, decoder.decodeWithECCount(received, 2));
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.google.zxing.common.reedsolomon;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ReedSolomonDecoderTest {
+    @Test
+    public void decodeWithECCountTest() {
+        // Create a field with 256 elements and a generator base of 10
+        GenericGF field = new GenericGF(256, 10);
+        
+        // Create a decoder with the field
+        ReedSolomonDecoder decoder = new ReedSolomonDecoder(field);
+        
+        // Test with a valid set of received symbols
+        int[] received = {1, 2, 3, 4};
+        assertEquals(0, decoder.decodeWithECCount(received, 2));
+        
+        // Test with an invalid set of received symbols
+        received = new int[] {-1, -2, -3, -4};
+        assertThrows(ReedSolomonException.class, () -> {
+            decoder.decodeWithECCount(received, 2);
+        });
+        
+        // Test with a set of received symbols that contains an error
+        received = new int[] {1, 2, 3, -4};
+        assertEquals(1, decoder.decodeWithECCount(received, 2));
+    }
+}
+
+
+No.6 generated result --------------------------
+
+    
+package com.google.zxing.common.reedsolomon;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ReedSolomonDecoderTest {
+    @Test
+    public void decodeWithECCountTest() {
+        int[] received = new int[2]; // Replace with the actual received data
+        int twoS = 1; // Replace with the actual value of "twoS"
+        
+        ReedSolomonDecoder decoder = new ReedSolomonDecoder(GenericGF.QR_CODE_FIELD);
+        int errorsCorrected = decoder.decodeWithECCount(received, twoS);
+        
+        assertEquals(1, errorsCorrected); // Replace with the expected number of corrected errors
+    }
+}
+
+
+No.7 generated result --------------------------
+
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ReedSolomonDecoderTest {
+    @Test
+    public void decodeWithECCountTest() {
+        // Test with no errors:
+        GenericGF field = new GenericGF(256, 0x11d);
+        int[] received = new int[8];
+        for (int i = 0; i < received.length; i++) {
+            received[i] = i + 1;
+        }
+        ReedSolomonDecoder decoder = new ReedSolomonDecoder(field);
+        assertEquals(0, decoder.decodeWithECCount(received, 4));
+
+        // Test with errors:
+        received[3] = GenericGF.addOrSubtract(received[3], field.exp(4));
+        received[5] = GenericGF.addOrSubtract(received[5], field.exp(12));
+        assertEquals(2, decoder.decodeWithECCount(received, 4));
+    }
+}
+
+
+
+No.8 generated result --------------------------
+
+package com.google.zxing.common.reedsolomon;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ReedSolomonDecoderTest {
+    @Test
+    public void decodeWithECCountTest() {
+        // Set up the test data
+        GenericGF field = new GenericGF(15);
+        int[] received = {1, 2, 3, 4};
+        int twoS = 2;
+        ReedSolomonDecoder decoder = new ReedSolomonDecoder(field);
+        
+        // Call the method under test
+        int errorsCorrected = decoder.decodeWithECCount(received, twoS);
+        
+        // Verify that the result is correct
+        assertEquals(2, errorsCorrected);
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package com.google.zxing.common.reedsolomon;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ReedSolomonDecoderTest {
+    @Test
+    public void decodeWithECCountTest() {
+        // Create an instance of the ReedSolomonDecoder class
+        GenericGF field = new GenericGF(256);
+        ReedSolomonDecoder decoder = new ReedSolomonDecoder(field);
+
+        // Test with a valid input
+        int[] received = { 1, 0, 1, 0 };
+        int twoS = 3;
+        int expectedECCount = 1;
+        assertEquals(expectedECCount, decoder.decodeWithECCount(received, twoS));
+
+        // Test with a valid input but no errors
+        received = new int[] { 1, 0, 1, 0 };
+        expectedECCount = 0;
+        assertEquals(expectedECCount, decoder.decodeWithECCount(received, twoS));
+
+        // Test with an invalid input (received array is not divisible by twoS)
+        received = new int[] { 1, 0, 1 };
+        twoS = 3;
+        expectedECCount = -1;
+        assertEquals(expectedECCount, decoder.decodeWithECCount(received, twoS));
+    }
+}
+
+
+No.10 generated result --------------------------
+
+
+@Test
+public void decodeWithECCountTest() {
+    // Setup the test environment
+    GenericGF field = new GenericGF(256, 251);
+    int[] received = new int[] {1, 0, 1, 0};
+    int twoS = 4;
+    ReedSolomonDecoder decoder = new ReedSolomonDecoder(field);
+    
+    // Execute the method to be tested
+    int actual = decoder.decodeWithECCount(received, twoS);
+    
+    // Verify the result
+    assertEquals(1, actual);
+}
+
+

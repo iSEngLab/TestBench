@@ -1,0 +1,517 @@
+Source code: 
+
+
+public static String getEncodeData(String data, SensitiveEnum sensitiveEnum){
+    String result;
+    switch (sensitiveEnum){
+        case ENCODE:
+            try {
+                result = AesEncryptUtil.encrypt(data);
+            } catch (Exception exception) {
+                log.error("数据加密错误", exception.getMessage());
+                result = data;
+            }
+            break;
+        case CHINESE_NAME:
+            result = chineseName(data);
+            break;
+        case ID_CARD:
+            result = idCardNum(data);
+            break;
+        case FIXED_PHONE:
+            result = fixedPhone(data);
+            break;
+        case MOBILE_PHONE:
+            result = mobilePhone(data);
+            break;
+        case ADDRESS:
+            result = address(data, 3);
+            break;
+        case EMAIL:
+            result = email(data);
+            break;
+        case BANK_CARD:
+            result = bankCard(data);
+            break;
+        case CNAPS_CODE:
+            result = cnapsCode(data);
+            break;
+        default:
+            result = data;
+    }
+    return result;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SensitiveInfoUtilTest {
+    
+    @Test
+    public void getEncodeDataTest() {
+        String originalData = "Original Data";
+        String encryptedData = "Encrypted Data";
+        
+        // Mocking AesEncryptUtil.encrypt to return specific value for testing purposes
+        // Assuming 'AesEncryptUtil.encrypt' has been properly mocked somewhere to return "Encrypted Data" 
+        
+        assertEquals(encryptedData, SensitiveInfoUtil.getEncodeData(originalData, SensitiveEnum.ENCODE));
+        assertEquals("Li**", SensitiveInfoUtil.getEncodeData("Lili", SensitiveEnum.CHINESE_NAME));
+        assertEquals("123************34", SensitiveInfoUtil.getEncodeData("123456789012345678", SensitiveEnum.ID_CARD));
+        assertEquals("010-****-1234", SensitiveInfoUtil.getEncodeData("010-1234-1234", SensitiveEnum.FIXED_PHONE));
+        assertEquals("138****1234", SensitiveInfoUtil.getEncodeData("13812341234", SensitiveEnum.MOBILE_PHONE));
+        assertEquals("SomePlace*****", SensitiveInfoUtil.getEncodeData("SomePlace 123 Street", SensitiveEnum.ADDRESS));
+        assertEquals("e****@example.com", SensitiveInfoUtil.getEncodeData("email@example.com", SensitiveEnum.EMAIL));
+        assertEquals("6222***********1234", SensitiveInfoUtil.getEncodeData("62221234123412341234", SensitiveEnum.BANK_CARD));
+        assertEquals("1020*******12", SensitiveInfoUtil.getEncodeData("10203040506012", SensitiveEnum.CNAPS_CODE));
+        
+        // Assert that default case returns the data unchanged
+        assertEquals(originalData, SensitiveInfoUtil.getEncodeData(originalData, SensitiveEnum.UNKNOWN));
+        
+        // Please note that the actual encrypted data, and desensitized info like Chinese names,
+        // ID cards, etc. will depend on the actual implementation of the methods and utilities
+        // called within the `getEncodeData` method, which are not provided here. Therefore, you'll
+        // need to mock or implement these utilities to complete the test case suitably.
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SensitiveInfoUtilTest {
+
+    @Test
+    public void getEncodeDataTest() {
+        String rawString = "Raw Data";
+        
+        // Assuming AesEncryptUtil.encrypt() correctly encodes the raw data.
+        // This would need to be a mock or a valid static response for a pre-set value.
+        String encodedString = "Encoded Data";
+        
+        // Encode case
+        assertEquals(encodedString, SensitiveInfoUtil.getEncodeData(rawString, SensitiveEnum.ENCODE));
+
+        // Test other enum cases assuming the corresponding methods return the manipulated string.
+        // The tests should ideally mock the behavior of these methods.
+        
+        // Chinese Name case
+        String expectedChineseName = "****";
+        assertEquals(expectedChineseName, SensitiveInfoUtil.getEncodeData(rawString, SensitiveEnum.CHINESE_NAME));
+        
+        // ID Card case
+        String expectedIdCard = "ID Card Hidden";
+        assertEquals(expectedIdCard, SensitiveInfoUtil.getEncodeData(rawString, SensitiveEnum.ID_CARD));
+        
+        // ... and so on for each enum value with their expected results.
+        
+        // Default case
+        assertEquals(rawString, SensitiveInfoUtil.getEncodeData(rawString, SensitiveEnum.UNKNOWN));
+
+        // Error case
+        // Depending on how AesEncryptUtil.encrypt() handles errors, you could check for the raw string.
+        // For this, you would need to force the error either with invalid input or mock an exception.
+        // Here is an example of handling an error case if AesEncryptUtil.encrypt() throws an exception.
+        String errorInput = "Error Inducing Input";
+        assertEquals(errorInput, SensitiveInfoUtil.getEncodeData(errorInput, SensitiveEnum.ENCODE));
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+public class SensitiveInfoUtilTest {
+    // Assuming AesEncryptUtil is an external utility that's hard to test, we'll mock it.
+    private static AesEncryptUtil aesEncryptUtilMock;
+
+    @BeforeAll
+    static void setUp() {
+        aesEncryptUtilMock = mock(AesEncryptUtil.class);
+    }
+    
+    @BeforeEach
+    void setUpEach() throws Exception {
+        // We'll return the same string prefixed with "ENCRYPTED_" for illustration purposes.
+        when(aesEncryptUtilMock.encrypt(anyString())).thenReturn("ENCRYPTED_" + anyString());
+    }
+
+    @Test
+    public void getEncodeDataTest() {
+        // Mock the behavior of AesEncryptUtil.encrypt
+        String testData = "Test Data";
+        try {
+            Mockito.when(AesEncryptUtil.encrypt(testData)).thenReturn("EncryptedData");
+        } catch (Exception e) {
+            fail("Encrypt util threw an exception");
+        }
+        
+        // Test ENCODE case
+        assertEquals("EncryptedData", SensitiveInfoUtil.getEncodeData(testData, SensitiveEnum.ENCODE));
+        
+        // Test CHINESE_NAME case with a given name example.
+        assertEquals("NamePresentedAsChineseCharacters", SensitiveInfoUtil.getEncodeData("John Doe", SensitiveEnum.CHINESE_NAME));
+        
+        // Test ID_CARD case with a mock ID card.
+        assertEquals("IDCardNumber", SensitiveInfoUtil.getEncodeData("1234567890", SensitiveEnum.ID_CARD));
+        
+        // Test FIXED_PHONE case with a phone number
+        assertEquals("FixedPhoneNumber", SensitiveInfoUtil.getEncodeData("12345678", SensitiveEnum.FIXED_PHONE));
+        
+        // Test MOBILE_PHONE case with a phone number
+        assertEquals("EncryptedMobilePhone", SensitiveInfoUtil.getEncodeData("9876543210", SensitiveEnum.MOBILE_PHONE));
+        
+        // Test ADDRESS case with a mock address
+        assertEquals("HiddenAddressDetail", SensitiveInfoUtil.getEncodeData("123 Main St", SensitiveEnum.ADDRESS));
+        
+        // Test EMAIL case with an example email.
+        assertEquals("EmailEncryption", SensitiveInfoUtil.getEncodeData("example@example.com", SensitiveEnum.EMAIL));
+        
+        // Test BANK_CARD case with a mock bank card number.
+        assertEquals("BankCardEncryption", SensitiveInfoUtil.getEncodeData("1234567890123456", SensitiveEnum.BANK_CARD));
+        
+        // Test CNAPS_CODE case with a mock CNAPS code.
+        assertEquals("CNAPSCodeEncryption", SensitiveInfoUtil.getEncodeData("123456", SensitiveEnum.CNAPS_CODE));
+        
+        // Test the default case
+        assertEquals("DefaultData", SensitiveInfoUtil.getEncodeData("DefaultData", null));
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SensitiveInfoUtilTest {
+
+    // Template to create test cases for other enum cases
+    private void testEnumCase(String input, SensitiveEnum sensitiveEnum, String expectedOutput) {
+        String result = SensitiveInfoUtil.getEncodeData(input, sensitiveEnum);
+        assertEquals(expectedOutput, result);
+    }
+
+    @Test
+    public void getEncodeDataTest() {
+        // Test with ENCODE enum case
+        String originalData = "some data to be encoded";
+        String expectedEncodedData = "expected encoded result"; // This should be the result of AesEncryptUtil.encrypt(originalData);
+        testEnumCase(originalData, SensitiveEnum.ENCODE, expectedEncodedData);
+
+        // Test other cases assuming their methods (e.g., chineseName, idCardNum) return the string "mocked result"
+        // You should replace "mocked result" with the actual expected output from each method
+        testEnumCase("Chinese Name", SensitiveEnum.CHINESE_NAME, "mocked result");
+        testEnumCase("ID Card Number", SensitiveEnum.ID_CARD, "mocked result");
+        testEnumCase("Fixed Phone Number", SensitiveEnum.FIXED_PHONE, "mocked result");
+        testEnumCase("Mobile Phone Number", SensitiveEnum.MOBILE_PHONE, "mocked result");
+        testEnumCase("Address", SensitiveEnum.ADDRESS, "mocked result");
+        testEnumCase("Email", SensitiveEnum.EMAIL, "mocked result");
+        testEnumCase("Bank Card Number", SensitiveEnum.BANK_CARD, "mocked result");
+        testEnumCase("CNAPS Code", SensitiveEnum.CNAPS_CODE, "mocked result");
+        
+        // Test default case
+        String defaultCaseData = "default case data";
+        testEnumCase(defaultCaseData, null, defaultCaseData);
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.mockito.Mockito;
+import static org.mockito.Mockito.*;
+
+public class SensitiveInfoUtilTest {
+
+    private static final String TEST_DATA = "<TEST_INPUT>";
+    
+    @BeforeEach
+    public void setUp() {
+        // Set up any required mock behavior, particularly if you need to mock the AesEncryptUtil.encrypt method
+        AesEncryptUtil mockAesEncryptUtil = mock(AesEncryptUtil.class);
+        Mockito.when(mockAesEncryptUtil.encrypt(TEST_DATA)).thenReturn("<MOCK_RESULT>");
+    }
+    
+    @Test
+    public void getEncodeDataTest() {
+        // Test for ENCODE case
+        String encodedData = SensitiveInfoUtil.getEncodeData(TEST_DATA, SensitiveEnum.ENCODE);
+        assertEquals("<EXPECTED_RESULT>", encodedData);
+
+        // Add assertions for other SensitiveEnum cases here
+
+        // Test for CHINESE_NAME case
+        String chineseName = SensitiveInfoUtil.getEncodeData(TEST_DATA, SensitiveEnum.CHINESE_NAME);
+        assertEquals("<EXPECTED_RESULT>", chineseName);
+
+        // ... continue with other assertions ...
+    }
+
+    // Methods to add required mock behavior or additional helpers can be added here
+}
+
+
+No.6 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SensitiveInfoUtilTest {
+    @Test
+    public void getEncodeDataTest() {
+        // Assuming AesEncryptUtil.encrypt method is correct and log is properly initialized.
+        // Since AesEncryptUtil.encrypt is not provided, we will treat it as a black box and assume it works as expected.
+        // Testing ENCODE scenario with a dummy data
+        String plainText = "plainTextData";
+        String encodedText = SensitiveInfoUtil.getEncodeData(plainText, SensitiveEnum.ENCODE);
+        // Check that the encoded text is not null and not the same as the plain text since it should have been encrypted
+        assertNotNull(encodedText, "Encoded text should not be null");
+        assertNotEquals(plainText, encodedText, "Encoded text should not match the plain text");
+        
+        // Testing CHINESE_NAME case
+        String chineseName = "张三";
+        // Assuming chineseName method is correctly implemented
+        String maskedChineseName = SensitiveInfoUtil.getEncodeData(chineseName, SensitiveEnum.CHINESE_NAME);
+        assertEquals("张*", maskedChineseName, "Masked Chinese name should show first character and mask others");
+        
+        // Continue with other enum cases as needed, making similar assumptions as above
+        // For example, assuming idCardNum masks all but the last four characters
+        String idCard = "123456789012345678";
+        String maskedIdCard = SensitiveInfoUtil.getEncodeData(idCard, SensitiveEnum.ID_CARD);
+        assertEquals("************5678", maskedIdCard, "Masked ID card should show only last four characters");
+        
+        // Add additional cases as appropriate
+        // ...
+    
+        // Testing the DEFAULT case where no action should be taken
+        String defaultData = "defaultData";
+        String defaultResult = SensitiveInfoUtil.getEncodeData(defaultData, SensitiveEnum.UNKNOWN);
+        // Assuming UNKNOWN is not a defined enum constant and would trigger the default case
+        assertEquals(defaultData, defaultResult, "Default case should return the original data");
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+class SensitiveInfoUtilTest {
+
+    @Test
+    public void getEncodeDataTest() {
+        String nonSensitiveData = "nonSensitiveData";
+        String sensitiveData = "sensitiveData";
+        String encryptedData = "encryptedData"; // You might want to replace this with a real encrypted string
+        String dataToBeEncoded = "DataToBeEncoded";
+        
+        // Assuming AesEncryptUtil is mockable/overridable and log is properly initialized in the production code.
+
+        // Test for ENCODE case
+        // Mock AesEncryptUtil to return `encryptedData` when it gets `sensitiveData`
+        // This step assumes that the mocking framework allows for such interactions.
+        // AesEncryptUtil.encrypt(sensitiveData) returns encryptedData
+        
+        String resultEncode = SensitiveInfoUtil.getEncodeData(sensitiveData, SensitiveEnum.ENCODE);
+        assertEquals(encryptedData, resultEncode);
+
+        // Test for the default case
+        String resultDefault = SensitiveInfoUtil.getEncodeData(nonSensitiveData, SensitiveEnum.DEFAULT);
+        assertEquals(nonSensitiveData, resultDefault);
+
+        // Add more assertions for other SensitiveEnum cases if necessary.
+        // For example, for CHINESE_NAME:
+        // String resultChineseName = SensitiveInfoUtil.getEncodeData(dataToBeEncoded, SensitiveEnum.CHINESE_NAME);
+        // assertEquals(expectedChineseName, resultChineseName);
+
+        // ... repeat this for ID_CARD, FIXED_PHONE, etc.,
+        // each time mocking the appropriate method if necessary,
+        // and then asserting the expected vs. actual result.
+        
+        // Test error handling
+        // Mock AesEncryptUtil to throw an exception when attempting to encrypt
+        // This step would simulate the encryption failure and log the error
+        
+        // AesEncryptUtil.encrypt(data) throws new Exception("encryption error")
+        
+        // Given the Exception, verify the log error was called, and data is returned as-is
+        String resultEncodeError = SensitiveInfoUtil.getEncodeData(dataToBeEncoded, SensitiveEnum.ENCODE);
+        assertEquals(dataToBeEncoded, resultEncodeError);
+        
+        // Verify log.error was called with the correct parameters
+        // This would generally involve verifying the mock of the log object, which is not shown here.
+        
+        // Note: The data strings, expected results, and mock implementations would need to be adapted
+        // to fit the test environment and data being handled. Since there is no actual
+        // AesEncryptUtil code or other required methods (chineseName, idCardNum, etc.) shown,
+        // I've made assumptions about their behavior for the sake of providing a complete test case.
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SensitiveInfoUtilTest {
+
+    // Example of a mock method for AesEncryptUtil.encrypt()
+    // This should be replaced with the actual encryption method or mock object response
+    private static String mockEncrypt(String data) {
+        return "encrypted_" + data;
+    }
+
+    @Test
+    public void getEncodeDataTest() {
+        // Test for ENCODE case using a mock encryption method
+        assertEquals("encrypted_data", SensitiveInfoUtil.getEncodeData("data", SensitiveEnum.ENCODE));
+
+        // Add tests for other cases as well, assuming we have those methods defined.
+        // For instance, if the `chineseName` method anonymizes all but the last character:
+        assertEquals("张*", SensitiveInfoUtil.getEncodeData("张三", SensitiveEnum.CHINESE_NAME));
+
+        // Continuing with other SensitiveEnum cases
+        // Assuming `idCardNum` hides all but the last four digits:
+        assertEquals("************1234", SensitiveInfoUtil.getEncodeData("1234567890121234", SensitiveEnum.ID_CARD));
+
+        // And so on for other enums. Mock results need to be replaced with actual expected results.
+        // ...
+
+        // Finally, test the default case
+        assertEquals("defaultData", SensitiveInfoUtil.getEncodeData("defaultData", SensitiveEnum.OTHER));
+    }
+
+    // Additional utility methods and setup/teardown methods, if necessary
+}
+
+
+No.9 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SensitiveInfoUtilTest {
+
+    @Test
+    public void getEncodeDataTest() {
+        String originalData = "SensitiveData";
+        String encryptedData = "EncryptedData";
+        String maskedData = "****Data";
+        
+        // Mock AesEncryptUtil to return a fixed encrypted string when encrypt is called
+        AesEncryptUtil mockAesEncryptUtil = Mockito.mock(AesEncryptUtil.class);
+        when(mockAesEncryptUtil.encrypt(originalData)).thenReturn(encryptedData);
+        
+        // Test for ENCODE case
+        assertEquals(encryptedData, SensitiveInfoUtils.getEncodeData(originalData, SensitiveEnum.ENCODE));
+        
+        // Test for CHINESE_NAME case
+        assertEquals(maskedData, SensitiveInfoUtils.getEncodeData(originalData, SensitiveEnum.CHINESE_NAME));
+        
+        // Test for ID_CARD case
+        assertEquals(maskedData, SensitiveInfoUtils.getEncodeData(originalData, SensitiveEnum.ID_CARD));
+        
+        // Add more test cases to cover all the enum values
+        
+        // Test for FIXED_PHONE case
+        assertEquals(maskedData, SensitiveInfoUtils.getEncodeData(originalData, SensitiveEnum.FIXED_PHONE));
+        
+        // Test for MOBILE_PHONE case
+        assertEquals(maskedData, SensitiveInfoUtils.getEncodeData(originalData, SensitiveEnum.MOBILE_PHONE));
+        
+        // Test for ADDRESS case
+        assertEquals(maskedData, SensitiveInfoUtils.getEncodeData(originalData, SensitiveEnum.ADDRESS));
+        
+        // Test for EMAIL case
+        assertEquals(maskedData, SensitiveInfoUtils.getEncodeData(originalData, SensitiveEnum.EMAIL));
+        
+        // Test for BANK_CARD case
+        assertEquals(maskedData, SensitiveInfoUtils.getEncodeData(originalData, SensitiveEnum.BANK_CARD));
+        
+        // Test for CNAPS_CODE case
+        assertEquals(maskedData, SensitiveInfoUtils.getEncodeData(originalData, SensitiveEnum.CNAPS_CODE));
+        
+        // Test default case handling
+        assertEquals(originalData, SensitiveInfoUtils.getEncodeData(originalData, SensitiveEnum.DEFAULT));
+        
+        // Verify that AesEncryptUtil.encrypt was called once with the original data
+        Mockito.verify(mockAesEncryptUtil).encrypt(originalData);
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SensitiveInfoUtilTest {
+    @Test
+    public void getEncodeDataTest() {
+        String testString = "TestData123";
+        String encryptedData = ""; // You will need an actual encrypted string here
+        
+        // Assuming AesEncryptUtil.encrypt() works as expected and you've initialized it
+        try {
+            encryptedData = AesEncryptUtil.encrypt(testString);
+        } catch (Exception e) {
+            fail("Encryption failed", e);
+        }
+        
+        // Check for ENCODE case
+        String encodeResult = SensitiveInfoUtil.getEncodeData(testString, SensitiveEnum.ENCODE);
+        assertEquals(encryptedData, encodeResult, "The encoded data should match the expected encryption");
+
+        // Add more tests for different cases if necessary, for example:
+        
+        // Check for CHINESE_NAME case
+        String chineseNameMasked = SensitiveInfoUtil.chineseName("张三");
+        assertEquals(chineseNameMasked, SensitiveInfoUtil.getEncodeData("张三", SensitiveEnum.CHINESE_NAME), "The Chinese name data should be masked as per the logic in chineseName method");
+
+        // ...similarly for ID_CARD, FIXED_PHONE, etc.
+
+        // Just examples, not actual implementations
+        // Check for default case where no encoding should happen
+        String defaultResult = SensitiveInfoUtil.getEncodeData(testString, SensitiveEnum.UNKNOWN);
+        assertEquals(testString, defaultResult, "The default case should return the original data");
+    }
+}
+
+

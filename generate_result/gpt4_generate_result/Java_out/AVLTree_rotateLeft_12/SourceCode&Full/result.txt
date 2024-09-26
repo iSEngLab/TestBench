@@ -1,0 +1,482 @@
+Source code: 
+
+private Node rotateLeft(Node a) {
+    Node b = a.right;
+    b.parent = a.parent;
+
+    a.right = b.left;
+
+    if (a.right != null) {
+        a.right.parent = a;
+    }
+
+    b.left = a;
+    a.parent = b;
+
+    if (b.parent != null) {
+        if (b.parent.right == a) {
+            b.parent.right = b;
+        } else {
+            b.parent.left = b;
+        }
+    }
+
+    setBalance(a, b);
+
+    return b;
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AVLTreeTest {
+
+    private AVLTree avlTree;
+    private AVLTree.Node parent;
+
+    @BeforeEach
+    public void setUp() {
+        avlTree = new AVLTree();
+        parent = avlTree.new Node(1, null); // Assuming this constructor is accessible
+        parent.left = avlTree.new Node(2, parent);
+        parent.right = avlTree.new Node(3, parent);
+        parent.right.right = avlTree.new Node(4, parent.right);
+    }
+
+    @Test
+    public void rotateLeftTest() {
+        AVLTree.Node oldRight = parent.right;
+        AVLTree.Node rotated = avlTree.rotateLeft(parent);
+
+        assertEquals(oldRight, rotated, "The right child must become new parent after left rotation.");
+        assertEquals(parent, rotated.left, "Original parent must become left child of new parent after left rotation.");
+        assertNull(parent.right, "Original parent's right child must be null after left rotation.");
+        assertEquals(oldRight.right, rotated.right, "Right child of new parent should remain the same.");
+
+        // If rotateLeft has to handle balance correction and parent connection, we can test those as well.
+        assertNull(rotated.parent, "After rotation, new root should not have a parent");
+        assertNotNull(rotated.left.parent, "Rotated left child should have the new parent set correctly");
+        assertEquals(rotated, rotated.left.parent, "Rotated left child's parent should be the new root node");
+
+        // Check balance and parent-child consistency
+        assertEquals(0, rotated.balance, "The balance of the new root should be corrected to 0.");
+        assertEquals(-1, parent.balance, "The balance of the old root (now left child) should be corrected to -1.");
+        assertEquals(parent, rotated.left, "The parent of the left child should be the new root node after rotation.");
+        assertEquals(3, rotated.key, "Check the key of the new root node after rotation.");
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AVLTreeTest {
+
+    @Test
+    public void rotateLeftTest() {
+        AVLTree tree = new AVLTree();
+
+        // manually constructing a simple tree
+        AVLTree.Node root = tree.new Node(1, null);
+        AVLTree.Node node2 = tree.new Node(2, root);
+        root.right = node2;
+        AVLTree.Node node3 = tree.new Node(3, node2);
+        node2.right = node3;
+
+        // Set up initial heights and balances, as they are normally maintained during insertion
+        tree.reheight(root);
+        tree.setBalance(root, node2, node3);
+        
+        // Perform the rotateLeft operation on the root (1) which should result in node (2) being the new root.
+        AVLTree.Node newRoot = tree.rotateLeft(root);
+
+        // newRoot should be node2
+        assertNotNull(newRoot);
+        assertEquals(node2, newRoot);
+        
+        // newRoot's left child should now be the old root
+        assertEquals(root, newRoot.left);
+        
+        // The root's right child should now be null after rotation
+        assertNull(root.right);
+        
+        // The new root's parent should be null after rotation
+        assertNull(newRoot.parent);
+        
+        // The root's new parent should be the new root after rotation
+        assertEquals(newRoot, root.parent);
+        
+        // node3 should remain the right child of the new root
+        assertEquals(node3, newRoot.right);
+        
+        // Check balances and heights to make sure they've been updated properly
+        tree.reheight(root);  // as rotateLeft doesn't update heights
+        tree.setBalance(root, newRoot);
+        assertEquals(0, newRoot.balance);
+        assertEquals(-1, root.balance);  // assuming height of null is -1 and node3 is still here so root's balance should be -1
+        assertEquals(0, newRoot.height); // wherever it is in the tree it is the local root so its height is 0
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AVLTreeTest {
+    @Test
+    public void rotateLeftTest() {
+        AVLTree tree = new AVLTree();
+        tree.insert(1);
+        tree.insert(2);
+        tree.insert(3); // This should cause a left rotation on the root
+
+        AVLTree.Node root = tree.root; 
+
+        assertEquals(2, root.key, "Root key after rotation should be 2");
+        assertNotNull(root.left, "Left child of root should not be null after rotation");
+        assertEquals(1, root.left.key, "Left child of root should have key of 1");
+        assertNotNull(root.right, "Right child of root should not be null after rotation");
+        assertEquals(3, root.right.key, "Right child of root should have key of 3");
+
+        assertNull(root.parent, "Root should not have a parent after rotation");
+        assertEquals(root, root.left.parent, "Left child's parent should be the root after rotation");
+        assertEquals(root, root.right.parent, "Right child's parent should be the root after rotation");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AVLTreeTest {
+
+    @Test
+    public void rotateLeftTest() {
+        AVLTree tree = new AVLTree();
+
+        // Inserting nodes
+        tree.insert(1);
+        tree.insert(2);
+        tree.insert(3); // This should trigger a rotateLeft due to insertion of a right-heavy situation
+
+        // Getting reference to root before rotation
+        AVLTree.Node root = tree.searchHelper(tree.getRoot(), 1);
+
+        // root should now be 2 and the root's left child should be 1
+        assertEquals(2, root.key);
+        assertNotNull(root.left);
+        assertEquals(1, root.left.key);
+
+        // Verification that the old root (1) is now the left child of new root (2)
+        AVLTree.Node leftChild = root.left;
+        assertEquals(root, leftChild.parent);
+
+        // The left child should not have a left child of its own since it's a leaf node after rotation
+        assertNull(leftChild.left);
+
+        // Left child's right child should be the previous right child of old root before rotation
+        assertNotNull(leftChild.right);
+        assertEquals(3, leftChild.right.key);
+
+        // Verification that the old root's right child is now handling the new right child correctly
+        AVLTree.Node rightChildOfLeftChild = leftChild.right;
+        assertEquals(leftChild, rightChildOfLeftChild.parent);
+        assertNull(rightChildOfLeftChild.left);
+        assertNull(rightChildOfLeftChild.right);
+    }
+
+    // Dummy method to expose the root for testing purposes
+    // Note: This should ideally be in the AVLTree class
+    public AVLTree.Node getRoot() {
+        return this.root;
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AVLTreeTest {
+
+    @Test
+    public void rotateLeftTest() {
+        // Set up the structure
+        AVLTree tree = new AVLTree();
+        tree.insert(1);
+        tree.insert(2); // This will be our node 'a'
+        tree.insert(4); // Node that will be 'b'
+
+        // Search the nodes 
+        AVLTree.Node nodeA = tree.searchHelper(tree.root, 2);
+        AVLTree.Node nodeB = tree.searchHelper(tree.root, 4);
+
+        // Rotate Left
+        AVLTree.Node result = tree.rotateLeft(nodeA);
+
+        // Validate the structure is correctly rotated
+        assertEquals(nodeB, result, "The returned node must be the new root after rotation.");
+        assertEquals(nodeA, result.left, "Node A must be the left child of Node B after rotation.");
+
+        // Validate new parent relationships
+        assertNull(nodeB.parent, "Parent of new root Node B should be null.");
+        assertEquals(nodeB, nodeA.parent, "Parent of Node A must be Node B after rotation.");
+
+        // Validate no change in subtree nodes other than right child of original node A (which is now Node B)
+        assertNull(nodeA.right, "Right child of node A must be null after its right child is promoted.");
+        assertNull(nodeA.left, "Left child of node A must still be null.");
+        
+        // If tree structure had more nodes in the original right sub-tree of Node A (node that becomes B),
+        // those should remain unchanged. This code section assumes we had a right child for Node B (originally Node A's right),
+        // which would now need to be Node A's right child after rotation.
+        //Example:
+        //tree.insert(5);
+        //assertEquals(nodeX, nodeA.right, "Right child of node A should be nodeX after rotation.")
+        
+        //Returning the whole test case to show up in an IDE 
+        assertEquals("package com.thealgorithms.datastructures.trees;\n\nimport org.junit.jupiter.api.*;\nimport static org.junit.jupiter.api.Assertions.*;\n\npublic class AVLTreeTest {\n\n    @Test\n    public void rotateLeftTest() {\n        // Set up the structure\n        AVLTree tree = new AVLTree();\n        tree.insert(1);\n        tree.insert(2); // This will be our node 'a'\n        tree.insert(4); // Node that will be 'b'\n\n        // Search the nodes\n        AVLTree.Node nodeA = tree.searchHelper(tree.root, 2);\n        AVLTree.Node nodeB = tree.searchHelper(tree.root, 4);\n\n        // Rotate Left\n        AVLTree.Node result = tree.rotateLeft(nodeA);\n\n        // Validate the structure is correctly rotated\n        assertEquals(nodeB, result);\n        assertEquals(nodeA, result.left);\n\n        // Validate new parent relationships\n        assertNull(nodeB.parent);\n        assertEquals(nodeB, nodeA.parent);\n\n        // Validate no change in subtree nodes\n        assertNull(nodeA.right);\n        assertNull(nodeA.left);\n    }\n}\n", "Checking the test");
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AVLTreeTest {
+
+    @Test
+    public void rotateLeftTest() {
+        // Setup AVL tree with a simple structure where rotateLeft will occur
+        AVLTree tree = new AVLTree();
+        tree.insert(1); // root
+        tree.insert(2); // right child of root, causes imbalance
+
+        // Perform rotateLeft on root node
+        AVLTree.Node newRoot = tree.rotateLeft(tree.root);
+
+        // Validate new structure of the tree
+        assertNotNull(newRoot);
+        assertEquals(2, newRoot.key, "The new root should have the key of the previously right child.");
+        assertNotNull(newRoot.left);
+        assertEquals(1, newRoot.left.key, "The left child of the new root should have the key of the previously root.");
+
+        // Check parent relationships are correctly updated
+        assertEquals(newRoot, newRoot.left.parent, "The left child's parent should now be the new root.");
+
+        // Check the balance factors are set correctly
+        assertEquals(0, newRoot.balance, "After rotation, the new root balance should be 0.");
+        assertEquals(0, newRoot.left.balance, "After rotation, the left child balance should be 0.");
+
+        // Validate left (previously root) node does not have any children, since it was a leaf before rotation
+        assertNull(newRoot.left.left, "The left child of the left child (previously root) should be null.");
+        assertNull(newRoot.left.right, "The right child of the left child (previously root) should be null.");
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AVLTreeTest {
+
+    private AVLTree.AVLTree tree;
+    private Method rotateLeft;
+
+    @BeforeEach
+    public void setUp() throws NoSuchMethodException {
+        tree = new AVLTree.AVLTree();
+
+        rotateLeft = AVLTree.AVLTree.class.getDeclaredMethod("rotateLeft", AVLTree.Node.class);
+        rotateLeft.setAccessible(true);
+    }
+
+    @Test
+    public void rotateLeftTest() throws Exception {
+        // Create the following BST
+        //       4
+        //        \
+        //         5
+        //          \
+        //           6
+        // The expected AVL tree after rotateLeft will be
+        //       5
+        //      / \
+        //     4   6
+
+        tree.insert(4);
+        tree.insert(5);
+        tree.insert(6);
+
+        AVLTree.Node root = tree.getRoot();
+        AVLTree.Node rotatedRoot = (AVLTree.Node) rotateLeft.invoke(tree, root);
+
+        assertEquals(5, rotatedRoot.getKey());
+        assertEquals(4, rotatedRoot.getLeft().getKey());
+        assertEquals(6, rotatedRoot.getRight().getKey());
+        assertNull(rotatedRoot.getParent());
+
+        AVLTree.Node leftChild = rotatedRoot.getLeft();
+        assertEquals(root, leftChild);
+        assertEquals(rotatedRoot, leftChild.getParent());
+        assertNull(leftChild.getLeft());
+        assertNull(leftChild.getRight());
+
+        AVLTree.Node rightChild = rotatedRoot.getRight();
+        assertEquals(6, rightChild.getKey());
+        assertNull(rightChild.getLeft());
+        assertNull(rightChild.getRight());
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AVLTreeTest {
+
+    private AVLTree.AVLTree tree;
+    
+    @BeforeEach
+    public void setup() {
+        tree = new AVLTree.AVLTree();
+    }
+
+    @Test
+    public void rotateLeftTest() {
+        // Setting up the tree
+        tree.insert(1);
+        tree.insert(2);
+        tree.insert(3); // This should cause a rotateLeft at node 1
+
+        // Accessing the private root field, assuming we can use reflection or make root package-private for testing.
+        AVLTree.AVLTree.Node root = tree.root;
+
+        // Checks if rotation happened correctly
+        assertEquals(2, root.key, "Root key should be 2 after left rotation.");
+        assertNotNull(root.left, "Left child should not be null after left rotation.");
+        assertEquals(1, root.left.key, "Left child key should be 1 after left rotation.");
+        assertNotNull(root.right, "Right child should not be null after left rotation.");
+        assertEquals(3, root.right.key, "Right child key should be 3 after left rotation.");
+
+        // Checking parents
+        assertNull(root.parent, "Root parent should be null.");
+        assertEquals(root, root.left.parent, "Left child parent should be new root.");
+        assertEquals(root, root.right.parent, "Right child parent should be new root.");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AVLTreeTest {
+
+    private AVLTree.AVLTree tree;
+    private AVLTree.Node root;
+
+    @BeforeEach
+    public void setUp() {
+        tree = new AVLTree();
+        root = tree.new Node(1, null);
+        tree.root = root;  // Let's say 1 is the root node
+    }
+
+    @Test
+    public void rotateLeftTest() {
+        // Initial tree:
+        //       1
+        //         \
+        //          2
+        AVLTree.Node node2 = tree.new Node(2, root);
+        root.right = node2;
+
+        // Performing a left rotation on root/node 1.
+        AVLTree.Node newRoot = tree.rotateLeft(root);
+
+        // After rotation, new root should be node 2, and node 1 should be left child of node 2.
+        assertEquals(node2, newRoot, "Node 2 should be new root after left rotation.");
+        assertEquals(root, node2.left, "Node 1 should be left child of new root after left rotation.");
+        assertNull(newRoot.parent, "New root should not have a parent after rotation.");
+        assertEquals(newRoot, root.parent, "Parent of Node 1 should be new root after rotation.");
+
+        // Check if rebalancing happened correctly.
+        int balanceRoot = root.balance;
+        int balanceNewRoot = newRoot.balance;
+        assertTrue(Math.abs(balanceRoot) <= 1, "Balance factor of old root should be not be more than 1.");
+        assertTrue(Math.abs(balanceNewRoot) <= 1, "Balance factor of new root should be not be more than 1.");
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AVLTreeTest {
+    @Test
+    public void rotateLeftTest() {
+        AVLTree avlTree = new AVLTree();
+        avlTree.insert(1);
+        avlTree.insert(2); // This will be node 'a' in the rotateLeft.
+        avlTree.insert(3); // This will be node 'b' after rotateLeft.
+
+        // Apply rotateLeft directly as it's a private method (in the example,
+        // let's assume the visibility of rotateLeft has been changed to package-private for testing).
+        // Or we could use Reflection to access it if we need to test private method.
+        AVLTree.Node root = avlTree.root; // This is node 'a', which has key = 2.
+        assertNull(root.left); // Before rotation, root.left should be null.
+        AVLTree.Node rotatedRoot = avlTree.rotateLeft(root); // Perform the rotation.
+        
+        assertEquals(3, rotatedRoot.key); // After rotation, the root should be node 'b' which has key = 3.
+        assertEquals(root, rotatedRoot.left); // After rotation, root becomes the left child of rotatedRoot.
+        assertEquals(1, rotatedRoot.left.key); // Check the left child of original root to verify rotation.
+        assertNull(rotatedRoot.right); // After rotation, rotatedRoot.right should be null.
+        
+        // Check the parent linkage after rotation.
+        assertEquals(rotatedRoot, root.parent); // root's parent should now be the rotated root.
+        assertNull(rotatedRoot.parent); // The new root's parent should be null as it's the root of the tree.
+    }
+}
+
+

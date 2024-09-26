@@ -1,0 +1,274 @@
+Source code: 
+
+
+protected ModelAndView exportXlsSheet(HttpServletRequest request, T object, Class<T> clazz, String title,String exportFields,Integer pageNum) {
+    // Step.1 组装查询条件
+    QueryWrapper<T> queryWrapper = QueryGenerator.initQueryWrapper(object, request.getParameterMap());
+    LoginUser sysUser = (LoginUser) SecurityUtils.getSubject().getPrincipal();
+    // Step.2 计算分页sheet数据
+    double total = service.count();
+    int count = (int)Math.ceil(total/pageNum);
+    //update-begin-author:liusq---date:20220629--for: 多sheet导出根据选择导出写法调整 ---
+    // Step.3  过滤选中数据
+    String selections = request.getParameter("selections");
+    if (oConvertUtils.isNotEmpty(selections)) {
+        List<String> selectionList = Arrays.asList(selections.split(","));
+        queryWrapper.in("id",selectionList);
+    }
+    //update-end-author:liusq---date:20220629--for: 多sheet导出根据选择导出写法调整 ---
+    // Step.4 多sheet处理
+    List<Map<String, Object>> listMap = new ArrayList<Map<String, Object>>();
+    for (int i = 1; i <=count ; i++) {
+        Page<T> page = new Page<T>(i, pageNum);
+        IPage<T> pageList = service.page(page, queryWrapper);
+        List<T> exportList = pageList.getRecords();
+        Map<String, Object> map = new HashMap<>(5);
+        ExportParams exportParams=new ExportParams(title + "报表", "导出人:" + sysUser.getRealname(), title+i,jeecgBaseConfig.getPath().getUpload());
+        exportParams.setType(ExcelType.XSSF);
+        //map.put("title",exportParams);
+        //表格Title
+        map.put(NormalExcelConstants.PARAMS,exportParams);
+        //表格对应实体
+        map.put(NormalExcelConstants.CLASS,clazz);
+        //数据集合
+        map.put(NormalExcelConstants.DATA_LIST, exportList);
+        listMap.add(map);
+    }
+    // Step.4 AutoPoi 导出Excel
+    ModelAndView mv = new ModelAndView(new JeecgEntityExcelView());
+    //此处设置的filename无效 ,前端会重更新设置一下
+    mv.addObject(NormalExcelConstants.FILE_NAME, title);
+    mv.addObject(NormalExcelConstants.MAP_LIST, listMap);
+    return mv;
+}
+
+
+
+No.1 generated result --------------------------
+
+protected ModelAndView modelAndView = new ModelAndView();
+ModelAndView output = exportXlsSheet(request, object, clazz, title, exportFields, pageNum);
+assertEquals(modelAndView, output);
+
+
+No.2 generated result --------------------------
+
+package org.jeecg.common.system.base.controller;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JeecgControllerTest {
+    @Test
+    public void exportXlsSheetTest() {
+        // Given
+        HttpServletRequest request = new HttpServletRequest();
+        Class<T> clazz = T.class;
+        String title = "Test Title";
+        String exportFields = "field1, field2";
+        Integer pageNum = 10;
+        T object = new T(); // Create an instance of the object
+
+        // When
+        ModelAndView result = exportXlsSheet(request, object, clazz, title, exportFields, pageNum);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(title, result.getModel().get(NormalExcelConstants.FILE_NAME));
+    }
+}
+
+
+No.3 generated result --------------------------
+
+protected ModelAndView result = exportXlsSheet(request, object, clazz, title, exportFields, pageNum);
+
+assertEquals("Expected Title报表导出人:User" + 1, result.getViewName());
+assertEquals("Expected Title1", result.getModel().get("NormalExcelConstants.PARAMS"));
+assertEquals("Expected Title Report", result.getModel().get("NormalExcelConstants.CLASS"));
+assertEquals("Expected List<>", result.getModel().get("NormalExcelConstants.DATA_LIST"));
+
+
+No.4 generated result --------------------------
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.jeecg.common.system.query.QueryGenerator;
+import org.jeecg.common.system.vo.LoginUser;
+import org.jeecg.common.util.oConvertUtils;
+import org.jeecg.config.JeecgBaseConfig;
+import org.jeecgframework.poi.excel.def.NormalExcelConstants;
+import org.jeecgframework.poi.excel.entity.ExportParams;
+import org.jeecgframework.poi.excel.entity.enmus.ExcelType;
+import org.jeecgframework.poi.excel.view.JeecgEntityExcelView;
+import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.servlet.ModelAndView;
+import java.util.List;
+import java.util.Arrays;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+public class JeecgControllerTest {
+    @Test
+    public void exportXlsSheetTest() {
+        T object = createTObject();  // replace with actual object creation
+        Class<T> clazz = createTClass();  // replace with actual class creation
+        String title = "Test Title";
+        String exportFields = "Test Export Fields";
+        Integer pageNum = 10;
+        HttpServletRequest request = new MockHttpServletRequest();
+        
+        JeecgController jeecgController = new JeecgController();  // replace with actual controller creation
+        jeecgController.service = createIService();  // replace with actual service creation
+        jeecgController.jeecgBaseConfig = createJeecgBaseConfig();  // replace with actual config creation
+        
+        ModelAndView result = jeecgController.exportXlsSheet(request, object, clazz, title, exportFields, pageNum);
+        
+        assertNotNull(result);
+        // Add additional assertions for the expected outcome
+        // Example: assertEquals("Expected Value", result.getValue());
+    }
+}
+
+
+
+No.5 generated result --------------------------
+
+@Test
+public void exportXlsSheetTest() {
+    // Create a new instance of HttpServletRequest
+    HttpServletRequest request = new HttpServletRequest();
+
+    // Create object to be passed
+    T object = new T();
+
+    // Create object to be passed
+    Class<T> clazz = new Class<T>();
+
+    // Define title
+    String title = "Test Title";
+
+    // Define export fields
+    String exportFields = "Field1, Field2, Field3";
+
+    // Define page number
+    Integer pageNum = 10;
+
+    // Call the method and assert the output
+    ModelAndView modelAndView = exportXlsSheet(request, object, clazz, title, exportFields, pageNum);
+    assertNotNull(modelAndView);
+}
+
+
+No.6 generated result --------------------------
+
+@Override
+public void exportXlsSheetTest() {
+    // Create a new instance of the object and set any necessary attributes
+    HttpServletRequest request = new HttpServletRequest();
+    T object = new T();
+    Class<T> clazz = T.class;
+    String title = "Test Title";
+    String exportFields = "Test Fields";
+    Integer pageNum = 5;
+    
+    // Call the method to be tested
+    ModelAndView result = exportXlsSheet(request, object, clazz, title, exportFields, pageNum);
+    
+    // Use assertions to verify the returned ModelAndView
+    assertNotNull(result);
+    // Add specific assertions for the expected output of the method
+    // ...
+}
+
+
+No.7 generated result --------------------------
+
+@Test
+public void exportXlsSheetTest() {
+    // Create and set up mock objects such as HttpServletRequest, T object, Class<T> clazz, String title, String exportFields, and Integer pageNum
+    // Call exportXlsSheet method with the mock objects
+    // Verify the expected result
+}
+
+
+No.8 generated result --------------------------
+
+@Test
+public void exportXlsSheetTest() {
+    // Create request, object, clazz, title, exportFields, and pageNum
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    T object = // create T object;
+    Class<T> clazz = // create Class<T> clazz;
+    String title = // provide title;
+    String exportFields = // provide export fields;
+    Integer pageNum = // provide page number;
+
+    // Create the expected ModelAndView
+    ModelAndView expectedModelAndView = new ModelAndView(new JeecgEntityExcelView());
+    expectedModelAndView.addObject(NormalExcelConstants.FILE_NAME, title);
+    expectedModelAndView.addObject(NormalExcelConstants.MAP_LIST, // provide listMap);
+
+    // Create the queryWrapper
+    QueryWrapper<T> queryWrapper = createQueryWrapper(object, request.getParameterMap());
+
+    // Call the method to test
+    ModelAndView actualModelAndView = exportXlsSheet(request, object, clazz, title, exportFields, pageNum);
+
+    // Compare the expected and actual ModelAndViews
+    assertEquals(expectedModelAndView.getModel().size(), actualModelAndView.getModel().size());
+    // Add further assertions if needed
+}
+
+
+No.9 generated result --------------------------
+
+protected ModelAndView exportXlsSheet(HttpServletRequest request, T object, Class<T> clazz, String title, String exportFields, Integer pageNum) {
+    // Step.1 组装查询条件
+    QueryWrapper<T> queryWrapper = QueryGenerator.initQueryWrapper(object, request.getParameterMap());
+    LoginUser sysUser = new LoginUser();
+    // Step.2 计算分页sheet数据
+    double total = service.count();
+    int count = (int)Math.ceil(total / pageNum);
+    // Step.3 过滤选中数据
+    String selections = "1,2,3";  // Example selections for testing
+    if (oConvertUtils.isNotEmpty(selections)) {
+        List<String> selectionList = Arrays.asList(selections.split(","));
+        queryWrapper.in("id", selectionList);
+    }
+    // Step.4 多sheet处理
+    List<Map<String, Object>> listMap = new ArrayList<>();
+    for (int i = 1; i <= count; i++) {
+        Page<T> page = new Page<>(i, pageNum);
+        IPage<T> pageList = service.page(page, queryWrapper);
+        List<T> exportList = pageList.getRecords();
+        Map<String, Object> map = new HashMap<>(5);
+        ExportParams exportParams=new ExportParams(title + "报表", "导出人:", title+i,jeecgBaseConfig.getPath().getUpload());
+        exportParams.setType(ExcelType.XSSF);
+        //map.put("title",exportParams);
+        //表格Title
+        map.put(NormalExcelConstants.PARAMS, exportParams);
+        //表格对应实体
+        map.put(NormalExcelConstants.CLASS, clazz);
+        //数据集合
+        map.put(NormalExcelConstants.DATA_LIST, exportList);
+        listMap.add(map);
+    }
+    // Step.4 AutoPoi 导出Excel
+    ModelAndView mv = new ModelAndView(new JeecgEntityExcelView());
+    //此处设置的filename无效 ,前端会重更新设置一下
+    mv.addObject(NormalExcelConstants.FILE_NAME, title);
+    mv.addObject(NormalExcelConstants.MAP_LIST, listMap);
+    return mv;
+}
+
+
+No.10 generated result --------------------------
+
+protected ModelAndView mv = new JeecgController().exportXlsSheet(request, object, clazz, title, exportFields, pageNum);
+assertNotNull(mv);
+assertEquals(title, mv.getModel().get(NormalExcelConstants.FILE_NAME));
+
+

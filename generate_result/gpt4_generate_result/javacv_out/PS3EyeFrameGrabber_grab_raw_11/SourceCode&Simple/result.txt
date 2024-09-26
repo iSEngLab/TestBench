@@ -1,0 +1,501 @@
+Source code: 
+
+
+public int[] grab_raw() {
+    if (camera.getCameraFrame(ps3_frame, timeout)) {
+        return ps3_frame;
+    }
+    else return null;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class PS3EyeFrameGrabberTest {
+
+    @Test
+    public void grab_rawTest() {
+        // Arrange
+        CLCamera mockCamera = mock(CLCamera.class);
+        int[] expectedFrame = new int[] {1, 2, 3, 4};
+        when(mockCamera.getCameraFrame(any(), anyInt())).thenReturn(true);
+        
+        // Initialize PS3EyeFrameGrabber with mock camera
+        PS3EyeFrameGrabber frameGrabber = new PS3EyeFrameGrabber();
+        frameGrabber.camera = mockCamera;
+        frameGrabber.ps3_frame = expectedFrame;
+
+        // Act
+        int[] resultFrame = frameGrabber.grab_raw();
+
+        // Assert
+        assertNotNull(resultFrame, "The result frame should not be null");
+        assertArrayEquals(expectedFrame, resultFrame, "The grabbed frame should match the expected frame");
+    }
+
+    @Test
+    public void grab_rawReturnsNullWhenNoFrameGrabbedTest() {
+        // Arrange
+        CLCamera mockCamera = mock(CLCamera.class);
+        when(mockCamera.getCameraFrame(any(), anyInt())).thenReturn(false);
+        
+        // Initialize PS3EyeFrameGrabber with mock camera
+        PS3EyeFrameGrabber frameGrabber = new PS3EyeFrameGrabber();
+        frameGrabber.camera = mockCamera;
+
+        // Act
+        int[] resultFrame = frameGrabber.grab_raw();
+
+        // Assert
+        assertNull(resultFrame, "The result frame should be null when no frame is grabbed");
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+class PS3EyeFrameGrabberTest {
+
+    private PS3EyeFrameGrabber grabber;
+    private CLCamera mockCamera;
+    private int[] testFrame;
+    private final int timeout = 1000; // This value should be defined in your test/context if needed
+
+    @BeforeEach
+    void setUp() {
+        grabber = new PS3EyeFrameGrabber();
+        mockCamera = new CLCamera();
+        grabber.camera = mockCamera; // Assuming you can set this directly or via constructor
+        testFrame = new int[] { 0, 1, 2, 3 }; // Example test frame
+    }
+
+    @Test
+    public void grab_rawTest() {
+        // Mock the camera's getCameraFrame method to return true and set the frame
+        grabber.ps3_frame = testFrame;
+        when(mockCamera.getCameraFrame(any(int[].class), eq(timeout))).thenReturn(true);
+
+        int[] result = grabber.grab_raw();
+        assertArrayEquals(testFrame, result, "The returned frame should match the mock frame when camera frame is grabbed successfully.");
+
+        // Mock the camera's getCameraFrame method to return false
+        when(mockCamera.getCameraFrame(any(int[].class), eq(timeout))).thenReturn(false);
+        
+        result = grabber.grab_raw();
+        assertNull(result, "The returned frame should be null when camera frame is not grabbed.");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class PS3EyeFrameGrabberTest {
+
+    @Test
+    public void grab_rawTest() {
+        // Creating a mock for the CLCamera class
+        CLCamera mockCamera = mock(CLCamera.class);
+        
+        // Instantiating the PS3EyeFrameGrabber instance and injecting the mock camera
+        PS3EyeFrameGrabber grabber = new PS3EyeFrameGrabber();
+        grabber.camera = mockCamera;
+        
+        // Setting up the mock behavior
+        int[] frameData = {0, 1, 2, 3};              // Dummy frame data
+        grabber.ps3_frame = frameData;
+        // When getCameraFrame is called with any int array and anyFloat, return true, indicating success
+        when(mockCamera.getCameraFrame(any(int[].class), anyFloat())).thenReturn(true);
+        
+        // Test successful camera frame grab
+        int[] result = grabber.grab_raw();
+        assertNotNull(result, "The result should not be null when the camera frame is grabbed successfully.");
+        assertArrayEquals(frameData, result, "The grabbed frame data should match the expected dummy data.");
+        
+        // When getCameraFrame is called again, return false, indicating failure
+        when(mockCamera.getCameraFrame(any(int[].class), anyFloat())).thenReturn(false);
+        
+        // Test unsuccessful camera frame grab
+        result = grabber.grab_raw();
+        assertNull(result, "The result should be null when the camera frame grab is unsuccessful.");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class PS3EyeFrameGrabberTest {
+
+    private PS3EyeFrameGrabber frameGrabber;
+    private CLCamera cameraMock;
+
+    @BeforeEach
+    public void setUp() {
+        frameGrabber = new PS3EyeFrameGrabber();
+        cameraMock = mock(CLCamera.class);
+        frameGrabber.camera = cameraMock; // Assuming we can access and mock the camera object directly
+    }
+    
+    @Test
+    public void grab_rawShouldReturnFrameWhenCameraFrameAcquired() {
+        // Given
+        int[] expectedFrame = new int[] { 1, 2, 3, 4 };
+        when(cameraMock.getCameraFrame(any(), anyInt())).thenReturn(true);
+        frameGrabber.ps3_frame = expectedFrame;
+
+        // When
+        int[] actualFrame = frameGrabber.grab_raw();
+
+        // Then
+        assertNotNull(actualFrame, "Frame should not be null when camera frame is acquired");
+        assertArrayEquals(expectedFrame, actualFrame, "The frames should match when camera frame is acquired");
+    }
+
+    @Test
+    public void grab_rawShouldReturnNullWhenCameraFrameNotAcquired() {
+        // Given
+        when(cameraMock.getCameraFrame(any(), anyInt())).thenReturn(false);
+
+        // When
+        int[] actualFrame = frameGrabber.grab_raw();
+
+        // Then
+        assertNull(actualFrame, "Frame should be null when camera frame is not acquired");
+    }
+
+    @AfterEach
+    public void tearDown() {
+        frameGrabber.camera = null;
+        cameraMock = null;
+        frameGrabber = null;
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class PS3EyeFrameGrabberTest {
+    private PS3EyeFrameGrabber frameGrabber;
+    private CLCamera mockCamera;
+    private final int timeout = 10; // example timeout
+    private final int[] ps3_frame = new int[] {1, 2, 3}; // example frame data
+
+    @BeforeEach
+    public void setUp() {
+        frameGrabber = new PS3EyeFrameGrabber();
+        mockCamera = mock(CLCamera.class);
+        frameGrabber.camera = mockCamera;
+    }
+
+    @Test
+    public void grab_rawReturnsFrameWhenCameraFrameIsAvailable() {
+        when(mockCamera.getCameraFrame(any(int[].class), eq(timeout))).thenReturn(true);
+        frameGrabber.ps3_frame = ps3_frame;
+
+        int[] result = frameGrabber.grab_raw();
+        
+        verify(mockCamera).getCameraFrame(any(int[].class), eq(timeout));
+        assertArrayEquals(ps3_frame, result, "The method should return the correct frame data.");
+    }
+
+    @Test
+    public void grab_rawReturnsNullWhenCameraFrameIsNotAvailable() {
+        when(mockCamera.getCameraFrame(any(int[].class), eq(timeout))).thenReturn(false);
+        
+        int[] result = frameGrabber.grab_raw();
+
+        verify(mockCamera).getCameraFrame(any(int[].class), eq(timeout));
+        assertNull(result, "The method should return null when no frame is available.");
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+class PS3EyeFrameGrabberTest {
+
+    // Mocked dependencies (consider using a mocking framework like Mockito)
+    private CLCamera mockCamera;
+    private int[] mockFrame;
+    private int mockTimeout;
+
+    // The actual instance of the PS3EyeFrameGrabber we'll be testing
+    private PS3EyeFrameGrabber frameGrabber;
+
+    @BeforeEach
+    void setUp() {
+        mockCamera = new CLCamera();
+        mockFrame = new int[10]; // Assuming a non-empty frame array for testing purposes
+        mockTimeout = 1000; // Example timeout value in milliseconds
+
+        // Here you would set up the mocks to return appropriate values when invoked
+        // For example, using Mockito you would do:
+        // when(mockCamera.getCameraFrame(any(int[].class), anyInt())).thenReturn(true);
+
+        frameGrabber = new PS3EyeFrameGrabber() {
+            // Overriding getCamera to return our mock
+            @Override
+            public CLCamera getCamera() {
+                return mockCamera;
+            }
+
+            // Overriding grab_raw to use our mock frame and timeout
+            @Override
+            public int[] grab_raw() {
+                if (getCamera().getCameraFrame(mockFrame, mockTimeout)) {
+                    return mockFrame;
+                } else {
+                    return null;
+                }
+            }
+        };
+
+        frameGrabber.ps3_frame = mockFrame;
+        frameGrabber.camera = mockCamera;
+    }
+
+    @Test
+    public void grab_rawTest() {
+        // Test the scenario where the camera frame is successfully obtained
+        assertTrue(mockCamera.getCameraFrame(mockFrame, mockTimeout));
+        int[] resultFrame = frameGrabber.grab_raw();
+        assertNotNull(resultFrame);
+        assertArrayEquals(mockFrame, resultFrame);
+
+        // Test the scenario where the camera frame is not obtained
+        // Again, using Mockito, you can set the mock to return false here
+        // when(mockCamera.getCameraFrame(any(int[].class), anyInt())).thenReturn(false);
+        assertFalse(mockCamera.getCameraFrame(mockFrame, mockTimeout));
+        resultFrame = frameGrabber.grab_raw();
+        assertNull(resultFrame);
+    }
+
+    // After test cleanup, if necessary
+    @AfterEach
+    void tearDown() {
+        mockCamera = null;
+        mockFrame = null;
+        mockTimeout = 0;
+        frameGrabber = null;
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class PS3EyeFrameGrabberTest {
+    private PS3EyeFrameGrabber frameGrabber;
+    private CLCamera cameraMock;
+    private final int timeout = 1000;
+    private final int[] mockFrame = new int[]{1, 2, 3, 4}; // Example frame data
+
+    @BeforeEach
+    public void setUp() throws Exception {
+        frameGrabber = new PS3EyeFrameGrabber();
+        cameraMock = mock(CLCamera.class);
+        frameGrabber.camera = cameraMock; // Assume there's a way to inject the mock
+    }
+
+    @Test
+    public void grab_rawTest_successfulGrab() {
+        // Given the camera successfully grabs a frame
+        when(cameraMock.getCameraFrame(any(int[].class), eq(timeout))).thenReturn(true);
+        // Mock the ps3_frame to return a known array
+        frameGrabber.ps3_frame = mockFrame;
+
+        // When grab_raw is called
+        int[] result = frameGrabber.grab_raw();
+
+        // Then a non-null array should be returned
+        assertNotNull(result);
+        // And the result should be the expected mock frame
+        assertArrayEquals(mockFrame, result);
+    }
+
+    @Test
+    public void grab_rawTest_nullOnTimeout() {
+        // Given the camera times out and does not grab a frame
+        when(cameraMock.getCameraFrame(any(int[].class), eq(timeout))).thenReturn(false);
+
+        // When grab_raw is called
+        int[] result = frameGrabber.grab_raw();
+
+        // Then a null should be returned
+        assertNull(result);
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class PS3EyeFrameGrabberTest {
+
+    @Test
+    public void grab_rawTest() {
+        // Create a mock CLCamera object
+        CLCamera mockCamera = mock(CLCamera.class);
+        
+        // Assume the grab_raw method tries to get a frame with a certain timeout
+        int timeout = 1000;
+        // Assume ps3_frame is a valid frame, represented by an array of integers
+        int[] ps3_frame = new int[]{ 1, 2, 3, 4 }; // example frame data
+
+        // Configure mock to return true and have the getCameraFrame method return the ps3_frame when called
+        when(mockCamera.getCameraFrame(any(int[].class), eq(timeout))).thenReturn(true);
+
+        // Create an instance of PS3EyeFrameGrabber
+        PS3EyeFrameGrabber frameGrabber = new PS3EyeFrameGrabber();
+        // Set the mock camera to the frame grabber
+        frameGrabber.camera = mockCamera;
+        // Set the ps3_frame array to a new array so that the mock can fill it
+        frameGrabber.ps3_frame = new int[ps3_frame.length];
+
+        // Call the method under test
+        int[] result = frameGrabber.grab_raw();
+
+        // Validate the result is not null and equals to the mocked ps3_frame
+        assertNotNull(result, "Result should not be null when camera frame is grabbed successfully");
+        assertArrayEquals(ps3_frame, result, "The result should match the mocked ps3_frame data");
+        
+        // Now, let's test the case where the camera fails to get a frame
+        // Configure mock to return false indicating a failure to get the camera frame
+        when(mockCamera.getCameraFrame(any(int[].class), eq(timeout))).thenReturn(false);
+
+        // Call the method under test again
+        result = frameGrabber.grab_raw();
+
+        // Validate the result is null this time
+        assertNull(result, "Result should be null when camera fails to grab frame");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class PS3EyeFrameGrabberTest {
+    
+    @Test
+    public void grab_rawTest() {
+        // Given
+        PS3EyeFrameGrabber frameGrabber = new PS3EyeFrameGrabber();
+        CLCamera mockedCamera = mock(CLCamera.class);
+        int[] expectedFrame = {1, 2, 3, 4}; // Example raw frame data
+        frameGrabber.camera = mockedCamera;
+        frameGrabber.ps3_frame = expectedFrame;
+
+        // Set camera behavior
+        when(mockedCamera.getCameraFrame(expectedFrame, anyInt())).thenReturn(true);
+
+        // When
+        int[] actualFrame = frameGrabber.grab_raw();
+
+        // Then
+        assertNotNull(actualFrame, "The frame should not be null");
+        assertArrayEquals(expectedFrame, actualFrame, "The returned frame should match the expected frame");
+
+        // Test the scenario where the camera frame is not obtained
+        when(mockedCamera.getCameraFrame(expectedFrame, anyInt())).thenReturn(false);
+        actualFrame = frameGrabber.grab_raw();
+        assertNull(actualFrame, "The frame should be null when camera frame is not obtained");
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class PS3EyeFrameGrabberTest {
+
+    // Assuming there's a mock implementation or a way to inject mocks
+    // or suppose we are testing with a real CLCamera object.
+    private PS3EyeFrameGrabber frameGrabber;
+    private CLCamera cameraMock; // Assume this is a mock.
+
+    @BeforeEach
+    public void setUp() throws Exception {
+        cameraMock = mock(CLCamera.class); // If using a mock framework like Mockito.
+        int cameraIndex = 0; // Use an arbitrary camera index for the test case.
+        frameGrabber = new PS3EyeFrameGrabber(cameraIndex);
+        frameGrabber.camera = cameraMock; // Injecting the mock or real object.
+    }
+
+    @Test
+    public void grab_rawTest() {
+        // Scenario 1: camera provides a frame successfully.
+        int timeout = 10; // Some timeout value.
+        int[] expectedFrame = {1, 2, 3, 4}; // Expected frame content.
+        when(cameraMock.getCameraFrame(any(int[].class), eq(timeout))).thenReturn(true);
+        frameGrabber.ps3_frame = expectedFrame; // Set a frame to the grabber
+
+        int[] resultFrame = frameGrabber.grab_raw();
+        assertNotNull(resultFrame, "The result frame should not be null.");
+        assertArrayEquals(expectedFrame, resultFrame, "The frames should match when the camera provides a frame.");
+
+        // Scenario 2: camera fails to provide a frame.
+        when(cameraMock.getCameraFrame(any(int[].class), eq(timeout))).thenReturn(false);
+        resultFrame = frameGrabber.grab_raw();
+        assertNull(resultFrame, "The result frame should be null when the camera fails to provide a frame.");
+    }
+
+    @AfterEach
+    public void tearDown() throws Exception {
+        frameGrabber.release(); // Release resources if necessary.
+    }
+}
+
+

@@ -1,0 +1,547 @@
+Source code: 
+
+
+public static boolean setWay(int[][] map, int i, int j) {
+    if (map[6][5] == 2) { // means the ball find its path, ending condition
+        return true;
+    }
+    if (map[i][j] == 0) { // if the ball haven't gone through this point
+        // then the ball follows the move strategy : down -> right -> up -> left
+        map[i][j] = 2; // we assume that this path is feasible first, set the current point to 2
+                       // first。
+        if (setWay(map, i + 1, j)) { // go down
+            return true;
+        } else if (setWay(map, i, j + 1)) { // go right
+            return true;
+        } else if (setWay(map, i - 1, j)) { // go up
+            return true;
+        } else if (setWay(map, i, j - 1)) { // go left
+            return true;
+        } else {
+            // means that the current point is the dead end, the ball cannot proceed, set
+            // the current point to 3 and return false, the backtracking will start, it will
+            // go to the previous step and check for feasible path again
+            map[i][j] = 3;
+            return false;
+        }
+    } else { // if the map[i][j] != 0 , it will probably be 1,2,3, return false because the
+        // ball cannot hit the wall, cannot go to the path that has gone though before,
+        // and cannot head to deadened.
+        return false;
+    }
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.thealgorithms.backtracking;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class MazeRecursionTest {
+    @Test
+    public void setWayTest() {
+        // prepare the map
+        int[][] map = new int[8][7];
+        for (int i = 0; i < 7; i++) {
+            map[0][i] = 1;
+            map[7][i] = 1;
+        }
+        for (int i = 0; i < 8; i++) {
+            map[i][0] = 1;
+            map[i][6] = 1;
+        }
+        map[3][1] = 1;
+        map[3][2] = 1;
+
+        // call the method
+        boolean result = MazeRecursion.setWay(map, 1, 1);
+        
+        // expected layout of map after calling setWay if a path is found
+        int[][] expectedMap = {
+            {1, 1, 1, 1, 1, 1, 1},
+            {1, 2, 0, 0, 0, 0, 1},
+            {1, 2, 0, 0, 0, 0, 1},
+            {1, 1, 1, 0, 0, 0, 1},
+            {1, 0, 0, 0, 0, 0, 1},
+            {1, 0, 0, 0, 0, 0, 1},
+            {1, 0, 0, 0, 0, 2, 1},
+            {1, 1, 1, 1, 1, 1, 1}
+        };
+
+        // verify the result
+        assertTrue(result); // the method should return true if a path is found
+
+        // the map should be updated to reflect the path found by setWay method
+        assertArrayEquals(expectedMap, map);
+
+        // call the method with map filled with walls to test for no path case
+        int[][] noPathMap = new int[8][7];
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 7; j++) {
+                noPathMap[i][j] = 1; // All walls, no path possible
+            }
+        }
+        boolean noPathResult = MazeRecursion.setWay(noPathMap, 1, 1);
+
+        // verify that the result is false as no path should be found
+        assertFalse(noPathResult);
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package com.thealgorithms.backtracking;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class MazeRecursionTest {
+    @Test
+    public void setWayTest() {
+        // Initialize our test map based on the context information
+        int[][] testMap = new int[8][7];
+        // Set the borders
+        for (int i = 0; i < 7; i++) {
+            testMap[0][i] = 1;
+            testMap[7][i] = 1;
+        }
+        for (int i = 0; i < 8; i++) {
+            testMap[i][0] = 1;
+            testMap[i][6] = 1;
+        }
+        // Set obstacles
+        testMap[3][1] = 1;
+        testMap[3][2] = 1;
+
+        // Using setWay to find the path
+        boolean result = MazeRecursion.setWay(testMap, 1, 1);
+
+        // Assert that the path is found correctly
+        assertTrue(result);
+
+        // Validate that the path was marked correctly with 2's
+        // We only check the exit condition (6, 5) which is enough here
+        assertEquals(2, testMap[6][5]);
+
+        // Also, make sure the no-go areas are still marked as 1 (walls) and 3 (tried and failed)
+        // Check the walls
+        for (int i = 0; i < 7; i++) {
+            assertEquals(1, testMap[0][i]);
+            assertEquals(1, testMap[7][i]);
+        }
+        for (int i = 0; i < 8; i++) {
+            assertEquals(1, testMap[i][0]);
+            assertEquals(1, testMap[i][6]);
+        }
+        // Check the obstacle
+        assertEquals(1, testMap[3][1]);
+        assertEquals(1, testMap[3][2]);
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.thealgorithms.backtracking;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class MazeRecursionTest {
+
+    @Test
+    public void setWayTest() {
+        // Prepare a test maze map with known layout
+        int[][] map = new int[8][7];
+        // Initialize walls
+        for (int i = 0; i < 7; i++) {
+            map[0][i] = 1;
+            map[7][i] = 1;
+            map[i][0] = 1;
+            map[i][6] = 1;
+        }
+        // Initialize obstacles
+        map[3][1] = 1;
+        map[3][2] = 1;
+        
+        // Test a scenario where the path is achievable
+        boolean result = MazeRecursion.setWay(map, 1, 1);
+        assertTrue(result, "The path should be found.");
+        assertEquals(2, map[6][5], "The endpoint should be marked as part of the path.");
+
+        // Now test a scenario where the path is blocked, and there is no way to the endpoint
+        int[][] blockedMap = new int[8][7];
+        // Initialize walls
+        for (int i = 0; i < 7; i++) {
+            blockedMap[0][i] = 1;
+            blockedMap[7][i] = 1;
+            blockedMap[i][0] = 1;
+            blockedMap[i][6] = 1;
+        }
+        // Initialize obstacles
+        blockedMap[1][1] = 1; // Blocking the start position
+
+        result = MazeRecursion.setWay(blockedMap, 1, 1);
+        assertFalse(result, "The path should not be found.");
+        
+        // In this case, assert the state of the map after the algorithm has run,
+        // it should be unchanged since the start position was blocked.
+        for (int i = 0; i < blockedMap.length; i++) {
+            for (int j = 0; j < blockedMap[i].length; j++) {
+                if (i == 0 || i == 7 || j == 0 || j == 6) {
+                    assertEquals(1, blockedMap[i][j], "Walls should remain as 1.");
+                } else if (i == 1 && j == 1) {
+                    assertEquals(1, blockedMap[i][j], "Blocked start position should remain as 1.");
+                } else {
+                    assertEquals(0, blockedMap[i][j], "Other paths should remain unvisited (0).");
+                }
+            }
+        }
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.thealgorithms.backtracking;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class MazeRecursionTest {
+
+    @Test
+    public void setWayTest() {
+        // Create a maze map as per the context provided
+        int[][] map = new int[8][7];
+        for (int i = 0; i < 7; i++) {
+            map[0][i] = 1;
+            map[7][i] = 1;
+        }
+        for (int i = 0; i < 8; i++) {
+            map[i][0] = 1;
+            map[i][6] = 1;
+        }
+        map[3][1] = 1;
+        map[3][2] = 1;
+
+        // Test whether the ball can find its way to the endpoint (map[6][5])
+        boolean result = MazeRecursion.setWay(map, 1, 1);
+
+        // The expected result should be true since the ball should find a way
+        assertTrue(result);
+
+        // Further checks can be made to see if the correct path is being marked with '2'
+        // For instance, the ball would initially move down from (1,1), so we expect (2,1) to be '2'
+        assertEquals(2, map[2][1]);
+
+        // Checking for the end point being reached
+        assertEquals(2, map[6][5]);
+        
+        // We can also check that the walls are still intact (not overwritten by the setWay method)
+        for (int i = 0; i < 7; i++) {
+            assertEquals(1, map[0][i]);
+            assertEquals(1, map[7][i]);
+        }
+        for (int i = 0; i < 8; i++) {
+            assertEquals(1, map[i][0]);
+            assertEquals(1, map[i][6]);
+        }
+        
+        // If additional assertions are needed for the entire path, these would depend on the specific implementation of setWay
+        // For a more thorough test, one could loop through all cells in the maze and verify that no '2's are next to walls or outside the valid path
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.thealgorithms.backtracking;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class MazeRecursionTest {
+    @Test
+    public void setWayTest() {
+        // Initialize a maze with the same structure as described in the problem context
+        int[][] map = new int[8][7];
+        for (int i = 0; i < 7; i++) {
+            map[0][i] = 1;
+            map[7][i] = 1;
+        }
+        for (int i = 0; i < 8; i++) {
+            map[i][0] = 1;
+            map[i][6] = 1;
+        }
+        map[3][1] = 1;
+        map[3][2] = 1;
+        
+        // Test path finding starting from the entry point (1,1)
+        boolean result = MazeRecursion.setWay(map, 1, 1);
+        
+        // Assert that a path has been found
+        assertTrue(result);
+        
+        // Assert that the endpoint has been marked as part of the path
+        assertEquals(2, map[6][5]);
+        
+        // Additional assertions could check the correctness of the path marked by '2's
+        // and that there are no incorrect paths marked by '3's after the full path has been found.
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package com.thealgorithms.backtracking;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class MazeRecursionTest {
+
+    @Test
+    public void setWayTest() {
+        // Create a map with the initial setup according to the context provided
+        int[][] map = new int[8][7];
+
+        // Set walls on borders
+        for (int i = 0; i < 7; i++) {
+            map[0][i] = 1;
+            map[7][i] = 1;
+        }
+        for (int i = 0; i < 8; i++) {
+            map[i][0] = 1;
+            map[i][6] = 1;
+        }
+
+        // Set some obstacles inside the maze
+        map[3][1] = 1;
+        map[3][2] = 1;
+
+        boolean result = MazeRecursion.setWay(map, 1, 1);
+
+        // Expected map after running the setWay method
+        int[][] expectedMap = {
+            {1, 1, 1, 1, 1, 1, 1},
+            {1, 2, 0, 0, 0, 0, 1},
+            {1, 2, 0, 0, 0, 0, 1},
+            {1, 1, 1, 0, 0, 0, 1},
+            {1, 0, 0, 0, 0, 0, 1},
+            {1, 0, 0, 0, 0, 2, 1},
+            {1, 0, 0, 0, 0, 2, 1},
+            {1, 1, 1, 1, 1, 1, 1}
+        };
+
+        // Verify that the setWay method finds the correct path (result is true)
+        assertTrue(result, "The setWay method should find a path to the destination.");
+
+        // Verify that the maze has been updated correctly to reflect the path found
+        assertArrayEquals(expectedMap, map, "The map should match the expected map layout with the path marked.");
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.thealgorithms.backtracking;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class MazeRecursionTest {
+
+    @Test
+    public void setWayTest() {
+        int[][] map = new int[8][7];
+        // Set walls
+        for (int i = 0; i < 7; i++) {
+            map[0][i] = 1;
+            map[7][i] = 1;
+            map[i][0] = 1;
+            map[i][6] = 1;
+        }
+
+        // Set some obstacles
+        map[3][1] = 1;
+        map[3][2] = 1;
+
+        // Use setWay method on the map starting from position (1,1)
+        boolean result = MazeRecursion.setWay(map, 1, 1);
+
+        // Since we start from (1,1) and the exit is assumed at (6,5)
+        // and we have not set any obstacles that block the path completely,
+        // the result should be true, meaning a path is found
+        assertTrue(result, "setWay should return true as a path exists");
+
+        // Validate the path marked by '2's actually leads to the exit
+        assertEquals(2, map[6][5], "The path should reach the exit");
+
+        // Check if the path does not contains '0's which means all points are either visited or are walls
+        for (int i = 1; i < map.length - 1; i++) {
+            for (int j = 1; j < map[i].length - 1; j++) {
+                if (map[i][j] == 0) {
+                    fail("There should be no unvisited open space ('0') on the path found");
+                }
+            }
+        }
+
+        // Optionally check that the path found is continuous and there are no isolated '2's
+        // For brevity, this part is not included here but could be added to make the test more robust
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package com.thealgorithms.backtracking;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
+public class MazeRecursionTest {
+    
+    @Test
+    public void setWayTest() {
+        int[][] map = {
+            {1, 1, 1, 1, 1, 1, 1},
+            {1, 0, 0, 0, 0, 0, 1},
+            {1, 0, 1, 1, 1, 0, 1},
+            {1, 1, 1, 0, 0, 0, 1},
+            {1, 1, 1, 0, 1, 1, 1},
+            {1, 0, 0, 0, 0, 0, 1},
+            {1, 1, 1, 1, 1, 2, 1}, // The expected path ending
+            {1, 1, 1, 1, 1, 1, 1}
+        };
+
+        // Check if the method finds the path
+        assertTrue(MazeRecursion.setWay(map, 1, 1)); // Start from the coordinate (1,1)
+
+        // Check if the method does not find the path when starting from a wall
+        assertFalse(MazeRecursion.setWay(map, 0, 0)); // Start from a wall (0,0)
+
+        // Modify the maze to have no exit
+        for (int i = 0; i < 7; i++) {
+            map[6][i] = 1;
+        }
+
+        // Check if the method returns false when there is no path
+        assertFalse(MazeRecursion.setWay(map, 1, 1)); // No exit from the maze
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package com.thealgorithms.backtracking;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class MazeRecursionTest {
+
+    @Test
+    public void setWayTest() {
+        int[][] map = new int[8][7];
+
+        // Initialize the map with walls
+        for (int i = 0; i < 7; i++) {
+            map[0][i] = 1;
+            map[7][i] = 1;
+        }
+        for (int i = 0; i < 8; i++) {
+            map[i][0] = 1;
+            map[i][6] = 1;
+        }
+
+        // Set obstacles
+        map[3][1] = 1;
+        map[3][2] = 1;
+
+        // Test that the setWay method returns true when a path is found
+        assertTrue(MazeRecursion.setWay(map, 1, 1), "The path is not found when it should be.");
+        
+        // Check the final state of the map to ensure the path (indicated by 2's) is created
+        int[][] expectedMap = {
+            {1, 1, 1, 1, 1, 1, 1},
+            {1, 2, 2, 2, 2, 2, 1},
+            {1, 2, 3, 3, 3, 2, 1},
+            {1, 1, 1, 3, 2, 2, 1},
+            {1, 3, 3, 3, 3, 1, 1},
+            {1, 3, 2, 2, 2, 2, 1},
+            {1, 3, 3, 3, 3, 2, 1},
+            {1, 1, 1, 1, 1, 1, 1},
+        };
+        assertArrayEquals(expectedMap, map, "The map state after executing setWay is not as expected.");
+
+        // Test that the setWay method returns false when no path is found
+        // Here, we add an obstacle to the exit to ensure the path is blocked
+        map[6][5] = 1;
+        assertFalse(MazeRecursion.setWay(map, 1, 1), "A path is found when it should not be possible.");
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.thealgorithms.backtracking;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class MazeRecursionTest {
+    @Test
+    public void setWayTest() {
+        // Initialize maze with the same configurations as provided in the source code
+        int[][] map = new int[8][7];
+        // Set walls
+        for (int i = 0; i < 7; i++) {
+            map[0][i] = 1;
+            map[7][i] = 1;
+        }
+        for (int i = 0; i < 8; i++) {
+            map[i][0] = 1;
+            map[i][6] = 1;
+        }
+        // Set some obstacles
+        map[3][1] = 1;
+        map[3][2] = 1;
+
+        // Perform the test
+        boolean result = MazeRecursion.setWay(map, 1, 1);
+
+        // Since the endpoint at [6][5] cannot be reached with the given obstacle setup,
+        // the expected result is false
+        assertFalse(result, "The ball did not find a path");
+
+        // Now, set a successful path for the ball to find its way to the endpoint at [6][5]
+        // Remove the obstacles
+        map[3][1] = 0;
+        map[3][2] = 0;
+        // Set additional paths
+        map[2][2] = 0;
+        map[2][3] = 0;
+        map[2][4] = 0;
+        map[3][4] = 0;
+        map[4][4] = 0;
+        map[5][4] = 0;
+        map[6][4] = 0;
+
+        // Perform the test again with a successful path
+        result = MazeRecursion.setWay(map, 1, 1);
+
+        // Now the expected result is true since the endpoint at [6][5] can be reached
+        assertTrue(result, "The ball found a path to the endpoint");
+        
+        // We can also check that the endpoint [6][5] has value 2 (i.e. part of the path)
+        assertEquals(2, map[6][5], "The ball reached the endpoint at map[6][5]");
+    }
+}
+
+

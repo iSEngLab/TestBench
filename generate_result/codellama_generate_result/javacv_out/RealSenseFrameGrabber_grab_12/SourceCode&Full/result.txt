@@ -1,0 +1,518 @@
+Source code: 
+
+
+public Frame grab() throws Exception {
+    device.wait_for_frames();
+
+      frameNumber++; 
+    // For Framegrabber
+    if (colorEnabled && behaveAsColorFrameGrabber) {
+        IplImage image = grabVideo();
+
+        if (returnImage == null) {
+            int deviceWidth = device.get_stream_width(RealSense.color);
+            int deviceHeight = device.get_stream_height(RealSense.color);
+              returnImage = IplImage.create(deviceWidth, deviceHeight, IPL_DEPTH_8U, 3);
+            returnImage = IplImage.create(deviceWidth, deviceHeight, IPL_DEPTH_8U, 1);
+        }
+        cvCvtColor(image, returnImage, CV_BGR2GRAY);
+        return converter.convert(returnImage);
+    } else {
+        if (IREnabled) {
+            return converter.convert(grabIR());
+        } else {
+            if (depthEnabled) {
+                
+                // Fake colors
+                IplImage image = grabDepth();
+                if (returnImage == null) {
+                    int deviceWidth = device.get_stream_width(RealSense.depth);
+                    int deviceHeight = device.get_stream_height(RealSense.depth);
+              returnImage = IplImage.create(deviceWidth, deviceHeight, IPL_DEPTH_8U, 3);
+                    returnImage = IplImage.create(deviceWidth, deviceHeight, IPL_DEPTH_8U, 1);
+                } 
+                return converter.convert(returnImage);
+            }
+        }
+    }
+
+    return null;
+}
+
+
+
+No.1 generated result --------------------------
+
+
+package org.bytedeco.javacv;
+
+import java.io.IOException;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RealSenseFrameGrabberTest {
+    private static final String DEVICE_FILE = "/dev/ttyACM0";
+    
+    @BeforeAll
+    public static void setUpClass() throws IOException, InterruptedException {
+        // Set up the RealSense device connection.
+        DeviceList list = new DeviceList();
+        Device device = list.createDevice(DEVICE_FILE);
+        
+        // Configure the device for depth streaming.
+        Config config = device.getConfig();
+        config.enableStream(RealSense.RS_STREAM_DEPTH, 640, 480, RealSense.RS_FORMAT_Z16, 30);
+        
+        // Start the depth streaming pipeline.
+        Pipeline pipeline = new Pipeline();
+        pipeline.startWithConfig(config);
+    }
+    
+    @AfterAll
+    public static void tearDownClass() {
+        // Stop the device and release resources.
+        DeviceList list = new DeviceList();
+        Device device = list.createDevice(DEVICE_FILE);
+        device.stop();
+        device.close();
+    }
+    
+    @Test
+    public void grabTest() throws IOException, InterruptedException {
+        // Set up the frame grabber and start streaming.
+        RealSenseFrameGrabber grabber = new RealSenseFrameGrabber(DEVICE_FILE);
+        grabber.start();
+        
+        // Grab frames for 10 seconds and verify that they are valid.
+        long timeout = System.currentTimeMillis() + 10 * 1000;
+        while (System.currentTimeMillis() < timeout) {
+            Frame frame = grabber.grab();
+            
+            // Verify that the frame is valid and has the expected size.
+            assertNotNull(frame);
+            assertEquals(640, frame.imageWidth);
+            assertEquals(480, frame.imageHeight);
+        }
+        
+        // Stop streaming and release resources.
+        grabber.stop();
+    }
+}
+
+
+
+No.2 generated result --------------------------
+
+// Fill in the blanks.
+package org.bytedeco.javacv;
+import java.util.Arrays;
+import java.util.List;
+import java.nio.ByteBuffer;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+public class RealSenseFrameGrabberTest {
+    private RealSenseFrameGrabber grabber = new RealSenseFrameGrabber();
+    @BeforeEach
+    public void setup() throws FrameGrabber.Exception {
+        // Open the camera, get the frame and close it.
+        grabber.setDeviceNumber(0);
+        grabber.start();
+        VideoFrame videoFrame = grabber.grabVideoFrame();
+        assertNotNull(videoFrame);
+        grabber.stop();
+    }
+    @Test
+    public void testGrabRgb() throws FrameGrabber.Exception {
+        // Check that RGB is enabled by default.
+        List<Integer> rgbModes = Arrays.asList(RealSense.RS_FORMAT_RGB8, RealSense.RS_FORMAT_RGBA8);
+        grabber.setDeviceNumber(0);
+        grabber.start();
+        VideoFrame videoFrame = grabber.grabVideoFrame();
+        assertNotNull(videoFrame);
+        ByteBuffer byteBuf = videoFrame.getByteBuffer();
+        assertEquals(rgbModes, byteBuf.getInt());
+        grabber.stop();
+    }
+    @Test
+    public void testGrabDepth() throws FrameGrabber.Exception {
+        // Check that depth is disabled by default.
+        List<Integer> depthModes = Arrays.asList(RealSense.RS_FORMAT_Z16);
+        grabber.setDeviceNumber(0);
+        grabber.start();
+        VideoFrame videoFrame = grabber.grabVideoFrame();
+        assertNotNull(videoFrame);
+        ByteBuffer byteBuf = videoFrame.getByteBuffer();
+        assertEquals(depthModes, byteBuf.getInt());
+        grabber.stop();
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import java.io.*;
+
+@Disabled("Need to be implemented")
+public class RealSenseFrameGrabberTest {
+    @Test
+    public void grabTest() throws IOException, InterruptedException {
+        // Load the native library.
+        try (RealSense r = new RealSense()) {}
+        
+        // Create a frame grabber for the depth stream
+        FrameGrabber<VideoFrame> grabber = null;
+        
+        // Grab 10 frames
+        int nFrames = 10;
+        VideoFrame[] frames = new VideoFrame[nFrames];
+        for (int i = 0; i < nFrames; i++) {
+            System.out.println("Grabbing frame " + (i+1) + "/" + nFrames);
+            
+            // Grab a frame asynchronously with the grabber's thread
+            FrameGrabber.Frame[] grabbed = grabber.grab();
+            
+            // Wait for the grabbed frame to be ready
+            while (grabbed[0].status() != FrameGrabber.Status.SUCCESS) {
+                Thread.sleep(1);
+            }
+            
+            // Retrieve the grabbed frame
+            VideoFrame frame = (VideoFrame)grabbed[0].frame();
+            frames[i] = frame;
+        }
+        
+        // Display all frames
+        for (int i = 0; i < nFrames; i++) {
+            System.out.println("Displaying frame " + (i+1) + "/" + nFrames);
+            
+            // Display the current frame
+            VideoFrame frame = frames[i];
+            
+            // Get the depth values for the current frame
+            double[] depth = grabber.getDepthMap();
+        }
+        
+        // Release all resources
+        grabber.stop();
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RealSenseFrameGrabberTest {
+    @Test
+    public void grabTest() {
+        <FILL>
+    }
+}
+
+
+No.5 generated result --------------------------
+
+
+package org.bytedeco.javacv;
+import java.util.*;
+
+public class RealSenseFrameGrabberTest {
+    @Test
+    public void grabTest() {
+        // Instantiate a new RealSense device
+        RealSense rs = new RealSense();
+        
+        // Enable all streams (depth, color, fisheye)
+        String[] profiles = rs.getDeviceProfiles(0);
+        assertEquals("[default_f200, default_sr300]", Arrays.toString(profiles));
+        
+        int deviceNumber = 0; // or other device number as needed
+        boolean isDepthSensorEnabled = true;
+        RealSenseFrameGrabber frameGrabber = new RealSenseFrameGrabber();
+        frameGrabber.setDevice(deviceNumber);
+        
+        // Set the color stream format
+        frameGrabber.setFormat("color", "bgr8");
+        
+        // Set the depth stream format
+        frameGrabber.setFormat("depth", "z16");
+                    
+        try {
+            assertTrue(frameGrabber.start());
+            
+            Frame color = new Frame();
+            Frame depth = new Frame();
+            
+            while (true) {
+                // Grab a frame from the default stream of the device
+                boolean grabbedDepth = frameGrabber.grab(depth);
+                
+                if (!grabbedDepth) {
+                    continue;
+                }
+                
+                boolean grabbedColor = frameGrabber.grab(color);
+                
+                if (grabbedColor && grabbedDepth) {
+                    // Process the frames as needed
+                    
+                    System.out.println("Depth data: " + depth);
+                    System.out.println("Color data: " + color);
+                    
+                    Thread.sleep(500); // Let's not hog all CPU resources...
+                } else {
+                    break; // We have stopped grabbing frames, probably because we have reached the end of the stream
+                }
+            }
+        } catch (Exception e) {
+            fail("An error occurred while grabbing and processing a frame.");
+        } finally {
+            assertTrue(frameGrabber.stop());
+            
+            // Release all resources
+            rs.dispose();
+        }
+    }
+}
+    
+
+
+No.6 generated result --------------------------
+
+### [LANG=java]
+package org.bytedeco.javacv;
+
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.Map;
+import javax.swing.JFrame;
+
+import org.bytedeco.librealsense.*;
+import org.junit.jupiter.api.Test;
+
+@Disabled("Not yet implemented") public class RealSenseFrameGrabberTest {
+    @Test void grabTest() throws InterruptedException, IOException {
+        // Create a frame grabber for the connected Intel Realsense camera
+        RealSenseDevice device = new RealSenseDevice();
+        FrameListener listener = new FrameListener(device);
+        try (RealSenseFrameGrabber grabber = new RealSenseFrameGrabber(0, listener)) {
+            // Start the frame grabber and display each captured image in a separate window
+            grabber.start();
+            for (int i = 0; i < 10; i++) {
+                BufferedImage image = grabber.grab().clone();
+                JFrame f = new JFrame(String.format("Test Image %d", i));
+                f.setSize(image.getWidth(), image.getHeight());
+                f.add(new CanvasFrame("Test Image", image));
+                f.setVisible(true);
+            }
+        } finally {
+            device.close();
+        }
+    }
+}
+
+class FrameListener implements RealSenseFrameGrabber.FrameListener {
+    private final RealSenseDevice device;
+    
+    public FrameListener(RealSenseDevice device) {
+        this.device = device;
+    }
+    
+    @Override public void onFrameset(@ByRef RealSenseFrameset frameset) throws IOException {
+        // Process each frame in the set of captured images
+        for (int i = 0; i < frameset.size(); i++) {
+            try (RealSenseFrame frame = new RealSenseFrame(frameset.get(i))) {
+                // TODO: do something with the individual frame
+            }
+        }
+    }
+}
+[/LANG]
+    
+
+### [LANG=python]
+import pytest
+from jnius import autoclass, cast
+from pylibrs.pyrealsense2 import PyRealSense2
+from tests.conftest import device_test_wrapper
+
+class TestRealSenseFrameGrabber(object):
+    
+    @device_test_wrapper
+    def test_start(self, ctx, dev):
+        """Test that the grabber can start."""
+        # Create a frame grabber for the connected Intel Realsense camera
+        rs = PyRealSense2()
+        listener = FrameListener(rs)
+        grabber = RealSenseFrameGrabber(0, listener)
+        try:
+            grabber.start()
+            
+            # TODO: Implement test
+        
+    @device_test_wrapper
+    def test_stop(self, ctx, dev):
+        """Test that the grabber can stop."""
+        rs = PyRealSense2()
+        listener = FrameListener(rs)
+        grabber = RealSenseFrameGrabber(0, listener)
+    
+        try:
+            grabber.start()
+        
+        except Exception as e:
+            print(e)
+    
+    @device_test_wrapper
+    def test_grab(self, ctx, dev):
+        """Test that the grabber can grab a frame."""
+        rs = PyRealSense2()
+        listener = FrameListener(rs)
+        grabber = RealSenseFrameGrabber(0, listener)
+    
+        try:
+            grabber.start()
+        
+        except Exception as e:
+            print(e)
+    
+    @device_test_wrapper
+    def test_grabMultiple(self, ctx, dev):
+        """Test that the grabber can grab multiple frames."""
+        rs = PyRealSense2()
+        listener = FrameListener(rs)
+        grabber = RealSenseFrameGrabber(0, listener)
+    
+        try:
+            grabber.start()
+        
+        except Exception as e:
+            print(e)
+    
+    @device_test_wrapper
+    def test_grabMultipleDifferentSize(self, ctx, dev):
+        """Test that the grabber can grab multiple frames of different sizes."""
+        rs = PyRealSense2()
+        listener = FrameListener(rs)
+        grabber = RealSenseFrameGrabber(0, listener)
+    
+        try:
+            grabber.start()
+        
+        except Exception as e:
+            print(e)
+    
+    @device_test_wrapper
+    def test_grabMultipleDifferentSizeWithDelay(self, ctx, dev):
+        """Test that the grabber can grab multiple frames of different sizes with a delay."""
+        rs = PyRealSense2()
+        listener = FrameListener(rs)
+        grabber = RealSenseFrameGrabber(0, listener)
+    
+        try:
+            grabber.start()
+        
+        except Exception as e:
+            print(e)
+
+
+
+No.7 generated result --------------------------
+
+RealSenseFrameGrabber grabber = new RealSenseFrameGrabber();
+if (grabber.start()) {
+    // Grab frames
+    while (true) {
+        RealSenseFrames frame = grabber.grab();
+        if (frame != null) {
+            // Process the color and depth images
+        } else {
+            break;
+        }
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import java.io.File;
+import org.junit.jupiter.api.*;
+
+public class RealSenseFrameGrabberTest {
+    private File file = new File("<FILL>"); // Path to a video file (e.g., "video/sample_720p.mp4")
+    private RealSenseFrameGrabber grabber;
+
+    @BeforeEach
+    public void setUp() throws Exception {
+        grabber = new RealSenseFrameGrabber(file);
+    }
+
+    @AfterEach
+    public void tearDown() throws Exception {
+        if (grabber != null) {
+            grabber.release();
+        }
+    }
+
+    @Test
+    public void grabTest() throws Exception {
+        OpenCVFrameConverter.ToIplImage converter = new OpenCVFrameConverter.ToIplImage();
+        Frame frame = grabber.grab();
+        IplImage image = converter.convert(frame);
+
+        assertNotNull(image, "Failed to retrieve a valid image frame");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+import org.bytedeco.javacpp.*;
+import org.bytedeco.javacv.*;
+import static org.bytedeco.javacv.RealSenseFrameGrabber.RS_FORMAT;
+
+public class RealSenseFrameGrabberTest {
+    @Test
+    public void grabTest() {
+        // Create an instance of RealSenseFrameGrabber
+        RealSenseFrameGrabber grabber = new RealSenseFrameGrabber();
+        
+        // Set the device ID to connect to
+        grabber.setDeviceID(0);
+        
+        // Set the format of frames to RGB8
+        grabber.setFormat(RS_FORMAT.RGBA8);
+        
+        // Start capturing video input from the camera
+        grabber.start();
+        
+        // Wait for a frame to be captured
+        Frame frame = grabber.grab();
+        
+        // Check if the frame is not null
+        assertNotNull(frame);
+    }
+}
+
+
+No.10 generated result --------------------------
+
+
+RealSenseFrameGrabber grabber = new RealSenseFrameGrabber(width, height);
+try {
+    Future<Frame> future = grabber.grab();
+    // do something else until the capture is ready
+    Frame frame = future.get();
+} catch (Exception e) {
+    e.printStackTrace();
+}
+
+
+

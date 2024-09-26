@@ -1,0 +1,351 @@
+Source code: 
+
+
+public static void handleNestedObject(Object obj, Class entity, boolean isEncode) throws IllegalAccessException {
+    Field[] fields = obj.getClass().getDeclaredFields();
+    for (Field field : fields) {
+        if(field.getType().isPrimitive()){
+            continue;
+        }
+        if(field.getType().equals(entity)){
+            // 对象里面是实体
+            field.setAccessible(true);
+            Object nestedObject = field.get(obj);
+            handlerObject(nestedObject, isEncode);
+            break;
+        }else{
+            // 对象里面是List<实体>
+            if(field.getGenericType() instanceof ParameterizedType){
+                ParameterizedType pt = (ParameterizedType)field.getGenericType();
+                if(pt.getRawType().equals(List.class)){
+                    if(pt.getActualTypeArguments()[0].equals(entity)){
+                        field.setAccessible(true);
+                        Object nestedObject = field.get(obj);
+                        handleList(nestedObject, entity, isEncode);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+No.1 generated result --------------------------
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SensitiveInfoUtilTest {
+    @Test
+    public void handleNestedObjectTest() throws IllegalAccessException {
+        // Set up a mock object for the input parameter obj
+        Object obj = new Object();
+        
+        // Set up a mock object for the input parameter entity
+        Class entity = String.class;
+        
+        // Call the handleNestedObject method with the mock objects as arguments
+        SensitiveInfoUtil.handleNestedObject(obj, entity, true);
+        
+        // Verify that the expected results are returned by the method
+        assertEquals("The nested object should be handled correctly", obj, SensitiveInfoUtil.getNestedObject(obj, entity));
+    }
+}
+
+
+No.2 generated result --------------------------
+
+@Test
+public void handleNestedObjectTest() throws IllegalAccessException {
+    Object obj = new Object();
+    Class entity = String.class;
+    boolean isEncode = true;
+    SensitiveInfoUtil.handleNestedObject(obj, entity, isEncode);
+}
+
+
+No.3 generated result --------------------------
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SensitiveInfoUtilTest {
+    @Test
+    public void handleNestedObjectTest() {
+        // Create an instance of the entity class
+        Class entityClass = ...;
+        Object obj = new entityClass();
+
+        // Add a field to the object that is an instance of the entity class
+        Field field = new Field(entityClass);
+        obj.setAccessible(true);
+        obj.addField(field);
+
+        // Call the handleNestedObject method on the object and verify that it correctly handles the nested object
+        SensitiveInfoUtil.handleNestedObject(obj, entityClass, true);
+        assertTrue(obj.getAccessible());
+    }
+}
+
+
+No.4 generated result --------------------------
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class SensitiveInfoUtilTest {
+    @Test
+    public void handleNestedObjectTest() throws IllegalAccessException {
+        // Create a mock object to use as the input parameter
+        Object obj = mock(Object.class);
+        
+        // Use reflection to retrieve the declared fields of the mock object
+        Field[] fields = obj.getClass().getDeclaredFields();
+        
+        // Iterate through the declared fields and find any nested objects within them
+        for (Field field : fields) {
+            if (field.getType().isPrimitive()) {
+                continue;
+            } else if (field.getType().equals(Object.class)) {
+                // Set the accessible flag of this field to true and retrieve its value
+                field.setAccessible(true);
+                Object nestedObject = field.get(obj);
+                
+                // Call the handlerObject() method with this object as an argument
+                SensitiveInfoUtil.handleNestedObject(nestedObject, Object.class, false);
+            } else if (field.getGenericType() instanceof ParameterizedType) {
+                ParameterizedType pt = (ParameterizedType) field.getGenericType();
+                if (pt.getRawType().equals(List.class)) {
+                    // Retrieve the actual type arguments of this parameterized type and check if they are entities
+                    Class[] actualTypes = (Class[]) pt.getActualTypeArguments();
+                    for (Class actualType : actualTypes) {
+                        if (actualType.equals(Object.class)) {
+                            // Set the accessible flag of this field to true and retrieve its value
+                            field.setAccessible(true);
+                            Object nestedList = field.get(obj);
+                            
+                            // Call the handleList() method with this list as an argument
+                            SensitiveInfoUtil.handleNestedObject(nestedList, Object.class, false);
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Verify that the handlerObject() and handleList() methods were called once each
+        verify(SensitiveInfoUtil).handlerObject(any(), anyBoolean());
+        verify(SensitiveInfoUtil).handleList(any(), any(), anyBoolean());
+    }
+}
+
+
+No.5 generated result --------------------------
+
+@BeforeEach
+public void setUp() {
+    SensitiveInfoUtil sensitiveInfoUtil = new SensitiveInfoUtil();
+    Object obj = new Object(); // replace with the actual object
+    Class entity = String.class; // replace with the actual class
+    boolean isEncode = true;
+    try {
+        sensitiveInfoUtil.handleNestedObject(obj, entity, isEncode);
+    } catch (IllegalAccessException e) {
+        fail("Unexpected IllegalAccessException");
+    }
+}
+
+@Test
+public void handleNestedObject_List_Success() {
+    List<String> list = new ArrayList<>(); // replace with the actual list
+    Class entity = String.class; // replace with the actual class
+    boolean isEncode = true;
+    SensitiveInfoUtil sensitiveInfoUtil = new SensitiveInfoUtil();
+    try {
+        sensitiveInfoUtil.handleNestedObject(list, entity, isEncode);
+    } catch (IllegalAccessException e) {
+        fail("Unexpected IllegalAccessException");
+    }
+}
+
+@Test
+public void handleNestedObject_List_Fail() {
+    List<String> list = new ArrayList<>(); // replace with the actual list
+    Class entity = Integer.class; // replace with the actual class
+    boolean isEncode = true;
+    SensitiveInfoUtil sensitiveInfoUtil = new SensitiveInfoUtil();
+    try {
+        sensitiveInfoUtil.handleNestedObject(list, entity, isEncode);
+        fail("Expected IllegalArgumentException");
+    } catch (IllegalArgumentException e) {
+        // expected exception
+    } catch (IllegalAccessException e) {
+        fail("Unexpected IllegalAccessException");
+    }
+}
+
+
+No.6 generated result --------------------------
+
+
+package org.jeecg.common.desensitization.util;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SensitiveInfoUtilTest {
+    @Test
+    public void handleNestedObjectTest() {
+        Object obj = null; // Replace with a valid object instance
+        Class entity = null; // Replace with the class of the nested object
+        boolean isEncode = false; // Replace with the desired value for isEncode
+        
+        SensitiveInfoUtil.handleNestedObject(obj, entity, isEncode);
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SensitiveInfoUtilTest {
+    @Test
+    public void handleNestedObjectTest() {
+        Object obj = new Object(); // Create a sample object
+        Class entity = String.class; // Set the entity type to String
+        boolean isEncode = true; // Set the encode flag to true
+
+        try {
+            SensitiveInfoUtil.handleNestedObject(obj, entity, isEncode);
+        } catch (IllegalAccessException e) {
+            fail("Encountered an error while handling nested object: " + e.getMessage());
+        }
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SensitiveInfoUtilTest {
+    @Test
+    public void handleNestedObjectTest() {
+        // Create a sample object with a nested instance of the given class
+        SampleObject sample = new SampleObject();
+        sample.setName("John Doe");
+        sample.setAge(30);
+        SampleChild child = new SampleChild();
+        child.setName("Jane Doe");
+        child.setAge(15);
+        sample.setChild(child);
+        
+        // Call the handleNestedObject method on this instance and verify that it has been modified as expected
+        SensitiveInfoUtil.handleNestedObject(sample, SampleChild.class, true);
+        assertEquals("John Doe", sample.getName());
+        assertEquals(30, sample.getAge());
+        assertTrue(sample.isModified()); // Verify that the object has been modified
+    }
+}
+
+
+No.9 generated result --------------------------
+
+
+package org.jeecg.common.desensitization.util;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SensitiveInfoUtilTest {
+    @Test
+    public void handleNestedObjectTest() {
+        Object obj = new Object(); // Replace with an instance of the object to test
+        Class entity = String.class; // Replace with the class of the entity you want to test
+        boolean isEncode = true; // Replace with the expected value for the isEncode parameter
+        
+        SensitiveInfoUtil.handleNestedObject(obj, entity, isEncode);
+        
+        assertEquals("Expected field.getAccessible() to be called", true, field.getAccessible());
+        assertEquals("Expected handlerObject() to be called with the correct parameters", obj, nestedObject);
+        assertEquals("Expected handleList() to be called with the correct parameters", obj, nestedObject);
+    }
+}
+
+
+No.10 generated result --------------------------
+
+
+package org.jeecg.common.desensitization.util;
+
+import static org.junit.jupiter.api.Assertions.*;
+import java.lang.reflect.*;
+import java.util.*;
+
+public class SensitiveInfoUtilTest {
+    @Test
+    public void handleNestedObjectTest() throws Exception {
+        // Create a sample object with nested fields
+        Object obj = new SampleObject();
+
+        // Set up the expected output
+        Field[] fields = obj.getClass().getDeclaredFields();
+        for (Field field : fields) {
+            if(field.getType().isPrimitive()){
+                continue;
+            }
+            if(field.getType().equals(SampleObject2.class)){
+                // 对象里面是实体
+                field.setAccessible(true);
+                Object nestedObject = field.get(obj);
+                handlerObject(nestedObject, true);
+                break;
+            }else{
+                // 对象里面是List<实体>
+                if(field.getGenericType() instanceof ParameterizedType){
+                    ParameterizedType pt = (ParameterizedType)field.getGenericType();
+                    if(pt.getRawType().equals(List.class)){
+                        if(pt.getActualTypeArguments()[0].equals(SampleObject2.class)){
+                            field.setAccessible(true);
+                            Object nestedObject = field.get(obj);
+                            handleList(nestedObject, SampleObject2.class, true);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Verify that the expected output is correct
+        assertEquals(expectedOutput, actualOutput);
+    }
+}
+
+// Sample Objects
+public class SampleObject {
+    private SampleObject2 obj1;
+    private List<SampleObject2> listObj;
+
+    public SampleObject() {}
+
+    // Getters and Setters for the fields
+}
+
+public class SampleObject2 {
+    private String field1;
+    private int field2;
+
+    public SampleObject2() {}
+
+    // Getters and Setters for the fields
+}
+
+

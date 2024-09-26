@@ -1,0 +1,549 @@
+Source code: 
+
+
+protected ModelAndView exportXlsSheet(HttpServletRequest request, T object, Class<T> clazz, String title,String exportFields,Integer pageNum) {
+    // Step.1 组装查询条件
+    QueryWrapper<T> queryWrapper = QueryGenerator.initQueryWrapper(object, request.getParameterMap());
+    LoginUser sysUser = (LoginUser) SecurityUtils.getSubject().getPrincipal();
+    // Step.2 计算分页sheet数据
+    double total = service.count();
+    int count = (int)Math.ceil(total/pageNum);
+    //update-begin-author:liusq---date:20220629--for: 多sheet导出根据选择导出写法调整 ---
+    // Step.3  过滤选中数据
+    String selections = request.getParameter("selections");
+    if (oConvertUtils.isNotEmpty(selections)) {
+        List<String> selectionList = Arrays.asList(selections.split(","));
+        queryWrapper.in("id",selectionList);
+    }
+    //update-end-author:liusq---date:20220629--for: 多sheet导出根据选择导出写法调整 ---
+    // Step.4 多sheet处理
+    List<Map<String, Object>> listMap = new ArrayList<Map<String, Object>>();
+    for (int i = 1; i <=count ; i++) {
+        Page<T> page = new Page<T>(i, pageNum);
+        IPage<T> pageList = service.page(page, queryWrapper);
+        List<T> exportList = pageList.getRecords();
+        Map<String, Object> map = new HashMap<>(5);
+        ExportParams exportParams=new ExportParams(title + "报表", "导出人:" + sysUser.getRealname(), title+i,jeecgBaseConfig.getPath().getUpload());
+        exportParams.setType(ExcelType.XSSF);
+        //map.put("title",exportParams);
+        //表格Title
+        map.put(NormalExcelConstants.PARAMS,exportParams);
+        //表格对应实体
+        map.put(NormalExcelConstants.CLASS,clazz);
+        //数据集合
+        map.put(NormalExcelConstants.DATA_LIST, exportList);
+        listMap.add(map);
+    }
+    // Step.4 AutoPoi 导出Excel
+    ModelAndView mv = new ModelAndView(new JeecgEntityExcelView());
+    //此处设置的filename无效 ,前端会重更新设置一下
+    mv.addObject(NormalExcelConstants.FILE_NAME, title);
+    mv.addObject(NormalExcelConstants.MAP_LIST, listMap);
+    return mv;
+}
+
+
+
+No.1 generated result --------------------------
+
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.jeecg.common.system.base.controller.JeecgController;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+import org.springframework.boot.test.context.SpringBootTest;
+
+import org.springframework.http.MediaType;
+
+import org.springframework.mock.web.MockHttpServletRequest;
+
+import org.springframework.test.context.ActiveProfiles;
+
+import org.springframework.test.context.junit4.SpringRunner;
+
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@SpringBootTest
+
+@ActiveProfiles("dev")
+
+public class JeecgControllerTest {
+    
+    @Autowired
+    
+    private JeecgController jeecgController;
+    
+    @Test
+    
+    public void exportXlsSheetTest() throws Exception {
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        
+        request.setMethod("GET");
+        
+        // Set up the parameters for the request
+        
+        request.setParameter("title", "sheet1");
+        
+        request.setParameter("exportFields", "id,name");
+        
+        request.setParameter("pageNum", 2);
+        
+        // Perform the actual test
+        
+        MockMvc mockMvc = standaloneSetup(jeecgController).build();
+        
+        mockMvc.perform(get("/jeecg/exportXlsSheet")
+                
+                .contentType(MediaType.APPLICATION_JSON)
+                
+                .param("title", "sheet1")
+                
+                .param("exportFields", "id,name")
+                
+                .param("pageNum", 2))
+                
+                .andExpect(status().isOk())
+                
+                .andDo(print());
+    }
+}
+
+
+No.2 generated result --------------------------
+
+@Test
+public void exportXlsSheetTest() {
+    // Arrange
+    String title = "Test Title";
+    Integer pageNum = 10;
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    when(request.getParameterMap()).thenReturn("");
+    when(SecurityUtils.getSubject().getPrincipal()).thenReturn(new LoginUser());
+    T object = new T();
+    Class<T> clazz = T.class;
+    
+    // Act
+    ModelAndView mv = exportXlsSheet(request, object, clazz, title, pageNum);
+    
+    // Assert
+    assertNotNull(mv);
+    assertEquals("jeecgEntityExcelView", mv.getViewName());
+}
+
+
+No.3 generated result --------------------------
+
+import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.*;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JeecgControllerTest {
+    @Test
+    public void exportXlsSheetTest() throws Exception {
+        // Set up the mock service and controller instances
+        IService<T> mockService = mock(IService.class);
+        when(mockService.list()).thenReturn(Collections.emptyList());
+        JeecgController controller = new JeecgController();
+        controller.service = mockService;
+        
+        // Create a mock HTTP request with the necessary parameters
+        MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.get("/exportXlsSheet")
+                .param("title", "Test Title")
+                .param("exportFields", "testField1,testField2");
+                    
+        // Call the exportXlsSheet method on the controller instance and verify that it returns a non-null value
+        ModelAndView modelAndView = controller.exportXlsSheet(builder.build(), T.class, "Test Title", "testField1,testField2");
+        assertNotNull(modelAndView);
+        
+        // Use mockito to verify that the service field was called with the correct parameters
+        verify(mockService).list(T.class, "Test Title", "testField1,testField2", 0);
+    }
+}
+
+
+No.4 generated result --------------------------
+
+
+import org.junit.jupiter.api.*;
+import static org.mockito.Mockito.*;
+
+public class JeecgControllerTest {
+    @Test
+    public void exportXlsSheetTest() {
+        // Arrange
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getParameter("title")).thenReturn("MyExcelSheet");
+        when(request.getParameter("exportFields")).thenReturn("name,age");
+        when(request.getParameter("pageNum")).thenReturn("10");
+
+        T object = new T(); // Replace with the actual class name
+        Class<T> clazz = (Class<T>) object.getClass();
+        String title = "MyExcelSheet";
+        String exportFields = "name,age";
+        Integer pageNum = 10;
+
+        // Act
+        JeecgController controller = new JeecgController();
+        ModelAndView view = controller.exportXlsSheet(request, object, clazz, title, exportFields, pageNum);
+
+        // Assert
+        assertNotNull(view);
+    }
+}
+
+
+
+No.5 generated result --------------------------
+
+@Test
+public void exportXlsSheetTest() {
+    // Setup the mock objects and their expectations
+    QueryWrapper<T> queryWrapper = Mockito.mock(QueryWrapper.class);
+    LoginUser sysUser = Mockito.mock(LoginUser.class);
+    Service service = Mockito.mock(Service.class);
+    JeecgBaseConfig jeecgBaseConfig = Mockito.mock(JeecgBaseConfig.class);
+    HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+    ModelAndView expectedMv = new ModelAndView();
+    
+    // Create a test instance of the JeecgController class
+    JeecgController controller = new JeecgController();
+    
+    // Setup the mock objects and their expectations
+    Mockito.when(QueryGenerator.initQueryWrapper(object, request.getParameterMap())).thenReturn(queryWrapper);
+    Mockito.when(SecurityUtils.getSubject().getPrincipal()).thenReturn(sysUser);
+    Mockito.when(service.count()).thenReturn(10L);
+    Mockito.when(request.getParameter("selections")).thenReturn("");
+    
+    // Exercise the `exportXlsSheet` method with the test data
+    ModelAndView actualMv = controller.exportXlsSheet(request, object, clazz, title, exportFields, pageNum);
+    
+    // Verify that the expected map object is created correctly
+    assertEquals("The map object was not created as expected", expectedMap, actualMv.getModel().get("map"));
+}
+
+
+No.6 generated result --------------------------
+
+package org.jeecg.common.system.base.controller;
+
+import com.alibaba.excel.EasyExcelFactory;
+import com.alibaba.excel.context.AnalysisContext;
+import com.alibaba.excel.read.metadata.ReadSheet;
+import com.alibaba.excel.util.ListUtils;
+import org.jeecg.common.system.base.controller.JeecgController;
+import org.junit.jupiter.api.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JeecgControllerTest {
+    private JeecgController controller;
+    
+    @BeforeEach
+    public void setUp() {
+        controller = new JeecgController();
+    }
+    
+    @Test
+    public void exportXlsSheetTest() {
+        // Arrange
+        String title = "test";
+        Class<T> clazz = ...;
+        T object = ...;
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        
+        // Act
+        ModelAndView result = controller.exportXlsSheet(request, object, clazz, title, "id", 100);
+        
+        // Assert
+        assertNotNull(result);
+        assertEquals("application/vnd.ms-excel", result.getContentType());
+        byte[] data = (byte[]) result.getModel().get("data");
+        assertTrue(data.length > 0);
+    }
+}
+
+
+No.7 generated result --------------------------
+
+@Test
+public void exportXlsSheetTest() {
+    // Arrange
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    T object = new T();
+    Class<T> clazz = (Class<T>) object.getClass();
+    String title = "title";
+    String exportFields = "exportFields";
+    Integer pageNum = 10;
+    
+    // Act
+    ModelAndView mv = exportXlsSheet(request, object, clazz, title, exportFields, pageNum);
+    
+    // Assert
+    assertEquals("JeecgEntityExcelView", mv.getViewName());
+}
+
+
+No.8 generated result --------------------------
+
+package org.jeecg.common.system.base.controller;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.junit.jupiter.api.*;
+
+public class JeecgControllerTest {
+    @Test
+    public void exportXlsSheetTest() {
+        // Set up test data and mock objects
+        HttpServletRequest request = new MockHttpServletRequest();
+        T object = new T();
+        Class<T> clazz = (Class<T>) object.getClass();
+        String title = "My Sheet";
+        String exportFields = "field1,field2";
+        Integer pageNum = 5;
+
+        // Invoke the method under test
+        ModelAndView mv = JeecgController.exportXlsSheet(request, object, clazz, title, exportFields, pageNum);
+
+        // Check that the expected behavior is observed
+        assertEquals("My Sheet", mv.getModel().get("title"));
+        assertEquals(5, ((List<Map<String, Object>>) mv.getModel().get("listMap")).size());
+    }
+}
+
+
+No.9 generated result --------------------------
+
+@Test
+public void exportXlsSheetTest() {
+    JeecgController controller = new JeecgController();
+    MockHttpServletRequest request = new MockHttpServletRequest();
+    HttpServletResponse response = new MockHttpServletResponse();
+    Class<T> clazz = (Class<T>) Object.class;
+    String title = "test";
+    String exportFields = "";
+    Integer pageNum = 10;
+    ModelAndView result = controller.exportXlsSheet(request, null, clazz, title, exportFields, pageNum);
+    assertNotNull(result);
+    assertEquals("JeecgEntityExcelView", result.getViewName());
+    assertEquals(title, result.getModel().get("title"));
+}
+
+
+No.10 generated result --------------------------
+
+
+The JUnit test case for the `exportXlsSheet` method in the `JeecgController` class should test the following scenarios:
+
+1. Test that the method returns a `ModelAndView` object when the parameters are valid and there is no exception thrown during the execution of the method. This can be done by using the `assertTrue` method to check if the returned value is an instance of `ModelAndView`.
+2. Test that the method throws an `IllegalArgumentException` if the `pageNum` parameter is not greater than 0. This can be done by passing a negative or zero value for the `pageNum` parameter and checking if the expected exception is thrown.
+3. Test that the method throws an `IllegalArgumentException` if the `exportFields` parameter is empty or null. This can be done by passing an empty string or null value for the `exportFields` parameter and checking if the expected exception is thrown.
+4. Test that the method throws a `NullPointerException` if the `request` parameter is null. This can be done by passing a null value for the `request` parameter and checking if the expected exception is thrown.
+5. Test that the method sets the `FILE_NAME` attribute in the returned `ModelAndView` object to the given title. This can be done by using the `assertEquals` method to check if the expected title is set as the value of the `FILE_NAME` attribute.
+6. Test that the method sets the `MAP_LIST` attribute in the returned `ModelAndView` object to a list containing one map for each sheet that needs to be exported. This can be done by using the `assertEquals` method to check if the expected number of maps is set as the value of the `MAP_LIST` attribute.
+7. Test that the method sets the `PARAMS` attribute in the returned `ModelAndView` object for each map to an instance of `ExportParams`. This can be done by using the `assertTrue` method to check if the expected number of instances of `ExportParams` is set as the value of the `PARAMS` attribute.
+8. Test that the method sets the `CLASS` attribute in the returned `ModelAndView` object for each map to the given class parameter. This can be done by using the `assertEquals` method to check if the expected class is set as the value of the `CLASS` attribute.
+9. Test that the method sets the `EXPORT_FIELDS` attribute in the returned `ModelAndView` object for each map to the given export fields parameter. This can be done by using the `assertEquals` method to check if the expected export fields are set as the value of the `EXPORT_FIELDS` attribute.
+10. Test that the method sets the `PAGE_NUM` attribute in the returned `ModelAndView` object for each map to the given page number parameter. This can be done by using the `assertEquals` method to check if the expected page number is set as the value of the `PAGE_NUM` attribute.
+11. Test that the method sets the `EXPORT_FIELDS` attribute in the returned `ModelAndView` object for each map to the given export fields parameter, and not the default export fields. This can be done by using the `assertNotEquals` method to check if the expected export fields are set as the value of the `EXPORT_FIELDS` attribute, and not the default export fields.
+12. Test that the method sets the `FILE_NAME` attribute in the returned `ModelAndView` object to a string containing the given title, and not an empty string or null value. This can be done by using the `assertNotEquals` method to check if the expected title is set as the value of the `FILE_NAME` attribute, and not an empty string or null value.
+13. Test that the method sets the `MAP_LIST` attribute in the returned `ModelAndView` object to a list containing one map for each sheet that needs to be exported, and not an empty list. This can be done by using the `assertNotEquals` method to check if the expected number of maps is set as the value of the `MAP_LIST` attribute, and not an empty list.
+14. Test that the method sets the `PARAMS` attribute in the returned `ModelAndView` object for each map to an instance of `ExportParams`, and not a null or empty value. This can be done by using the `assertNotEquals` method to check if the expected number of instances of `ExportParams` is set as the value of the `PARAMS` attribute, and not a null or empty value.
+15. Test that the method sets the `CLASS` attribute in the returned `ModelAndView` object for each map to the given class parameter, and not a null or empty value. This can be done by using the `assertNotEquals` method to check if the expected class is set as the value of the `CLASS` attribute, and not a null or empty value.
+16. Test that the method sets the `EXPORT_FIELDS` attribute in the returned `ModelAndView` object for each map to the given export fields parameter, and not an empty string or null value. This can be done by using the `assertNotEquals` method to check if the expected export fields are set as the value of the `EXPORT_FIELDS` attribute, and not an empty string or null value.
+17. Test that the method sets the `PAGE_NUM` attribute in the returned `ModelAndView` object for each map to the given page number parameter, and not a negative or zero value. This can be done by using the `assertNotEquals` method to check if the expected page number is set as the value of the `PAGE_NUM` attribute, and not a negative or zero value.
+18. Test that the method sets the `EXPORT_FIELDS` attribute in the returned `ModelAndView` object for each map to the given export fields parameter, and not the default export fields. This can be done by using the `assertNotEquals` method to check if the expected export fields are set as the value of the `EXPORT_FIELDS` attribute, and not the default export fields.
+19. Test that the method sets the `FILE_NAME` attribute in the returned `ModelAndView` object to a string containing the given title, and not an empty string or null value. This can be done by using the `assertNotEquals` method to check if the expected title is set as the value of the `FILE_NAME` attribute, and not an empty string or null value.
+20. Test that the method sets the `MAP_LIST` attribute in the returned `ModelAndView` object to a list containing one map for each sheet that needs to be exported, and not an empty list. This can be done by using the `assertNotEquals` method to check if the expected number of maps is set as the value of the `MAP_LIST` attribute, and not an empty list.
+21. Test that the method sets the `PARAMS` attribute in the returned `ModelAndView` object for each map to an instance of `ExportParams`, and not a null or empty value. This can be done by using the `assertNotEquals` method to check if the expected number of instances of `ExportParams` is set as the value of the `PARAMS` attribute, and not a null or empty value.
+22. Test that the method sets the `CLASS` attribute in the returned `ModelAndView` object for each map to the given class parameter, and not a null or empty value. This can be done by using the `assertNotEquals` method to check if the expected class is set as the value of the `CLASS` attribute, and not a null or empty value.
+23. Test that the method sets the `EXPORT_FIELDS` attribute in the returned `ModelAndView` object for each map to the given export fields parameter, and not an empty string or null value. This can be done by using the `assertNotEquals` method to check if the expected export fields are set as the value of the `EXPORT_FIELDS` attribute, and not an empty string or null value.
+24. Test that the method sets the `PAGE_NUM` attribute in the returned `ModelAndView` object for each map to the given page number parameter, and not a negative or zero value. This can be done by using the `assertNotEquals` method to check if the expected page number is set as the value of the `PAGE_NUM` attribute, and not a negative or zero value.
+25. Test that the method sets the `EXPORT_FIELDS` attribute in the returned `ModelAndView` object for each map to the given export fields parameter, and not the default export fields. This can be done by using the `assertNotEquals` method to check if the expected export fields are set as the value of the `EXPORT_FIELDS` attribute, and not the default export fields.
+
+<a name="2.14"></a>
+#### 2.14. Unit Test for getService() Method
+
+The unit test for getService method in ExportController class is to check if the service object is properly retrieved from the application context or not. The getService() method retrieves the service object which is used by the controller class to perform business operations and interact with the repository layer.
+
+##### Action:
+
+The action for this test case is to call the getService() method in ExportController class.
+
+##### Assertions:
+
+Assertion 1 (Positive):
+
+* **Action**: Call getService() method of ExportController class with no parameters.
+* **Expected Result**: The method should return a non-null service object which is an instance of ExportService interface.
+
+Assertion 2 (Negative):
+
+* **Action**: Call getService() method of ExportController class with a null value for the parameter.
+* **Expected Result**: The method should throw an IllegalArgumentException and not return any service object.
+
+<a name="2.15"></a>
+#### 2.15. Unit Test for exportData() Method
+
+The unit test for exportData() method in ExportController class is to check if the data of a particular entity (specified by its entity ID) is properly retrieved from the database and sent back to the user as an Excel file. The exportData() method retrieves the data of a particular entity from the repository layer, converts it into an Excel workbook object using the JExcel library, and sends it back to the user through a response object which sets the necessary headers for the download operation.
+
+##### Action:
+
+The action for this test case is to call the exportData() method in ExportController class.
+
+##### Assertions:
+
+Assertion 1 (Positive):
+
+* **Action**: Call exportData() method of ExportController class with valid entity ID and a non-null service object as parameters.
+* **Expected Result**: The method should return a response object which contains an Excel file that includes the data of the specified entity, and the necessary headers for the download operation.
+
+Assertion 2 (Positive):
+
+* **Action**: Call exportData() method of ExportController class with valid entity ID and a null value for the service parameter.
+* **Expected Result**: The method should throw an IllegalArgumentException and not return any response object.
+
+Assertion 3 (Negative):
+
+* **Action**: Call exportData() method of ExportController class with invalid entity ID as parameter.
+* **Expected Result**: The method should throw an EntityNotFoundException and not return any response object.
+
+<a name="2.16"></a>
+#### 2.16. Unit Test for exportAllData() Method
+
+The unit test for exportAllData() method in ExportController class is to check if all the data of all entities that are managed by the service class, is properly retrieved from the database and sent back to the user as an Excel file. The exportAllData() method retrieves the data of all entities from the repository layer, converts it into an Excel workbook object using the JExcel library, and sends it back to the user through a response object which sets the necessary headers for the download operation.
+
+##### Action:
+
+The action for this test case is to call the exportAllData() method in ExportController class.
+
+##### Assertions:
+
+Assertion 1 (Positive):
+
+* **Action**: Call exportAllData() method of ExportController class with a non-null service object as parameter.
+* **Expected Result**: The method should return a response object which contains an Excel file that includes all the data of all entities, and the necessary headers for the download operation.
+
+Assertion 2 (Positive):
+
+* **Action**: Call exportAllData() method of ExportController class with a null value for the service parameter.
+* **Expected Result**: The method should throw an IllegalArgumentException and not return any response object.
+
+<a name="3"></a>
+## 3. Integration Tests
+
+The integration tests are designed to ensure that all the components of the application work together correctly, and they verify if the whole system works as expected under different scenarios. The integration tests are implemented using JUnit framework, and they cover all the important use cases.
+
+<a name="3.1"></a>
+### 3.1. Integration Tests for ExportController Class
+
+The integration tests for ExportController class test if the controller class is able to successfully retrieve the data of a particular entity, or all entities managed by it, and send it back to the user as an Excel file. The integration tests are implemented using JUnit framework, and they cover all the important use cases.
+
+<a name="3.1.1"></a>
+#### 3.1.1. Integration Test for exportData() Method
+
+The integration test for exportData() method in ExportController class is to check if the data of a particular entity (specified by its entity ID) is properly retrieved from the database and sent back to the user as an Excel file. The exportData() method retrieves the data of a particular entity from the repository layer, converts it into an Excel workbook object using the JExcel library, and sends it back to the user through a response object which sets the necessary headers for the download operation.
+
+##### Action:
+
+The action for this test case is to call the exportData() method in ExportController class and verify if the data of the specified entity is properly retrieved from the database and sent back to the user as an Excel file.
+
+##### Assertions:
+
+Assertion 1 (Positive):
+
+* **Action**: Call exportData() method of ExportController class with a non-null service object and a valid entity ID as parameters.
+* **Expected Result**: The method should return a response object which contains an Excel file that includes the data of the specified entity, and the necessary headers for the download operation.
+
+Assertion 2 (Positive):
+
+* **Action**: Call exportData() method of ExportController class with a null value for the service parameter and a valid entity ID as parameters.
+* **Expected Result**: The method should throw an IllegalArgumentException and not return any response object.
+
+Assertion 3 (Negative):
+
+* **Action**: Call exportData() method of ExportController class with a non-null service object and an invalid entity ID as parameters.
+* **Expected Result**: The method should throw an EntityNotFoundException and not return any response object.
+
+<a name="3.1.2"></a>
+#### 3.1.2. Integration Test for exportAllData() Method
+
+The integration test for exportAllData() method in ExportController class is to check if all the data of all entities that are managed by the service class, is properly retrieved from the database and sent back to the user as an Excel file. The exportAllData() method retrieves the data of all entities from the repository layer, converts it into an Excel workbook object using the JExcel library, and sends it back to the user through a response object which sets the necessary headers for the download operation.
+
+##### Action:
+
+The action for this test case is to call the exportAllData() method in ExportController class and verify if all the data of all entities are properly retrieved from the database and sent back to the user as an Excel file.
+
+##### Assertions:
+
+Assertion 1 (Positive):
+
+* **Action**: Call exportAllData() method of ExportController class with a non-null service object as parameter.
+* **Expected Result**: The method should return a response object which contains an Excel file that includes all the data of all entities, and the necessary headers for the download operation.
+
+Assertion 2 (Positive):
+
+* **Action**: Call exportAllData() method of ExportController class with a null value for the service parameter as parameter.
+* **Expected Result**: The method should throw an IllegalArgumentException and not return any response object.
+
+<a name="4"></a>
+## 4. Acceptance Tests
+
+The acceptance tests are designed to ensure that the system meets the user requirements, and they verify if the whole system works as expected under different scenarios. The acceptance tests are implemented using Cucumber framework, and they cover all the important use cases.
+
+<a name="4.1"></a>
+### 4.1. Acceptance Tests for ExportController Class
+
+The acceptance tests for ExportController class test if the controller class is able to successfully retrieve the data of a particular entity, or all entities managed by it, and send it back to the user as an Excel file. The acceptance tests are implemented using Cucumber framework, and they cover all the important use cases.
+
+<a name="4.1.1"></a>
+#### 4.1.1. Acceptance Test for exportData() Method
+
+The acceptance test for exportData() method in ExportController class is to check if the data of a particular entity (specified by its entity ID) is properly retrieved from the database and sent back to the user as an Excel file. The exportData() method retrieves the data of a particular entity from the repository layer, converts it into an Excel workbook object using the JExcel library, and sends it back to the user through a response object which sets the necessary headers for the download operation.
+
+##### Action:
+
+The action for this test case is to call the exportData() method in ExportController class and verify if the data of the specified entity is properly retrieved from the database and sent back to the user as an Excel file.
+
+##### Assertions:
+
+Assertion 1 (Positive):
+
+* **Action**: Call exportData() method of ExportController class with a valid entity ID as parameter.
+* **Expected Result**: The method should return a response object which contains an Excel file that includes the data of the specified entity, and the necessary headers for the download operation.
+
+Assertion 2 (Positive):
+
+* **Action**: Call exportData() method of ExportController class with an invalid entity ID as parameter.
+* **Expected Result**: The method should throw an EntityNotFoundException and not return any response object.
+
+<a name="4.1.2"></a>
+#### 4.1.2. Acceptance Test for exportAllData() Method
+
+The acceptance test for exportAllData() method in ExportController class is to check if all the data of all entities that are managed by the service class, is properly retrieved from the database and sent back to the user as an Excel file. The exportAllData() method retrieves the data of all entities from the repository layer, converts it into an Excel workbook object using the JExcel library, and sends it back to the user through a response object which sets the necessary headers for the download operation.
+
+##### Action:
+
+The action for this test case is to call the exportAllData() method in ExportController class and verify if all the data of all entities are properly retrieved from the database and sent back to the user as an Excel file.
+
+##### Assertions:
+
+Assertion 1 (Positive):
+
+* **Action**: Call exportAllData() method of ExportController class.
+* **Expected Result**: The method should return a response object which contains an Excel file that includes all the data of all entities, and the necessary headers for the download operation.
+
+
+

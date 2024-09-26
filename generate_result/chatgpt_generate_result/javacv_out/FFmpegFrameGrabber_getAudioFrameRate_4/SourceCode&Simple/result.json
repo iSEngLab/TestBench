@@ -1,0 +1,24 @@
+{
+    "project_name": "javacv",
+    "file_name": "FFmpegFrameGrabber.java",
+    "relative_path": "javacv/src/main/java/org/bytedeco/javacv/FFmpegFrameGrabber.java",
+    "execute_path": "javacv",
+    "package": "org.bytedeco.javacv",
+    "docstring": "/**Estimation of audio frames per second.\n     *\n     * Care must be taken as this method may require unnecessary call of\n     * grabFrame(true, false, false, false, false) with frameGrabbed set to true.\n     *\n     * @return (double) getSampleRate()) / samples_frame.nb_samples()\n     * if samples_frame.nb_samples() is not zero, otherwise return 0\n     */",
+    "source_code": "\npublic double getAudioFrameRate() {\n    if (audio_st == null) {\n        return 0.0;\n    } else {\n        if (samples_frame == null || samples_frame.nb_samples() == 0) {\n            try {\n                grabFrame(true, false, false, false, false);\n                frameGrabbed = true;\n            } catch (Exception e) {\n                return 0.0;\n            }\n        }\n        if (samples_frame != null && samples_frame.nb_samples() != 0)\n            return ((double) getSampleRate()) / samples_frame.nb_samples();\n        else return 0.0;\n\n    }\n}\n",
+    "class_name": "FFmpegFrameGrabber",
+    "method_name": "getAudioFrameRate",
+    "arguments": [],
+    "generate_test": [
+        "@Test\npublic void getAudioFrameRateTest() {\n    // Arrange\n    FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(\"testfile.mp4\");\n    \n    // Act\n    double audioFrameRate = grabber.getAudioFrameRate();\n    \n    // Assert\n    assertEquals(0.0, audioFrameRate); // Assuming audio_st is null in the test file\n}",
+        "@Test\npublic void getAudioFrameRateTest() {\n    FFmpegFrameGrabber frameGrabber = new FFmpegFrameGrabber(new File(\"test.mp4\"));\n    frameGrabber.start();\n    double result = frameGrabber.getAudioFrameRate();\n    assertEquals(0.0, result);\n    frameGrabber.stop();\n}",
+        "@Test\npublic void getAudioFrameRateTest() {\n    FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(Mockito.mock(InputStream.class));\n    assertEquals(0.0, grabber.getAudioFrameRate());\n}",
+        "@Test\npublic void getAudioFrameRateTest() {\n    FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(null);\n    grabber.setSampleRate(44100);\n    grabber.setSamplesFrame(new AVFrame());\n    grabber.setSamplesPtr(new BytePointer());\n    \n    double result = grabber.getAudioFrameRate();\n    \n    assertEquals(44100.0, result);\n}",
+        "@Test\npublic void getAudioFrameRateTest() {\n    // Given\n    FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(/* input stream or file */);\n    \n    // When\n    double audioFrameRate = grabber.getAudioFrameRate();\n    \n    // Then\n    assertEquals(0.0, audioFrameRate);\n}",
+        "@Test\npublic void getAudioFrameRateTest() {\n    FFmpegFrameGrabber frameGrabber = new FFmpegFrameGrabber();\n    frameGrabber.getSampleRate(44100);\n    Double audioFrameRate = frameGrabber.getAudioFrameRate();\n    assertEquals(44100 / frameGrabber.samples_frame().nb_samples(), audioFrameRate);\n}",
+        "@Test\npublic void getAudioFrameRateTest() {\n    FFmpegFrameGrabber frameGrabber = new FFmpegFrameGrabber(null);\n    double result = frameGrabber.getAudioFrameRate();\n    assertEquals(0.0, result);\n}",
+        "@Test\npublic void getAudioFrameRateTest() {\n    FFmpegFrameGrabber frameGrabber = new FFmpegFrameGrabber(\"\");\n    double result = frameGrabber.getAudioFrameRate();\n    assertEquals(0.0, result);\n}",
+        "@Test\npublic void getAudioFrameRateTest() {\n    FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(\"test.mp4\");\n    double result = grabber.getAudioFrameRate();\n    assertEquals(0.0, result, \"Expected audio frame rate to be 0.0\");\n}",
+        "@Test\npublic void getAudioFrameRateTest() {\n    FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(null);\n    double result = grabber.getAudioFrameRate();\n    assertEquals(0.0, result);\n}"
+    ]
+}

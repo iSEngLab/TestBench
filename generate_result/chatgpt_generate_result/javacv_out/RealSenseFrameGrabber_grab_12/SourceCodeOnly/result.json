@@ -1,0 +1,24 @@
+{
+    "project_name": "javacv",
+    "file_name": "RealSenseFrameGrabber.java",
+    "relative_path": "javacv/src/main/java/org/bytedeco/javacv/RealSenseFrameGrabber.java",
+    "execute_path": "javacv",
+    "package": "org.bytedeco.javacv",
+    "docstring": "/**\n     *\n     * @return null grabs all images, get them with grabColor, grabDepth, and\n     * grabIR instead.\n     * @throws org.bytedeco.javacv.FrameGrabber.Exception\n     */",
+    "source_code": "\npublic Frame grab() throws Exception {\n    device.wait_for_frames();\n\n      frameNumber++; \n    // For Framegrabber\n    if (colorEnabled && behaveAsColorFrameGrabber) {\n        IplImage image = grabVideo();\n\n        if (returnImage == null) {\n            int deviceWidth = device.get_stream_width(RealSense.color);\n            int deviceHeight = device.get_stream_height(RealSense.color);\n              returnImage = IplImage.create(deviceWidth, deviceHeight, IPL_DEPTH_8U, 3);\n            returnImage = IplImage.create(deviceWidth, deviceHeight, IPL_DEPTH_8U, 1);\n        }\n        cvCvtColor(image, returnImage, CV_BGR2GRAY);\n        return converter.convert(returnImage);\n    } else {\n        if (IREnabled) {\n            return converter.convert(grabIR());\n        } else {\n            if (depthEnabled) {\n                \n                // Fake colors\n                IplImage image = grabDepth();\n                if (returnImage == null) {\n                    int deviceWidth = device.get_stream_width(RealSense.depth);\n                    int deviceHeight = device.get_stream_height(RealSense.depth);\n              returnImage = IplImage.create(deviceWidth, deviceHeight, IPL_DEPTH_8U, 3);\n                    returnImage = IplImage.create(deviceWidth, deviceHeight, IPL_DEPTH_8U, 1);\n                } \n                return converter.convert(returnImage);\n            }\n        }\n    }\n\n    return null;\n}\n",
+    "class_name": "RealSenseFrameGrabber",
+    "method_name": "grab",
+    "arguments": [],
+    "generate_test": [
+        "@Test\npublic void grabTest() {\n    // Create an instance of RealSenseFrameGrabber\n    RealSenseFrameGrabber grabber = new RealSenseFrameGrabber();\n    // Call the grab method and assert that it does not return null\n    assertNotNull(grabber.grab());\n}",
+        "Frame frame = null;\ntry {\n    frame = new Frame();\n    assertNotNull(frame.grab());\n} catch (Exception e) {\n    fail(\"Exception thrown: \" + e.getMessage());\n}",
+        "public void grabTest() throws Exception {\n    // Write a test case to cover the grab() method in the RealSenseFrameGrabber class\n}",
+        "@Test\npublic void grabTest() {\n    // Create an instance of the RealSenseFrameGrabber\n    RealSenseFrameGrabber grabber = new RealSenseFrameGrabber();\n    \n    // Test the grab() method\n    assertThrows(Exception.class, () -> {\n        grabber.grab();\n    });\n}\n",
+        "public Frame frame = null;\nAssertions.assertNotNull(frame.grab());",
+        "public void grabTest() {\n    RealSenseFrameGrabber frameGrabber = new RealSenseFrameGrabber();\n    assertNotNull(frameGrabber);\n}",
+        "@Test\npublic void grabTest() {\n    // Given\n    RealSenseFrameGrabber grabber = new RealSenseFrameGrabber();\n    \n    // When\n    Frame result = grabber.grab();\n    \n    // Then\n    assertNotNull(result);\n}",
+        "@Test\npublic void grabTest() {\n    // Create instance of RealSenseFrameGrabber\n    RealSenseFrameGrabber grabber = new RealSenseFrameGrabber();\n    \n    // Set up the necessary parameters\n    grabber.device = new RealSense.context();\n\n    // Perform the grab method\n    Frame result = null;\n    try {\n        result = grabber.grab();\n    } catch (Exception e) {\n        e.printStackTrace();\n    }\n\n    // Verify the result, assert the output\n    assertNotNull(result);\n  }",
+        "public Frame frame = new Frame();\nassertThrows(Exception.class, () -> {\n  frame.grab();\n});",
+        "public Frame frameGrabber() throws Exception {\n  // setup\n  FrameGrabber frameGrabber = new FrameGrabber();\n  // execute and verify\n  assertNotNull(frameGrabber.grab());\n}"
+    ]
+}

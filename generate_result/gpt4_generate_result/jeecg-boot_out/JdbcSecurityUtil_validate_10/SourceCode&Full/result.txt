@@ -1,0 +1,405 @@
+Source code: 
+
+
+public static void validate(String jdbcUrl){
+    if(oConvertUtils.isEmpty(jdbcUrl)){
+        return;
+    }
+    String urlConcatChar = "?";
+    if(jdbcUrl.indexOf(urlConcatChar)<0){
+        return;
+    }
+    String argString = jdbcUrl.substring(jdbcUrl.indexOf(urlConcatChar)+1);
+    String[] keyAndValues = argString.split("&");
+    for(String temp: keyAndValues){
+        String key = temp.split("=")[0];
+        for(String prop: notAllowedProps){
+            if(prop.equalsIgnoreCase(key)){
+                throw new JeecgBootException("连接地址有安全风险，【"+key+"】");
+            }
+        }
+    }
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jeecg.common.util.security;
+
+import org.junit.jupiter.api.Test;
+import org.jeecg.common.exception.JeecgBootException;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+
+public class JdbcSecurityUtilTest {
+
+    @Test
+    public void validateTest() {
+        // Case 1: JDBC URL without questionable parameters should not throw an exception
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate("jdbc:postgresql://localhost:5432/mydb?user=myuser&password=mypass"));
+
+        // Case 2: JDBC URL with an empty string should not throw an exception
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(""));
+
+        // Case 3: JDBC URL with null should not throw an exception
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(null));
+
+        // Case 4: JDBC URL with no parameters (no '?' character) should not throw an exception.
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate("jdbc:postgresql://localhost:5432/mydb"));
+
+        // Case 5: JDBC URL containing not allowed property should throw a JeecgBootException
+        assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate("jdbc:postgresql://localhost:5432/mydb?sslhostnameverifier=strict&user=myuser&password=mypass"));
+
+        // Case 6: JDBC URL containing multiple not allowed properties should throw a JeecgBootException
+        assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate("jdbc:postgresql://localhost:5432/mydb?authenticationPluginClassName=SomeClass&sslhostnameverifier=strict&socketFactory=SomeFactory"));
+
+        // Case 7: JDBC URL with not allowed property in different case should throw a JeecgBootException
+        assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate("jdbc:postgresql://localhost:5432/mydb?SSlHoStNaMeVeRifier=strict"));
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jeecg.common.util.security;
+
+import org.jeecg.common.exception.JeecgBootException;
+import org.junit.jupiter.api.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JdbcSecurityUtilTest {
+
+    @Test
+    public void validateTest_withEmptyUrl() {
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(""));
+    }
+    
+    @Test
+    public void validateTest_withValidUrl() {
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate("jdbc:postgresql://localhost:5432/mydb?user=me&password=secret"));
+    }
+    
+    @Test
+    public void validateTest_withNotAllowedProp() {
+        JeecgBootException exception = assertThrows(JeecgBootException.class, () ->
+                JdbcSecurityUtil.validate("jdbc:postgresql://localhost:5432/mydb?sslhostnameverifier=true&user=me&password=secret")
+        );
+        assertTrue(exception.getMessage().contains("连接地址有安全风险，【sslhostnameverifier】"));
+    }
+    
+    @Test
+    public void validateTest_withUrlLackingConcatChar() {
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate("jdbc:postgresql://localhost:5432/mydb"));
+    }
+    
+    @Test
+    public void validateTest_withMultipleNotAllowedProps() {
+        JeecgBootException exception = assertThrows(JeecgBootException.class, () ->
+                JdbcSecurityUtil.validate("jdbc:postgresql://localhost:5432/mydb?authenticationPluginClassName=com.example.plugin&sslhostnameverifier=true&user=me&password=secret")
+        );
+        assertTrue(exception.getMessage().contains("连接地址有安全风险，【authenticationPluginClassName】") || exception.getMessage().contains("连接地址有安全风险，【sslhostnameverifier】"));
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jeecg.common.util.security;
+
+import org.jeecg.common.exception.JeecgBootException;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+
+import org.junit.jupiter.api.Test;
+
+public class JdbcSecurityUtilTest {
+
+    @Test
+    public void validateTest() {
+        // Scenario 1: Test with an empty jdbcUrl
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(""));
+
+        // Scenario 2: Test with a jdbcUrl that does not contain prohibited properties
+        String safeJdbcUrl = "jdbc:postgresql://localhost/test?user=foo&password=bar";
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(safeJdbcUrl));
+
+        // Scenario 3: Test with a jdbcUrl that contains a prohibited property
+        String riskyJdbcUrl = "jdbc:postgresql://localhost/test?sslhostnameverifier=foo&user=foo&password=bar";
+        assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate(riskyJdbcUrl));
+
+        // Scenario 4: Test jdbcUrl that does not contain "?" should not throw any Exception
+        String incompleteJdbcUrl = "jdbc:postgresql://localhost/test";
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(incompleteJdbcUrl));
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jeecg.common.util.security;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JdbcSecurityUtilTest {
+    
+    private final String safeJdbcUrl = "jdbc:postgresql://localhost:5432/testdb?user=testuser&password=secret";
+    private final String riskyJdbcUrl = "jdbc:postgresql://localhost:5432/testdb?authenticationPluginClassName=com.example&user=testuser&password=secret";
+
+    @Test
+    public void validateWithNullUrlShouldNotThrowException() {
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(null));
+    }
+
+    @Test
+    public void validateWithEmptyUrlShouldNotThrowException() {
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(""));
+    }
+
+    @Test
+    public void validateWithSafeUrlShouldNotThrowException() {
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(safeJdbcUrl));
+    }
+
+    @Test
+    public void validateWithRiskyUrlShouldThrowException() {
+        Exception exception = assertThrows(JeecgBootException.class, () -> {
+            JdbcSecurityUtil.validate(riskyJdbcUrl);
+        });
+        String expectedMessage = "连接地址有安全风险，【authenticationPluginClassName】";
+        String actualMessage = exception.getMessage();
+        assertTrue(actualMessage.contains(expectedMessage));
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jeecg.common.util.security;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JdbcSecurityUtilTest {
+
+    @Test
+    public void validateTestWhenJdbcUrlEmpty() {
+        String jdbcUrlEmpty = "";
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(jdbcUrlEmpty));
+    }
+
+    @Test
+    public void validateTestWhenJdbcUrlHasNoQueryString() {
+        String jdbcUrlHasNoQueryString = "jdbc://valid.url.with.no.query.string";
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(jdbcUrlHasNoQueryString));
+    }
+
+    @Test
+    public void validateTestWhenJdbcUrlHasNotAllowedProps() {
+        String jdbcUrlHasNotAllowedProp = "jdbc://valid.url?sslhostnameverifier=someValue";
+        assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate(jdbcUrlHasNotAllowedProp));
+    }
+
+    @Test
+    public void validateTestWhenJdbcUrlIsValid() {
+        String jdbcUrlIsValid = "jdbc://valid.url?user=root&password=root";
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(jdbcUrlIsValid));
+    }
+
+    @Test
+    public void validateTestWhenJdbcUrlHasMultipleNotAllowedProps() {
+        String jdbcUrlHasMultipleNotAllowedProps = "jdbc://valid.url?socketFactory=value&sslfactory=anotherValue&sslpasswordcallback=yetAnotherValue";
+        assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate(jdbcUrlHasMultipleNotAllowedProps));
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jeecg.common.util.security;
+
+import org.jeecg.common.exception.JeecgBootException;
+import org.junit.jupiter.api.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JdbcSecurityUtilTest {
+    
+    @Test
+    public void validateTestWithoutDisallowedProps() {
+        String safeJdbcUrl = "jdbc:postgresql://localhost:5432/mydb?user=foo&password=bar";
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(safeJdbcUrl));
+    }
+
+    @Test
+    public void validateTestWithDisallowedProp() {
+        String dangerousJdbcUrl = "jdbc:postgresql://localhost:5432/mydb?user=foo&sslhostnameverifier=true";
+        Exception exception = assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate(dangerousJdbcUrl));
+        String expectedMessage = "连接地址有安全风险，【sslhostnameverifier】";
+        String actualMessage = exception.getMessage();
+        assertTrue(actualMessage.contains(expectedMessage));
+    }
+
+    @Test
+    public void validateTestEmptyOrNullJdbcUrl() {
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(""));
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(null));
+    }
+
+    @Test
+    public void validateTestUrlWithoutParameters() {
+        String noParamsJdbcUrl = "jdbc:postgresql://localhost:5432/mydb";
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(noParamsJdbcUrl));
+    }
+
+    @Test
+    public void validateTestMixedCaseDisallowedProps() {
+        String mixedCaseUnsafeJdbcUrl = "jdbc:postgresql://localhost:5432/mydb?user=foo&SSLHOSTNAMEVERIFIER=true";
+        Exception exception = assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate(mixedCaseUnsafeJdbcUrl));
+        String expectedMessage = "连接地址有安全风险，【SSLHOSTNAMEVERIFIER】";
+        String actualMessage = exception.getMessage();
+        assertTrue(actualMessage.contains(expectedMessage));
+    }
+
+    // Add more tests if necessary, focusing on various edge cases or additional features of JdbcSecurityUtil.validate
+}
+
+
+No.7 generated result --------------------------
+
+package org.jeecg.common.util.security;
+
+import org.junit.jupiter.api.Test;
+import org.jeecg.common.exception.JeecgBootException;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JdbcSecurityUtilTest {
+    @Test
+    public void validateTest() {
+        // Test case for a valid JDBC URL
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate("jdbc:postgresql://localhost:5432/dbName?user=dbUser&password=dbPass"));
+        
+        // Test case when JDBC URL is empty or null
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(""));
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(null));
+        
+        // Test case when JDBC URL does not have URL concatenation character "?"
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate("jdbc:postgresql://localhost:5432/dbName"));
+
+        // Test case when JDBC URL contains not allowed property
+        assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate("jdbc:postgresql://localhost:5432/dbName?sslhostnameverifier=value"));
+        
+        // Test case when the not allowed property is in mixed case to test ignore case scenario
+        assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate("jdbc:postgresql://localhost:5432/dbName?SSLHostnameVerifier=value"));
+        
+        // Test case when JDBC URL contains multiple properties including not allowed property
+        assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate("jdbc:postgresql://localhost:5432/dbName?user=dbUser&sslpasswordcallback=value&password=dbPass"));
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.jeecg.common.util.security;
+
+import org.junit.jupiter.api.*;
+import org.jeecg.common.exception.JeecgBootException;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JdbcSecurityUtilTest {
+    
+    @Test
+    public void validateTest() {
+        // Test with null or empty JDBC URL; should return without exception
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(null));
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(""));
+
+        // Test with JDBC URL that doesn't contain any disallowed props
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate("jdbc:postgresql://localhost:5432/mydb?user=me&password=secret"));
+
+        // Test with JDBC URL that contains a disallowed prop
+        String unsafeUrl = "jdbc:postgresql://localhost:5432/mydb?authenticationPluginClassName=example&user=me&password=secret";
+        JeecgBootException exception = assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate(unsafeUrl));
+        assertTrue(exception.getMessage().contains("连接地址有安全风险，【authenticationPluginClassName】"));
+
+        // Test with JDBC URL that contains a prop that should not be disallowed to confirm no false positives
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate("jdbc:postgresql://localhost:5432/mydb?safeParameter=value&user=me&password=secret"));
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jeecg.common.util.security;
+
+import org.jeecg.common.exception.JeecgBootException;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JdbcSecurityUtilTest {
+    
+    @Test
+    public void validateTest() {
+        // Test case where jdbcUrl is null, should not throw an exception
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(null));
+
+        // Test case where jdbcUrl is empty, should not throw an exception
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(""));
+
+        // Test case where jdbcUrl does not contain prohibited properties, should not throw an exception
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate("jdbc:postgresql://localhost/test?user=user&password=pass"));
+
+        // Test case where jdbcUrl contains a prohibited property, should throw JeecgBootException
+        assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate("jdbc:postgresql://localhost/test?sslhostnameverifier=strict&user=user&password=pass"));
+
+        // Test case where jdbcUrl contains multiple prohibited properties, should throw JeecgBootException
+        assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate("jdbc:postgresql://localhost/test?authenticationPluginClassName=someClassName&socketFactory=SomeFactory&user=user&password=pass"));
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.common.util.security;
+
+import org.jeecg.common.exception.JeecgBootException;
+import org.junit.jupiter.api.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JdbcSecurityUtilTest {
+    private final static String ALLOWED_JDBC_URL = "jdbc:postgresql://localhost:5432/mydb?user=myuser&password=mypass";
+    private final static String DISALLOWED_JDBC_URL = "jdbc:postgresql://localhost:5432/mydb?authenticationPluginClassName=true";
+
+    @Test
+    public void validateTest_AllowedProperties_NoExceptionThrown() {
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(ALLOWED_JDBC_URL));
+    }
+
+    @Test
+    public void validateTest_DisallowedProperties_ExceptionThrown() {
+        JeecgBootException exception = assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate(DISALLOWED_JDBC_URL));
+        assertTrue(exception.getMessage().contains("连接地址有安全风险"));
+    }
+
+    @Test
+    public void validateTest_EmptyUrl_NoExceptionThrown() {
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(""));
+    }
+
+    @Test
+    public void validateTest_NullUrl_NoExceptionThrown() {
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(null));
+    }
+
+    @Test
+    public void validateTest_UrlWithoutQuestionMark_NoExceptionThrown() {
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate("jdbc:postgresql://localhost:5432/mydb"));
+    }
+}
+
+

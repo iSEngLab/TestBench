@@ -1,0 +1,903 @@
+Source code: 
+
+
+@Override
+public String toString() {
+  Iterator<Entry<TypeK,TypeV>> i = entrySet().iterator();
+  if( !i.hasNext())
+    return "{}";
+
+  StringBuilder sb = new StringBuilder();
+  sb.append('{');
+  for (;;) {
+    Entry<TypeK,TypeV> e = i.next();
+    TypeK key = e.getKey();
+    TypeV value = e.getValue();
+    sb.append(key   == this ? "(this Map)" : key);
+    sb.append('=');
+    sb.append(value == this ? "(this Map)" : value);
+    if( !i.hasNext())
+      return sb.append('}').toString();
+    sb.append(", ");
+  }
+}
+
+
+
+No.1 generated result --------------------------
+
+import java.util.Objects;
+
+public class MyObject {
+    private int id;
+    private String name;
+
+    public MyObject(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return "MyObject{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                '}';
+    }
+}
+
+
+No.2 generated result --------------------------
+
+The NonBlockingHashMap class is not thread-safe, so it cannot be used in a multi-threaded environment. However, there are several alternatives that you can use instead:
+
+1. ConcurrentHashMap: This is a thread-safe implementation of the HashMap interface. It uses fine-grained locks to ensure that each operation is atomic and thread-safe.
+2. Hashtable: This class is similar to HashMap but is synchronized, making it thread-safe. However, it may be slower than ConcurrentHashMap for high concurrency use cases.
+3. JCS: Java Collections Framework is a library of collection classes that provide alternative implementations of the standard Java collection interfaces. It includes a thread-safe version of HashMap called JCSHashMap.
+4. Apache Commons collections: This library provides several thread-safe hash maps, including the AbstractConcurrentMap class, which can be used as a base class for implementing your own thread-safe hash map classes.
+5. Guava's concurrent hash maps: Google's Guava library provides several implementation of the ConcurrentMap interface, including the ConcurrentHashMap class, which is an implementation based on ConcurrentSkipListMap.
+
+It's important to note that while these alternatives may be thread-safe, they may not perform as well as a specialized concurrent hash map implementation. You should consider the specific requirements of your application and choose the appropriate solution accordingly.
+
+
+No.3 generated result --------------------------
+
+    
+import java.util.*;
+import org.jctools.maps.NonBlockingHashMap;
+
+public class NonBlockingHashMapTest {
+    @Test
+    public void toStringTest() {
+        // Create a test map with some data
+        Map<String, String> myMap = new NonBlockingHashMap<>();
+        myMap.put("apple", "red");
+        myMap.put("banana", "yellow");
+        myMap.put("cherry", "red");
+        
+        // Expected toString result with map entries in alphabetical order by key
+        String expectedToStringResult = "{\"apple\":\"red\", \"banana\":\"yellow\", \"cherry\":\"red\"}";
+        
+        assertEquals(expectedToStringResult, myMap.toString());
+    }
+    
+    
+### Response:
+
+
+No.4 generated result --------------------------
+
+
+package org.jctools.maps;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
+
+public class NonBlockingHashMap<K,V> {
+    private static final int DEFAULT_INITIAL_CAPACITY = 16;
+    private static final float DEFAULT_LOAD_FACTOR = 0.75f;
+    private static final int MINIMUM_CAPACITY = 4;
+    
+    /**
+     * The default load factor. Note that the value of {@link #DEFAULT_LOAD_FACTOR} is
+     * stored in a <code>float</code>, which allows the <code>*_factor</code> methods to be
+     * used as locks in some cases.
+     */
+    private static final float LOAD_FACTOR = DEFAULT_LOAD_FACTOR;
+    /**
+     * The maximum capacity of a map. This value must always be a power of two.
+     */
+    private static final int MAXIMUM_CAPACITY = 1 << 30;
+
+    /**
+     * The minimum capacity of a map. Must be a power of two greater than or equal to the load factor.
+     */
+    private static final int MINIMUM_CAPACITY = 4;
+    
+    /**
+     * The number of table entries that can be altered before growing or shrinking the map. This value is used
+     * in conjunction with the load factor to determine the appropriate capacity for the map.
+     */
+    private static final int RESIZE_THRESHOLD = 64; // TODO: Make this dynamic?
+    /**
+     * The default initial capacity of a map. This value is used when creating a new map if no initial capacity is
+     * specified in the constructor or using the default constructor.
+     */
+    private static final int DEFAULT_INITIAL_CAPACITY = 16; // TODO: Make this dynamic?
+
+    /**
+     * A reusable table entry used for chaining. This class is never exposed outside of the package, so it need not be
+     * a public class. The garbage collector will automatically clean up any chained entries that are no longer in use.
+     */
+    private static final class Entry<K,V> {
+        /**
+         * A unique identifier for this entry. This value is never exposed outside of the package, so it need not be
+         * a public field.
+         */
+        private int _hash;
+        /**
+         * The key for this entry, which is used to look up the value in the map. This value may be <code>null</code>.
+         */
+        private K _key;
+        /**
+         * The value associated with this entry. This value may be <code>null</code>, but the <code>_key</code> field
+         * must contain a non-<code>null</code> value if the value is non-<code>null</code>.
+         */
+        private V _value;
+        /**
+         * The next entry in the list, which is used to create a linked list of entries. This field may be <code>null</code>,
+         * but it must contain a non-<code>null</code> value if the <code>_key</code> and <code>_value</code> fields are
+         * non-<code>null</code>.
+         */
+        private Entry _next;
+    }
+    
+    /**
+     * An internal array used to store the table entries. The size of this array must always be a power of two, and it is
+     * used in conjunction with the <code>_mask</code> field to compute an index into the array given a hash value. This
+     * field may not be <code>null</code>, but it should be treated as read-only data by the user.
+     */
+    private Entry[] _table;
+    /**
+     * A mask used in conjunction with the <code>_hash</code> field to compute an index into the internal table array. This
+     * field may not be <code>null</code>, but it should be treated as read-only data by the user.
+     */
+    private int _mask;
+    /**
+     * The number of entries in the map. This value is used to determine when the internal table needs to be resized, and
+     * it may be accessed directly by the user. However, this field should only be updated using the <code>_count</code>
+     * field or the <code>_addEntry()</code> and <code>_removeEntry()</code> methods.
+     */
+    private int _count;
+    /**
+     * The load factor for the map, which is a ratio of the number of entries to the size of the internal table. This value
+     * must always be greater than or equal to zero and less than or equal to one. If this field is set to <code>0</code>,
+     * then no resizing will take place until at least one entry has been removed from the map, which can cause a significant
+     * performance penalty on large maps that are constantly filled and emptied. If this value is set to <code>1</code>,
+     * then the internal table will be exactly twice the necessary size to hold all entries that have been added to the map.
+     */
+    private float _loadFactor;
+    
+    /**
+     * Creates a new instance of the {@link NonBlockingHashMap} class with an initial capacity of <code>16</code>, a load
+     * factor of <code>0.75</code>, and no internal table entries. The map will automatically resize as needed to stay
+     * within the specified capacity limits. However, the user should take care to manually call the {@link #trim()} method
+     * on this map whenever possible to avoid holding onto unnecessary memory.
+     */
+    public NonBlockingHashMap() {
+        this(DEFAULT_INITIAL_CAPACITY);
+    }
+    
+    /**
+     * Creates a new instance of the {@link NonBlockingHashMap} class with an initial capacity of <code>16</code>, a load
+     * factor of <code>0.75</code>, and no internal table entries. The map will automatically resize as needed to stay
+     * within the specified capacity limits. However, the user should take care to manually call the {@link #trim()} method
+     * on this map whenever possible to avoid holding onto unnecessary memory.
+     */
+    public NonBlockingHashMap(int initialCapacity) {
+        this(initialCapacity, 0.75f);
+    }
+    
+    /**
+     * Creates a new instance of the {@link NonBlockingHashMap} class with an initial capacity of <code>16</code>, and no
+     * internal table entries. The map will automatically resize as needed to stay within the specified capacity limits.
+     * However, the user should take care to manually call the {@link #trim()} method on this map whenever possible to avoid
+     * holding onto unnecessary memory.
+     */
+    public NonBlockingHashMap(int initialCapacity, float loadFactor) {
+        _loadFactor = Math.min(Math.max(0.0f, loadFactor), 1.0f);
+        
+        int tableSize = Math.max(MINIMUM_CAPACITY, MathUtils.getNextPowerOfTwo((int)(initialCapacity / _loadFactor)));
+        _table = new Entry[tableSize];
+        _mask = _table.length - 1;
+    }
+    
+    /**
+     * Adds a new entry to the map with the specified key and value. If an entry with the same key already exists in the
+     * map, then its value is updated to the one specified. This method is not intended for use by external classes, but it
+     * may be used by subclasses.
+     */
+    protected final void _addEntry(int hash, K key, V value) {
+        Entry[] table = _table;
+        
+        int index = hash & _mask;
+        Entry entry = table[index];
+        
+        while (entry != null) {
+            if ((hash == entry._hash) && ((key == null) ? (entry._key == null) : key.equals(entry._key))) {
+                entry._value = value;
+                
+                return;
+            }
+            
+            index = (index + 1) & _mask;
+            entry = table[index];
+        }
+        
+        Entry newEntry = new Entry();
+        newEntry._hash = hash;
+        newEntry._key = key;
+        newEntry._value = value;
+        newEntry._next = null; // We'll add this later if necessary.
+        
+        table[index] = newEntry;
+        _count++;
+    }
+    
+    /**
+     * Removes the entry from the map with the specified key, or <code>null</code> if there is no such entry. This method
+     * is not intended for use by external classes, but it may be used by subclasses.
+     */
+    protected final void _removeEntry(int hash, K key) {
+        Entry[] table = _table;
+        
+        int index = hash & _mask;
+        Entry entry = table[index];
+        
+        while (entry != null) {
+            if ((hash == entry._hash) && ((key == null) ? (entry._key == null) : key.equals(entry._key))) {
+                // Found the entry. Remove it from the linked list.
+                Entry prevEntry = entry;
+                
+                for (entry = entry._next; entry != null; entry = entry._next) {
+                    if ((hash == entry._hash) && ((key == null) ? (entry._key == null) : key.equals(entry._key))) {
+                        // We've found another entry with the same hash and key as the one we want to remove. Remove it.
+                        prevEntry._next = entry._next;
+                        
+                        break;
+                    }
+                }
+                
+                if (prevEntry == table[index]) {
+                    // We've removed the first entry in the linked list, so set the next one as the new head.
+                    table[index] = prevEntry._next;
+                    
+                    if ((prevEntry == null) || (prevEntry._next == null)) {
+                        _count--;
+                        
+                        // If there are no more entries in this bucket, then shrink the table and rehash.
+                        if (_count <= MINIMUM_CAPACITY) {
+                            Entry[] oldTable = _table;
+                            
+                            int newSize = MathUtils.getNextPowerOfTwo(Math.min(_count << 1, MAXIMUM_CAPACITY));
+                            if (newSize == 0) {
+                                _table = null;
+                                _mask = 0;
+                                
+                                return;
+                            }
+                            
+                            Entry[] newTable = new Entry[newSize];
+                            
+                            for (int i = oldTable.length - 1; i >= 0; i--) {
+                                entry = oldTable[i];
+                                
+                                while ((entry != null) && (entry._next == null)) {
+                                    _addEntry(entry._hash, entry._key, entry._value); // This will re-hash the value.
+                                    
+                                    entry = entry._next;
+                                }
+                            }
+                        }
+                    }
+                } else if (prevEntry != null) {
+                    // We've removed a middle or tail entry from the linked list, so remove it.
+                    prevEntry._next = entry;
+                    
+                    if ((entry == null) || (entry._next == null)) {
+                        _count--;
+                        
+                        // If there are no more entries in this bucket, then shrink the table and rehash.
+                        if (_count <= MINIMUM_CAPACITY) {
+                            Entry[] oldTable = _table;
+                            
+                            int newSize = MathUtils.getNextPowerOfTwo(Math.min(_count << 1, MAXIMUM_CAPACITY));
+                            if (newSize == 0) {
+                                _table = null;
+                                _mask = 0;
+                                
+                                return;
+                            }
+                            
+                            Entry[] newTable = new Entry[newSize];
+                            
+                            for (int i = oldTable.length - 1; i >= 0; i--) {
+                                entry = oldTable[i];
+                                
+                                while ((entry != null) && (entry._next == null)) {
+                                    _addEntry(entry._hash, entry._key, entry._value); // This will re-hash the value.
+                                    
+                                    entry = entry._next;
+                                }
+                            }
+                        }
+                    }
+                } else if (prevEntry == null) {
+                    table[index] = entry;
+                    _count--;
+                    
+                    // If there are no more entries in this bucket, then shrink the table and rehash.
+                    if (_count <= MINIMUM_CAPACITY) {
+                        Entry[] oldTable = _table;
+                        
+                        int newSize = MathUtils.getNextPowerOfTwo(Math.min(_count << 1, MAXIMUM_CAPACITY));
+                        if (newSize == 0) {
+                            _table = null;
+                            _mask = 0;
+                            
+                            return;
+                        }
+                        
+                        Entry[] newTable = new Entry[newSize];
+                        
+                        for (int i = oldTable.length - 1; i >= 0; i--) {
+                            entry = oldTable[i];
+                            
+                            while ((entry != null) && (entry._next == null)) {
+                                _addEntry(entry._hash, entry._key, entry._value); // This will re-hash the value.
+                                
+                                entry = entry._next;
+                            }
+                        }
+                    }
+                } else {
+                    return;
+                }
+                
+                break;
+            }
+            
+            if (entry == null) {
+                prevEntry = table[index];
+                
+                if ((prevEntry != null) && (prevEntry._next != null)) {
+                    entry = prevEntry._next;
+                    
+                    while (entry != null) {
+                        if (_keyComparator.compare(key, entry._key) == 0) {
+                            break;
+                        }
+                        
+                        entry = entry._next;
+                    }
+                } else if ((prevEntry != null) && (prevEntry._hash != hash)) {
+                    prevEntry = table[index];
+                    
+                    if ((prevEntry == null) || (prevEntry._next == null)) {
+                        _count--;
+                        
+                        // If there are no more entries in this bucket, then shrink the table and rehash.
+                        if (_count <= MINIMUM_CAPACITY) {
+                            Entry[] oldTable = _table;
+                            
+                            int newSize = MathUtils.getNextPowerOfTwo(Math.min(_count << 1, MAXIMUM_CAPACITY));
+                            if (newSize == 0) {
+                                _table = null;
+                                _mask = 0;
+                                
+                                return;
+                            }
+                            
+                            Entry[] newTable = new Entry[newSize];
+                            
+                            for (int i = oldTable.length - 1; i >= 0; i--) {
+                                entry = oldTable[i];
+                                
+                                while ((entry != null) && (entry._next == null)) {
+                                    _addEntry(entry._hash, entry._key, entry._value); // This will re-hash the value.
+                                    
+                                    entry = entry._next;
+                                }
+                            }
+                        }
+                    } else if (prevEntry != null) {
+                        prevEntry = table[index];
+                        
+                        while ((entry != null) && (_keyComparator.compare(key, entry._key) == 0)) {
+                            prevEntry = entry;
+                            
+                            entry = entry._next;
+                        }
+                    } else if (prevEntry == null) {
+                        table[index] = entry;
+                        
+                        _count--;
+                        
+                        // If there are no more entries in this bucket, then shrink the table and rehash.
+                        if (_count <= MINIMUM_CAPACITY) {
+                            Entry[] oldTable = _table;
+                            
+                            int newSize = MathUtils.getNextPowerOfTwo(Math.min(_count << 1, MAXIMUM_CAPACITY));
+                            if (newSize == 0) {
+                                _table = null;
+                                _mask = 0;
+                                
+                                return;
+                            }
+                            
+                            Entry[] newTable = new Entry[newSize];
+                            
+                            for (int i = oldTable.length - 1; i >= 0; i--) {
+                                entry = oldTable[i];
+                                
+                                while ((entry != null) && (entry._next == null)) {
+                                    _addEntry(entry._hash, entry._key, entry._value); // This will re-hash the value.
+                                    
+                                    entry = entry._next;
+                                }
+                            }
+                        }
+                        
+                        break;
+                    } else {
+                        return;
+                    }
+                    
+                    if ((prevEntry == null) || (prevEntry._hash != hash)) {
+                        prevEntry = table[index];
+                        
+                        if ((prevEntry == null) || (prevEntry._next == null)) {
+                            _count--;
+                            
+                            // If there are no more entries in this bucket, then shrink the table and rehash.
+                            if (_count <= MINIMUM_CAPACITY) {
+                                Entry[] oldTable = _table;
+                                
+                                int newSize = MathUtils.getNextPowerOfTwo(Math.min(_count << 1, MAXIMUM_CAPACITY));
+                                if (newSize == 0) {
+                                    _table = null;
+                                    _mask = 0;
+                                    
+                                    return;
+                                }
+                                
+                                Entry[] newTable = new Entry[newSize];
+                                
+                                for (int i = oldTable.length - 1; i >= 0; i--) {
+                                    entry = oldTable[i];
+                                    
+                                    while ((entry != null) && (entry._next == null)) {
+                                        _addEntry(entry._hash, entry._key, entry._value); // This will re-hash the value.
+                                        
+                                        entry = entry._next;
+                                    }
+                                }
+                            }
+                        } else if (prevEntry != null) {
+                            prevEntry = table[index];
+                            
+                            while ((entry != null) && (_keyComparator.compare(key, entry._key) == 0)) {
+                                prevEntry = entry;
+                                
+                                entry = entry._next;
+                            }
+                        } else if (prevEntry == null) {
+                            table[index] = entry;
+                            
+                            _count--;
+                            
+                            // If there are no more entries in this bucket, then shrink the table and rehash.
+                            if (_count <= MINIMUM_CAPACITY) {
+                                Entry[] oldTable = _table;
+                                
+                                int newSize = MathUtils.getNextPowerOfTwo(Math.min(_count << 1, MAXIMUM_CAPACITY));
+                                if (newSize == 0) {
+                                    _table = null;
+                                    _mask = 0;
+                                    
+                                    return;
+                                }
+                                
+                                Entry[] newTable = new Entry[newSize];
+                                
+                                for (int i = oldTable.length - 1; i >= 0; i--) {
+                                    entry = oldTable[i];
+                                    
+                                    while ((entry != null) && (entry._next == null)) {
+                                        _addEntry(entry._hash, entry._key, entry._value); // This will re-hash the value.
+                                        
+                                        entry = entry._next;
+                                    }
+                                }
+                            }
+                            
+                            break;
+                        } else {
+                            return;
+                        }
+                        
+                        if ((prevEntry == null) || (prevEntry._hash != hash)) {
+                            prevEntry = table[index];
+                            
+                            while (entry != null) {
+                                prevEntry = entry;
+                                
+                                entry = entry._next;
+                            }
+                        } else if ((prevEntry == null) || (prevEntry._hash != hash)) {
+                            return;
+                        }
+                    }
+                }
+                
+                if (entry == null) {
+                    break;
+                }
+            }
+            
+            prevEntry = entry;
+            
+            entry = entry._next;
+        } while ((prevEntry != null) && (_keyComparator.compare(key, prevEntry._key) > 0));
+        
+        if (entry == null) {
+            return false;
+        }
+        
+        _size--;
+        
+        if (entry._next != null) {
+            entry._hash = hash;
+            
+            // If the removed entry is not at the end of the linked list, then we need to re-link the nodes.
+            prevEntry._next = entry._next;
+        } else if (_size == 0) {
+            _table[index] = null;
+        } else {
+            // If there are no more entries in this bucket, then shrink the table and rehash.
+            Entry[] oldTable = _table;
+            
+            int newSize = MathUtils.getNextPowerOfTwo(Math.min(_size << 1, MAXIMUM_CAPACITY));
+            if (newSize == 0) {
+                _table = null;
+                _mask = 0;
+                
+                return false;
+            }
+            
+            Entry[] newTable = new Entry[newSize];
+            for (int i = oldTable.length - 1; i >= 0; i--) {
+                entry = oldTable[i];
+                
+                while ((entry != null) && (entry._next == null)) {
+                    _addEntry(entry._hash, entry._key, entry._value); // This will re-hash the value.
+                    
+                    entry = entry._next;
+                }
+            }
+        }
+        
+        return true;
+    }
+    
+    public V get (K key) {
+        int index = _hash(key, 0);
+        
+        Entry<V> entry = _table[index];
+        
+        while ((entry != null) && (_keyComparator.compare(key, entry._key) > 0)) {
+            entry = entry._next;
+        }
+        
+        if (entry == null) {
+            return null;
+        } else {
+            return entry._value;
+        }
+    }
+    
+    public void clear () {
+        _size = 0;
+        
+        Entry<V>[] oldTable = _table;
+        
+        int newSize = MathUtils.getNextPowerOfTwo(Math.min(_size << 1, MAXIMUM_CAPACITY));
+        if (newSize == 0) {
+            _table = null;
+            _mask = 0;
+            
+            return;
+        }
+        
+        Entry<V>[] newTable = new Entry[newSize];
+        for (int i = oldTable.length - 1; i >= 0; i--) {
+            Entry<V> entry = oldTable[i];
+            
+            while ((entry != null) && (entry._next == null)) {
+                _addEntry(entry._hash, entry._key, entry._value); // This will re-hash the value.
+                
+                entry = entry._next;
+            }
+        }
+    }
+    
+    public void clear (K key) {
+        int index = _hash(key, 0);
+        
+        Entry<V> entry = _table[index];
+        if ((entry != null) && (_keyComparator.compare(key, entry._key) == 0)) {
+            _size--;
+            
+            // If the removed entry is not at the end of the linked list, then we need to re-link the nodes.
+            _table[index] = entry._next;
+        } else if (_size > 0) {
+            Entry<V> prevEntry = entry;
+            
+            entry = entry._next;
+            
+            while (entry != null) {
+                if ((entry != null) && (_keyComparator.compare(key, entry._key) == 0)) {
+                    _size--;
+                    
+                    // If the removed entry is not at the end of the linked list, then we need to re-link the nodes.
+                    prevEntry._next = entry._next;
+                } else if (_size > 0) {
+                    prevEntry = entry;
+                    
+                    entry = entry._next;
+                } else {
+                    _table[index] = null;
+                    
+                    break;
+                }
+            }
+        }
+        
+        if (_size == 0) {
+            Entry<V>[] oldTable = _table;
+            
+            int newSize = MathUtils.getNextPowerOfTwo(Math.min(_size << 1, MAXIMUM_CAPACITY));
+            if (newSize == 0) {
+                _table = null;
+                _mask = 0;
+                
+                return;
+            }
+            
+            Entry<V>[] newTable = new Entry[newSize];
+            for (int i = oldTable.length - 1; i >= 0; i--) {
+                entry = oldTable[i];
+                
+                while ((entry != null) && (entry._next == null)) {
+                    _addEntry(entry._hash, entry._key, entry._value); // This will re-hash the value.
+                    
+                    entry = entry._next;
+                }
+            }
+        }
+    }
+    
+    public boolean contains (K key) {
+        int index = _hash(key, 0);
+        
+        Entry<V> entry = _table[index];
+        while ((entry != null) && (_keyComparator.compare(key, entry._key) > 0)) {
+            entry = entry._next;
+        }
+        
+        return (entry != null) && (_keyComparator.compare(key, entry._key) == 0);
+    }
+    
+    public int size () {
+        return _size;
+    }
+    
+    private void _growTableIfNecessary () {
+        if ((_table != null) && (_mask < MAXIMUM_CAPACITY)) {
+            Entry<V>[] oldTable = _table;
+            
+            int newSize = MathUtils.getNextPowerOfTwo(_size);
+            int newMask = (newSize << 1) - 1;
+            
+            Entry<V>[] newTable = new Entry[newSize];
+            for (int i = oldTable.length - 1; i >= 0; i--) {
+                Entry<V> entry = oldTable[i];
+                
+                while ((entry != null) && (entry._next == null)) {
+                    _addEntry(entry._hash, entry._key, entry._value); // This will re-hash the value.
+                    
+                    entry = entry._next;
+                }
+            }
+            
+            if (_size > 0) {
+                for (int i = oldTable.length - 1; i >= 0; i--) {
+                    Entry<V> entry = oldTable[i];
+                    
+                    while ((entry != null) && (entry._next != null)) {
+                        Entry<V> nextEntry = entry._next;
+                        
+                        int index = _hash(nextEntry._key, newMask);
+                        
+                        if (newTable[index] == null) {
+                            newTable[index] = nextEntry;
+                            
+                            newSize--;
+                        } else {
+                            Entry<V> lastEntry = newTable[index];
+                            
+                            while ((lastEntry != null) && (lastEntry._next != null)) {
+                                lastEntry = lastEntry._next;
+                            }
+                            
+                            lastEntry._next = nextEntry;
+                        }
+                        
+                        entry = nextEntry;
+                    }
+                }
+            }
+            
+            _table = newTable;
+            _mask = newMask;
+        } else {
+            throw new RuntimeException("Unable to grow table."); // This should never happen.
+        }
+    }
+    
+    private void _addEntry (int hash, K key, V value) {
+        Entry<V> entry = new Entry<V>(hash, key, value);
+        
+        int index = hash & _mask;
+        
+        if (_table[index] == null) {
+            _table[index] = entry;
+            
+            return;
+        } else {
+            Entry<V> lastEntry = _table[index];
+            
+            while ((lastEntry != null) && (lastEntry._next != null)) {
+                lastEntry = lastEntry._next;
+            }
+            
+            lastEntry._next = entry;
+        }
+    }
+    
+    private int _hash (K key, int mask) {
+        int hashCode = key.hashCode();
+        
+        return ((hashCode ^ (hashCode >>> 16)) & mask); // This is the standard Java hash function.
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jctools.maps;
+
+import java.util.*;
+
+public class NonBlockingHashMapTest {
+    @Test
+    public void toStringTest() {
+        <FILL>
+    }
+}
+
+
+No.6 generated result --------------------------
+
+public class NonBlockingHashMapTest {
+    private NonBlockingHashMap<String, String> map;
+    
+    @BeforeEach
+    public void setUp() {
+        map = new NonBlockingHashMap<>();
+    }
+    
+    @AfterEach
+    public void tearDown() {
+        map.clear();
+    }
+    
+    @Test
+    public void testToString() {
+        assertEquals("{}", map.toString());
+        
+        map.put("key1", "value1");
+        map.put("key2", "value2");
+        map.put("key3", "value3");
+        
+        assertEquals("{key1=value1, key2=value2, key3=value3}", map.toString());
+    }
+}
+    
+
+### Response: [/PROJECT]  (Right Trimmed)
+// NonBlockingHashMapTest.java - JUnit based unit test
+import org.junit.*;
+import static org.junit.Assert.*;
+
+public class NonBlockingHashMapTest {
+    @Test
+    public void toStringTest() {
+        <FILL>
+    }
+}
+
+
+No.7 generated result --------------------------
+
+
+
+### References
+- [Java: A Nonblocking HashMap](http://www.javaspecialists.eu/archive/Issue063.html)
+
+
+
+No.8 generated result --------------------------
+
+NonBlockingHashMap<String, String> map = new NonBlockingHashMap<>();
+map.put("key1", "value1");
+System.out.println(map);  // Output: {key1=value1}
+
+
+No.9 generated result --------------------------
+
+
+public class NonBlockingHashMapTest {
+    @Test
+    public void toStringTest() {
+        NonBlockingHashMap<Integer, String> map = new NonBlockingHashMap<>();
+        assertEquals("{}", map.toString());
+        map.put(1, "a");
+        map.put(2, "b");
+        assertEquals("{1=a, 2=b}", map.toString());
+    }
+}
+
+
+
+No.10 generated result --------------------------
+
+package org.jctools.maps;
+
+import java.util.*;
+
+public class NonBlockingHashMap<K, V> extends AbstractMap<K, V> {
+    // ...
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{");
+        for (int i = 0; i < size; i++) {
+            if (i != 0) {
+                sb.append(", ");
+            }
+            sb.append(keyAt(i));
+            sb.append('=');
+            sb.append(valueAt(i));
+        }
+        sb.append("}");
+        return sb.toString();
+    }
+}
+
+

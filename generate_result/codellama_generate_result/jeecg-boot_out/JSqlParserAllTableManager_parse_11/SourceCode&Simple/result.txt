@@ -1,0 +1,344 @@
+Source code: 
+
+
+public Map<String, SelectSqlInfo> parse() throws JSQLParserException {
+    // 1. 创建解析器
+    CCJSqlParserManager mgr = new CCJSqlParserManager();
+    // 2. 使用解析器解析sql生成具有层次结构的java类
+    Statement stmt = mgr.parse(new StringReader(this.sql));
+    if (stmt instanceof Select) {
+        Select selectStatement = (Select) stmt;
+        SelectBody selectBody = selectStatement.getSelectBody();
+        this.parsedSql = selectBody.toString();
+        // 3. 解析select查询sql的信息
+        if (selectBody instanceof PlainSelect) {
+            PlainSelect plainSelect = (PlainSelect) selectBody;
+            // 4. 合并 fromItems
+            List<FromItem> fromItems = new ArrayList<>();
+            fromItems.add(plainSelect.getFromItem());
+            // 4.1 处理join的表
+            List<Join> joins = plainSelect.getJoins();
+            if (joins != null) {
+                joins.forEach(join -> fromItems.add(join.getRightItem()));
+            }
+            // 5. 处理 fromItems
+            for (FromItem fromItem : fromItems) {
+                // 5.1 通过表名的方式from
+                if (fromItem instanceof Table) {
+                    this.addSqlInfoByTable((Table) fromItem);
+                }
+                // 5.2 通过子查询的方式from
+                else if (fromItem instanceof SubSelect) {
+                    this.handleSubSelect((SubSelect) fromItem);
+                }
+            }
+            // 6. 解析 selectFields
+            List<SelectItem> selectItems = plainSelect.getSelectItems();
+            for (SelectItem selectItem : selectItems) {
+                // 6.1 查询的是全部字段
+                if (selectItem instanceof AllColumns) {
+                    // 当 selectItem 为 AllColumns 时，fromItem 必定为 Table
+                    String tableName = plainSelect.getFromItem(Table.class).getName();
+                    // 此处必定不为空，因为在解析 fromItem 时，已经将表名添加到 allTableMap 中
+                    SelectSqlInfo sqlInfo = this.allTableMap.get(tableName);
+                    assert sqlInfo != null;
+                    // 设置为查询全部字段
+                    sqlInfo.setSelectAll(true);
+                    sqlInfo.setSelectFields(null);
+                    sqlInfo.setRealSelectFields(null);
+                }
+                // 6.2 查询的是带表别名（ u.* )的全部字段
+                else if (selectItem instanceof AllTableColumns) {
+                    AllTableColumns allTableColumns = (AllTableColumns) selectItem;
+                    String aliasName = allTableColumns.getTable().getName();
+                    // 通过别名获取表名
+                    String tableName = this.tableAliasMap.get(aliasName);
+                    if (tableName == null) {
+                        tableName = aliasName;
+                    }
+                    SelectSqlInfo sqlInfo = this.allTableMap.get(tableName);
+                    // 如果此处为空，则说明该字段是通过子查询获取的，所以可以不处理，只有实际表才需要处理
+                    if (sqlInfo != null) {
+                        // 设置为查询全部字段
+                        sqlInfo.setSelectAll(true);
+                        sqlInfo.setSelectFields(null);
+                        sqlInfo.setRealSelectFields(null);
+                    }
+                }
+                // 6.3 各种字段表达式处理
+                else if (selectItem instanceof SelectExpressionItem) {
+                    SelectExpressionItem selectExpressionItem = (SelectExpressionItem) selectItem;
+                    Expression expression = selectExpressionItem.getExpression();
+                    Alias alias = selectExpressionItem.getAlias();
+                    this.handleExpression(expression, alias, plainSelect.getFromItem());
+                }
+            }
+        } else {
+            log.warn("暂时尚未处理该类型的 SelectBody: {}", selectBody.getClass().getName());
+            throw new JeecgBootException("暂时尚未处理该类型的 SelectBody");
+        }
+    } else {
+        // 非 select 查询sql，不做处理
+        throw new JeecgBootException("非 select 查询sql，不做处理");
+    }
+    return this.allTableMap;
+}
+
+
+
+No.1 generated result --------------------------
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JSqlParserAllTableManagerTest {
+    @Test
+    public void parseTest() {
+        String sql = "SELECT * FROM TABLE1 JOIN TABLE2 ON TABLE1.ID = TABLE2.ID";
+        Map<String, SelectSqlInfo> result = new HashMap<>();
+        
+        // We need to create an instance of the JSqlParserAllTableManager class and call its parse method to test it.
+        JSqlParserAllTableManager parser = new JSqlParserAllTableManager(sql);
+        result = parser.parse();
+        
+        assertEquals(2, result.size()); // We expect two entries in the map returned by the parse method.
+        assertTrue(result.containsKey("TABLE1")); // The first entry should be for a table called "TABLE1".
+        assertTrue(result.containsKey("TABLE2")); // The second entry should be for a table called "TABLE2".
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jeecg.common.util.sqlparse;
+
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.*;
+
+public class JSqlParserAllTableManagerTest {
+    @Test
+    public void parseTest() {
+        // Create an instance of the JSqlParserAllTableManager class
+        String sql = "SELECT * FROM table1";
+        JSqlParserAllTableManager parser = new JSqlParserAllTableManager(sql);
+        
+        // Call the parse() method and get the result map
+        Map<String, SelectSqlInfo> allTablesMap = parser.parse();
+        
+        // Assert that the result map contains a single table with no alias
+        assertEquals(1, allTablesMap.size());
+        assertTrue(allTablesMap.containsKey("table1"));
+        assertFalse(allTablesMap.containsValue("alias1"));
+        
+        // Get the SelectSqlInfo object for the "table1" table
+        SelectSqlInfo info = allTablesMap.get("table1");
+        
+        // Assert that the SelectSqlInfo object contains the expected information
+        assertEquals(sql, info.getParsedSql());
+        assertNull(info.getAlias());
+        assertTrue(info.getColumns().isEmpty());
+    }
+}
+
+
+No.3 generated result --------------------------
+
+The `parse()` method of the `JSqlParserAllTableManager` class is a bit long and complex, so it's best to break it down into smaller methods.
+
+Here are some suggestions for how you can refactor this method:
+
+1. Extract the code that handles the different types of select statements (e.g., `PlainSelect`, `SetOperationList`) into separate methods. This will make the code easier to read and maintain.
+2. Consider using a strategy pattern to handle different types of from items, such as tables or subqueries. This will allow you to define multiple strategies for handling these types of from items and switch between them based on the type of from item encountered in the select statement.
+3. Use a HashMap or other data structure to store the select statements and their corresponding SQL information. This will make it easier to access and modify the SQL information as needed.
+4. Consider using a more descriptive naming convention for your variables, such as `selectStatement` instead of `stmt`. This will make the code easier to read and understand.
+5. Use meaningful variable names throughout the code. For example, `fromItems` is a confusing name, as it doesn't clearly indicate what type of items are being referred to. Instead, consider using something like `tableFromItems` or `subqueryFromItems`.
+6. Consider using a more descriptive naming convention for your method names. For example, instead of `parse()`, you could use `getSqlInformation()` or `processSelectStatement()`. This will make the code easier to read and understand.
+7. Use consistent indentation and formatting throughout the code. This will make the code easier to read and understand.
+8. Consider adding more test cases to cover different types of select statements, from items, and SQL expressions. This will help ensure that your code is robust and handles all possible scenarios correctly.
+
+Overall, it's a good idea to take your time and carefully review the code you've written. Ask yourself questions like "Is this code easy to read and understand?" "Is there a more elegant way to write this code?" "Are there any potential bugs or edge cases that I haven't considered?" These are all important questions to ask when writing code, and they can help you produce better results.
+
+
+No.4 generated result --------------------------
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+public class JSqlParserAllTableManagerTest {
+    private static final String SQL = "SELECT * FROM table1";
+    private static final String PARSED_SQL = "SELECT * FROM table1";
+
+    private JSqlParserAllTableManager manager;
+
+    @BeforeEach
+    public void setUp() {
+        manager = new JSqlParserAllTableManager(SQL);
+    }
+
+    @Test
+    public void parseTest() throws JSQLParserException {
+        // 1. 创建解析器
+        CCJSqlParserManager mgr = new CCJSqlParserManager();
+        // 2. 使用解析器解析sql生成具有层次结构的java类
+        Statement stmt = mgr.parse(new StringReader(SQL));
+        if (stmt instanceof Select) {
+            Select selectStatement = (Select) stmt;
+            SelectBody selectBody = selectStatement.getSelectBody();
+            assertEquals(PARSED_SQL, selectBody.toString());
+            // 3. 解析sql中的表名、别名和字段等信息
+            manager.parse();
+            Map<String, SelectSqlInfo> allTableMap = manager.getAllTableMap();
+            assertEquals(1, allTableMap.size());
+        } else {
+            fail("Expected a select statement but got: " + stmt);
+        }
+    }
+}
+
+
+No.5 generated result --------------------------
+
+@Test
+public void parseTest() {
+    String sql = "SELECT * FROM mytable";
+    JSqlParserAllTableManager parser = new JSqlParserAllTableManager(sql);
+    Map<String, SelectSqlInfo> map = parser.parse();
+    assertEquals(1, map.size());
+    assertTrue(map.containsKey("mytable"));
+}
+
+
+No.6 generated result --------------------------
+
+this.allTableMap.put("table2", new SelectSqlInfo());
+
+
+No.7 generated result --------------------------
+
+
+The provided code is a JUnit test case for the `JSqlParserAllTableManager` class. The test case has a single method called `parseTest()` which tests the functionality of the `parse()` method in the `JSqlParserAllTableManager` class.
+
+The `parse()` method is responsible for parsing a SQL statement and generating a map of tables to their corresponding `SelectSqlInfo` objects, where each `SelectSqlInfo` object represents a table in the parsed SQL statement. The `parse()` method uses the `CCJSqlParserManager` class from the JSqlParser library to parse the SQL statement and extract information about the tables and fields involved in the query.
+
+The test case starts by creating an instance of the `JSqlParserAllTableManager` class with a sample SQL statement as input. The `parse()` method is then called on this instance, which parses the SQL statement and generates a map of tables to their corresponding `SelectSqlInfo` objects.
+
+The next step is to verify that the generated map contains the expected number of tables. This is done by calling the `size()` method on the generated map and comparing it with the expected number of tables in the SQL statement.
+
+Finally, the test case verifies that each table in the map has the expected `SelectSqlInfo` object associated with it. This is done by looping through the map and checking that each key (i.e., table name) maps to an instance of the `SelectSqlInfo` class.
+
+Overall, this JUnit test case ensures that the `parse()` method in the `JSqlParserAllTableManager` class parses SQL statements correctly and generates a map of tables to their corresponding `SelectSqlInfo` objects.
+
+
+No.8 generated result --------------------------
+
+
+package org.jeecg.common.util.sqlparse;
+
+import lombok.extern.slf4j.Slf4j;
+
+import net.sf.jsqlparser.JSQLParserException;
+
+import net.sf.jsqlparser.expression.*;
+
+import net.sf.jsqlparser.parser.CCJSqlParserManager;
+
+import net.sf.jsqlparser.schema.Column;
+
+import net.sf.jsqlparser.schema.Table;
+
+import net.sf.jsqlparser.statement.Statement;
+
+import net.sf.jsqlparser.statement.select.*;
+
+import org.jeecg.common.exception.JeecgBootException;
+
+import org.jeecg.common.util.sqlparse.vo.SelectSqlInfo;
+
+import java.io.StringReader;
+
+import java.util.ArrayList;
+
+import java.util.HashMap;
+
+import java.util.List;
+
+import java.util.Map;
+
+@Slf4j
+public class JSqlParserAllTableManagerTest {
+    private final String sql = "SELECT * FROM table_name";
+    private final Map<String, SelectSqlInfo> allTableMap = new HashMap<>();
+    private final Map<String, String> tableAliasMap = new HashMap<>();
+    private String parsedSql;
+    
+    @Test
+    public void parseTest() {
+        JSqlParserAllTableManager manager = new JSqlParserAllTableManager(sql);
+        
+        try {
+            allTableMap.put("table_name", new SelectSqlInfo());
+            
+            parsedSql = "SELECT * FROM table_name";
+            
+            assertEquals(parsedSql, manager.parse().get("table_name").getParsedSql());
+        } catch (JSQLParserException e) {
+            log.error(e.getMessage(), e);
+            fail();
+        }
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jeecg.common.util.sqlparse;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JSqlParserAllTableManagerTest {
+    private JSqlParserAllTableManager manager;
+    
+    @BeforeEach
+    public void setup() {
+        String sql = "SELECT * FROM mytable"; // Replace with your own SQL string
+        manager = new JSqlParserAllTableManager(sql);
+    }
+    
+    @Test
+    public void parseTest() {
+        Map<String, SelectSqlInfo> map = manager.parse();
+        assertNotNull(map);
+        assertEquals(1, map.size());
+        
+        // Check that the key is "mytable" and the value is an instance of SelectSqlInfo
+        assertTrue(map.containsKey("mytable"));
+        assertTrue(map.get("mytable") instanceof SelectSqlInfo);
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.common.util.sqlparse;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JSqlParserAllTableManagerTest {
+    @Test
+    public void parseTest() {
+        // create an instance of the class under test
+        JSqlParserAllTableManager manager = new JSqlParserAllTableManager("select * from table1 t1 join table2 t2 on t1.id = t2.id");
+
+        // call the method to be tested
+        Map<String, SelectSqlInfo> allTableMap = manager.parse();
+
+        // assertions go here
+        assertEquals(2, allTableMap.size());
+        assertTrue(allTableMap.containsKey("table1"));
+        assertTrue(allTableMap.containsKey("table2"));
+    }
+}
+
+

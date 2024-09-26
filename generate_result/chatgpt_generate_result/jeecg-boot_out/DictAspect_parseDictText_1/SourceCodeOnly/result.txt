@@ -1,0 +1,295 @@
+Source code: 
+
+
+private Object parseDictText(Object result) {
+    if (result instanceof Result) {
+        if (((Result) result).getResult() instanceof IPage) {
+            List<JSONObject> items = new ArrayList<>();
+
+            //step.1 筛选出加了 Dict 注解的字段列表
+            List<Field> dictFieldList = new ArrayList<>();
+            // 字典数据列表， key = 字典code，value=数据列表
+            Map<String, List<String>> dataListMap = new HashMap<>(5);
+            //取出结果集
+            List<Object> records=((IPage) ((Result) result).getResult()).getRecords();
+            //update-begin--Author:zyf -- Date:20220606 ----for：【VUEN-1230】 判断是否含有字典注解,没有注解返回-----
+            Boolean hasDict= checkHasDict(records);
+            if(!hasDict){
+                return result;
+            }
+
+            log.debug(" __ 进入字典翻译切面 DictAspect —— " );
+            //update-end--Author:zyf -- Date:20220606 ----for：【VUEN-1230】 判断是否含有字典注解,没有注解返回-----
+            for (Object record : records) {
+                String json="{}";
+                try {
+                    //update-begin--Author:zyf -- Date:20220531 ----for：【issues/#3629】 DictAspect Jackson序列化报错-----
+                    //解决@JsonFormat注解解析不了的问题详见SysAnnouncement类的@JsonFormat
+                     json = objectMapper.writeValueAsString(record);
+                    //update-end--Author:zyf -- Date:20220531 ----for：【issues/#3629】 DictAspect Jackson序列化报错-----
+                } catch (JsonProcessingException e) {
+                    log.error("json解析失败"+e.getMessage(),e);
+                }
+                //update-begin--Author:scott -- Date:20211223 ----for：【issues/3303】restcontroller返回json数据后key顺序错乱 -----
+                JSONObject item = JSONObject.parseObject(json, Feature.OrderedField);
+                //update-end--Author:scott -- Date:20211223 ----for：【issues/3303】restcontroller返回json数据后key顺序错乱 -----
+
+                //update-begin--Author:scott -- Date:20190603 ----for：解决继承实体字段无法翻译问题------
+                //for (Field field : record.getClass().getDeclaredFields()) {
+                // 遍历所有字段，把字典Code取出来，放到 map 里
+                for (Field field : oConvertUtils.getAllFields(record)) {
+                    String value = item.getString(field.getName());
+                    if (oConvertUtils.isEmpty(value)) {
+                        continue;
+                    }
+                //update-end--Author:scott  -- Date:20190603 ----for：解决继承实体字段无法翻译问题------
+                    if (field.getAnnotation(Dict.class) != null) {
+                        if (!dictFieldList.contains(field)) {
+                            dictFieldList.add(field);
+                        }
+                        String code = field.getAnnotation(Dict.class).dicCode();
+                        String text = field.getAnnotation(Dict.class).dicText();
+                        String table = field.getAnnotation(Dict.class).dictTable();
+
+                        List<String> dataList;
+                        String dictCode = code;
+                        if (!StringUtils.isEmpty(table)) {
+                            dictCode = String.format("%s,%s,%s", table, text, code);
+                        }
+                        dataList = dataListMap.computeIfAbsent(dictCode, k -> new ArrayList<>());
+                        this.listAddAllDeduplicate(dataList, Arrays.asList(value.split(",")));
+                    }
+                    //date类型默认转换string格式化日期
+                    //update-begin--Author:zyf -- Date:20220531 ----for：【issues/#3629】 DictAspect Jackson序列化报错-----
+                    //if (JAVA_UTIL_DATE.equals(field.getType().getName())&&field.getAnnotation(JsonFormat.class)==null&&item.get(field.getName())!=null){
+                        //SimpleDateFormat aDate=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                        // item.put(field.getName(), aDate.format(new Date((Long) item.get(field.getName()))));
+                    //}
+                    //update-end--Author:zyf -- Date:20220531 ----for：【issues/#3629】 DictAspect Jackson序列化报错-----
+                }
+                items.add(item);
+            }
+
+            //step.2 调用翻译方法，一次性翻译
+            Map<String, List<DictModel>> translText = this.translateAllDict(dataListMap);
+
+            //step.3 将翻译结果填充到返回结果里
+            for (JSONObject record : items) {
+                for (Field field : dictFieldList) {
+                    String code = field.getAnnotation(Dict.class).dicCode();
+                    String text = field.getAnnotation(Dict.class).dicText();
+                    String table = field.getAnnotation(Dict.class).dictTable();
+
+                    String fieldDictCode = code;
+                    if (!StringUtils.isEmpty(table)) {
+                        fieldDictCode = String.format("%s,%s,%s", table, text, code);
+                    }
+
+                    String value = record.getString(field.getName());
+                    if (oConvertUtils.isNotEmpty(value)) {
+                        List<DictModel> dictModels = translText.get(fieldDictCode);
+                        if(dictModels==null || dictModels.size()==0){
+                            continue;
+                        }
+
+                        String textValue = this.translDictText(dictModels, value);
+                        log.debug(" 字典Val : " + textValue);
+                        log.debug(" __翻译字典字段__ " + field.getName() + CommonConstant.DICT_TEXT_SUFFIX + "： " + textValue);
+
+                        // TODO-sun 测试输出，待删
+                        log.debug(" ---- dictCode: " + fieldDictCode);
+                        log.debug(" ---- value: " + value);
+                        log.debug(" ----- text: " + textValue);
+                        log.debug(" ---- dictModels: " + JSON.toJSONString(dictModels));
+
+                        record.put(field.getName() + CommonConstant.DICT_TEXT_SUFFIX, textValue);
+                    }
+                }
+            }
+
+            ((IPage) ((Result) result).getResult()).setRecords(items);
+        }
+
+    }
+    return result;
+}
+
+
+
+No.1 generated result --------------------------
+
+@Test
+public void parseDictTextTest() {
+    // Create a mock Result object
+    Result result = new Result();
+    
+    // Create a mock IPage object
+    IPage iPage = new IPage();
+    
+    // Set up records for the IPage
+    List<Object> records = new ArrayList<>();
+    // Add mock records to the list
+    records.add(new Object());
+    records.add(new Object());
+    iPage.setRecords(records);
+    
+    // Set the IPage as the result of the Result object
+    result.setResult(iPage);
+    
+    // Call the parseDictText method with the mock Result object
+    Object parsedResult = parseDictText(result);
+    
+    // Assert that the parsedResult is not null
+    assertNotNull(parsedResult);
+}
+
+
+No.2 generated result --------------------------
+
+@Test
+public void parseDictTextTest() {
+    // Create a new object for testing
+    Object result = new Object();
+    
+    // Call the parseDictText method and assert the result
+    Object actualResult = parseDictText(result);
+    
+    // Add assertions for expected results
+    // ...
+}
+
+
+No.3 generated result --------------------------
+
+@Test
+public void parseDictTextTest() {
+    // Create a mock Result object
+    Result mockResult = new Result();
+    IPage mockIPage = new IPage();
+    mockResult.setResult(mockIPage);
+    
+    // Create a list of mock records
+    List<Object> mockRecords = new ArrayList<>();
+    // Add mock records to the list
+    
+    // Set the mock records to the mock IPage
+    mockIPage.setRecords(mockRecords);
+    
+    // Call the parseDictText method with the mock result and assert the expected output
+    Object result = parseDictText(mockResult);
+    // Assert the expected output
+    assertEquals(expectedOutput, result);
+}
+
+
+
+No.4 generated result --------------------------
+
+@Test
+public void parseDictTextTest() {
+    // Create a test case for the parseDictText method.
+    // For example, initialize the input and expected output,
+    // call the parseDictText method, and compare the actual output with the expected output.
+    // Assert.assertEquals(expectedOutput, actualOutput);
+}
+
+
+No.5 generated result --------------------------
+
+@Test
+public void parseDictTextTest() {
+    // Arrange
+    Object result = new Result();  // assuming Result is a class
+    DictAspect dictAspect = new DictAspect();
+    
+    // Act
+    Object parsedResult = dictAspect.parseDictText(result);
+    
+    // Assert
+    assertNotNull(parsedResult);
+    // Add more assertions as needed
+}
+
+
+No.6 generated result --------------------------
+
+@Test
+public void parseDictTextTest() {
+    // Create a test case and mock the necessary objects
+    // Write the necessary assertions to test the parseDictText method
+}
+
+
+No.7 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DictAspectTest {
+    @Test
+    public void parseDictTextTest() {
+        // Create an instance of the class to be tested
+        DictAspect dictAspect = new DictAspect();
+
+        // Create test data and test the parseDictText method
+        Object testData = new Object();
+        Object result = dictAspect.parseDictText(testData);
+
+        // Add assertions to verify the result
+        assertNotNull(result);
+        // Add more specific assertions based on the expected behavior of the method
+        // For example, check if the result is of the expected type, has certain properties, etc.
+    }
+}
+
+
+No.8 generated result --------------------------
+
+@Test
+public void parseDictTextTest() {
+    // Instantiate the object to be tested
+    Object result = new Object();
+    // Invoke the method being tested
+    Object testResult = parseDictText(result);
+    // Assert the expected result
+    assertNotNull(testResult);
+}
+
+
+No.9 generated result --------------------------
+
+@Test
+public void parseDictTextTest() {
+    // Arrange
+    // Create a mock Result object
+    Result mockResult = new Result();
+
+    // Act
+    Object result = parseDictText(mockResult);
+
+    // Assert
+    assertNotNull(result);
+    // Add more assertions based on the expected behavior of parseDictText
+}
+
+
+No.10 generated result --------------------------
+
+@Test
+public void parseDictTextTest() {
+    // Set up the test data
+    Object result = new Result();  // Substitute with appropriate data
+    DictAspect aspect = new DictAspect();
+    
+    // Call the method to be tested
+    Object output = aspect.parseDictText(result);
+    
+    // Perform assertions on the output
+    // Add assertions based on the expected behavior of parseDictText
+    // For example:
+    assertNotNull(output);
+}
+
+

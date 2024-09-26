@@ -1,0 +1,730 @@
+Source code: 
+
+
+@SuppressWarnings("unchecked")
+public static <K, V> Map<K, V> mapByKey(String key, List<?> list) {
+  Map<K, V> map = new HashMap<>();
+  if (CollectionUtils.isEmpty(list)) {
+    return map;
+  }
+  try {
+    Class<?> clazz = list.get(0).getClass();
+    Field field = deepFindField(clazz, key);
+    if (field == null) {
+        throw new IllegalArgumentException("Could not find the key");
+    }
+    field.setAccessible(true);
+    for (Object o : list) {
+      map.put((K) field.get(o), (V) o);
+    }
+  } catch (Exception e) {
+    throw new BeanUtilsException(e);
+  }
+  return map;
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.utils;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.lang.reflect.Field;
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@ExtendWith(MockitoExtension.class)
+public class BeanUtilsTest {
+
+    private static class TestClass {
+        private String id;
+        private String value;
+
+        public TestClass(String id, String value) {
+            this.id = id;
+            this.value = value;
+        }
+    }
+
+    private List<TestClass> testList;
+    
+    @BeforeEach
+    public void setUp() {
+        testList = new ArrayList<>();
+        testList.add(new TestClass("key1", "value1"));
+        testList.add(new TestClass("key2", "value2"));
+    }
+
+    @Test
+    public void mapByKeyTest() {
+        // Testing if the map is created correctly
+        Map<String, TestClass> map = BeanUtils.mapByKey("id", testList);
+        assertNotNull(map);
+        assertEquals(2, map.size());
+        assertSame(testList.get(0), map.get("key1"));
+        assertSame(testList.get(1), map.get("key2"));
+        
+        // Testing for an empty list
+        List<TestClass> emptyList = Collections.emptyList();
+        assertTrue(BeanUtils.mapByKey("id", emptyList).isEmpty());
+        
+        // Testing for null input
+        assertThrows(IllegalArgumentException.class, () -> BeanUtils.mapByKey("id", null));
+
+        // Testing for a non-existing key
+        assertThrows(IllegalArgumentException.class, () -> BeanUtils.mapByKey("nonExistingKey", testList));
+
+        // Optionally: Testing for a private or protected field can be done if the class is accordingly designed
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.utils;
+
+import org.junit.jupiter.api.*;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BeanUtilsTest {
+
+    private static class TestData {
+        private String id;
+        private String value;
+
+        public TestData(String id, String value) {
+            this.id = id;
+            this.value = value;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue(String value) {
+            this.value = value;
+        }
+    }
+
+    @Test
+    public void mapByKeyTest() {
+        // Create a list of test objects
+        List<TestData> dataList = new ArrayList<>();
+        dataList.add(new TestData("1", "Test1"));
+        dataList.add(new TestData("2", "Test2"));
+        dataList.add(new TestData("3", "Test3"));
+
+        // Case 1: Test mapping by a valid key
+        Map<String, TestData> result = BeanUtils.mapByKey("id", dataList);
+        assertEquals(3, result.size(), "The size of the result map should be 3");
+        assertTrue(result.containsKey("1"), "The map should contain the key '1'");
+        assertTrue(result.containsKey("2"), "The map should contain the key '2'");
+        assertTrue(result.containsKey("3"), "The map should contain the key '3'");
+        assertEquals("Test1", result.get("1").getValue(), "The value associated with key '1' should be 'Test1'");
+        
+        // Case 2: Test mapping with an empty list
+        List<TestData> emptyList = new ArrayList<>();
+        Map<String, TestData> emptyResult = BeanUtils.mapByKey("id", emptyList);
+        assertTrue(emptyResult.isEmpty(), "The result map should be empty");
+
+        // Case 3: Test mapping by an invalid key
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            BeanUtils.mapByKey("nonExistentKey", dataList);
+        }, "An IllegalArgumentException should be thrown if the key does not exist");
+
+        // Case 4: Test mapping with null list
+        Map<String, TestData> nullResult = BeanUtils.mapByKey("id", null);
+        assertTrue(nullResult.isEmpty(), "The result map should be empty when the input list is null");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.utils;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+public class BeanUtilsTest {
+
+    private static class SampleObject {
+        private String id;
+        private String value;
+
+        public SampleObject(String id, String value) {
+            this.id = id;
+            this.value = value;
+        }
+        
+        public String getId() {
+            return id;
+        }
+
+        // Other getters and setters for the properties if needed
+    }
+
+    @Test
+    public void mapByKeyTest() {
+        // Create a list of sample objects
+        List<SampleObject> sampleList = Arrays.asList(
+            new SampleObject("1", "First"),
+            new SampleObject("2", "Second"),
+            new SampleObject("3", "Third")
+        );
+
+        // Call the method under test
+        Map<String, SampleObject> result = BeanUtils.mapByKey("id", sampleList);
+
+        // Verify the size of the resulting map
+        assertEquals(3, result.size(), "Map should contain 3 elements");
+
+        // Verify that keys and values are correctly mapped
+        for (SampleObject obj : sampleList) {
+            assertTrue(result.containsKey(obj.getId()), "Map should contain the key " + obj.getId());
+            assertEquals(obj, result.get(obj.getId()), "Value should be mapped to the key " + obj.getId());
+        }
+        
+        // Verify behavior with empty list
+        assertTrue(BeanUtils.mapByKey("id", Collections.emptyList()).isEmpty(), "Map should be empty when given an empty list");
+
+        // Verify IllegalArgumentException is thrown with a null list
+        assertThrows(IllegalArgumentException.class, () -> BeanUtils.mapByKey("id", null), "Should throw an IllegalArgumentException for null list");
+        
+        // Verify exception is thrown with a non-existing key
+        assertThrows(IllegalArgumentException.class, () -> BeanUtils.mapByKey("nonExistingKey", sampleList), "Should throw an IllegalArgumentException for a non-existing key");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.utils;
+
+import org.junit.jupiter.api.*;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class ExampleObject {
+    private String key;
+    private Integer value;
+    
+    public ExampleObject(String key, Integer value) {
+        this.key = key;
+        this.value = value;
+    }
+    
+    // Getter and setters as needed
+    public String getKey() {
+        return key;
+    }
+    
+    public Integer getValue() {
+        return value;
+    }
+}
+
+public class BeanUtilsTest {
+
+    @Test
+    public void mapByKeyTest() {
+        // Create a list of example objects
+        List<ExampleObject> exampleList = new ArrayList<>();
+        exampleList.add(new ExampleObject("key1", 1));
+        exampleList.add(new ExampleObject("key2", 2));
+        exampleList.add(new ExampleObject("key3", 3));
+
+        // Call mapByKey method
+        Map<String, ExampleObject> resultMap = BeanUtils.mapByKey("key", exampleList);
+
+        // Assert that the resultMap is not null and has the correct size
+        assertNotNull(resultMap, "The resulting map should not be null.");
+        assertEquals(3, resultMap.size(), "The resulting map should have 3 entries.");
+
+        // Assert that the map contains all keys from the example list
+        assertTrue(resultMap.containsKey("key1"), "Resulting map should contain key 'key1'.");
+        assertTrue(resultMap.containsKey("key2"), "Resulting map should contain key 'key2'.");
+        assertTrue(resultMap.containsKey("key3"), "Resulting map should contain key 'key3'.");
+
+        // Assert that the map values match the objects from the list
+        assertEquals(exampleList.get(0), resultMap.get("key1"), "Map should map 'key1' to the first example object.");
+        assertEquals(exampleList.get(1), resultMap.get("key2"), "Map should map 'key2' to the second example object.");
+        assertEquals(exampleList.get(2), resultMap.get("key3"), "Map should map 'key3' to the third example object.");
+
+        // Test with an empty list
+        List<ExampleObject> emptyList = new ArrayList<>();
+        Map<String, ExampleObject> emptyResultMap = BeanUtils.mapByKey("key", emptyList);
+        assertTrue(emptyResultMap.isEmpty(), "Resulting map from an empty list should be empty.");
+
+        // Test with invalid key, expect an exception
+        final List<ExampleObject> finalList = exampleList;
+        assertThrows(IllegalArgumentException.class,
+            () -> { BeanUtils.mapByKey("nonExistentKey", finalList); },
+            "An IllegalArgumentException should be thrown when the key doesn't exist in the class.");
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.utils;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+class Item {
+    private String id;
+    private String value;
+
+    public Item(String id, String value) {
+        this.id = id;
+        this.value = value;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getValue() {
+        return value;
+    }
+}
+
+public class BeanUtilsTest {
+    @Test
+    public void mapByKeyTest() {
+        // Arrange
+        List<Item> itemList = Arrays.asList(new Item("1", "One"), new Item("2", "Two"), new Item("3", "Three"));
+        String key = "id"; // Field to use as map key
+
+        // Act
+        Map<String, Item> resultMap = BeanUtils.mapByKey(key, itemList);
+
+        // Assert
+        assertNotNull(resultMap);
+        assertEquals(3, resultMap.size());
+        assertTrue(resultMap.containsKey("1"));
+        assertTrue(resultMap.containsKey("2"));
+        assertTrue(resultMap.containsKey("3"));
+        assertEquals("One", resultMap.get("1").getValue());
+        assertEquals("Two", resultMap.get("2").getValue());
+        assertEquals("Three", resultMap.get("3").getValue());
+    }
+
+    @Test
+    public void mapByKeyTestWithEmptyList() {
+        // Arrange
+        List<Item> itemList = Arrays.asList();
+        String key = "id";
+
+        // Act
+        Map<String, Item> resultMap = BeanUtils.mapByKey(key, itemList);
+
+        // Assert
+        assertNotNull(resultMap);
+        assertTrue(resultMap.isEmpty());
+    }
+
+    @Test
+    public void mapByKeyTestWithInvalidKey() {
+        // Arrange
+        List<Item> itemList = Arrays.asList(new Item("1", "One"));
+        String key = "nonExistentKey";
+
+        // Act / Assert
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            BeanUtils.mapByKey(key, itemList);
+        });
+        assertEquals("Could not find the key", exception.getMessage());
+    }
+
+    @Test
+    public void mapByKeyTestWithNullList() {
+        // Arrange
+        String key = "id";
+
+        // Act
+        Map<String, Item> resultMap = BeanUtils.mapByKey(key, null);
+
+        // Assert
+        assertNotNull(resultMap);
+        assertTrue(resultMap.isEmpty());
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.utils;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+public class BeanUtilsTest {
+
+    private static class TestEntity {
+        private String id;
+        private String value;
+
+        public TestEntity(String id, String value) {
+            this.id = id;
+            this.value = value;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public String getValue() {
+            return value;
+        }
+    }
+
+    @Test
+    public void mapByKeyTest() {
+        // Set up test data
+        List<TestEntity> entityList = Arrays.asList(
+            new TestEntity("1", "value1"),
+            new TestEntity("2", "value2"),
+            new TestEntity("3", "value3")
+        );
+
+        // Invoke method
+        Map<String, TestEntity> result = BeanUtils.mapByKey("id", entityList);
+
+        // Verify that the result map is constructed correctly
+        assertNotNull(result, "The result should not be null.");
+        assertEquals(3, result.size(), "The map should contain 3 entries.");
+
+        // Verify that each entity is mapped correctly using the 'id' field
+        for (TestEntity entity : entityList) {
+            TestEntity mappedEntity = result.get(entity.getId());
+            assertNotNull(mappedEntity, "The mapped entity should not be null.");
+            assertEquals(entity.getId(), mappedEntity.getId(), "The IDs should match.");
+            assertEquals(entity.getValue(), mappedEntity.getValue(), "The values should match.");
+        }
+
+        // Test with an empty list
+        List<TestEntity> emptyList = Arrays.asList();
+        Map<String, TestEntity> emptyResult = BeanUtils.mapByKey("id", emptyList);
+        assertTrue(emptyResult.isEmpty(), "The result should be an empty map.");
+        
+        // Test with invalid key
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            BeanUtils.mapByKey("nonExistentKey", entityList);
+        });
+        assertEquals("Could not find the key", exception.getMessage(), "Exception message should match.");
+
+        // Test with null list
+        Map<String, TestEntity> nullResult = BeanUtils.mapByKey("id", null);
+        assertNotNull(nullResult, "The result should not be null.");
+        assertTrue(nullResult.isEmpty(), "The result should be an empty map.");
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.utils;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+public class BeanUtilsTest {
+
+    static class TestClass {
+        private String id;
+        private String value;
+
+        public TestClass(String id, String value) {
+            this.id = id;
+            this.value = value;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public String getValue() {
+            return value;
+        }
+    }
+
+    @Test
+    public void mapByKeyTest() {
+        // Prepare test objects
+        TestClass obj1 = new TestClass("1", "A");
+        TestClass obj2 = new TestClass("2", "B");
+        List<TestClass> list = Arrays.asList(obj1, obj2);
+
+        // Execute the method with the 'id' field as the key
+        Map<String, TestClass> result = BeanUtils.mapByKey("id", list);
+
+        // Verification
+        assertNotNull(result, "The map should not be null.");
+        assertEquals(2, result.size(), "The map should have 2 entries.");
+        assertTrue(result.containsKey(obj1.getId()), "The map should contain the ID of the first object.");
+        assertTrue(result.containsKey(obj2.getId()), "The map should contain the ID of the second object.");
+        assertEquals(obj1, result.get(obj1.getId()), "The map should map the right object to its ID.");
+        assertEquals(obj2, result.get(obj2.getId()), "The map should map the right object to its ID.");
+
+        // Test with an empty list
+        result = BeanUtils.mapByKey("id", Collections.emptyList());
+        assertTrue(result.isEmpty(), "The map should be empty when provided an empty list.");
+
+        // Test with a null list
+        result = BeanUtils.mapByKey("id", null);
+        assertTrue(result.isEmpty(), "The map should be empty when provided a null list.");
+
+        // Test with non-existing key
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            BeanUtils.mapByKey("nonExistingKey", list);
+        });
+        assertEquals("Could not find the key", exception.getMessage(), "An IllegalArgumentException should be thrown if the key doesn't exist.");
+
+        // Test with security exception while setting field accessible
+        Exception beanException = assertThrows(BeanUtilsException.class, () -> {
+            // Mock behavior that simulates a SecurityException
+            Field field = TestClass.class.getDeclaredField("id");
+            field.setAccessible(false);
+            BeanUtils.mapByKey("id", list);
+        });
+        assertNotNull(beanException.getCause(), "A BeanUtilsException with a cause should be thrown when the field can't be accessed.");
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.utils;
+
+import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class BeanUtilsTest {
+
+    private static class MockObject {
+        private String id;
+        private String value;
+
+        public MockObject(String id, String value) {
+            this.id = id;
+            this.value = value;
+        }
+        
+        // Getters and setters for id and value
+        public String getId() {
+            return id;
+        }
+        
+        public void setId(String id) {
+            this.id = id;
+        }
+        
+        public String getValue() {
+            return value;
+        }
+        
+        public void setValue(String value) {
+            this.value = value;
+        }
+    }
+
+    @Test
+    public void mapByKeyTest() {
+        List<MockObject> mockList = new ArrayList<>(Arrays.asList(
+            new MockObject("1", "A"),
+            new MockObject("2", "B"),
+            new MockObject("3", "C")
+        ));
+
+        Map<String, MockObject> resultMap = BeanUtils.mapByKey("id", mockList);
+
+        assertNotNull(resultMap, "The result map should not be null.");
+        assertEquals(3, resultMap.size(), "The size of the result map should match the list size.");
+        assertEquals("A", resultMap.get("1").getValue(), "Value should match for key 1.");
+        assertEquals("B", resultMap.get("2").getValue(), "Value should match for key 2.");
+        assertEquals("C", resultMap.get("3").getValue(), "Value should match for key 3.");
+        
+        // Test when collection is empty
+        List<MockObject> emptyList = new ArrayList<>();
+        Map<String, MockObject> emptyResultMap = BeanUtils.mapByKey("id", emptyList);
+        assertTrue(emptyResultMap.isEmpty(), "Result map should be empty for an empty list.");
+
+        // Test when the key doesn't exist
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+            BeanUtils.mapByKey("unknownKey", mockList), "Expected an IllegalArgumentException to be thrown"
+        );
+        assertEquals("Could not find the key", exception.getMessage(), "The exception message should match.");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.utils;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+public class BeanUtilsTest {
+    @Test
+    public void mapByKeyTest() {
+        // Create a simple class for testing
+        class Person {
+            public String name;
+            public int age;
+            
+            public Person(String name, int age) {
+                this.name = name;
+                this.age = age;
+            }
+        }
+
+        // Create a list of Persons
+        List<Person> people = Arrays.asList(new Person("Alice", 30), new Person("Bob", 25));
+
+        // Test mapByKey with valid key
+        Map<String, Person> mapByName;
+        try {
+            mapByName = BeanUtils.mapByKey("name", people);
+            assertEquals(2, mapByName.size(), "Map should contain 2 entries");
+            assertTrue(mapByName.containsKey("Alice"), "Map should contain key 'Alice'");
+            assertTrue(mapByName.containsKey("Bob"), "Map should contain key 'Bob'");
+        } catch (Exception e) {
+            fail("Exception should not be thrown for valid key");
+        }
+
+        // Test mapByKey with invalid key
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+                BeanUtils.mapByKey("nonExistingKey", people),
+            "An IllegalArgumentException should be thrown when key does not exist"
+        );
+
+        // Test mapByKey with null key
+        Exception nullKeyException = assertThrows(IllegalArgumentException.class, () ->
+                BeanUtils.mapByKey(null, people),
+            "An IllegalArgumentException should be thrown when key is null"
+        );
+
+        // Test mapByKey with empty list
+        Map<String, Person> emptyMap = BeanUtils.mapByKey("name", Collections.emptyList());
+        assertTrue(emptyMap.isEmpty(), "Resulting map from an empty list should be empty");
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.utils;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+class ExampleObject {
+    private String id;
+    private String value;
+
+    public ExampleObject(String id, String value) {
+        this.id = id;
+        this.value = value;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getValue() {
+        return value;
+    }
+}
+
+public class BeanUtilsTest {
+    @Test
+    public void mapByKeyTest() {
+        // Prepare a list of objects to work with
+        List<ExampleObject> exampleObjects = new ArrayList<>();
+        exampleObjects.add(new ExampleObject("1", "One"));
+        exampleObjects.add(new ExampleObject("2", "Two"));
+        exampleObjects.add(new ExampleObject("3", "Three"));
+
+        // Test mapping by a valid key
+        Map<String, ExampleObject> mapById = BeanUtils.mapByKey("id", exampleObjects);
+        assertNotNull(mapById);
+        assertEquals(3, mapById.size());
+        assertEquals("One", mapById.get("1").getValue());
+        assertEquals("Two", mapById.get("2").getValue());
+        assertEquals("Three", mapById.get("3").getValue());
+
+        // Test with an empty list
+        List<ExampleObject> emptyList = new ArrayList<>();
+        Map<String, ExampleObject> emptyMap = BeanUtils.mapByKey("id", emptyList);
+        assertNotNull(emptyMap);
+        assertTrue(emptyMap.isEmpty());
+
+        // Test with an invalid key - expecting an IllegalArgumentException
+        assertThrows(IllegalArgumentException.class, () -> {
+            BeanUtils.mapByKey("nonExistentKey", exampleObjects);
+        });
+
+        // Test for an exception being thrown for null list input - expecting a NullPointerException or specific BeanUtilsException
+        assertThrows(Exception.class, () -> {
+            BeanUtils.mapByKey("id", null);
+        });
+    }
+}
+
+

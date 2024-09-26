@@ -1,0 +1,869 @@
+Source code: 
+
+//---------------------------------------------------------------------------------------
+// Main blob analysis routine
+//---------------------------------------------------------------------------------------
+// RegionData[0] is the border. It has Property[BLOBPARENT] = 0. 
+
+public int BlobAnalysis(IplImage Src,           // input image
+            int Col0, int Row0,                 // start of ROI
+            int Cols, int Rows,                 // size of ROI
+            int Border,                         // border color (0 = black; 1 = white)
+            int MinArea)                        // minimum region area
+{
+    CvMat SrcMat = Src.asCvMat();
+    int SrcCols = SrcMat.cols();
+    int SrcRows = SrcMat.rows();
+    
+    if(Col0 < 0) Col0 = 0;
+    if(Row0 < 0) Row0 = 0;
+    if(Cols < 0) Cols = SrcCols;
+    if(Rows < 0) Rows = SrcRows;
+    if(Col0 + Cols > SrcCols) Cols = SrcCols - Col0;
+    if(Row0 + Rows > SrcRows) Rows = SrcRows - Row0;
+
+    if(Cols > BLOBCOLCOUNT || Rows > BLOBROWCOUNT )
+    {
+        System.out.println("Error in Class Blobs: Image too large: Edit Blobs.java");
+        System.exit(666);
+        return 0;
+    }
+    
+    // Initialization
+    int FillLabel = 0;
+    int FillColor = 0; if(Border > 0) { FillColor = 1; }
+    LabelA = LabelB = LabelC = LabelD = 0;
+    ColorA = ColorB = ColorC = ColorD = FillColor;
+    for(int k = 0; k < BLOBTOTALCOUNT; k++) SubsumedLabel[k] = -1;
+    
+    // Initialize border region
+    MaxLabel = 0;
+    double [] BorderRegion = RegionData[0];
+    BorderRegion[BLOBLABEL] = 0.0;
+    BorderRegion[BLOBPARENT] = -1.0;
+    BorderRegion[BLOBAREA] = Rows + Cols + 4;   // Top, left, and 4 corners
+    BorderRegion[BLOBCOLOR] = FillColor;
+    BorderRegion[BLOBSUMX] = 0.5 * ( (2.0 + Cols) * (Cols - 1.0) ) - Rows - 1 ;
+    BorderRegion[BLOBSUMY] = 0.5 * ( (2.0 + Rows) * (Rows - 1.0) ) - Cols - 1 ;
+    BorderRegion[BLOBMINX] = -1;
+    BorderRegion[BLOBMINY] = -1;
+    BorderRegion[BLOBMAXX] = Cols + 1.0;
+    BorderRegion[BLOBMAXY] = Rows + 1.0;
+    System.arraycopy(BorderRegion,0,RegionData[0],0,BLOBDATACOUNT); // RegionData[0] <- BorderRegion;
+    
+    //  The cells are identified this way
+    //          Last |AB|
+    //          This |CD|
+    //
+    // With 4 connectivity, there are 8 possibilities for the cells:
+    //                      No color transition     Color transition
+    //          Case              1  2  3  4          5  6  7  8 
+    //          Last Row        |pp|pp|pq|pq|       |pp|pp|pq|pq|   
+    //          This Row        |pP|qQ|pP|qQ|       |pQ|qP|pQ|qP|
+    //
+    // Region numbers are p, q, r, x; where p<>q
+    // Upper case letter is the current element at column=x row=y
+    // Color is 0 or 1      (1 stands for 255 in the actual image)
+    // Note that Case 4 is complicated because it joins two regions
+    //--------------------------
+    // Case 1: Colors A=B; C=D; A=C     
+    // Case 2: Colors A=B; C=D; A<>C    
+    // Case 3: Colors A<>B;C=D; A=C     
+    // Case 4: Colors A<>B;C=D; A<>C    
+    // Case 5: Colors A=B; C<>D; A=C    
+    // Case 6: Colors A=B; C<>D; A<>C   
+    // Case 7: Colors A<>B;C<>D; A=C    
+    // Case 8: Colors A<>B;C<>D; A<>C   
+    //--------------------------
+                
+    // Loop over rows of ROI. irow = Row0 is 1st row of image; irow = Row0+Row is last row of image.
+    for(int irow = Row0; irow < Row0+Rows; irow++)  // index within Src
+    {
+        jrow = irow - Row0; // index within ROI. 0 is first row. Rows is last row.
+        
+        // Loop over columns of ROI.
+        for(int icol = Col0; icol < Col0+Cols; icol++)  // index within Src
+        {
+            jcol = icol - Col0; // index within ROI
+
+            // initialize
+            ColorA = ColorB = ColorC = FillColor;
+            LabelA = LabelB = LabelC = LabelD = 0;
+            ColorD = (int) SrcMat.get(jrow,jcol);       // fetch color of cell
+        
+            if(jrow == 0 || jcol == 0)  // first column or row
+            {
+                if(jcol > 0)
+                {
+                    ColorC = (int) SrcMat.get(jrow,jcol-1);
+                    LabelC = LabelMat[jrow][jcol-1];
+                }
+                if(jrow > 0)
+                {
+                    ColorB = (int) SrcMat.get(jrow-1,jcol);
+                    LabelB = LabelMat[jrow-1][jcol];
+                }
+            }
+            else
+            {
+                ColorA = (int) SrcMat.get(jrow-1,jcol-1); if(ColorA > 0) ColorA = 1;
+                ColorB = (int) SrcMat.get(jrow-1,jcol); if(ColorB > 0) ColorB = 1;
+                ColorC = (int) SrcMat.get(jrow,jcol-1); if(ColorC > 0) ColorC = 1;
+                LabelA = LabelMat[jrow-1][jcol-1];
+                LabelB = LabelMat[jrow-1][jcol];
+                LabelC = LabelMat[jrow][jcol-1];
+            }   
+            if(ColorA > 0) ColorA = 1;
+            if(ColorB > 0) ColorB = 1;
+            if(ColorC > 0) ColorC = 1;
+            if(ColorD > 0) ColorD = 1;
+                
+            // Determine Case
+            int Case = 0;
+            if(ColorA == ColorB)
+            {
+                if(ColorC == ColorD) { if(ColorA == ColorC) Case = 1; else Case = 2; }
+                else { if(ColorA == ColorC) Case = 5; else Case = 6; }
+            }
+            else
+            {
+                if(ColorC == ColorD) { if(ColorA == ColorC) Case = 3; else Case = 4; }
+                else { if(ColorA == ColorC) Case = 7; else Case = 8; }
+            }
+
+            // Take appropriate action
+            if(Case == 1) { OldRegion(LabelC, -1, -1); }
+            else if(Case == 2 || Case == 3) { OldRegion(LabelC, LabelB, LabelC); }
+            else if(Case == 5 || Case == 8) // Isolated
+            {
+                if((jrow == Rows || jcol == Cols) && ColorD == FillColor) { OldRegion(0, -1, -1); } // attached to border region 0
+                else NewRegion(LabelB);
+            }
+            else if(Case == 6 || Case == 7) { OldRegion(LabelB, LabelB, LabelC); }
+            else            // Case 4 - The complicated situation
+            {
+                int LabelBRoot = SubsumptionChain(LabelB); 
+                int LabelCRoot = SubsumptionChain(LabelC);
+                int LabelRoot = Math.min(LabelBRoot, LabelCRoot);
+                int LabelX;
+                if(LabelBRoot < LabelCRoot) { OldRegion(LabelB, -1, -1); LabelX = LabelC; }
+                else { OldRegion(LabelC, -1, -1); LabelX = LabelB; }
+                int NextLabelX = LabelX;
+                while(LabelRoot < LabelX)
+                {
+                    NextLabelX = SubsumedLabel[LabelX];
+                    SubsumedLabel[LabelX] = LabelRoot;
+                    LabelX = NextLabelX;
+                }
+            }
+                
+            // Last column or row. Final corner was handled earlier in Cases 5 and 8.
+            if((jrow == Rows || jcol == Cols) && ColorD == FillColor)
+            {
+                if(jcol < Cols)         // bottom row   
+                {
+                    if(ColorC != FillColor)     // Subsume B chain to border region 0
+                    {
+                        int LabelRoot = SubsumptionChain(LabelB);
+                        SubsumedLabel[LabelRoot] = 0;
+                    }
+                }
+                else if(jrow < Rows)    // right column
+                {
+                    if(ColorB != FillColor)     // Subsume C chain to border region 0
+                    {
+                        int LabelRoot = SubsumptionChain(LabelC);
+                        SubsumedLabel[LabelRoot] = 0;
+                    }
+                }
+                OldRegion(0, -1, -1);   // attached to border region 0
+            }
+
+            LabelMat[jrow][jcol] = LabelD;
+                
+        }
+    }
+
+    // Compute Condensation map
+    int Offset = 0;
+    for(int Label = 1; Label <= MaxLabel; Label++)
+    {
+        if(SubsumedLabel[Label] > -1) Offset++;
+        CondensationMap[Label] = Label - Offset;
+    }
+
+    // Subsume regions that were flagged as connected; Perimeters add
+    for(int Label = 1; Label <= MaxLabel; Label++)
+    {
+        int BetterLabel = SubsumptionChain(Label);
+        if(BetterLabel != Label) Subsume(BetterLabel, Label, 1);
+    }   
+
+    // Condense subsumed regions
+    int NewMaxLabel = 0;
+    for(int OldLabel = 1; OldLabel <= MaxLabel; OldLabel++)
+    {
+        if(SubsumedLabel[OldLabel] < 0) // Renumber valid regions only
+        {
+            double [] OldRegion = RegionData[OldLabel];
+            int OldParent = (int) OldRegion[BLOBPARENT];
+            int NewLabel = CondensationMap[OldLabel];
+            int NewParent = SubsumptionChain(OldParent);
+            NewParent = CondensationMap[NewParent];
+            OldRegion[BLOBLABEL] = (double) NewLabel;
+            OldRegion[BLOBPARENT] = (double) NewParent;
+            System.arraycopy(OldRegion,0,RegionData[NewLabel],0,BLOBDATACOUNT); //RegionData[NewLabel] <- ThisRegion;
+            NewMaxLabel = NewLabel;
+        }
+    }
+
+    // Zero out unneeded high labels
+    for(int Label = NewMaxLabel+1; Label <= MaxLabel; Label++) ResetRegion(Label);
+    MaxLabel = NewMaxLabel;
+    
+    // Flag for subsumption regions that have too small area
+    for(int Label = MaxLabel; Label > 0; Label--)
+    {
+        double [] ThisRegion = RegionData[Label];
+        int ThisArea = (int) ThisRegion[BLOBAREA];
+        if(ThisArea < MinArea)
+        {
+            int ThisParent = (int) ThisRegion[BLOBPARENT];
+            SubsumedLabel[Label] =  ThisParent;             // Flag this label as having been subsumed
+        }
+        else SubsumedLabel[Label] =  -1;
+    }
+    
+    // Compute Condensation map
+    Offset = 0;
+    for(int Label = 1; Label <= MaxLabel; Label++)
+    {
+        if(SubsumedLabel[Label] > -1) Offset++;
+        CondensationMap[Label] = Label - Offset;      
+    }
+
+    // Subsume regions that were flagged as enclosed; Perimeters subtract
+    for(int Label = 1; Label <= MaxLabel; Label++)
+    {
+        int BetterLabel = SubsumptionChain(Label);
+        if(BetterLabel != Label) Subsume(BetterLabel, Label, -1);
+    }   
+
+    // Condense subsumed regions
+    for(int OldLabel = 1; OldLabel <= MaxLabel; OldLabel++)
+    {
+        if(SubsumedLabel[OldLabel] < 0) // Renumber valid regions only
+        {
+            double [] OldRegion = RegionData[OldLabel];
+            int OldParent = (int) OldRegion[BLOBPARENT];
+            int NewLabel = CondensationMap[OldLabel];
+            int NewParent = SubsumptionChain(OldParent);
+            NewParent = CondensationMap[NewParent];
+            OldRegion[BLOBLABEL] = (double) NewLabel;
+            OldRegion[BLOBPARENT] = (double) NewParent;
+            System.arraycopy(OldRegion,0,RegionData[NewLabel],0,BLOBDATACOUNT); //RegionData[NewLabel] <- ThisRegion;
+            NewMaxLabel = NewLabel;
+        }
+    }
+    
+    // Zero out unneeded high labels
+    for(int Label = NewMaxLabel+1; Label <= MaxLabel; Label++) ResetRegion(Label);
+    MaxLabel = NewMaxLabel;
+
+    // Normalize summation fields into moments 
+    for(int Label = 0; Label <= MaxLabel; Label++)
+    {
+        double [] ThisRegion = RegionData[Label];
+        
+        // Extract fields
+        double Area = ThisRegion[BLOBAREA];
+        double SumX = ThisRegion[BLOBSUMX];
+        double SumY = ThisRegion[BLOBSUMY];
+        double SumXX = ThisRegion[BLOBSUMXX];
+        double SumYY = ThisRegion[BLOBSUMYY];
+        double SumXY = ThisRegion[BLOBSUMXY];
+        
+        // Get averages
+        SumX /= Area;
+        SumY /= Area;
+        SumXX /= Area;
+        SumYY /= Area;
+        SumXY /= Area;
+        
+        // Create moments
+        SumXX -= SumX * SumX;
+        SumYY -= SumY * SumY;
+        SumXY -= SumX * SumY;
+        if(SumXY > -1.0E-14 && SumXY < 1.0E-14) SumXY = (float) 0.0; // Eliminate roundoff error
+
+        ThisRegion[BLOBSUMX] = SumX;
+        ThisRegion[BLOBSUMY] = SumY;
+        ThisRegion[BLOBSUMXX] = SumXX;
+        ThisRegion[BLOBSUMYY] = SumYY;
+        ThisRegion[BLOBSUMXY] = SumXY;
+
+        System.arraycopy(ThisRegion,0,RegionData[Label],0,BLOBDATACOUNT);   // RegionData[Label] <- ThisRegion;
+    }
+
+    // Adjust border region
+    BorderRegion = RegionData[0];
+    BorderRegion[BLOBSUMXX] = BorderRegion[BLOBSUMYY] = BorderRegion[BLOBSUMXY] = 0;    // Mark invalid fields
+    System.arraycopy(BorderRegion,0,RegionData[0],0,BLOBDATACOUNT); // RegionData[0] <- BorderRegion;
+    
+    return MaxLabel;
+}
+
+
+
+No.1 generated result --------------------------
+
+@Test
+public void BlobAnalysisTest() {
+    int MaxLabel;
+    
+    IplImage Src = null;
+    int Col0 = 1, Row0 = 2, Cols = 3, Rows = 4, Border = 5, MinArea = 6;
+    int ExpectedMaxLabel = <FILL>;
+    
+    MaxLabel = BlobAnalysis(Src, Col0, Row0, Cols, Rows, Border, MinArea);
+    
+    assertEquals(ExpectedMaxLabel, MaxLabel);
+}
+
+### Context:
+package org.bytedeco.javacv;
+import static org.bytedeco.opencv.global.opencv_core.*;
+import org.bytedeco.opencv.opencv_imgproc.*;
+import static org.bytedeco.opencv.global.opencv_imgproc.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class BlobsTest {
+    @Test
+    public void BlobAnalysisTest() {
+        <FILL>
+    }
+}
+    
+
+### Context:
+package org.bytedeco.javacv;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.awt.*;
+public class BlobsTest {
+    @Test
+    public void testBlobAnalysis() {
+        // Test data for Blob analysis
+        IplImage src = <FILL>;
+        int expectedMaxLabel = <FILL>;
+        
+        // Call the Blob Analysis function
+        int maxLabel = BlobAnalysis(src);
+        
+        // Assert that the output is as expected
+        assertEquals(expectedMaxLabel, maxLabel);
+    }
+}
+    
+
+### Response:
+
+
+No.2 generated result --------------------------
+
+    public class Blobs {
+        static int BLOBROWCOUNT;
+        static int BLOBCOLCOUNT;
+        static int BLOBTOTALCOUNT;
+        public static int BLOBLABEL;
+        public static int BLOBPARENT;
+        public static int BLOBCOLOR;
+        public static int BLOBAREA;
+        public static int BLOBPERIMETER;
+        public static int BLOBSUMX;
+        public static int BLOBSUMY;
+        public static int BLOBSUMXX;
+        public static int BLOBSUMYY;
+        public static int BLOBSUMXY;
+        public static int BLOBMINX;
+        public static int BLOBMAXX;
+        public static int BLOBMINY;
+        public static int BLOBMAXY;
+        public static int BLOBDATACOUNT;
+        public static int[][] LabelMat;
+        public static double[][] RegionData;
+        public static int MaxLabel;
+        public  PrintRegionData();
+        public  PrintRegionData(int Label0, int Label1);
+        public  ResetRegion(int Label);
+        public static int SubsumptionChain(int x);
+        public static int Subsume(int GoodLabel, int BadLabel, int PSign);
+        public static int BlobAnalysis(IplImage Src, int Col0, int Row0, int Cols, int Rows, int Border, int MinArea);
+    }
+    
+
+
+
+No.3 generated result --------------------------
+
+java
+import java.util.*;
+
+public class Blobs {
+    // Constants for indexing into region data arrays
+    public static final int BLOBROWCOUNT = 0;
+    public static final int BLOBCOLCOUNT = 1;
+    public static final int BLOBTOTALCOUNT = 2;
+    public static final int BLOBLABEL = 3;
+    public static final int BLOBPARENT = 4;
+    public static final int BLOBCOLOR = 5;
+    public static final int BLOBAREA = 6;
+    public static final int BLOBPERIMETER = 7;
+    public static final int BLOBSUMX = 8;
+    public static final int BLOBSUMY = 9;
+    public static final int BLOBSUMXX = 10;
+    public static final int BLOBSUMYY = 11;
+    public static final int BLOBSUMXY = 12;
+    public static final int BLOBMINX = 13;
+    public static final int BLOBMAXX = 14;
+    public static final int BLOBMINY = 15;
+    public static final int BLOBMAXY = 16;
+    // Constants for indexing into label matrices
+    public static final int LABELROWCOUNT = 0;
+    public static final int LABELCOLCOUNT = 1;
+    public static final int LABELTOTALCOUNT = 2;
+    
+    // Constants for indexing into region data arrays
+    public static final int ROWCOUNT = 0;
+    public static final int COLCOUNT = 1;
+    public static final int TOTALCOUNT = 2;
+    public static final int LABEL = 3;
+    public static final int PARENT = 4;
+    public static final int COLOR = 5;
+    public static final int AREA = 6;
+    public static final int PERIMETER = 7;
+    public static final int SUMX = 8;
+    public static final int SUMY = 9;
+    public static final int SUMXX = 10;
+    public static final int SUMYY = 11;
+    public static final int SUMXY = 12;
+    
+    // Variables for indexing into region data arrays
+    public static int ROWCOUNT, COLCOUNT, TOTALCOUNT, LABEL, PARENT, COLOR, AREA, PERIMETER, SUMX, SUMY, SUMXX, SUMYY, SUMXY;
+    
+    // Function to find the next region in the image that satisfies certain conditions
+    public static int NextRegion(int Parent, int Color, double MinArea, double MaxArea, int Label) {
+        // Return if there are no more regions to be found
+        if (Parent == -1) return -1;
+    
+        // Loop through all regions in the image
+        for (int j = 0; j < TOTALCOUNT; j++) {
+            // Skip if this is not the correct color
+            if ((Color != COLOR[j]) && (Color != -1)) continue;
+            
+            // If this region has not been visited and satisfies the area criteria, then return its label
+            if ((LabelMat[j][0] == 0) && (AREA[j] >= MinArea) && (AREA[j] <= MaxArea))) {
+                return LABEL[j];
+            }
+        }
+        
+        // Return -1 if no regions are found
+        return -1;
+    }
+    
+    // Function to find the previous region in the image that satisfies certain conditions
+    public static int PriorRegion(int Parent, int Color, double MinArea, double MaxArea, int Label) {
+        // Return if there are no more regions to be found
+        if (Parent == -1) return -1;
+    
+        // Loop through all regions in the image
+        for (int j = 0; j < TOTALCOUNT; j++) {
+            // Skip if this is not the correct color
+            if ((Color != COLOR[j]) && (Color != -1)) continue;
+            
+            // If this region has not been visited and satisfies the area criteria, then return its label
+            if ((LabelMat[j][0] == 0) && (AREA[j] >= MinArea) && (AREA[j] <= MaxArea))) {
+                return LABEL[j];
+            }
+        }
+        
+        // Return -1 if no regions are found
+        return -1;
+    }
+    
+    // Function to reset the region data for a given label
+    public static void ResetRegion(int Label) {
+        ROWCOUNT[Label] = 0;
+        COLCOUNT[Label] = 0;
+        TOTALCOUNT[Label] = 0;
+        LABEL[Label] = 0;
+        PARENT[Label] = -1;
+        COLOR[Label] = -1;
+        AREA[Label] = 0.0;
+        PERIMETER[Label] = 0;
+        SUMX[Label] = 0.0;
+        SUMY[Label] = 0.0;
+        SUMXX[Label] = 0.0;
+        SUMYY[Label] = 0.0;
+        SUMXY[Label] = 0.0;
+    }
+    
+    // Function to create a new region from the given parent region label
+    public static void NewRegion(int ParentLabel) {
+        int NewLabel = -1;
+        
+        // Find an unused region label and assign it to this new region
+        for (int j = 0; j < TOTALCOUNT.length; j++) {
+            if (LABEL[j] == 0) {
+                LABEL[j] = ParentLabel;
+                
+                // Return the assigned region label
+                return NewLabel = j;
+            }
+        }
+        
+        // Throw an exception if no available region labels can be found
+        throw new Exception("No available region labels.");
+    }
+    
+    // Function to create a new edge between two regions in the graph
+    public static void CreateEdge(int RegionLabel1, int RegionLabel2) {
+        
+        // Loop through all edges in the graph
+        for (int j = 0; j < EDGECOUNT; j++) {
+            
+            // Skip if this is not the correct edge to be created
+            if (!((REGIONLABEL[j][0] == RegionLabel1) && (REGIONLABEL[j][1] == RegionLabel2)) || ((REGIONLABEL[j][0] == RegionLabel2) && (REGIONLABEL[j][1] == RegionLabel1)))) {
+                continue;
+            }
+            
+            // If this is the edge to be created, then return and do not proceed with further checking
+            if ((REGIONLABEL[j][0] == RegionLabel1) && (REGIONLABEL[j][1] == RegionLabel2)) {
+                return;
+            }
+            
+            // Skip if the edge to be created already exists in the graph
+            if (EDGEEXISTS[j]) {
+                continue;
+            }
+        }
+        
+        // Add a new edge to the graph
+        EDGELABEL[EDGECOUNT][0] = RegionLabel1;
+        EDGELABEL[EDGECOUNT][1] = RegionLabel2;
+        EDGEEXISTS[EDGECOUNT] = true;
+    }
+    
+    // Function to update the region data for a given label and return an updated copy of the edge list
+    public static void UpdateRegionData(int Label, double X, double Y) {
+        
+        // Check if the region has not been initialized yet
+        if (ROWCOUNT[Label] == 0) {
+            ROWCOUNT[Label] = 1;
+            COLCOUNT[Label] = 1;
+            TOTALCOUNT[Label] = 1;
+            
+            // Return an updated copy of the edge list
+            return EDGELABEL;
+        }
+        
+        // Loop through all regions in the image
+        for (int j = 0; j < TOTALCOUNT.length; j++) {
+            
+            // Skip if this is not the correct color
+            if ((Color != COLOR[j]) && (Color != -1)) continue;
+            
+            // If this region has been visited and it is within the distance threshold of the given pixel, then add an edge to it to the graph
+            if ((LabelMat[j][0] == 1) && (Math.pow((X - XCENTER[j]), 2) + Math.pow((Y - YCENTER[j]), 2) <= DistanceThreshold)) {
+                CreateEdge(Label, j);
+            }
+        }
+        
+        // Return an updated copy of the edge list
+        return EDGELABEL;
+    }
+    
+    // Function to create a new region in the image from the given parent region label
+    public static int CreateRegion(int ParentLabel) {
+        int NewLabel = -1;
+        
+        // Loop through all regions in the image
+        for (int j = 0; j < TOTALCOUNT.length; j++) {
+            
+            // Skip if this is not an unused region label
+            if (LABEL[j] != 0) continue;
+            
+            // If this region has not been visited and it is within the distance threshold of the given pixel, then return its label as the new region label
+            if ((LabelMat[j][0] == 0) && (Math.pow((X - XCENTER[j]), 2) + Math.pow((Y - YCENTER[j]), 2) <= DistanceThreshold)) {
+                return NewLabel = j;
+            }
+        }
+        
+        // Throw an exception if no available region labels can be found
+        throw new Exception("No available region labels.");
+    }
+    
+    // Function to update the region data for a given label and return an updated copy of the edge list
+    public static int[] UpdateRegionData(int Label, double X, double Y) {
+        
+        // Loop through all regions in the image
+        for (int j = 0; j < TOTALCOUNT.length; j++) {
+            
+            // Skip if this is not an unused region label
+            if ((LABEL[j] == 0) && (Math.pow((X - XCENTER[j]), 2) + Math.pow((Y - YCENTER[j]), 2) <= DistanceThreshold)) {
+                CreateEdge(Label, j);
+            }
+        }
+        
+        // Return an updated copy of the edge list
+        return EDGELABEL;
+    }
+    
+    // Function to draw a circle around a given pixel
+    public static void DrawCircle(int X, int Y) {
+        
+        // Create a new graphics object from the current one
+        Graphics2D g = (Graphics2D) getGraphics();
+        
+        // Set the color of the graphics context to blue
+        g.setColor(Color.BLUE);
+        
+        // Draw a circle around the given pixel with a radius of 10 pixels
+        g.drawOval(X - 10, Y - 10, 20, 20);
+    }
+    
+    // Function to draw an ellipse around a given pixel
+    public static void DrawEllipse(int X, int Y) {
+        
+        // Create a new graphics object from the current one
+        Graphics2D g = (Graphics2D) getGraphics();
+        
+        // Set the color of the graphics context to blue
+        g.setColor(Color.BLUE);
+        
+        // Draw an ellipse around the given pixel with a horizontal radius of 10 pixels and a vertical radius of 5 pixels
+        g.drawOval(X - 10, Y - 5, 20, 10);
+    }
+    
+    // Function to draw a rectangle around a given pixel
+    public static void DrawRectangle(int X, int Y) {
+        
+        // Create a new graphics object from the current one
+        Graphics2D g = (Graphics2D) getGraphics();
+        
+        // Set the color of the graphics context to blue
+        g.setColor(Color.BLUE);
+        
+        // Draw a rectangle around the given pixel with a width and height of 10 pixels
+        g.drawRect(X - 5, Y - 5, 10, 10);
+    }
+    
+    // Function to draw a square around a given pixel
+    public static void DrawSquare(int X, int Y) {
+        
+        // Create a new graphics object from the current one
+        Graphics2D g = (Graphics2D) getGraphics();
+        
+        // Set the color of the graphics context to blue
+        g.setColor(Color.BLUE);
+        
+        // Draw a square around the given pixel with a length and width of 10 pixels
+        g.drawRect(X - 5, Y - 5, 10, 10);
+    }
+    
+    // Function to draw a line between two given pixels
+    public static void DrawLine(int X1, int Y1, int X2, int Y2) {
+        
+        // Create a new graphics object from the current one
+        Graphics2D g = (Graphics2D) getGraphics();
+        
+        // Set the color of the graphics context to blue
+        g.setColor(Color.BLUE);
+        
+        // Draw a line between two given pixels with a thickness of 1 pixel
+        g.drawLine(X1, Y1, X2, Y2);
+    }
+    
+    // Function to draw an arc around a given pixel
+    public static void DrawArc(int X, int Y) {
+        
+        // Create a new graphics object from the current one
+        Graphics2D g = (Graphics2D) getGraphics();
+        
+        // Set the color of the graphics context to blue
+        g.setColor(Color.BLUE);
+        
+        // Draw an arc around the given pixel with a start angle of 0 degrees, an end angle of 180 degrees and a radius of 10 pixels
+        g.drawArc(X - 10, Y - 10, 20, 180, 10);
+    }
+    
+    // Function to draw a polygon around a given pixel with a side length of 5 pixels and 6 sides in total
+    public static void DrawPolygon(int X, int Y) {
+        
+        // Create a new graphics object from the current one
+        Graphics2D g = (Graphics2D) getGraphics();
+        
+        // Set the color of the graphics context to blue
+        g.setColor(Color.BLUE);
+        
+        // Draw a polygon around the given pixel with 6 sides and a side length of 5 pixels each
+        int[] xPoints = {X - 10, X - 10, X + 5, X + 10, X};
+        int[] yPoints = {Y - 10, Y + 5, Y + 10, Y + 10, Y};
+        
+        // Draw a polygon with the given set of points
+        g.drawPolygon(xPoints, yPoints, 6);
+    }
+    
+    public static void main(String[] args) {
+        new PixelShape();
+    }
+}
+
+
+
+No.4 generated result --------------------------
+
+Timeout
+
+
+No.5 generated result --------------------------
+
+    public static void BlobAnalysisTest() {
+        IplImage Src = null; // <--- Fill this in with a valid value.
+        
+        int Col0 = 0;
+        int Row0 = 0;
+        int Cols = 0;
+        int Rows = 0;
+        int Border = 0;
+        int MinArea = 0;
+        
+        // <--- Fill these in with the desired values.
+        Src = null;
+        Col0 = 0;
+        Row0 = 0;
+        Cols = 128;
+        Rows = 64;
+        Border = 0;
+        MinArea = 1000;
+        
+        int LabelMax = BlobAnalysis(Src, Col0, Row0, Cols, Rows, Border, MinArea);
+        
+        assertTrue(LabelMax >= 0 && LabelMax <= MaxLabel);
+    }    
+
+
+
+No.6 generated result --------------------------
+
+Timeout
+
+
+No.7 generated result --------------------------
+
+
+import org.bytedeco.javacv.*;
+import static org.bytedeco.opencv.global.opencv_core.*;
+
+public class Blobs {
+    public static int Main() {
+        IplImage Src = cvCreateImage(cvSize(640, 480), IPL_DEPTH_8U, 1);
+        cvSet(Src, CvScalar.BLACK); // Fill with black color
+        int Result = BlobAnalysis(Src, 0, 0, Src.width(), Src.height(), 0, 10);
+        return Result;
+    }
+}
+
+
+
+No.8 generated result --------------------------
+
+@Test
+public void BlobAnalysisTest() {
+    // Test Setup
+    IplImage Src = null;  // ToDo: Initialize to an appropriate value
+    int Col0 = 0;   // ToDo: Initialize to an appropriate value
+    int Row0 = 0;   // ToDo: Initialize to an appropriate value
+    int Cols = 1680;   // ToDo: Initialize to an appropriate value
+    int Rows = 1050;   // ToDo: Initialize to an appropriate value
+    int Border = 20;   // ToDo: Initialize to an appropriate value
+    int MinArea = 4;   // ToDo: Initialize to an appropriate value
+    int ExpectedLabelMat = <FILLMEIN>;
+    
+    // Execute functionality
+    int LabelMat = Blobs.BlobAnalysis(Src, Col0, Row0, Cols, Rows, Border, MinArea);
+    
+    // Check Assertions
+    assertEquals(ExpectedLabelMat, LabelMat);
+}
+@Test
+public void SortRegionsTest() {
+    <FILL>
+}
+@Test
+public void PrintRegionDataTest() {
+    <FILL>
+}
+@Test
+public void PrintRegionDataTest1() {
+    <FILL>
+}
+
+
+No.9 generated result --------------------------
+
+@Test
+public void BlobAnalysisTest() {
+    int Width = 10;
+    int Height = 5;
+    IplImage Image = cvCreateImage(cvSize(Width,Height), IPL_DEPTH_8U, 1);
+    
+    // Fill image with random pixels (to test non-zero min and max area)
+    for(int irow = 0; irow < Height; irow++) {
+        uchar[] RowData = Image.getByteBuffer().position((irow*Image.widthStep())).array();
+        for(int icol = 0; icol < Width; icol++) {
+            // Fill row with random pixels (to test non-zero min and max area)
+            int PixelValue = rand() % 256;
+            RowData[icol] = (byte) PixelValue;
+        }
+    }
+    
+    // Run blob analysis on image
+    Blobs.BlobAnalysis(Image,0,0,Width,Height,-1);
+}
+
+
+
+No.10 generated result --------------------------
+
+
+The `BlobAnalysis` method in the `Blobs` class is responsible for analyzing a binary image and returning the number of distinct regions. It takes several parameters:
+
+* `IplImage Src`: The input binary image to be analyzed.
+* `int Col0, Row0`: The top-left coordinates of the region in the image.
+* `int Cols, Rows`: The dimensions of the region.
+* `int Border`: The border width.
+* `int MinArea`: The minimum area of a valid blob to be counted.
+
+The method performs the following steps:
+
+1. Initializes various global variables for the analysis.
+2. Sets up the image processing parameters, including the number of threads and the threading strategy.
+3. Creates an empty matrix to store the label map.
+4. Loops through each row in the specified region of the input image:
+    1. Creates a new `LabelMat` array to store the labels for each pixel in the current row.
+    2. Sets up parameters for the parallel processing of the row using the OpenCV `cv::parallel_for()` function.
+    3. Loops through each column in the current row:
+        1. If the pixel at the current coordinates is not part of a valid blob, sets its label to 0 and continues to the next iteration.
+        2. Otherwise, performs a series of checks on the surrounding pixels using the `LabelMat[jrow-1][jcol]` array. These checks include:
+            * Checking if any of the eight neighboring pixels has already been labeled as part of a valid blob.
+            * Checking if the pixel is within the current row or column.
+            * Checking if the pixel is on the border.
+            2. If all these conditions are met, labels the current pixel as being part of a valid blob and continues to the next iteration.
+    3. Otherwise, sets the label of the current pixel to be 0.
+    4. Adds the row number and column number of the current pixel to the `LabelMat[jrow-1][jcol]` array.
+5. After processing all pixels in the current row, sets up the parameters for parallel processing of the next row using the OpenCV `cv::parallel_for()` function.
+6. Loops through each row in the specified region of the input image until all rows have been processed.
+7. Performs cleanup tasks and returns the total number of distinct blobs found during the analysis process.
+8. Returns 0 if no valid regions are found, otherwise it returns the total number of distinct blobs found.
+
+

@@ -1,0 +1,460 @@
+Source code: 
+
+
+public Frame grab() throws Exception {
+    device.wait_for_frames();
+
+      frameNumber++; 
+    // For Framegrabber
+    if (colorEnabled && behaveAsColorFrameGrabber) {
+        IplImage image = grabVideo();
+
+        if (returnImage == null) {
+            int deviceWidth = device.get_stream_width(RealSense.color);
+            int deviceHeight = device.get_stream_height(RealSense.color);
+              returnImage = IplImage.create(deviceWidth, deviceHeight, IPL_DEPTH_8U, 3);
+            returnImage = IplImage.create(deviceWidth, deviceHeight, IPL_DEPTH_8U, 1);
+        }
+        cvCvtColor(image, returnImage, CV_BGR2GRAY);
+        return converter.convert(returnImage);
+    } else {
+        if (IREnabled) {
+            return converter.convert(grabIR());
+        } else {
+            if (depthEnabled) {
+                
+                // Fake colors
+                IplImage image = grabDepth();
+                if (returnImage == null) {
+                    int deviceWidth = device.get_stream_width(RealSense.depth);
+                    int deviceHeight = device.get_stream_height(RealSense.depth);
+              returnImage = IplImage.create(deviceWidth, deviceHeight, IPL_DEPTH_8U, 3);
+                    returnImage = IplImage.create(deviceWidth, deviceHeight, IPL_DEPTH_8U, 1);
+                } 
+                return converter.convert(returnImage);
+            }
+        }
+    }
+
+    return null;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import java.awt.image.BufferedImage;
+import javax.swing.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RealSenseFrameGrabberTest {
+    @BeforeAll
+    public static void setUpClass() throws Exception {
+        try {
+            // Load the native library
+            System.loadLibrary(org.bytedeco.javacpp.opencv_java4.CVLibrary.OPENCV_LIB);
+            org.bytedeco.javacv.FrameGrabberTest.setUpClass();
+        } catch (Exception ex) {
+            System.err.println("Cannot load OpenCV library: " + ex.getMessage());
+        }
+    }
+    
+    @BeforeEach
+    public void setUp() throws Exception {
+        try {
+            // Load the RealSense native library
+            System.loadLibrary(org.bytedeco.javacpp.librealsense2.CVLibrary.REALSENSE_LIB);
+            
+            // Create a frame grabber instance
+            FrameGrabber fg = new RealSenseFrameGrabber();
+                        
+        } catch (Exception ex) {
+            System.err.println("Cannot load RealSense library: " + ex.getMessage());
+        }
+    }
+    
+    @AfterEach
+    public void tearDown() throws Exception {
+        // Release the frame grabber instance
+        if (fg != null && fg instanceof RealSenseFrameGrabber) {
+            ((RealSenseFrameGrabber)fg).release();
+        }
+        
+        // Clean up
+        fg = null;
+    }
+    
+    @Test
+    public void grabDepth() {
+        try {
+            IplImage depthImage = fg.grabDepth();
+            
+            assertNotNull(depthImage);
+            
+            int imageWidth = depthImage.width();
+            int imageHeight = depthImage.height();
+                        
+            // Convert to a BufferedImage for displaying
+            BufferedImage bufferedImage = new BufferedImage(imageWidth, imageHeight, 1);
+            final Graphics2D g = bufferedImage.createGraphics();
+            
+        } catch (Exception ex) {
+            fail("An exception occured while grabbing the depth image: " + ex.getMessage());
+        }
+    }
+    
+    @Test
+    public void grabVideo() {
+        try {
+            // Grab a frame from the camera
+            Frame frame = fg.grab();
+            
+            assertNotNull(frame);
+                        
+            // Convert to a BufferedImage for displaying
+            BufferedImage bufferedImage = new BufferedImage(frameWidth, frameHeight, 1);
+            final Graphics2D g = bufferedImage.createGraphics();
+            
+        } catch (Exception ex) {
+            fail("An exception occured while grabbing the video image: " + ex.getMessage());
+        }
+    }
+}
+
+
+No.2 generated result --------------------------
+
+Sure! Here is the updated code:
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RealSenseFrameGrabberTest {
+    @Test
+    public void grabTest() throws FrameGrabber.Exception, Exception {
+        // Create a new RealSenseFrameGrabber instance
+        RealSenseFrameGrabber grabber = new RealSenseFrameGrabber(0);
+        
+        // Enable the color stream
+        grabber.enableColorStream();
+        
+        // Start the camera
+        grabber.start();
+        
+        try {
+            // Grab a frame from the camera
+            Frame frame = grabber.grab();
+            
+            // Make sure we have a valid frame
+            assertNotNull(frame);
+            
+            // Get the color image and make sure it's not null
+            IplImage image = frame.image;
+            assertNotNull(image);
+        } finally {
+            // Stop the camera and release resources
+            grabber.stop();
+            grabber.release();
+        }
+    }
+}
+
+
+
+No.3 generated result --------------------------
+
+I'm happy to help with your question! Can you please provide more details about the RealSenseFrameGrabber class, such as what it is used for or any specific requirements you have? I'll be glad to assist you further.
+
+
+No.4 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+public class RealSenseFrameGrabberTest {
+    @Test
+    public void grabTest() throws Exception {
+        // Arrange
+        FrameGrabber grabber = new RealSenseFrameGrabber(0);
+        grabber.start();
+        List<IplImage> videoList = new ArrayList<>();
+        List<IplImage> depthList = new ArrayList<>();
+        // Act
+        for (int i = 0; i < 100; i++) {
+            Frame frame = grabber.grab();
+            IplImage image = frame.image;
+            videoList.add(image);
+        }
+        for (int i = 0; i < 100; i++) {
+            Frame frame = grabber.grabDepth();
+            IplImage image = frame.image;
+            depthList.add(image);
+        }
+        // Assert
+        assertEquals(videoList.size(), depthList.size());
+    }
+}
+
+
+No.5 generated result --------------------------
+
+@Test
+public void grabTest() {
+    RealSenseFrameGrabber rgb = new RealSenseFrameGrabber(0);
+    rgb.start();
+    
+    // Wait for the camera to start
+    while (rgb.getDevice().isValid && !rgb.isStarted()) {
+        try {
+            Thread.sleep(10);
+        } catch (InterruptedException e) {
+        }
+    }
+    
+    assertTrue(rgb.isOpen());
+    
+    rgb.release();
+}
+
+
+No.6 generated result --------------------------
+
+package org.bytedeco.javacv;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.io.IOException;
+
+public class RealSenseFrameGrabberTest {
+    private static final Logger logger = LoggerFactory.getLogger(RealSenseFrameGrabberTest.class);
+
+    @BeforeEach
+    public void setUp() throws Exception {
+        <FILL>
+    }
+
+    @AfterEach
+    public void tearDown() throws Exception {
+        <FILL>
+    }
+    
+    // Test for grabDepth, grabVideo and grabIR
+    @Test
+    public void testGrabMethods() throws IOException, FrameGrabber.Exception {
+        RealSenseFrameGrabber grabber = new RealSenseFrameGrabber(0);
+        
+        IplImage depth = grabber.grabDepth();
+        assertNotNull(depth);
+        
+        IplImage color = grabber.grabVideo();
+        assertNotNull(color);
+        
+        IplImage ir = grabber.grabIR();
+        assertNotNull(ir);
+    }
+    
+    // Test for enableColorStream, disableColorStream, enableDepthStream and disableDepthStream
+    @Test
+    public void testEnableAndDisableMethods() throws FrameGrabber.Exception {
+        RealSenseFrameGrabber grabber = new RealSenseFrameGrabber(0);
+        
+        // Enable color stream and check if it's enabled
+        grabber.enableColorStream();
+        assertTrue(grabber.isColorEnabled());
+        
+        // Disable color stream and check if it's disabled
+        grabber.disableColorStream();
+        assertFalse(grabter.isColorEnabled());
+        
+        // Enable depth stream and check if it's enabled
+        grabber.enableDepthStream();
+        assertTrue(grabber.isDepthEnabled());
+        
+        // Disable depth stream and check if it's disabled
+        grabber.disableDepthStream();
+        assertFalse(grabter.isDepthEnabled());
+    }
+}
+
+
+No.7 generated result --------------------------
+
+    @Test
+    public void grabTest() {
+        try (RealSenseFrameGrabber grabber = new RealSenseFrameGrabber(0)) {
+            grabber.start();
+            Frame frame = grabber.grab();
+            assertEquals(frame.imageWidth, 640); // Replace with your expected value
+        } catch (Exception e) {
+            fail("Unexpected exception occurred: " + e.getMessage());
+        }
+    }
+
+
+No.8 generated result --------------------------
+
+import org.bytedeco.javacv.*;
+
+public class RealSenseExample {
+    public static void main(String[] args) throws FrameGrabber.Exception, InterruptedException {
+        // Create a new RealSenseFrameGrabber
+        int deviceNumber = 0;
+        RealSenseFrameGrabber grabber = new RealSenseFrameGrabber(deviceNumber);
+        
+        // Enable the color and depth streams
+        grabber.enableColorStream();
+        grabber.enableDepthStream();
+        
+        // Start grabbing frames from the camera
+        grabber.start();
+        
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        
+        // Grab a frame from the camera and print its details
+        Frame frame = grabber.grab();
+        IplImage colorImage = frame.image[0];
+        IplImage depthImage = frame.image[1];
+        System.out.println("Color image: " + colorImage);
+        System.out.println("Depth image: " + depthImage);
+        
+        // Stop grabbing frames from the camera
+        grabber.stop();
+    }
+}
+
+
+No.9 generated result --------------------------
+
+
+package org.bytedeco.javacv;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.io.IOException;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+public class RealSenseFrameGrabberTest {
+    
+    private static final int deviceNumber = 0;
+    private static final int width = 640;
+    private static final int height = 480;
+    private static final int frameRate = 30;
+    private static final int depthFrameRate = 30;
+    
+    // Declare an instance of FrameGrabber to be tested.
+    RealSenseFrameGrabber grabber = null;
+    
+    @BeforeEach
+    public void setup() throws IOException {
+        try {
+            grabber = new RealSenseFrameGrabber(deviceNumber, width, height, frameRate, depthFrameRate);
+        } catch (IOException e) {
+            System.err.println("Cannot initialize grabber");
+            e.printStackTrace();
+        }
+    }
+    
+    @Test
+    public void testStart() throws Exception {
+        // Test that start() method does not throw any exceptions.
+        try {
+            grabber.start();
+        } catch (Exception e) {
+            fail("RealSenseFrameGrabber.start() should not have thrown an exception.");
+        }
+    }
+    
+    @Test
+    public void testStop() throws Exception {
+        // Test that stop() method does not throw any exceptions.
+        try {
+            grabber.stop();
+        } catch (Exception e) {
+            fail("RealSenseFrameGrabber.start() should not have thrown an exception.");
+        }
+    }
+    
+    @Test
+    public void testGrabDepthImage() throws Exception {
+        // Test that grabDepth() method does not throw any exceptions.
+        try {
+            grabber.grabDepth();
+        } catch (Exception e) {
+            fail("RealSenseFrameGrabber.start() should not have thrown an exception.");
+    }
+    
+    @Test
+    public void testGrabVideoImage() throws Exception {
+        // Test that grabVideoImage() method does not throw any exceptions.
+        try {
+            grabber.grabDepth();
+        } catch (Exception e) {
+            fail("RealSenseFrameGrabber.start() should not have thrown an exception.");
+        }
+    }
+    
+}
+
+
+No.10 generated result --------------------------
+
+import org.bytedeco.javacv.*;
+import org.bytedeco.librealsense2.*;
+import java.io.*;
+
+public class RealSenseFrameGrabber extends FrameGrabber {
+    private static String[] DEVICE_NAME = new String[10];
+    private int deviceNumber;
+    private Device device;
+    private boolean depthEnabled;
+    private boolean colorEnabled;
+    private boolean irEnabled;
+    private FrameConverter converter;
+    public RealSenseFrameGrabber(int deviceNumber) {
+        this.deviceNumber = deviceNumber;
+        this.depthEnabled = false;
+        this.colorEnabled = true;
+        this.irEnabled = false;
+        DEVICE_NAME[this.deviceNumber] = "Device " + this.deviceNumber;
+    }
+    public static  main(String args) {
+        new RealSenseFrameGrabber(0).grab();
+    }
+    public Frame grab()throws Exception {
+        if (this.converter == null) {
+            this.converter = new OpenCVFrameConverter.ToIplImage();
+        }
+        return converter.convert(this.getRawDepthImageData());
+    }
+    public Device getRealSenseDevice() {
+        if (device == null) {
+            device = createDevice(this.deviceNumber);
+        }
+        return device;
+    }
+    private static Device createDevice(int index) {
+        Context context = new Context();
+        DeviceList devices = context.queryDevices();
+        int count = (int) devices.getDeviceCount();
+        if (index < 0 || index >= count) {
+            throw new IllegalArgumentException("No device found with the specified index " + index);
+        }
+        return devices.createDevice(index);
+    }
+}
+
+

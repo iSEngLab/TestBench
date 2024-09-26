@@ -1,0 +1,27 @@
+{
+    "project_name": "commons-math",
+    "file_name": "AccurateMathCalc.java",
+    "relative_path": "commons-math/commons-math-core/src/main/java/org/apache/commons/math4/core/jdkmath/AccurateMathCalc.java",
+    "execute_path": "commons-math/commons-math-core",
+    "package": "org.apache.commons.math4.core.jdkmath",
+    "docstring": "/** Compute the reciprocal of in.  Use the following algorithm.\n     *  in = c + d.\n     *  want to find x + y such that x+y = 1/(c+d) and x is much\n     *  larger than y and x has several zero bits on the right.\n     *\n     *  Set b = 1/(2^22),  a = 1 - b.  Thus (a+b) = 1.\n     *  Use following identity to compute (a+b)/(c+d)\n     *\n     *  (a+b)/(c+d)  =   a/c   +    (bc - ad) / (c^2 + cd)\n     *  set x = a/c  and y = (bc - ad) / (c^2 + cd)\n     *  This will be close to the right answer, but there will be\n     *  some rounding in the calculation of X.  So by carefully\n     *  computing 1 - (c+d)(x+y) we can compute an error and\n     *  add that back in.   This is done carefully so that terms\n     *  of similar size are subtracted first.\n     *  @param in initial number, in split form\n     *  @param result placeholder where to put the result\n     */",
+    "source_code": "\nstatic void splitReciprocal(final double[] in, final double[] result) {\n    final double b = 1.0 / 4194304.0;\n    final double a = 1.0 - b;\n\n    if (in[0] == 0.0) {\n        in[0] = in[1];\n        in[1] = 0.0;\n    }\n\n    result[0] = a / in[0];\n    result[1] = (b * in[0] - a * in[1]) / (in[0] * in[0] + in[0] * in[1]);\n\n    if (result[1] != result[1]) { // can happen if result[1] is NAN\n        result[1] = 0.0;\n    }\n\n    /* Resplit */\n    resplit(result);\n\n    for (int i = 0; i < 2; i++) {\n        /* this may be overkill, probably once is enough */\n        double err = 1.0 - result[0] * in[0] - result[0] * in[1] -\n            result[1] * in[0] - result[1] * in[1];\n        /*err = 1.0 - err; */\n        err *= result[0] + result[1];\n        /*printf(\"err = %16e\\n\", err); */\n        result[1] += err;\n    }\n}\n",
+    "class_name": "AccurateMathCalc",
+    "method_name": "splitReciprocal",
+    "arguments": [
+        "double[] in",
+        "double[] result"
+    ],
+    "generate_test": [
+        "@Test\npublic void splitReciprocalTest() {\n    double[] in = {2.0, 3.0};\n    double[] result = new double[2];\n    AccurateMathCalc.splitReciprocal(in, result);\n    assertEquals(0.5, result[0]);\n    assertEquals(-0.16666666666666666, result[1]);\n}",
+        "@Test\npublic void splitReciprocalTest() {\n    double[] input = {1.0, 2.0};\n    double[] expectedResult = new double[2];\n\n    AccurateMathCalc.splitReciprocal(input, expectedResult);\n\n    double[] actualResult = new double[2];\n    AccurateMathCalc.splitReciprocal(input, actualResult);\n\n    assertArrayEquals(expectedResult, actualResult);\n}",
+        "@Test\npublic void splitReciprocalTest() {\n    double[] in = {2.0, 3.0};\n    double[] result = new double[2];\n    AccurateMathCalc.splitReciprocal(in, result);\n    assertArrayEquals(new double[] {0.5, -0.16666666666666666}, result, 0.0001);\n}",
+        "@Test\npublic void splitReciprocalTest() {\n    double[] in = {1.0, 2.0};\n    double[] result = new double[2];\n    AccurateMathCalc.splitReciprocal(in, result);\n    assertArrayEquals(new double[]{1.0, -0.125}, result);\n}",
+        "@Test\npublic void splitReciprocalTest() {\n    double[] in = {2.0, 4.0};\n    double[] result = new double[2];\n    AccurateMathCalc.splitReciprocal(in, result);\n    double[] expected = {2.227496032249964E-1, -1.0658141036401503E-14};\n    assertArrayEquals(expected, result, 1e-15);\n}",
+        "@Test\npublic void splitReciprocalTest() {\n    double[] in = {2.0, 3.0};\n    double[] result = new double[2];\n    AccurateMathCalc.splitReciprocal(in, result);\n    \n    double[] expected = {1.0 / in[0], (1.0 / 4194304.0 * in[0] - (1.0 - 1.0 / 4194304.0) * in[1]) / (in[0] * in[0] + in[0] * in[1])};\n    if (expected[1] != expected[1]) {\n        expected[1] = 0.0;\n    }\n    AccurateMathCalc.resplit(expected);\n    for (int i = 0; i < 2; i++) {\n        double err = 1.0 - expected[0] * in[0] - expected[0] * in[1] - expected[1] * in[0] - expected[1] * in[1];\n        err *= expected[0] + expected[1];\n        expected[1] += err;\n    }\n    assertArrayEquals(expected, result);\n}",
+        "@Test\npublic void splitReciprocalTest() {\n    double[] in = {2.0, 3.0};\n    double[] result = new double[2];\n    AccurateMathCalc.splitReciprocal(in, result);\n    assertArrayEquals(new double[] {0.5, 0.16666666666666666}, result, 0.0000001);\n}",
+        "@Test\npublic void splitReciprocalTest() {\n    double[] in = {3.0, 4.0};\n    double[] result = new double[2];\n    AccurateMathCalc.splitReciprocal(in, result);\n    assertArrayEquals(new double[] {0.3333333333333333, -0.027777777777777776}, result);\n}",
+        "@Test\npublic void splitReciprocalTest() {\n    double[] in = {1.0, 2.0};\n    double[] result = new double[2];\n    AccurateMathCalc.splitReciprocal(in, result);\n    assertArrayEquals(new double[] {1.0, -2.0}, result, 0.00001);\n}",
+        "@Test\npublic void splitReciprocalTest() {\n    double[] in = {1.0, 2.0};\n    double[] result = new double[2];\n    AccurateMathCalc.splitReciprocal(in, result);\n    assertEquals(0.5, result[0], 1e-15);\n    assertEquals(0.0, result[1], 1e-15);\n}"
+    ]
+}

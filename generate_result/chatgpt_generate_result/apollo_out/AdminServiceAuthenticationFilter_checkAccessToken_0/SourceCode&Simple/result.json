@@ -1,0 +1,26 @@
+{
+    "project_name": "apollo",
+    "file_name": "AdminServiceAuthenticationFilter.java",
+    "relative_path": "apollo/apollo-adminservice/src/main/java/com/ctrip/framework/apollo/adminservice/filter/AdminServiceAuthenticationFilter.java",
+    "execute_path": "apollo",
+    "package": "com.ctrip.framework.apollo.adminservice.filter",
+    "docstring": null,
+    "source_code": "private boolean checkAccessToken(String token) {\n  String accessTokens = bizConfig.getAdminServiceAccessTokens();\n\n  // if user forget to configure access tokens, then default to pass\n  if (Strings.isNullOrEmpty(accessTokens)) {\n    return true;\n  }\n\n  // no need to check\n  if (Strings.isNullOrEmpty(token)) {\n    return false;\n  }\n\n  // update cache\n  if (!accessTokens.equals(lastAccessTokens)) {\n    synchronized (this) {\n      accessTokenList = ACCESS_TOKEN_SPLITTER.splitToList(accessTokens);\n      lastAccessTokens = accessTokens;\n    }\n  }\n\n  return accessTokenList.contains(token);\n}\n",
+    "class_name": "AdminServiceAuthenticationFilter",
+    "method_name": "checkAccessToken",
+    "arguments": [
+        "String token"
+    ],
+    "generate_test": [
+        "@Test\npublic void checkAccessTokenTest() {\n    AdminServiceAuthenticationFilter filter = new AdminServiceAuthenticationFilter(bizConfig);\n    boolean result = filter.checkAccessToken(\"sampleToken\");\n    assertTrue(result);\n}",
+        "@Test\npublic void checkAccessTokenTest() {\n    AdminServiceAuthenticationFilter filter = new AdminServiceAuthenticationFilter(bizConfig);\n    String validToken = \"validToken\";\n    String invalidToken = \"invalidToken\";\n    \n    assertTrue(filter.checkAccessToken(validToken));\n    assertFalse(filter.checkAccessToken(invalidToken));\n}",
+        "@Test\npublic void checkAccessTokenTest() {\n  // Test case when access tokens are configured\n  // Given\n  AdminServiceAuthenticationFilter filter = new AdminServiceAuthenticationFilter(mock(BizConfig.class));\n  String validToken = \"validToken\";\n  String invalidToken = \"invalidToken\";\n  filter.init(mock(FilterConfig.class));\n\n  // When\n  boolean actual1 = filter.checkAccessToken(validToken);\n  boolean actual2 = filter.checkAccessToken(invalidToken);\n\n  // Then\n  assertTrue(actual1);\n  assertFalse(actual2);\n}",
+        "@Test\npublic void checkAccessTokenTest() {\n    AdminServiceAuthenticationFilter filter = new AdminServiceAuthenticationFilter(new BizConfig());\n    assertTrue(filter.checkAccessToken(\"testToken\"));\n}",
+        "@Test\npublic void checkAccessTokenTest() {\n    AdminServiceAuthenticationFilter filter = new AdminServiceAuthenticationFilter(new BizConfig());\n    boolean result = filter.checkAccessToken(\"testToken\");\n    assertTrue(result);\n}",
+        "@Test\npublic void checkAccessTokenTest() {\n  AdminServiceAuthenticationFilter adminServiceAuthenticationFilter = new AdminServiceAuthenticationFilter(bizConfig);\n  boolean result = adminServiceAuthenticationFilter.checkAccessToken(\"token\");\n  assertTrue(result);\n}",
+        "@Test\npublic void checkAccessTokenTest() {\n    // Given\n    String validToken = \"validToken\";\n    AdminServiceAuthenticationFilter filter = new AdminServiceAuthenticationFilter(new BizConfig());\n    \n    // When\n    boolean result = filter.checkAccessToken(validToken);\n    \n    // Then\n    assertTrue(result);\n}",
+        "@Test\n  public void checkAccessTokenTest() {\n    AdminServiceAuthenticationFilter adminServiceAuthenticationFilter = new AdminServiceAuthenticationFilter(new BizConfig());\n    String token = \"exampleToken\";\n    boolean result = adminServiceAuthenticationFilter.checkAccessToken(token);\n    assertTrue(result);\n  }",
+        "@Test\npublic void checkAccessTokenTest() {\n    // Create an instance of the AdminServiceAuthenticationFilter class\n    BizConfig bizConfig = new BizConfig();\n    AdminServiceAuthenticationFilter filter = new AdminServiceAuthenticationFilter(bizConfig);\n  \n    // Set up the required variables for the test\n    String validToken = \"validToken\";\n    String invalidToken = \"invalidToken\";\n  \n    // Perform the test for valid access token\n    boolean validTokenResult = filter.checkAccessToken(validToken);\n    assertTrue(validTokenResult);\n  \n    // Perform the test for invalid access token\n    boolean invalidTokenResult = filter.checkAccessToken(invalidToken);\n    assertFalse(invalidTokenResult);\n}",
+        "@Test\npublic void checkAccessTokenTest() {\n    AdminServiceAuthenticationFilter filter = new AdminServiceAuthenticationFilter(bizConfig);\n    \n    String validToken = \"validToken\";\n    String invalidToken = \"invalidToken\";\n    \n    assertTrue(filter.checkAccessToken(validToken));\n    assertFalse(filter.checkAccessToken(invalidToken));\n}"
+    ]
+}

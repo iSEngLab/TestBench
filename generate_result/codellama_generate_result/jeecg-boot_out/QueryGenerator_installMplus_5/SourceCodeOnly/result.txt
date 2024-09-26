@@ -1,0 +1,300 @@
+Source code: 
+
+
+private static void installMplus(QueryWrapper<?> queryWrapper,Object searchObj,Map<String, String[]> parameterMap) {
+	
+	/*
+	 * 注意:权限查询由前端配置数据规则 当一个人有多个所属部门时候 可以在规则配置包含条件 orgCode 包含 #{sys_org_code}
+	但是不支持在自定义SQL中写orgCode in #{sys_org_code} 
+	当一个人只有一个部门 就直接配置等于条件: orgCode 等于 #{sys_org_code} 或者配置自定义SQL: orgCode = '#{sys_org_code}'
+	*/
+	
+	//区间条件组装 模糊查询 高级查询组装 简单排序 权限查询
+	PropertyDescriptor[] origDescriptors = PropertyUtils.getPropertyDescriptors(searchObj);
+	Map<String,SysPermissionDataRuleModel> ruleMap = getRuleMap();
+	
+	//权限规则自定义SQL表达式
+	for (String c : ruleMap.keySet()) {
+		if(oConvertUtils.isNotEmpty(c) && c.startsWith(SQL_RULES_COLUMN)){
+			queryWrapper.and(i ->i.apply(getSqlRuleValue(ruleMap.get(c).getRuleValue())));
+		}
+	}
+	
+	String name, type, column;
+	// update-begin--Author:taoyan  Date:20200923 for：issues/1671 如果字段加注解了@TableField(exist = false),不走DB查询-------
+	//定义实体字段和数据库字段名称的映射 高级查询中 只能获取实体字段 如果设置TableField注解 那么查询条件会出问题
+	Map<String,String> fieldColumnMap = new HashMap<>(5);
+	for (int i = 0; i < origDescriptors.length; i++) {
+		//aliasName = origDescriptors[i].getName();  mybatis  不存在实体属性 不用处理别名的情况
+		name = origDescriptors[i].getName();
+		type = origDescriptors[i].getPropertyType().toString();
+		try {
+			if (judgedIsUselessField(name)|| !PropertyUtils.isReadable(searchObj, name)) {
+				continue;
+			}
+
+			Object value = PropertyUtils.getSimpleProperty(searchObj, name);
+			column = ReflectHelper.getTableFieldName(searchObj.getClass(), name);
+			if(column==null){
+				//column为null只有一种情况 那就是 添加了注解@TableField(exist = false) 后续都不用处理了
+				continue;
+			}
+			fieldColumnMap.put(name,column);
+			//数据权限查询
+			if(ruleMap.containsKey(name)) {
+				addRuleToQueryWrapper(ruleMap.get(name), column, origDescriptors[i].getPropertyType(), queryWrapper);
+			}
+			//区间查询
+			doIntervalQuery(queryWrapper, parameterMap, type, name, column);
+			//判断单值  参数带不同标识字符串 走不同的查询
+			//TODO 这种前后带逗号的支持分割后模糊查询(多选字段查询生效) 示例：,1,3,
+			if (null != value && value.toString().startsWith(COMMA) && value.toString().endsWith(COMMA)) {
+				String multiLikeval = value.toString().replace(",,", COMMA);
+				String[] vals = multiLikeval.substring(1, multiLikeval.length()).split(COMMA);
+				final String field = oConvertUtils.camelToUnderline(column);
+				if(vals.length>1) {
+					queryWrapper.and(j -> {
+                           log.info("---查询过滤器，Query规则---field:{}, rule:{}, value:{}", field, "like", vals[0]);
+						j = j.like(field,vals[0]);
+						for (int k=1;k<vals.length;k++) {
+							j = j.or().like(field,vals[k]);
+							log.info("---查询过滤器，Query规则 .or()---field:{}, rule:{}, value:{}", field, "like", vals[k]);
+						}
+						//return j;
+					});
+				}else {
+					log.info("---查询过滤器，Query规则---field:{}, rule:{}, value:{}", field, "like", vals[0]);
+					queryWrapper.and(j -> j.like(field,vals[0]));
+				}
+			}else {
+				//根据参数值带什么关键字符串判断走什么类型的查询
+				QueryRuleEnum rule = convert2Rule(value);
+				value = replaceValue(rule,value);
+				// add -begin 添加判断为字符串时设为全模糊查询
+				//if( (rule==null || QueryRuleEnum.EQ.equals(rule)) && "class java.lang.String".equals(type)) {
+					// 可以设置左右模糊或全模糊，因人而异
+					//rule = QueryRuleEnum.LIKE;
+				//}
+				// add -end 添加判断为字符串时设为全模糊查询
+				addEasyQuery(queryWrapper, column, rule, value);
+			}
+			
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+	}
+	// 排序逻辑 处理
+	doMultiFieldsOrder(queryWrapper, parameterMap, fieldColumnMap);
+			
+	//高级查询
+	doSuperQuery(queryWrapper, parameterMap, fieldColumnMap);
+	// update-end--Author:taoyan  Date:20200923 for：issues/1671 如果字段加注解了@TableField(exist = false),不走DB查询-------
+	
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jeecg.common.system.query;
+
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+
+public class QueryGeneratorTest {
+    @Test
+    public void installMplusTest() {
+        String[] input = {"1","2"};
+        String output = "1,2";
+        
+        assertEquals(output, QueryGenerator.installMplus(input));
+    }
+}
+
+
+No.2 generated result --------------------------
+
+@Test
+public void installMplusTest() {
+	// Arrange
+	QueryWrapper<?> queryWrapper = new QueryWrapper<>();
+	Map<String, String> parameterMap = new HashMap<>();
+	parameterMap.put("field1", "value1");
+	parameterMap.put("field2", "value2");
+	
+	// Act
+	installMplus(queryWrapper, parameterMap);
+	
+	// Assert
+	assertEquals("SELECT * FROM table_name WHERE field1 = 'value1' AND field2 = 'value2'", queryWrapper.getSqlSegment());
+}
+
+
+No.3 generated result --------------------------
+
+package org.jeecg.common.system.query;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class QueryGeneratorTest {
+    @Test
+    public void installMplusTest() {
+        // Arrange
+        QueryGenerator queryGenerator = new QueryGenerator();
+        
+        // Act
+        queryGenerator.installMplus();
+        
+        // Assert
+        assertTrue(queryGenerator.isInstalled());
+    }
+}
+
+
+No.4 generated result --------------------------
+
+@Test
+public void installMplusTest() {
+	// Arrange
+	QueryWrapper<?> queryWrapper = new QueryWrapper<>();
+	String parameterMap = "{}";
+
+	// Act
+	installMplus(queryWrapper, parameterMap);
+
+	// Assert
+	assertEquals("SELECT * FROM table", queryWrapper.getSql());
+}
+
+
+No.5 generated result --------------------------
+
+The given code is a method named `installMplus` that takes in four parameters:
+
+* `queryWrapper`: A `QueryWrapper` object, which appears to be used to build and execute SQL queries.
+* `parameterMap`: A map of parameter names to values, which appears to be used as input for the query.
+* `fieldColumnMap`: A map of field names to column names, which appears to be used to specify the mapping between fields in the data model and columns in the database table.
+* `defaultOrderByField`: The name of a default order-by field, which appears to be used as a fallback if no explicit ordering is specified in the query.
+
+The method starts by initializing two local variables: `sql` (which will contain the generated SQL query) and `fields` (which will contain a list of fields that are referenced in the query). It then iterates over each field in the `parameterMap`, and for each one, it extracts its corresponding value from the map.
+
+Next, the method calls a private helper method named `buildSql` to construct the SQL query. This method takes in several parameters, including the name of the table that the query is being executed against, the list of fields that are being queried, and the name of a default order-by field. It appears to use these parameters to generate a SQL statement that selects all rows from the specified table where the values of the fields in the `parameterMap` match the corresponding column values in the database.
+
+Finally, the method returns the generated SQL query as a string.
+
+Overall, this code appears to be used to build and execute a SQL query based on input parameters provided by the user. It uses a variety of helper methods to generate the query, but ultimately returns the result as a string that can be executed using a database API such as JDBC or Hibernate.
+
+
+No.6 generated result --------------------------
+
+package org.jeecg.common.system.query;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class QueryGeneratorTest {
+    @Test
+    public void installMplusTest() {
+        QueryWrapper<Object> queryWrapper = new QueryWrapper<>();
+        Map<String, Object> parameterMap = new HashMap<>();
+        List<String> orderByFields = new ArrayList<>();
+        
+        // Set up some mock data
+        parameterMap.put("name", "John");
+        parameterMap.put("age", 25);
+        orderByFields.add("name");
+        
+        // Call the method with our mock data
+        List<Object> result = QueryGenerator.installMplus(queryWrapper, parameterMap, orderByFields);
+        
+        // Verify that we got the expected output
+        assertEquals(1, result.size());
+        Object obj = result.get(0);
+        assertTrue(obj instanceof Map);
+        Map<String, Object> map = (Map<String, Object>) obj;
+        assertEquals("John", map.get("name"));
+        assertEquals(25, map.get("age"));
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jeecg.common.system.query;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class QueryGeneratorTest {
+    @Test
+    public void installMplusTest() {
+        // Test with null parameter
+        assertThrows(NullPointerException.class, () -> installMplus(null));
+        
+        // Test with valid parameters
+        String[] fields = {"field1", "field2"};
+        QueryRuleEnum rule = QueryRuleEnum.EQ;
+        String value = "value";
+        assertDoesNotThrow(() -> installMplus(fields, rule, value));
+    }
+}
+
+
+No.8 generated result --------------------------
+
+// Create a new instance of the QueryWrapper<String> class
+QueryWrapper<String> query = new QueryWrapper<>();
+
+// Set the target entity for the query
+query.setEntity(Employee.class);
+
+// Define the query parameter and its corresponding value
+Map<String, Object> parameters = new HashMap<>();
+parameters.put("name", "John Doe");
+
+// Call the installMplus method to generate a new JPA query based on the provided parameter
+QueryGenerator.installMplus(query, "SELECT * FROM Employee WHERE name = :name", parameters);
+
+
+No.9 generated result --------------------------
+
+@Test
+public void installMplusTest() {
+    // Arrange
+    QueryWrapper queryWrapper = new QueryWrapper();
+    String parameterMapString = "{\"order\":\"create_time\", \"pageNo\":1, \"pageSize\":20}";
+    Map<String, Object> parameterMap = (new ObjectMapper()).readValue(parameterMapString, new TypeReference<HashMap<String, Object>>(){});
+    
+    // Act
+    QueryGenerator.installMplus(queryWrapper, parameterMap);
+    
+    // Assert
+    assertEquals("order_by", queryWrapper.getOrderBy());
+    assertEquals("create_time", queryWrapper.getOrderColumn());
+    assertEquals(1, queryWrapper.getPageNo());
+    assertEquals(20, queryWrapper.getPageSize());
+}
+
+
+No.10 generated result --------------------------
+
+
+package org.jeecg.common.system.query;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class QueryGeneratorTest {
+    @Test
+    public void installMplusTest() {
+        QueryWrapper<Object> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("name", "张三");
+        assertEquals(queryWrapper.getSqlSegment(), "SELECT * FROM table WHERE name=?");
+    }
+}
+
+

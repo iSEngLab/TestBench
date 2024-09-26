@@ -1,0 +1,644 @@
+Source code: 
+
+
+Node mergeKList(Node[] a, int N) {
+    // Min Heap
+    PriorityQueue<Node> min = new PriorityQueue<>(Comparator.comparingInt(x -> x.data));
+
+    // adding head of all linkedList in min heap
+    min.addAll(Arrays.asList(a).subList(0, N));
+
+    // Make new head among smallest heads in K linkedList
+    Node head = min.poll();
+    min.add(head.next);
+    Node curr = head;
+
+    // merging LinkedList
+    while (!min.isEmpty()) {
+        Node temp = min.poll();
+        curr.next = temp;
+        curr = temp;
+
+        // Add Node in min Heap only if temp.next is not null
+        if (temp.next != null) {
+            min.add(temp.next);
+        }
+    }
+
+    return head;
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.thealgorithms.datastructures.lists;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class Merge_K_SortedLinkedlistTest {
+
+    public static class Node {
+        int data;
+        Node next;
+
+        public Node(int data) {
+            this.data = data;
+        }   
+    }
+
+    private Merge_K_SortedLinkedlist.Node[] createLists() {
+        // Create test data
+        Merge_K_SortedLinkedlist.Node node1 = new Node(1);
+        node1.next = new Node(4);
+        node1.next.next = new Node(5);
+
+        Merge_K_SortedLinkedlist.Node node2 = new Node(1);
+        node2.next = new Node(3);
+        node2.next.next = new Node(4);
+
+        Merge_K_SortedLinkedlist.Node node3 = new Node(2);
+        node3.next = new Node(6);
+
+        return new Merge_K_SortedLinkedlist.Node[]{node1, node2, node3};
+    }
+
+    private String listToString(Merge_K_SortedLinkedlist.Node node) {
+        StringBuilder sb = new StringBuilder();
+        while (node != null) {
+            sb.append(node.data);
+            if (node.next != null) {
+                sb.append("->");
+            }
+            node = node.next;
+        }
+        return sb.toString();
+    }
+
+    @Test
+    public void mergeKListTest() {
+        Merge_K_SortedLinkedlist mergeKSortedList = new Merge_K_SortedLinkedlist();
+        Merge_K_SortedLinkedlist.Node[] lists = createLists();
+        
+        Merge_K_SortedLinkedlist.Node mergedHead = mergeKSortedList.mergeKList(lists, lists.length);
+        
+        // We expect the merged list to be 1->1->2->3->4->4->5->6
+        String result = listToString(mergedHead);
+        assertEquals("1->1->2->3->4->4->5->6", result);
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package com.thealgorithms.datastructures.lists;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class Merge_K_SortedLinkedlistTest {
+
+    private Merge_K_SortedLinkedlist merge_k_sortedLinkedList;
+
+    @BeforeEach
+    public void setup() {
+        merge_k_sortedLinkedList = new Merge_K_SortedLinkedlist();
+    }
+
+    @Test
+    public void mergeKListTest() {
+        Merge_K_SortedLinkedlist.Node[] lists = new Merge_K_SortedLinkedlist.Node[]{
+            createList(new int[]{1, 4, 5}),
+            createList(new int[]{1, 3, 4}),
+            createList(new int[]{2, 6})
+        };
+        Merge_K_SortedLinkedlist.Node mergedHead = merge_k_sortedLinkedList.mergeKList(lists, lists.length);
+
+        int[] expected = new int[]{1, 1, 2, 3, 4, 4, 5, 6};
+        for (int value : expected) {
+            assertNotNull(mergedHead);
+            assertEquals(value, mergedHead.data);
+            mergedHead = mergedHead.next;
+        }
+
+        assertNull(mergedHead); // The merged list should end here
+    }
+
+    private Merge_K_SortedLinkedlist.Node createList(int[] data) {
+        if (data == null || data.length == 0) {
+            return null;
+        }
+
+        Merge_K_SortedLinkedlist.Node head = new Merge_K_SortedLinkedlist.Node(data[0]);
+        Merge_K_SortedLinkedlist.Node current = head;
+
+        for (int i = 1; i < data.length; i++) {
+            current.next = new Merge_K_SortedLinkedlist.Node(data[i]);
+            current = current.next;
+        }
+
+        return head;
+    }
+    
+    // This is required as the Node class was private. We are mimicking it with a static nested class for this test.
+    private static class Node {
+        private int data;
+        private Merge_K_SortedLinkedlist.Node next;
+
+        public Node(int data) {
+            this.data = data;
+            this.next = null;
+        }
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.thealgorithms.datastructures.lists;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class Merge_K_SortedLinkedlistTest {
+
+    private Merge_K_SortedLinkedlist.Node newNode(int value) {
+        Merge_K_SortedLinkedlist.Node node = new Merge_K_SortedLinkedlist().new Node();
+        node.data = value;
+        node.next = null;
+        return node;
+    }
+
+    private Merge_K_SortedLinkedlist.Node[] createTestLists() {
+        // List 1: 1->3->5
+        Merge_K_SortedLinkedlist.Node head1 = newNode(1);
+        head1.next = newNode(3);
+        head1.next.next = newNode(5);
+
+        // List 2: 2->4->6
+        Merge_K_SortedLinkedlist.Node head2 = newNode(2);
+        head2.next = newNode(4);
+        head2.next.next = newNode(6);
+
+        return new Merge_K_SortedLinkedlist.Node[]{head1, head2};
+    }
+
+    @Test
+    public void mergeKListTest() {
+        Merge_K_SortedLinkedlist mergeKLists = new Merge_K_SortedLinkedlist();
+        Merge_K_SortedLinkedlist.Node[] lists = createTestLists();
+        Merge_K_SortedLinkedlist.Node mergedList = mergeKLists.mergeKList(lists, lists.length);
+
+        assertNotNull(mergedList);
+
+        int[] expectedData = {1, 2, 3, 4, 5, 6};
+        for (int value : expectedData) {
+            assertNotNull(mergedList);
+            assertEquals(value, mergedList.data);
+            mergedList = mergedList.next;
+        }
+
+        assertNull(mergedList);
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.thealgorithms.datastructures.lists;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class Merge_K_SortedLinkedlistTest {
+
+    Merge_K_SortedLinkedlist merge_k_sortedLinkedlist = new Merge_K_SortedLinkedlist();
+
+    @Test
+    public void mergeKListTest() {
+        // Initialize individual linked lists
+        Merge_K_SortedLinkedlist.Node[] lists = new Merge_K_SortedLinkedlist.Node[3];
+        lists[0] = createList(new int[]{1, 4, 5});
+        lists[1] = createList(new int[]{1, 3, 4});
+        lists[2] = createList(new int[]{2, 6});
+
+        // Merge K lists
+        Merge_K_SortedLinkedlist.Node head = merge_k_sortedLinkedlist.mergeKList(lists, lists.length);
+        
+        // Expected merged list as array
+        int[] expected = new int[]{1, 1, 2, 3, 4, 4, 5, 6};
+
+        // Convert merged linked list to array
+        int[] result = linkedListToArray(head);
+        
+        // Assert that the merged list matches the expected result
+        assertArrayEquals(expected, result, "The merged array does not match the expected output.");
+    }
+
+    // Helper method to create a linked list from the given array of values
+    private Merge_K_SortedLinkedlist.Node createList(int[] values) {
+        if (values == null || values.length == 0) return null;
+        Merge_K_SortedLinkedlist.Node head = merge_k_sortedLinkedlist.new Node();
+        Merge_K_SortedLinkedlist.Node current = head;
+        head.data = values[0];
+        for (int i = 1; i < values.length; i++) {
+            Merge_K_SortedLinkedlist.Node temp = merge_k_sortedLinkedlist.new Node();
+            temp.data = values[i];
+            current.next = temp;
+            current = temp;
+        }
+        return head;
+    }
+
+    // Helper method to convert a linked list to an array of ints
+    private int[] linkedListToArray(Merge_K_SortedLinkedlist.Node head) {
+        int length = 0;
+        Merge_K_SortedLinkedlist.Node current = head;
+        while (current != null) {
+            length++;
+            current = current.next;
+        }
+        int[] result = new int[length];
+        current = head;
+        int index = 0;
+        while (current != null) {
+            result[index++] = current.data;
+            current = current.next;
+        }
+        return result;
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.thealgorithms.datastructures.lists;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class Merge_K_SortedLinkedlistTest {
+    
+    private Merge_K_SortedLinkedlist.Node createNode(int data) {
+        Merge_K_SortedLinkedlist.Node node = new Merge_K_SortedLinkedlist().new Node();
+        node.data = data;
+        node.next = null;
+        return node;
+    }
+
+    private Merge_K_SortedLinkedlist.Node createLinkedList(int[] values) {
+        if (values.length == 0) return null;
+        Merge_K_SortedLinkedlist.Node head = createNode(values[0]);
+        Merge_K_SortedLinkedlist.Node curr = head;
+        for (int i = 1; i < values.length; i++) {
+            curr.next = createNode(values[i]);
+            curr = curr.next;
+        }
+        return head;
+    }
+
+    @Test
+    public void mergeKListTest() {
+        Merge_K_SortedLinkedlist mergeK = new Merge_K_SortedLinkedlist();
+
+        // Create linked lists
+        Merge_K_SortedLinkedlist.Node list1 = createLinkedList(new int[]{1, 4, 7});
+        Merge_K_SortedLinkedlist.Node list2 = createLinkedList(new int[]{2, 5, 8});
+        Merge_K_SortedLinkedlist.Node list3 = createLinkedList(new int[]{3, 6, 9});
+
+        // Array of linked list heads
+        Merge_K_SortedLinkedlist.Node[] nodes = new Merge_K_SortedLinkedlist.Node[]{list1, list2, list3};
+
+        // Merge the K sorted linked lists
+        Merge_K_SortedLinkedlist.Node mergedHead = mergeK.mergeKList(nodes, nodes.length);
+
+        // Convert the merged linked list to an array for easy comparison
+        int[] result = new int[9];
+        int i = 0;
+        while (mergedHead != null) {
+            result[i++] = mergedHead.data;
+            mergedHead = mergedHead.next;
+        }
+
+        // Define the expected result
+        int[] expectedResult = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+        assertArrayEquals(expectedResult, result, "The merged linked list is not correct.");
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package com.thealgorithms.datastructures.lists;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class Merge_K_SortedLinkedlistTest {
+
+    private Merge_K_SortedLinkedlist merge_k_sortedLinkedList;
+
+    @BeforeEach
+    public void setUp() {
+        merge_k_sortedLinkedList = new Merge_K_SortedLinkedlist();
+    }
+
+    @Test
+    public void mergeKListTest() {
+        // Setup test data: creating k sorted linked lists
+        Merge_K_SortedLinkedlist.Node[] sortedLists = new Merge_K_SortedLinkedlist.Node[3];
+
+        // List 1: 1 -> 3 -> 5
+        sortedLists[0] = createNodeList(new int[]{1, 3, 5});
+
+        // List 2: 2 -> 4 -> 6
+        sortedLists[1] = createNodeList(new int[]{2, 4, 6});
+
+        // List 3: 0 -> 7 -> 8
+        sortedLists[2] = createNodeList(new int[]{0, 7, 8});
+
+        // Merge k lists
+        Merge_K_SortedLinkedlist.Node mergedHead = merge_k_sortedLinkedList.mergeKList(sortedLists, sortedLists.length);
+
+        // Verify merged list is sorted: 0 -> 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
+        int[] expectedData = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+        for (int data : expectedData) {
+            assertNotNull(mergedHead, "Node should not be null");
+            assertEquals(data, mergedHead.data, "Node data should match expected value");
+            mergedHead = mergedHead.next;
+        }
+        assertNull(mergedHead, "Merged list should end with null");
+    }
+
+    private Merge_K_SortedLinkedlist.Node createNodeList(int[] data) {
+        if (data.length == 0) return null;
+        Merge_K_SortedLinkedlist.Node head, current;
+
+        head = merge_k_sortedLinkedList.new Node();
+        head.data = data[0];
+        current = head;
+
+        for (int i = 1; i < data.length; i++) {
+            current.next = merge_k_sortedLinkedList.new Node();
+            current = current.next;
+            current.data = data[i];
+        }
+
+        return head;
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.thealgorithms.datastructures.lists;
+
+import org.junit.jupiter.api.Test;
+
+import java.util.PriorityQueue;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+public class Merge_K_SortedLinkedlistTest {
+
+    @Test
+    public void mergeKListTest() {
+        // Setup the linked lists (Nodes)
+        Merge_K_SortedLinkedlist mergeKListUtil = new Merge_K_SortedLinkedlist();
+        Merge_K_SortedLinkedlist.Node list1 = mergeKListUtil.new Node();
+        list1.data = 1;
+        list1.next = mergeKListUtil.new Node();
+        list1.next.data = 4;
+        list1.next.next = mergeKListUtil.new Node();
+        list1.next.next.data = 5;
+
+        Merge_K_SortedLinkedlist.Node list2 = mergeKListUtil.new Node();
+        list2.data = 1;
+        list2.next = mergeKListUtil.new Node();
+        list2.next.data = 3;
+        list2.next.next = mergeKListUtil.new Node();
+        list2.next.next.data = 4;
+
+        Merge_K_SortedLinkedlist.Node list3 = mergeKListUtil.new Node();
+        list3.data = 2;
+        list3.next = mergeKListUtil.new Node();
+        list3.next.data = 6;
+
+        Merge_K_SortedLinkedlist.Node[] nodes = new Merge_K_SortedLinkedlist.Node[] { list1, list2, list3 };
+
+        // Perform the merge
+        Merge_K_SortedLinkedlist.Node mergedList = mergeKListUtil.mergeKList(nodes, nodes.length);
+
+        // Assert the resulting list is as expected
+        assertNotNull(mergedList);
+        int[] expectedData = {1, 1, 2, 3, 4, 4, 5, 6};
+
+        for (int expectedValue : expectedData) {
+            assertEquals(expectedValue, mergedList.data);
+            mergedList = mergedList.next;
+        }
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package com.thealgorithms.datastructures.lists;
+
+import org.junit.jupiter.api.*;
+
+import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+public class Merge_K_SortedLinkedlistTest {
+    
+    Merge_K_SortedLinkedlist mergeKListsObj = new Merge_K_SortedLinkedlist();
+    
+    @Test
+    public void mergeKListTest() {
+        Merge_K_SortedLinkedlist.Node[] nodeList = new Merge_K_SortedLinkedlist.Node[3];
+        
+        nodeList[0] = createLinkedList(new int[]{1, 4, 7});
+        nodeList[1] = createLinkedList(new int[]{2, 5, 8});
+        nodeList[2] = createLinkedList(new int[]{3, 6, 9});
+        
+        Merge_K_SortedLinkedlist.Node mergedHead = mergeKListsObj.mergeKList(nodeList, nodeList.length);
+        
+        assertNotNull(mergedHead, "The merged linked list should not be null");
+        
+        int[] expectedMergedValues = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9};
+        for (int value : expectedMergedValues) {
+            assertNotNull(mergedHead, "Node should not be null");
+            assertEquals(value, mergedHead.data, "Node data should match expected value");
+            mergedHead = mergedHead.next;
+        }
+        assertEquals(null, mergedHead, "The last node should point to null");
+    }
+    
+    private Merge_K_SortedLinkedlist.Node createLinkedList(int[] values) {
+        if (values == null || values.length == 0) {
+            return null;
+        }
+
+        Merge_K_SortedLinkedlist.Node head = new Merge_K_SortedLinkedlist().new Node();
+        Merge_K_SortedLinkedlist.Node current = head;
+
+        head.data = values[0];
+
+        for (int i = 1; i < values.length; i++) {
+            Merge_K_SortedLinkedlist.Node temp = new Merge_K_SortedLinkedlist().new Node();
+            temp.data = values[i];
+            current.next = temp;
+            current = temp;
+        }
+
+        return head;
+    }
+    
+}
+
+
+No.9 generated result --------------------------
+
+package com.thealgorithms.datastructures.lists;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class Merge_K_SortedLinkedlistTest {
+
+    private Merge_K_SortedLinkedlist mergeKListObj = new Merge_K_SortedLinkedlist();
+    
+    private Merge_K_SortedLinkedlist.Node[] generateSampleLists() {
+        // Creating sample lists
+        Merge_K_SortedLinkedlist.Node list1 = createList(new int[]{1, 4, 7});
+        Merge_K_SortedLinkedlist.Node list2 = createList(new int[]{2, 5, 8});
+        Merge_K_SortedLinkedlist.Node list3 = createList(new int[]{3, 6, 9});
+
+        return new Merge_K_SortedLinkedlist.Node[]{list1, list2, list3};
+    }
+    
+    private Merge_K_SortedLinkedlist.Node createList(int[] values) {
+        Merge_K_SortedLinkedlist.Node head = mergeKListObj.new Node(values[0], null);
+        Merge_K_SortedLinkedlist.Node current = head;
+        for (int i = 1; i < values.length; i++) {
+            current.next = mergeKListObj.new Node(values[i], null);
+            current = current.next;
+        }
+        return head;
+    }
+
+    private boolean areListsEqual(Merge_K_SortedLinkedlist.Node head1, Merge_K_SortedLinkedlist.Node head2) {
+        Merge_K_SortedLinkedlist.Node ptr1 = head1;
+        Merge_K_SortedLinkedlist.Node ptr2 = head2;
+        while (ptr1 != null && ptr2 != null) {
+            if (ptr1.data != ptr2.data) {
+                return false;
+            }
+            ptr1 = ptr1.next;
+            ptr2 = ptr2.next;
+        }
+        return (ptr1 == null) && (ptr2 == null);
+    }
+    
+    @Test
+    public void mergeKListTest() {
+        // given
+        Merge_K_SortedLinkedlist.Node[] sampleLists = generateSampleLists();
+        Merge_K_SortedLinkedlist.Node expected = createList(new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9});
+        
+        // when
+        Merge_K_SortedLinkedlist.Node resultHead = mergeKListObj.mergeKList(sampleLists, sampleLists.length);
+        
+        // then
+        assertTrue(areListsEqual(expected, resultHead));
+    }
+
+    @Test
+    public void mergeKListTest_EmptyList() {
+        // given
+        Merge_K_SortedLinkedlist.Node[] sampleLists = new Merge_K_SortedLinkedlist.Node[]{};
+
+        // when
+        Merge_K_SortedLinkedlist.Node resultHead = mergeKListObj.mergeKList(sampleLists, sampleLists.length);
+
+        // then
+        assertNull(resultHead);
+    }
+    
+    // We can add more test cases for scenarios like partially filled arrays, very large lists, etc.
+
+    // Define the Node class properly according to the available constructor in the original codebase or update the code
+    // to match this test case, if necessary.
+}
+
+
+No.10 generated result --------------------------
+
+package com.thealgorithms.datastructures.lists;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class Merge_K_SortedLinkedlistTest {
+
+    private class Node {
+        private int data;
+        private Node next;
+
+        public Node(int data) {
+            this.data = data;
+            this.next = null;
+        }
+    }
+    
+    // Helper method to create a linked list with given values
+    private Node createLinkedList(int[] values) {
+        Node head = new Node(values[0]);
+        Node current = head;
+        for (int i = 1; i < values.length; i++) {
+            current.next = new Node(values[i]);
+            current = current.next;
+        }
+        return head;
+    }
+    
+    // Helper method to convert linked list to string for easy comparison
+    private String linkedListToString(Node head) {
+        StringBuilder sb = new StringBuilder();
+        Node current = head;
+        while (current != null) {
+            sb.append(current.data).append(" ");
+            current = current.next;
+        }
+        return sb.toString().trim();
+    }
+    
+    @Test
+    public void mergeKListTest() {
+        Merge_K_SortedLinkedlist mergeKSortedLinkedlist = new Merge_K_SortedLinkedlist();
+        
+        // Create linked lists
+        Node l1 = createLinkedList(new int[] {1, 4, 7});
+        Node l2 = createLinkedList(new int[] {2, 5, 8});
+        Node l3 = createLinkedList(new int[] {3, 6, 9});
+        
+        // Array of linked list heads
+        Node[] lists = new Node[] {l1, l2, l3};
+        
+        // Perform merge operation
+        Node mergedListHead = mergeKSortedLinkedlist.mergeKList(lists, lists.length);
+        
+        // Convert merged list to string and assert
+        String result = linkedListToString(mergedListHead);
+        String expected = "1 2 3 4 5 6 7 8 9";
+        assertEquals(expected, result);
+    }
+} 
+
+

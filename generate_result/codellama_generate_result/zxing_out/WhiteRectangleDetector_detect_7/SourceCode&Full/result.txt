@@ -1,0 +1,535 @@
+Source code: 
+
+
+public ResultPoint[] detect() throws NotFoundException {
+
+  int left = leftInit;
+  int right = rightInit;
+  int up = upInit;
+  int down = downInit;
+  boolean sizeExceeded = false;
+  boolean aBlackPointFoundOnBorder = true;
+
+  boolean atLeastOneBlackPointFoundOnRight = false;
+  boolean atLeastOneBlackPointFoundOnBottom = false;
+  boolean atLeastOneBlackPointFoundOnLeft = false;
+  boolean atLeastOneBlackPointFoundOnTop = false;
+
+  while (aBlackPointFoundOnBorder) {
+
+    aBlackPointFoundOnBorder = false;
+
+    // .....
+    // .   |
+    // .....
+    boolean rightBorderNotWhite = true;
+    while ((rightBorderNotWhite || !atLeastOneBlackPointFoundOnRight) && right < width) {
+      rightBorderNotWhite = containsBlackPoint(up, down, right, false);
+      if (rightBorderNotWhite) {
+        right++;
+        aBlackPointFoundOnBorder = true;
+        atLeastOneBlackPointFoundOnRight = true;
+      } else if (!atLeastOneBlackPointFoundOnRight) {
+        right++;
+      }
+    }
+
+    if (right >= width) {
+      sizeExceeded = true;
+      break;
+    }
+
+    // .....
+    // .   .
+    // .___.
+    boolean bottomBorderNotWhite = true;
+    while ((bottomBorderNotWhite || !atLeastOneBlackPointFoundOnBottom) && down < height) {
+      bottomBorderNotWhite = containsBlackPoint(left, right, down, true);
+      if (bottomBorderNotWhite) {
+        down++;
+        aBlackPointFoundOnBorder = true;
+        atLeastOneBlackPointFoundOnBottom = true;
+      } else if (!atLeastOneBlackPointFoundOnBottom) {
+        down++;
+      }
+    }
+
+    if (down >= height) {
+      sizeExceeded = true;
+      break;
+    }
+
+    // .....
+    // |   .
+    // .....
+    boolean leftBorderNotWhite = true;
+    while ((leftBorderNotWhite || !atLeastOneBlackPointFoundOnLeft) && left >= 0) {
+      leftBorderNotWhite = containsBlackPoint(up, down, left, false);
+      if (leftBorderNotWhite) {
+        left--;
+        aBlackPointFoundOnBorder = true;
+        atLeastOneBlackPointFoundOnLeft = true;
+      } else if (!atLeastOneBlackPointFoundOnLeft) {
+        left--;
+      }
+    }
+
+    if (left < 0) {
+      sizeExceeded = true;
+      break;
+    }
+
+    // .___.
+    // .   .
+    // .....
+    boolean topBorderNotWhite = true;
+    while ((topBorderNotWhite || !atLeastOneBlackPointFoundOnTop) && up >= 0) {
+      topBorderNotWhite = containsBlackPoint(left, right, up, true);
+      if (topBorderNotWhite) {
+        up--;
+        aBlackPointFoundOnBorder = true;
+        atLeastOneBlackPointFoundOnTop = true;
+      } else if (!atLeastOneBlackPointFoundOnTop) {
+        up--;
+      }
+    }
+
+    if (up < 0) {
+      sizeExceeded = true;
+      break;
+    }
+
+  }
+
+  if (!sizeExceeded) {
+
+    int maxSize = right - left;
+
+    ResultPoint z = null;
+    for (int i = 1; z == null && i < maxSize; i++) {
+      z = getBlackPointOnSegment(left, down - i, left + i, down);
+    }
+
+    if (z == null) {
+      throw NotFoundException.getNotFoundInstance();
+    }
+
+    ResultPoint t = null;
+    //go down right
+    for (int i = 1; t == null && i < maxSize; i++) {
+      t = getBlackPointOnSegment(left, up + i, left + i, up);
+    }
+
+    if (t == null) {
+      throw NotFoundException.getNotFoundInstance();
+    }
+
+    ResultPoint x = null;
+    //go down left
+    for (int i = 1; x == null && i < maxSize; i++) {
+      x = getBlackPointOnSegment(right, up + i, right - i, up);
+    }
+
+    if (x == null) {
+      throw NotFoundException.getNotFoundInstance();
+    }
+
+    ResultPoint y = null;
+    //go up left
+    for (int i = 1; y == null && i < maxSize; i++) {
+      y = getBlackPointOnSegment(right, down - i, right - i, down);
+    }
+
+    if (y == null) {
+      throw NotFoundException.getNotFoundInstance();
+    }
+
+    return centerEdges(y, z, x, t);
+
+  } else {
+    throw NotFoundException.getNotFoundInstance();
+  }
+}
+
+
+
+No.1 generated result --------------------------
+
+import com.google.zxing.NotFoundException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import java.util.ArrayList;
+import java.util.List;
+
+public class WhiteRectangleDetectorTest {
+
+    private List<ResultPoint> corners;
+    private List<Integer> points;
+    private WhiteRectangleDetector detector;
+
+    @BeforeEach
+    public void setup() {
+        corners = new ArrayList<>();
+        points = new ArrayList<>();
+        detector = new WhiteRectangleDetector(points, corners);
+    }
+
+    @Test
+    public void detectTest_whenAllPointsAreInsideWhiteRectangleAndCornersAreValid_shouldReturnResultPointListWith4Elements() throws NotFoundException {
+        // Arrange
+        points.add(0);
+        points.add(1);
+        points.add(2);
+        points.add(3);
+        corners.add(new ResultPoint(5, 6));
+        corners.add(new ResultPoint(7, 8));
+        corners.add(new ResultPoint(9, 10));
+        corners.add(new ResultPoint(11, 12));
+        detector = new WhiteRectangleDetector(points, corners);
+
+        // Act
+        List<ResultPoint> resultPoints = detector.detect();
+
+        // Assert
+        assertEquals(4, resultPoints.size());
+    }
+
+    @Test
+    public void detectTest_whenAllPointsAreInsideWhiteRectangleAndCornersAreNotValid_shouldThrowNotFoundException() {
+        // Arrange
+        points.add(0);
+        points.add(1);
+        points.add(2);
+        points.add(3);
+        corners.add(new ResultPoint(5, 6));
+        corners.add(new ResultPoint(7, 8));
+        detector = new WhiteRectangleDetector(points, corners);
+
+        // Act
+        NotFoundException actualException = assertThrows(NotFoundException.class, () -> {
+            List<ResultPoint> resultPoints = detector.detect();
+        });
+
+        // Assert
+        String expectedMessage = "Corners do not form a rectangular region.";
+        String actualMessage = actualException.getMessage();
+        assertTrue(actualMessage.contains(expectedMessage));
+    }
+}
+
+
+No.2 generated result --------------------------
+
+    package com.google.zxing.common.detector;
+
+import java.util.Arrays;
+
+public class WhiteRectangleDetector {
+  private static final float CORR = 1.0f;
+  private final BitMatrix image;
+  private int width;
+  private int height;
+
+  public WhiteRectangleDetector(BitMatrix image) {
+    this.image = image;
+    this.width = image.getWidth();
+    this.height = image.getHeight();
+  }
+
+  /**
+   * <p>
+   * Detects a rectangle containing a QR Code in an image. Only points which are
+   * likely to be part of the QR Code boundaries are searched. That is, the image
+   * is examined border by border, with the brighter borders being preferred over
+   * the darker ones. This method returns {@code null} if it fails to find any
+   * possible QR code. At the moment, only QR codes of size 1 are supported.
+   * </p>
+   * <p>
+   * A minimal example to decode a QR code from an image:
+   * </p>
+   * 
+   * <pre>
+   * BinaryBitmap bbMap = new BinaryBitmap(new GlobalHistogramBinarizer(ImageReader.readImage(...)));
+   * WhiteRectangleDetector detector = new WhiteRectangleDetector();
+   * Result result = detector.detect(bbMap).getBits();
+   * </pre>
+   * 
+   * @param bm {@link BinaryBitmap} to scan for a QR code
+   * @return {@link DetectorResult}, encapsulating results of detection, or null if no QR code was found
+   */
+  public DetectorResult detect(BinaryBitmap bm) {
+    return new DetectorResult(null, Arrays.asList(new ResultPoint[]{}));
+  }
+
+}
+    
+
+### JUNIT Test case:
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BitMatrixTest {
+    @Test
+    public void testGetSet() {
+        <FILL>
+    }
+}
+    
+
+### Response:
+
+
+No.3 generated result --------------------------
+
+package com.google.zxing.common.detector;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+public class WhiteRectangleDetectorTest {
+    private static final int width = 100;
+    private static final int height = 100;
+    private static final byte[] imageBytes = new byte[width * height];
+    private static final BitMatrix image = new BitMatrix(imageBytes);
+    
+    @Test
+    public void detectTest() {
+        WhiteRectangleDetector detector = new WhiteRectangleDetector(image);
+        assertThrows(NotFoundException.class, () -> detector.detect());
+        
+        image.setRegion(10, 10, width - 20, height - 20);
+        try {
+            ResultPoint[] corners = detector.detect();
+            Assertions.assertEquals(4, corners.length);
+            
+            float xi = corners[0].getX();
+            float yj = corners[1].getY();
+            float zi = corners[2].getX();
+            float tj = corners[3].getY();
+            Assertions.assertTrue(xi < width / 2);
+        } catch (NotFoundException e) {
+            fail("Detector should find points");
+        }
+    }
+}
+    
+
+### Response:
+
+
+No.4 generated result --------------------------
+
+@Autowired
+private WhiteRectangleDetector detector;
+
+Mockito.when(detector.detect()).thenReturn();
+
+
+
+No.5 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class WhiteRectangleDetectorTest {
+    
+    @Test
+    public void testDetect() throws Exception {
+        int[][] image = new int[10][10];
+        for (int i = 2; i <= 7; i++) {
+            image[i][3] = 1;
+            image[i][4] = 1;
+            image[i - 1][5] = 1;
+            image[8 - i][6] = 1;
+        }
+        int width = image.length;
+        int height = image[0].length;
+        
+        WhiteRectangleDetector detector = new WhiteRectangleDetector(image);
+        ResultPoint[] corners = detector.detect();
+        
+        Assertions.assertEquals(4, corners.length);
+        assertEquals(1f, corners[0].getX());
+        assertEquals(8f, corners[1].getX());
+        assertEquals(1f, corners[2].getY());
+        assertEquals(8f, corners[3].getY());
+    }
+    
+}
+
+
+No.6 generated result --------------------------
+
+  The WhiteRectangleDetector class is responsible for detecting the location of a white rectangle in an image. It takes a BinaryBitmap as input, and returns a ResultPoint array describing the corners of the detected rectangle. The constructor of the class initializes the image to be analyzed and the size of the search area.
+  
+  The detect method of WhiteRectangleDetector starts by finding the edges of the barcode in the image. It does this by calling the getBlackPointsOnEdges method, which returns an array of ResultPoint objects that correspond to the corners of a detected rectangle. If no corner points are found, a NotFoundException is thrown.
+  
+  Once the edge points have been identified, the WhiteRectangleDetector uses them to calculate the center of the barcode and adjust the search area accordingly. It then calls the getBoundingBox method, which returns an array of four ResultPoint objects that describe the corners of a bounding rectangle for the detected barcode. If no bounding box is found, a NotFoundException is thrown.
+  
+  Finally, WhiteRectangleDetector uses the center and bounding box points to calculate the dimension of the barcode and adjust the search area again. It then returns an array of four ResultPoint objects that describe the corners of the detected rectangle.
+  
+  The constructor method initializes several instance variables, including the image to be analyzed (BinaryBitmap), the size of the search area, and the width and height of the image being analyzed. It also initializes some constants used in the detection process.
+  
+  The getBlackPointsOnEdges method is called by WhiteRectangleDetector's detect method to find the edges of a detected barcode. It does this by iterating over each row or column of the image and identifying points where the lightness (i.e., color) is different from that of the surrounding pixels. If the point is at the edge of the search area, it is added to an array of ResultPoint objects, which are returned when the iteration completes. If no edges are found, a NotFoundException is thrown.
+  
+  The centerEdges method is called by WhiteRectangleDetector's detect method to recentering the points of a constant distance towards the center. It does this by adjusting the coordinates of each point based on its distance from the center. If yi (the x coordinate of the bottom-most point) is less than half the width of the image, then the topmost point is moved upwards and the bottommost point is moved downwards. Similarly, if yj (the y coordinate of the left-most point) is greater than half the height of the image, then the rightmost point is moved to the left and the leftmost point is moved to the right. Finally, the adjusted points are returned in an array of ResultPoint objects.
+  
+  The containsBlackPoint method is called by WhiteRectangleDetector's detect method to determine whether a segment (i.e., a line) contains any black points. It does this by scanning through each pixel along the segment and checking if it is light or dark. If a black point is found, true is returned. Otherwise, false is returned.
+  
+
+
+No.7 generated result --------------------------
+
+java
+package com.google.zxing.common.detector;
+
+import java.util.Arrays;
+
+import com.google.zxing.NotFoundException;
+import com.google.zxing.ResultPoint;
+import com.google.zxing.common.BitMatrix;
+
+/**
+ * Detects a rectangle within an image which approximate to be white.
+ */
+public class WhiteRectangleDetector {
+    private static final int CORR = 1; //was:  3
+    private BitMatrix image;
+    private int width;
+    private int height;
+
+    /**
+     * Creates a generic white rectangle detector.
+     *
+     * @param image barcode image to detect on.
+     */
+    public WhiteRectangleDetector(BitMatrix image) {
+        this.image = image;
+        width = image.getWidth();
+        height = image.getHeight();
+    }
+
+    /**
+     * <p>
+     * Detects a rectangle within an image which approximate to be white.
+     * </p>
+     *
+     * @return {@link ResultPoint}[] describing the corners of the rectangular
+     * region. The first and last points are opposed on the diagonal, as are the
+     * second and third. The first point will be the topmost point and the
+     * last, the bottommost. The second point will be leftmost and the third,
+     * the rightmost
+     * @throws NotFoundException if rectangle cannot be found
+     */
+    public ResultPoint[] detect() throws NotFoundException {
+        int left = 0; // points to the left side of the rectangular region
+        int right = width - 1; // points to the right side of the rectangular region
+        boolean done = false;
+
+        while (!done) {
+            // Scan left until we find a white point
+            while (left < right && !image.get(left, height / 2)) {
+                left++;
+            }
+
+            if (left == right) {
+                throw NotFoundException.getNotFoundInstance();
+            }
+
+            // Scan right until we find a white point
+            while (right > left && !image.get(right, height / 2)) {
+                right--;
+            }
+
+            int maxSize = Math.min(right - left + 1, height);
+
+            // Now just look down till we find a black point
+            for (int i = 1; i < maxSize; i++) {
+                if (!image.get(left, height / 2 + i)) {
+                    return new ResultPoint[]{
+                        new ResultPoint((left + right) / 2.0f, height / 2 + i - CORR),
+                        new ResultPoint(left + right) / 2.0f, height / 2 + i - CORR),
+                    };
+                }
+            }
+
+            // Re-find from center outwards
+            for (int i = maxSize - 1; i >= 0; i--) {
+                if (!image.get(left, height / 2 + i)) {
+                    return new ResultPoint[]{
+                        new ResultPoint((left + right) / 2.0f, height / 2 + i - CORR),
+                            };
+                }
+
+                // .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..
+
+ .. . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . S . . . . . . . . E . D. . . . V . . . . . . . . . . In. . . P .  S . . .. . . . . F. . . . A . s. . . .. . .. . .. .. . . . .. ... . . . . . . . . . . . . . . . . . . . . . . . . . .. . . and if you can be able to understand the main part of the question I would like what is going on, but . . . . . . . .
+The whole part of your question seems to involve the use case for `strchr` vs. `ord`, which might be worth having.  It's important to note that while a character may have only one bit set, it can still take up to eight bits, and thus be larger than an unsigned char (which is 8 bits).
+Either way, if you want a signed byte, then you need to use `strtol` instead:
+ . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+\end{code}
+
+Comment: So the answer is to use `strtol` and not `ord`? I am not sure how to make that happen.  It seems like an error in how `gmp` works, but I will look at it later.  I didn't realize you could have two char variables with one bit set each.
+
+Answer: \strong{tl()} returns a long integer so that means you can not use the character 'a'. You should be using 'A', and then it might work as you expect.
+
+\begin{code}
+    $ echo $((printf "%02X" 97) | tr 'a') | xxd -p
+    a: 97
+    A: 65
+\end{code}
+
+
+No.8 generated result --------------------------
+
+<!---
+
+Copyright 2018 Google LLC.
+Use of this source code is governed by an MIT-style license that
+can be found in the LICENSE file or at
+https://opensource.org/licenses/MIT.
+-->
+
+
+### Response:
+
+
+No.9 generated result --------------------------
+
+<FILL>
+
+    private int width = 10;
+    private int height = 10;
+    private final BitMatrix image = new BitMatrix(width,height);
+
+    @BeforeEach
+    public void setUp() {
+        for (int i=0; i<width; i++) {
+            for (int j=0; j<height; j++) {
+                if ((i>2) && (j>2)) image.set(i, j);
+            }
+        }
+    }
+
+    @Test
+    public void detectOnLargeBlackFullySurroundedImage() throws NotFoundException {
+        WhiteRectangleDetector detector = new WhiteRectangleDetector(image);
+        ResultPoint[] corners = detector.detect();
+        assertEquals(4, corners.length);
+    }
+}
+
+
+No.10 generated result --------------------------
+
+<FILL>
+
+
+
+

@@ -1,0 +1,822 @@
+Source code: 
+
+
+private Boolean checkRoute(String routeId) {
+    Boolean hasRoute = false;
+    try {
+        //修复使用带命名空间启动网关swagger看不到接口文档的问题
+        Properties properties=new Properties();
+        properties.setProperty("serverAddr",serverAddr);
+        if(namespace!=null && !"".equals(namespace)){
+            log.info("nacos.discovery.namespace = {}", namespace);
+            properties.setProperty("namespace",namespace);
+        }
+        if(username!=null && !"".equals(username)){
+            properties.setProperty("username",username);
+        }
+        if(password!=null && !"".equals(password)){
+            properties.setProperty("password",password);
+        }
+        //【issues/5115】因swagger文档导致gateway内存溢出
+        if (this.naming == null) {
+            this.naming = NamingFactory.createNamingService(properties);
+        }
+        log.info(" config.group : {}", group);
+        List<Instance> list = this.naming.selectInstances(routeId, group , true);
+        if (ObjectUtil.isNotEmpty(list)) {
+            hasRoute = true;
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return hasRoute;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jeecg.handler.swagger;
+
+import com.alibaba.nacos.api.naming.NamingService;
+import com.alibaba.nacos.api.naming.pojo.Instance;
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+import org.springframework.cloud.gateway.route.Route;
+import org.springframework.cloud.gateway.route.RouteLocator;
+import reactor.core.publisher.Flux;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class MySwaggerResourceProviderTest {
+
+    private MySwaggerResourceProvider provider;
+    private RouteLocator routeLocator;
+    private NamingService namingService;
+
+    @BeforeEach
+    public void setUp() throws Exception {
+        routeLocator = Mockito.mock(RouteLocator.class);
+        namingService = Mockito.mock(NamingService.class);
+        provider = new MySwaggerResourceProvider(routeLocator);
+        provider.naming = namingService;
+
+        // Mocks for the test context
+        provider.serverAddr = "localhost";
+        provider.namespace = "test-namespace";
+        provider.username = "test-username";
+        provider.password = "test-password";
+    }
+
+    @Test
+    public void checkRouteTest() {
+        String routeId = "test-route";
+        String group = "DEFAULT_GROUP";
+
+        // Assume naming service returns a healthy instance list when the correct parameters are passed
+        List<Instance> instances = Arrays.asList(new Instance());
+        try {
+            when(namingService.selectInstances(routeId, group, true)).thenReturn(instances);
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+
+        // Call the actual method
+        Boolean hasRoute = provider.checkRoute(routeId);
+
+        // Validate results
+        assertTrue(hasRoute, "The method should return true when instances are available");
+
+        // Ensure that naming service is called with the right parameters
+        try {
+            verify(namingService).selectInstances(routeId, group, true);
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+
+        // Test for no instances scenario
+        try {
+            when(namingService.selectInstances(routeId, group, true)).thenReturn(Collections.emptyList());
+            hasRoute = provider.checkRoute(routeId);
+            assertFalse(hasRoute, "The method should return false when no instances are available");
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jeecg.handler.swagger;
+
+import com.alibaba.nacos.api.naming.NamingService;
+import com.alibaba.nacos.api.naming.pojo.Instance;
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+import org.springframework.cloud.gateway.route.RouteLocator;
+import java.util.ArrayList;
+import java.util.List;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.anyString;
+
+public class MySwaggerResourceProviderTest {
+
+    private MySwaggerResourceProvider provider;
+    private NamingService namingService;
+    private RouteLocator routeLocator;
+
+    @BeforeEach
+    public void setUp() {
+        routeLocator = Mockito.mock(RouteLocator.class);
+        namingService = Mockito.mock(NamingService.class);
+        provider = new MySwaggerResourceProvider(routeLocator) {
+            @Override
+            protected NamingService getNamingService() {
+                return namingService;
+            }
+        };
+    }
+
+    @Test
+    public void checkRouteShouldReturnTrueWhenListNotEmpty() throws Exception {
+        // Mock behavior of NamingService
+        List<Instance> instances = new ArrayList<>();
+        instances.add(Mockito.mock(Instance.class)); // Add mock instance to the list
+        when(namingService.selectInstances(anyString(), anyString(), Mockito.eq(true))).thenReturn(instances);
+
+        // Call the method checkRoute and assert the result
+        Boolean result = provider.checkRoute("validRouteId");
+        assertTrue(result, "The method checkRoute should return true for non-empty instance list");
+    }
+
+    @Test
+    public void checkRouteShouldReturnFalseWhenListEmpty() throws Exception {
+        // Mock behavior of NamingService
+        when(namingService.selectInstances(anyString(), anyString(), Mockito.eq(true))).thenReturn(new ArrayList<>());
+
+        // Call the method checkRoute and assert the result
+        Boolean result = provider.checkRoute("invalidRouteId");
+        assertFalse(result, "The method checkRoute should return false for an empty instance list");
+    }
+
+    @Test
+    public void checkRouteShouldHandleExceptionGracefully() throws Exception {
+        // Mock behavior of NamingService to throw an exception
+        when(namingService.selectInstances(anyString(), anyString(), Mockito.eq(true))).thenThrow(new RuntimeException("Test exception"));
+
+        // Call the method checkRoute and assert the result
+        Boolean result = provider.checkRoute("exceptionRouteId");
+        assertFalse(result, "The method checkRoute should return false when an exception occurs");
+    }
+
+    // Add a method to retrieve the mock naming service for testing purpose
+    private class MySwaggerResourceProvider extends org.jeecg.handler.swagger.MySwaggerResourceProvider {
+        public MySwaggerResourceProvider(RouteLocator routeLocator) {
+            super(routeLocator);
+        }
+
+        @Override
+        protected NamingService getNamingService() {
+            return namingService; // Return the mock naming service
+        }
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jeecg.handler.swagger;
+
+import com.alibaba.nacos.api.naming.NamingService;
+import com.alibaba.nacos.api.naming.pojo.Instance;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.cloud.gateway.route.RouteLocator;
+import java.util.ArrayList;
+import java.util.Properties;
+
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class MySwaggerResourceProviderTest {
+    
+    private MySwaggerResourceProvider mySwaggerResourceProvider;
+    private NamingService namingService;
+    private RouteLocator routeLocator;
+    
+    @BeforeEach
+    public void setUp() {
+        // Mockito setup for dependent components
+        routeLocator = Mockito.mock(RouteLocator.class);
+        namingService = Mockito.mock(NamingService.class);
+        
+        mySwaggerResourceProvider = new MySwaggerResourceProvider(routeLocator);
+        mySwaggerResourceProvider.naming = namingService; // Assuming we can directly set this for the test case
+    }
+
+    @Test
+    public void checkRouteTest() throws Exception {
+        // Given
+        String routeId = "test_route";
+        String group = "DEFAULT_GROUP";
+        Instance instance = new Instance();
+        instance.setInstanceId("test_instance");
+
+        // Configure the mock behavior for namingService.selectInstances
+        ArrayList<Instance> instances = new ArrayList<>();
+        instances.add(instance);
+        when(namingService.selectInstances(routeId, group, true)).thenReturn(instances);
+        
+        // When the checkRoute method is called
+        Boolean result = mySwaggerResourceProvider.checkRoute(routeId);
+
+        // Then the result should be true because the list is not empty
+        assertTrue(result, "The route check should return true when instances are present.");
+
+        // Verify that selectInstances was called with the correct parameters
+        verify(namingService, times(1)).selectInstances(routeId, group, true);
+    }
+
+    // Additional tests could be included for exception handling and scenarios where
+    // no instances are returned, but that implementation is dependent on the logic not provided (namingService behavior, etc.)
+}
+
+
+No.4 generated result --------------------------
+
+package org.jeecg.handler.swagger;
+
+import com.alibaba.nacos.api.naming.NamingService;
+import com.alibaba.nacos.api.naming.pojo.Instance;
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+import static org.mockito.ArgumentMatchers.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
+
+public class MySwaggerResourceProviderTest {
+
+    private MySwaggerResourceProvider mySwaggerResourceProvider;
+    private NamingService namingServiceMock;
+
+    @BeforeEach
+    public void setup() {
+        namingServiceMock = Mockito.mock(NamingService.class);
+        mySwaggerResourceProvider = new MySwaggerResourceProvider(null) {
+            public NamingService getNamingService() {
+                return namingServiceMock; // Use mock instead of actual NamingService
+            }
+        };
+        mySwaggerResourceProvider.serverAddr = "testServerAddr";
+        mySwaggerResourceProvider.namespace = "testNamespace";
+        mySwaggerResourceProvider.group = "testGroup";
+    }
+
+    @Test
+    public void checkRouteTest_noInstanceFound_returnsFalse() throws Exception {
+        // Arrange
+        when(namingServiceMock.selectInstances(anyString(), anyString(), anyBoolean())).thenReturn(Collections.emptyList());
+
+        // Act
+        boolean result = mySwaggerResourceProvider.checkRoute("testRouteId");
+
+        // Assert
+        assertFalse(result, "Expected checkRoute to return false when no instances are found");
+    }
+
+    @Test
+    public void checkRouteTest_instancesFound_returnsTrue() throws Exception {
+        // Arrange
+        List<Instance> instances = Collections.singletonList(Mockito.mock(Instance.class));
+        when(namingServiceMock.selectInstances(anyString(), anyString(), anyBoolean())).thenReturn(instances);
+
+        // Act
+        boolean result = mySwaggerResourceProvider.checkRoute("testRouteId");
+
+        // Assert
+        assertTrue(result, "Expected checkRoute to return true when instances are found");
+    }
+
+    @Test
+    public void checkRouteTest_ThrowsException_returnsFalse() throws Exception {
+        // Arrange
+        when(namingServiceMock.selectInstances(anyString(), anyString(), anyBoolean())).thenThrow(new RuntimeException("Test exception"));
+
+        // Act and Assert
+        assertFalse(mySwaggerResourceProvider.checkRoute("testRouteId"),
+                     "Expected checkRoute to return false when an exception is thrown");
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jeecg.handler.swagger;
+
+import com.alibaba.nacos.api.naming.NamingService;
+import com.alibaba.nacos.api.naming.pojo.Instance;
+import org.junit.jupiter.api.*;
+import org.springframework.cloud.gateway.route.RouteLocator;
+import org.springframework.cloud.gateway.route.Route;
+
+import java.net.URI;
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
+import java.util.stream.Collectors;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class MySwaggerResourceProviderTest {
+
+    private MySwaggerResourceProvider provider;
+    private RouteLocator routeLocator;
+    private NamingService namingService;
+
+    @BeforeEach
+    public void setup() {
+        routeLocator = mock(RouteLocator.class);
+        namingService = mock(NamingService.class);
+        properties.setProperty("serverAddr", "testServerAddr");
+        Properties properties = new Properties();
+        provider = new MySwaggerResourceProvider(routeLocator) {
+            @Override
+            public NamingService getNaming() {
+                // Override for testing purposes to return the mock naming service
+                return namingService;
+            }
+        };
+    }
+
+    @Test
+    public void checkRouteTest() {
+        String routeId = "testRoute";
+        String groupName = "DEFAULT_GROUP";
+        List<Instance> instances = Collections.singletonList(new Instance());
+
+        when(routeLocator.getRoutes()).thenReturn(Flux.just(
+            Route.async().id(routeId).uri(URI.create("lb://SERVICE-ID")).build()
+        ));
+
+        try {
+            // Mock the behavior of namingService.selectInstances to return our list of instances
+            when(namingService.selectInstances(routeId, groupName, true)).thenReturn(instances);
+
+            // Calling the actual checkRoute method
+            Boolean result = provider.checkRoute(routeId);
+
+            // Verify if the selectInstances was called with expected arguments
+            verify(namingService).selectInstances(routeId, groupName, true);
+
+            // Assertions
+            assertTrue(result, "The route is expected to be valid, but it was not.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("An exception should not have been thrown");
+        }
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jeecg.handler.swagger;
+
+import com.alibaba.nacos.api.exception.NacosException;
+import com.alibaba.nacos.api.naming.NamingService;
+import com.alibaba.nacos.api.naming.pojo.Instance;
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
+
+public class MySwaggerResourceProviderTest {
+
+    private MySwaggerResourceProvider mySwaggerResourceProvider;
+    private NamingService namingServiceMock;
+
+    @BeforeEach
+    public void setUp() throws NacosException {
+        // Create a Mock NamingService
+        namingServiceMock = Mockito.mock(NamingService.class);
+        
+        // Prepare the MySwaggerResourceProvider instance with mocked properties and NamingService
+        mySwaggerResourceProvider = new MySwaggerResourceProvider(null) {
+            {
+                setServerAddr("localhost");
+                setNamespace("namespace");
+                setGroup("group");
+                setUsername("username");
+                setPassword("password");
+                setNaming(namingServiceMock);
+            }
+            // Mock the NamingService creation to return our mock
+            @Override
+            protected NamingService createNamingService(Properties properties) {
+                return namingServiceMock;
+            }
+            // Getters and setters for private fields in MySwaggerResourceProvider
+            public void setServerAddr(String serverAddr) {
+                this.serverAddr = serverAddr;
+            }
+            public void setNamespace(String namespace) {
+                this.namespace = namespace;
+            }
+            public void setGroup(String group) {
+                this.group = group;
+            }
+            public void setUsername(String username) {
+                this.username = username;
+            }
+            public void setPassword(String password) {
+                this.password = password;
+            }
+            public void setNaming(NamingService naming) {
+                this.naming = naming;
+            }
+        };
+    }
+
+    @Test
+    public void checkRouteTestHealthyInstance() throws NacosException {
+        String routeId = "testRoute";
+        List<Instance> healthyInstances = Collections.singletonList(new Instance());
+
+        // Configure the mock to return a healthy list of instances
+        when(namingServiceMock.selectInstances(routeId, "group", true)).thenReturn(healthyInstances);
+
+        // Call the actual method to test
+        boolean result = mySwaggerResourceProvider.checkRoute(routeId);
+
+        // Verify result
+        assertTrue(result, "checkRoute should return true for healthy instances");
+
+        // Verify interaction with the mocked NamingService
+        verify(namingServiceMock).selectInstances(routeId, "group", true);
+    }
+
+    @Test
+    public void checkRouteTestNoHealthyInstance() throws NacosException {
+        String routeId = "testRoute";
+        
+        // Configure the mock to return an empty list of instances
+        when(namingServiceMock.selectInstances(routeId, "group", true)).thenReturn(Collections.emptyList());
+
+        // Call the actual method to test
+        boolean result = mySwaggerResourceProvider.checkRoute(routeId);
+
+        // Verify result
+        assertFalse(result, "checkRoute should return false for no healthy instances");
+
+        // Verify interaction with the mocked NamingService
+        verify(namingServiceMock).selectInstances(routeId, "group", true);
+    }
+
+    @Test
+    public void checkRouteTestThrowsException() throws NacosException {
+        String routeId = "testRoute";
+
+        // Configure the mock to throw an exception
+        when(namingServiceMock.selectInstances(anyString(), anyString(), anyBoolean())).thenThrow(NacosException.class);
+
+        // Call the actual method to test expecting no exceptions
+        boolean result = mySwaggerResourceProvider.checkRoute(routeId);
+
+        // Verify result
+        assertFalse(result, "checkRoute should return false when an exception is thrown");
+
+        // Verify interaction with the mocked NamingService
+        verify(namingServiceMock).selectInstances(routeId, "group", true);
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jeecg.handler.swagger;
+
+import com.alibaba.nacos.api.naming.NamingFactory;
+import com.alibaba.nacos.api.naming.NamingService;
+import com.alibaba.nacos.api.naming.pojo.Instance;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import static org.mockito.ArgumentMatchers.*;
+import org.springframework.cloud.gateway.route.RouteLocator;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+public class MySwaggerResourceProviderTest {
+    
+    private MySwaggerResourceProvider mySwaggerResourceProvider;
+    private NamingService namingService;
+
+    @BeforeEach
+    public void setUp() {
+        RouteLocator routeLocator = mock(RouteLocator.class);
+        mySwaggerResourceProvider = new MySwaggerResourceProvider(routeLocator);
+        namingService = mock(NamingService.class);
+        mySwaggerResourceProvider.naming = namingService;
+    }
+
+    @Test
+    public void checkRouteTest_validRoute_returnsTrue() {
+        String routeId = "test-route";
+        String group = "DEFAULT_GROUP";
+        
+        // Return a non-empty list to simulate a healthy instance
+        List<Instance> instances = Arrays.asList(mock(Instance.class));
+        
+        try (MockedStatic<NamingFactory> mockedNamingFactory = Mockito.mockStatic(NamingFactory.class)) {
+            mockedNamingFactory.when(() -> NamingFactory.createNamingService(any(Properties.class))).thenReturn(namingService);
+            
+            when(namingService.selectInstances(routeId, group, true)).thenReturn(instances);
+            
+            boolean result = mySwaggerResourceProvider.checkRoute(routeId);
+            
+            assertTrue(result, "The route should be considered valid when instances are found");
+        } catch (Exception e) {
+            fail("An unexpected exception occurred: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void checkRouteTest_invalidRoute_returnsFalse() {
+        String routeId = "invalid-route";
+        String group = "DEFAULT_GROUP";
+        
+        // Return an empty list to simulate no healthy instance
+        List<Instance> instances = Collections.emptyList();
+        
+        try (MockedStatic<NamingFactory> mockedNamingFactory = Mockito.mockStatic(NamingFactory.class)) {
+            mockedNamingFactory.when(() -> NamingFactory.createNamingService(any(Properties.class))).thenReturn(namingService);
+
+            when(namingService.selectInstances(routeId, group, true)).thenReturn(instances);
+            
+            boolean result = mySwaggerResourceProvider.checkRoute(routeId);
+            
+            assertFalse(result, "The route should be considered invalid when no instances are found");
+        } catch (Exception e) {
+            fail("An unexpected exception occurred: " + e.getMessage());
+        }
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.jeecg.handler.swagger;
+
+import com.alibaba.nacos.api.naming.NamingService;
+import com.alibaba.nacos.api.naming.pojo.Instance;
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+import org.springframework.cloud.gateway.route.Route;
+import org.springframework.cloud.gateway.route.RouteLocator;
+import org.springframework.core.env.Environment;
+import reactor.core.publisher.Flux;
+
+import java.net.URI;
+import java.util.Collections;
+import java.util.Properties;
+
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class MySwaggerResourceProviderTest {
+
+    private MySwaggerResourceProvider provider;
+    private RouteLocator routeLocator;
+    private NamingService namingService;
+    private Environment environment;
+
+    @BeforeEach
+    public void setUp() throws Exception {
+        routeLocator = mock(RouteLocator.class);
+        namingService = mock(NamingService.class);
+        environment = mock(Environment.class);
+        
+        // Initializing the required values for the provider
+        when(environment.getProperty("spring.cloud.nacos.discovery.server-addr")).thenReturn("localhost");
+        when(environment.getProperty("spring.cloud.nacos.discovery.namespace")).thenReturn(null);
+        when(environment.getProperty("spring.cloud.nacos.config.group")).thenReturn("DEFAULT_GROUP");
+        when(environment.getProperty("spring.cloud.nacos.discovery.username")).thenReturn(null);
+        when(environment.getProperty("spring.cloud.nacos.discovery.password")).thenReturn(null);
+        when(environment.getProperty("spring.application.name")).thenReturn("gateway");
+
+        provider = new MySwaggerResourceProvider(routeLocator) {
+            // Override methods as necessary to avoid actual remote calls during unit testing
+            @Override
+            protected NamingService createNamingService(Properties properties) {
+                return namingService;
+            }
+
+            @Override
+            protected Environment getEnvironment() {
+                return environment;
+            }
+        };
+
+        // Mocking the routeLocator and namingService behaviors
+        when(routeLocator.getRoutes()).thenReturn(Flux.just(Route.async().id("route1").uri(URI.create("http://example.com")).build()));
+        when(namingService.selectInstances("route1", "DEFAULT_GROUP", true)).thenReturn(Collections.singletonList(new Instance()));
+
+        // As this method is private in the source code, it's necessary to either test it indirectly or use reflection to access it.
+    }
+
+    @Test
+    public void checkRouteTest() throws Exception {
+        // Assuming we have a method to test our private method checkRoute, for example, a public version for the sake of testing
+        assertTrue(provider.checkRoute("route1"));
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jeecg.handler.swagger;
+
+import com.alibaba.nacos.api.exception.NacosException;
+import com.alibaba.nacos.api.naming.NamingService;
+import com.alibaba.nacos.api.naming.pojo.Instance;
+import org.junit.jupiter.api.*;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.springframework.cloud.gateway.route.RouteLocator;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+public class MySwaggerResourceProviderTest {
+
+    private MySwaggerResourceProvider resourceProvider;
+    private NamingService namingService;
+    private RouteLocator routeLocator;
+    private final String serverAddr = "TEST_SERVER";
+    private final String namespace = "TEST_NAMESPACE";
+    private final String group = "TEST_GROUP";
+    private final String username = "TEST_USER";
+    private final String password = "TEST_PASS";
+    private final String routeId = "TEST_ROUTE";
+    
+    @BeforeEach
+    public void setUp() {
+        routeLocator = mock(RouteLocator.class);
+        namingService = mock(NamingService.class);
+
+        resourceProvider = new MySwaggerResourceProvider(routeLocator);
+        setField(resourceProvider, "serverAddr", serverAddr);
+        setField(resourceProvider, "namespace", namespace);
+        setField(resourceProvider, "group", group);
+        setField(resourceProvider, "username", username);
+        setField(resourceProvider, "password", password);
+
+        // Here we need a method to set a private field. We can use reflection or create a helper method in test.
+        // This code assumes you have a helper method 'setField' available for setting private fields.
+    }
+
+    @Test
+    public void checkRouteTest_withHealthyInstances() throws NacosException {
+        List<Instance> healthyInstances = Collections.singletonList(mock(Instance.class));
+
+        try (MockedStatic<NamingFactory> mockedNamingFactory = Mockito.mockStatic(NamingFactory.class)) {
+            mockedNamingFactory.when(() -> NamingFactory.createNamingService(any(Properties.class)))
+                .thenReturn(namingService);
+            
+            when(namingService.selectInstances(routeId, group, true)).thenReturn(healthyInstances);
+
+            boolean result = resourceProvider.checkRoute(routeId);
+            assertTrue(result, "The checkRoute method should return true when healthy instances are found.");
+        }
+    }
+
+    @Test
+    public void checkRouteTest_withoutHealthyInstances() throws NacosException {
+        try (MockedStatic<NamingFactory> mockedNamingFactory = Mockito.mockStatic(NamingFactory.class)) {
+            mockedNamingFactory.when(() -> NamingFactory.createNamingService(any(Properties.class)))
+                .thenReturn(namingService);
+            
+            when(namingService.selectInstances(routeId, group, true)).thenReturn(Collections.emptyList());
+
+            boolean result = resourceProvider.checkRoute(routeId);
+            assertFalse(result, "The checkRoute method should return false when no healthy instances are found.");
+        }
+    }
+
+    @Test
+    public void checkRouteTest_withException() throws NacosException {
+        try (MockedStatic<NamingFactory> mockedNamingFactory = Mockito.mockStatic(NamingFactory.class)) {
+            mockedNamingFactory.when(() -> NamingFactory.createNamingService(any(Properties.class)))
+                .thenReturn(namingService);
+            
+            when(namingService.selectInstances(routeId, group, true)).thenThrow(new NacosException());
+
+            boolean result = resourceProvider.checkRoute(routeId);
+            assertFalse(result, "The checkRoute method should return false when an exception occurs.");
+        }
+    }
+    
+    // Helper method to set value of a private field via reflection
+    private void setField(Object target, String fieldName, Object value) {
+        try {
+            java.lang.reflect.Field field = target.getClass().getDeclaredField(fieldName);
+            field.setAccessible(true);
+            field.set(target, value);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.handler.swagger;
+
+import com.alibaba.nacos.api.naming.NamingService;
+import com.alibaba.nacos.api.naming.pojo.Instance;
+import org.junit.jupiter.api.*;
+import static org.mockito.Mockito.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Properties;
+
+public class MySwaggerResourceProviderTest {
+
+    private MySwaggerResourceProvider mySwaggerResourceProvider;
+    private NamingService mockNamingService;
+    
+    @BeforeEach
+    public void setUp() throws Exception {
+        mockNamingService = mock(NamingService.class);
+        mySwaggerResourceProvider = new MySwaggerResourceProvider(null); // pass null since routeLocator is not used in checkRoute method
+
+        // Reflectively setting the namingService field in MySwaggerResourceProvider
+        Field namingField = MySwaggerResourceProvider.class.getDeclaredField("naming");
+        namingField.setAccessible(true);
+        namingField.set(mySwaggerResourceProvider, mockNamingService);
+    }
+    
+    @Test
+    public void checkRouteTestHealthyInstance() throws Exception {
+        String routeId = "test-route";
+        String group = "DEFAULT_GROUP";
+        List<Instance> instanceList = new ArrayList<>();
+        instanceList.add(new Instance()); // Add a healthy instance
+
+        when(mockNamingService.selectInstances(routeId, group, true)).thenReturn(instanceList);
+
+        // Call the method we want to test
+        Boolean result = mySwaggerResourceProvider.checkRoute(routeId);
+
+        assertTrue(result, "The route should have a healthy instance");
+    }
+
+    @Test
+    public void checkRouteTestUnhealthyInstance() throws Exception {
+        String routeId = "test-route";
+        String group = "DEFAULT_GROUP";
+
+        when(mockNamingService.selectInstances(routeId, group, true)).thenReturn(new ArrayList<>());
+
+        // Call the method we want to test
+        Boolean result = mySwaggerResourceProvider.checkRoute(routeId);
+
+        assertFalse(result, "The route should not have any healthy instance");
+    }
+}
+
+

@@ -1,0 +1,30 @@
+{
+    "project_name": "javacv",
+    "file_name": "Blobs.java",
+    "relative_path": "javacv/src/main/java/org/bytedeco/javacv/Blobs.java",
+    "execute_path": "javacv",
+    "package": "org.bytedeco.javacv",
+    "docstring": null,
+    "source_code": "// Determine the next (higher number) region that meets the desired conditions\npublic static int NextRegion(int Parent, int Color, double MinArea, double MaxArea, int Label)\n{\n    double DParent = (double) Parent; \n    double DColor = (double) Color; if(DColor > 0) DColor = 1;\n    \n    int i;\n    for(i = Label; i <= MaxLabel; i++)\n    {\n        double [] Region = RegionData[i];\n        double ThisParent = Region[BLOBPARENT];\n        double ThisColor = Region[BLOBCOLOR];\n        if(DParent >= 0 && DParent != ThisParent) continue;\n        if(DColor >= 0 && DColor != ThisColor) continue;\n        if(Region[BLOBAREA] < MinArea || Region[BLOBAREA] > MaxArea) continue;  \n        break;      // We have a match!\n    }\n    if(i > MaxLabel) i = -1;    // Use -1 to flag that there was no match\n    return i;\n}\n",
+    "class_name": "Blobs",
+    "method_name": "NextRegion",
+    "arguments": [
+        "int Parent",
+        "int Color",
+        "double MinArea",
+        "double MaxArea",
+        "int Label"
+    ],
+    "generate_test": [
+        "@Test\npublic void NextRegionTest() {\n    int result = Blobs.NextRegion(1, 2, 10.0, 20.0, 3);\n    assertEquals(5, result);\n}",
+        "@Test\npublic void NextRegionTest() {\n    int parent = 0;\n    int color = 1;\n    double minArea = 10.0;\n    double maxArea = 100.0;\n    int label = 0;\n    int expected = 1;\n\n    int actual = Blobs.NextRegion(parent, color, minArea, maxArea, label);\n\n    assertEquals(expected, actual);\n}",
+        "@Test\npublic void NextRegionTest() {\n    int result = Blobs.NextRegion(1, 0, 10.5, 20.7, 3);\n    assertEquals(4, result);    \n}",
+        "assertEquals(1, Blobs.NextRegion(1, 1, 100, 200, 2));",
+        "@Test\npublic void NextRegionTest() {\n    int result = Blobs.NextRegion(1, 0, 10.0, 100.0, 0);\n    assertEquals(-1, result);\n}",
+        "@Test\npublic void NextRegionTest() {\n    int Parent = 1;\n    int Color = 0;\n    double MinArea = 10.0;\n    double MaxArea = 100.0;\n    int Label = 0;\n    \n    int result = Blobs.NextRegion(Parent, Color, MinArea, MaxArea, Label);\n    \n    assertEquals(expectedResult, result);\n}",
+        "@Test\npublic void NextRegionTest() {\n    int Parent = 0;\n    int Color = 1;\n    double MinArea = 10;\n    double MaxArea = 100;\n    int Label = 5;\n    \n    int result = Blobs.NextRegion(Parent, Color, MinArea, MaxArea, Label);\n    \n    // Add assertions for the expected result\n    assertEquals(6, result); // Example assertion\n}",
+        "\npublic void NextRegionTest() {\n    int result = Blobs.NextRegion(1, 2, 10.0, 50.0, 3);\n    assertEquals(expectedResult, result);\n}",
+        "@Test\npublic void NextRegionTest() {\n    int result = Blobs.NextRegion(1, 2, 10.0, 50.0, 1);\n    assertEquals(-1, result);\n}",
+        "@Test\npublic void NextRegionTest() {\n    int Parent = 2;\n    int Color = 1;\n    double MinArea = 100.0;\n    double MaxArea = 500.0;\n    int Label = 1;\n    \n    int expected = 3; // Assuming the expected result is 3\n    \n    int result = Blobs.NextRegion(Parent, Color, MinArea, MaxArea, Label);\n    \n    assertEquals(expected, result);\n}"
+    ]
+}

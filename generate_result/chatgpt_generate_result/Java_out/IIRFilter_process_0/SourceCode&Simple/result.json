@@ -1,0 +1,26 @@
+{
+    "project_name": "Java",
+    "file_name": "IIRFilter.java",
+    "relative_path": "Java/src/main/java/com/thealgorithms/audiofilters/IIRFilter.java",
+    "execute_path": "Java",
+    "package": "com.thealgorithms.audiofilters",
+    "docstring": "/**\n     * Process a single sample\n     *\n     * @param sample the sample to process\n     * @return the processed sample\n     */",
+    "source_code": "\npublic double process(double sample) {\n    double result = 0.0;\n\n    // Process\n    for (int i = 1; i <= order; i++) {\n        result += (coeffsB[i] * historyX[i - 1] - coeffsA[i] * historyY[i - 1]);\n    }\n    result = (result + coeffsB[0] * sample) / coeffsA[0];\n\n    // Feedback\n    for (int i = order - 1; i > 0; i--) {\n        historyX[i] = historyX[i - 1];\n        historyY[i] = historyY[i - 1];\n    }\n\n    historyX[0] = sample;\n    historyY[0] = result;\n\n    return result;\n}\n",
+    "class_name": "IIRFilter",
+    "method_name": "process",
+    "arguments": [
+        "double sample"
+    ],
+    "generate_test": [
+        "\npackage com.thealgorithms.audiofilters;\n\nimport org.junit.jupiter.api.*;\nimport static org.junit.jupiter.api.Assertions.*;\n\npublic class IIRFilterTest {\n    @Test\n    public void processTest() {\n        IIRFilter filter = new IIRFilter(3);\n        double[] coeffsA = {1.0, 2.0, 3.0};\n        double[] coeffsB = {3.0, 2.0, 1.0};\n        filter.setCoeffs(coeffsA, coeffsB);\n        double[] historyX = {0.0, 0.0, 0.0};\n        double[] historyY = {0.0, 0.0, 0.0};\n        filter.process(4.0);\n        // Assertion here\n    }\n}\n",
+        "\ndouble[] aCoeffs = {1.0, 2.0, 3.0};\ndouble[] bCoeffs = {0.5, 0.25, 0.75};\nIIRFilter filter = new IIRFilter(3);\nfilter.setCoeffs(aCoeffs, bCoeffs);\ndouble output = filter.process(5.0);\nassertEquals(3.083333333, output, 0.0001);",
+        "@Test\npublic void processTest() {\n    double sample = 5.0;\n    IIRFilter filter = new IIRFilter(2);\n    double[] aCoeffs = {1.0, -0.5, 0.25};\n    double[] bCoeffs = {0.125, 0.25, 0.125};\n    filter.setCoeffs(aCoeffs, bCoeffs);\n    double result = filter.process(sample);\n    assertEquals(2.73125, result);\n}",
+        "\n@Test\npublic void processTest() {\n    double sample = 5.0;\n    IIRFilter filter = new IIRFilter(3);\n    double[] aCoeffs = {1.0, 2.0, 3.0};\n    double[] bCoeffs = {4.0, 5.0, 6.0};\n    filter.setCoeffs(aCoeffs, bCoeffs);\n    double expectedResult = 10.0; \n    assertEquals(expectedResult, filter.process(sample));\n}",
+        "@Test\npublic void processTest() {\n    IIRFilter iirFilter = new IIRFilter(3);\n    double[] aCoeffs = {1.0, -1.1430, 0.4128};\n    double[] bCoeffs = {0.1, 0.2, 0.1};\n    iirFilter.setCoeffs(aCoeffs, bCoeffs);\n    double result = iirFilter.process(0.5);\n    // Assert the result\n    assertEquals(expectedResult, result);\n}",
+        "@Test\npublic void processTest() {\n    IIRFilter filter = new IIRFilter(3);\n    filter.setCoeffs(new double[]{1.0, 2.0, 1.0}, new double[]{1.0, 1.0, 0.0});\n    double result = filter.process(5.0);\n    assertEquals(5.0, result);\n}",
+        "// Given\nIIRFilter filter = new IIRFilter(3);\ndouble[] aCoeffs = {1.0, 2.0, 3.0};\ndouble[] bCoeffs = {0.5, 0.3, 0.1};\nfilter.setCoeffs(aCoeffs, bCoeffs);\n\n// When\ndouble result = filter.process(5.0);\n\n// Then\nassertEquals(expectedResult, result);",
+        "@Test\n public void processTest() {\n     IIRFilter filter = new IIRFilter(3);\n     double[] coeffsA = {1.0, -1.947463016918843, 0.955587370138107};\n     double[] coeffsB = {0.978274159750886, -1.956548319501772, 0.978274159750886};\n     filter.setCoeffs(coeffsA, coeffsB);\n     double output = filter.process(5.0);\n     assertEquals(expectedOutput, actualOutput, 0.0001);\n }",
+        "@Test\npublic void processTest() {\n    IIRFilter filter = new IIRFilter(3);\n    double[] coeffsA = {1, 2, 3};\n    double[] coeffsB = {4, 5, 6};\n    double[] historyX = {7, 8, 9};\n    double[] historyY = {10, 11, 12};\n    \n    filter.setCoeffs(coeffsA, coeffsB);\n    filter.process(15.0);\n    \n    // Assert statements\n    // Add your assertions here\n}",
+        "@Test\npublic void processTest() {\n    IIRFilter iirFilter = new IIRFilter(3);\n    double[] coeffsA = {0.2, 0.3, 0.4};\n    double[] coeffsB = {0.5, 0.6, 0.7};\n    iirFilter.setCoeffs(coeffsA, coeffsB);\n    double sample = 0.1;\n    double result = iirFilter.process(sample);\n    assertEquals(expectedResult, result);\n}"
+    ]
+}

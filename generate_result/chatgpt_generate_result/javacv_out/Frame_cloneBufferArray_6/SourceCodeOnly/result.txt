@@ -1,0 +1,250 @@
+Source code: 
+
+
+private static Pointer cloneBufferArray(Buffer[] srcBuffers, Buffer[] clonedBuffers) {
+    Pointer opaque = null;
+
+    if (srcBuffers != null && srcBuffers.length > 0) {
+        int totalCapacity = 0;
+        for (int i = 0; i < srcBuffers.length; i++) {
+            srcBuffers[i].rewind();
+            totalCapacity += srcBuffers[i].capacity();
+        }
+
+        /*
+         * In order to optimize the transfer we need a type check.
+         *
+         * Most CPUs support hardware memory transfer for different data
+         * types, so it's faster to copy more bytes at once rather
+         * than one byte per iteration as in case of ByteBuffer.
+         *
+         * For example, Intel CPUs support MOVSB (byte transfer), MOVSW
+         * (word transfer), MOVSD (double word transfer), MOVSS (32 bit
+         * scalar single precision floating point), MOVSQ (quad word
+         * transfer) and so on...
+         *
+         * Type checking may be improved by changing the order in
+         * which a buffer is checked against. If it's likely that the
+         * expected buffer is of type "ShortBuffer", then it should be
+         * checked at first place.
+         *
+         */
+
+        if (srcBuffers[0] instanceof ByteBuffer) {
+            BytePointer pointer = new BytePointer(totalCapacity);
+            for (int i = 0; i < srcBuffers.length; i++) {
+                clonedBuffers[i] = pointer.limit(pointer.position() + srcBuffers[i].limit())
+                        .asBuffer().put((ByteBuffer)srcBuffers[i]);
+                pointer.position(pointer.limit());
+            }
+            opaque = pointer;
+        } else if (srcBuffers[0] instanceof ShortBuffer) {
+            ShortPointer pointer = new ShortPointer(totalCapacity);
+            for (int i = 0; i < srcBuffers.length; i++) {
+                clonedBuffers[i] = pointer.limit(pointer.position() + srcBuffers[i].limit())
+                        .asBuffer().put((ShortBuffer)srcBuffers[i]);
+                pointer.position(pointer.limit());
+            }
+            opaque = pointer;
+        } else if (srcBuffers[0] instanceof IntBuffer) {
+            IntPointer pointer = new IntPointer(totalCapacity);
+            for (int i = 0; i < srcBuffers.length; i++) {
+                clonedBuffers[i] = pointer.limit(pointer.position() + srcBuffers[i].limit())
+                        .asBuffer().put((IntBuffer)srcBuffers[i]);
+                pointer.position(pointer.limit());
+            }
+            opaque = pointer;
+        } else if (srcBuffers[0] instanceof LongBuffer) {
+            LongPointer pointer = new LongPointer(totalCapacity);
+            for (int i = 0; i < srcBuffers.length; i++) {
+                clonedBuffers[i] = pointer.limit(pointer.position() + srcBuffers[i].limit())
+                        .asBuffer().put((LongBuffer)srcBuffers[i]);
+                pointer.position(pointer.limit());
+            }
+            opaque = pointer;
+        } else if (srcBuffers[0] instanceof FloatBuffer) {
+            FloatPointer pointer = new FloatPointer(totalCapacity);
+            for (int i = 0; i < srcBuffers.length; i++) {
+                clonedBuffers[i] = pointer.limit(pointer.position() + srcBuffers[i].limit())
+                        .asBuffer().put((FloatBuffer)srcBuffers[i]);
+                pointer.position(pointer.limit());
+            }
+            opaque = pointer;
+        } else if (srcBuffers[0] instanceof DoubleBuffer) {
+            DoublePointer pointer = new DoublePointer(totalCapacity);
+            for (int i = 0; i < srcBuffers.length; i++) {
+                clonedBuffers[i] = pointer.limit(pointer.position() + srcBuffers[i].limit())
+                        .asBuffer().put((DoubleBuffer)srcBuffers[i]);
+                pointer.position(pointer.limit());
+            }
+            opaque = pointer;
+        }
+
+        for (int i = 0; i < srcBuffers.length; i++) {
+            srcBuffers[i].rewind();
+            clonedBuffers[i].rewind();
+        }
+    }
+
+    if (opaque != null) {
+        opaque.retainReference();
+    }
+    return opaque;
+}
+
+
+
+No.1 generated result --------------------------
+
+Buffer[] srcBuffers = new Buffer[1];
+srcBuffers[0] = ByteBuffer.allocate(10);
+Buffer[] clonedBuffers = new Buffer[1];
+Pointer result = Frame.cloneBufferArray(srcBuffers, clonedBuffers);
+assertNotNull(result);
+
+
+No.2 generated result --------------------------
+
+@Test
+public void cloneBufferArrayTest() {
+    Buffer[] srcBuffers = new Buffer[1];
+    srcBuffers[0] = ByteBuffer.allocate(10);
+
+    Buffer[] clonedBuffers = new Buffer[1];
+
+    Pointer output = Frame.cloneBufferArray(srcBuffers, clonedBuffers);
+
+    assertNotNull(output);
+}
+
+
+No.3 generated result --------------------------
+
+Buffer[] srcBuffers = new Buffer[5]; // Replace with actual buffer array
+Buffer[] clonedBuffers = new Buffer[5]; // Replace with actual buffer array
+
+// Fill srcBuffers with actual Buffer objects
+
+Pointer result = cloneBufferArray(srcBuffers, clonedBuffers);
+
+// Write assertions to test the output of the cloneBufferArray method
+
+// For example:
+assertNotNull(result);
+
+
+No.4 generated result --------------------------
+
+@Test
+public void cloneBufferArrayTest() {
+    Buffer[] srcBuffers = new Buffer[]{ByteBuffer.allocate(10), ByteBuffer.allocate(20)};
+    Buffer[] clonedBuffers = new Buffer[srcBuffers.length];
+
+    Pointer result = Frame.cloneBufferArray(srcBuffers, clonedBuffers);
+
+    assertNotNull(result);
+    assertTrue(result instanceof BytePointer);
+}
+
+
+No.5 generated result --------------------------
+
+@Test
+public void cloneBufferArrayTest() {
+    // Create sample data for srcBuffers and clonedBuffers
+    Buffer[] srcBuffers = new Buffer[]{ByteBuffer.allocate(10), ShortBuffer.allocate(10)};
+    Buffer[] clonedBuffers = new Buffer[2];
+
+    // Call the method to be tested
+    Pointer result = cloneBufferArray(srcBuffers, clonedBuffers);
+
+    // Verify the result
+    assertNotNull(result);
+}
+
+
+No.6 generated result --------------------------
+
+@Test
+public void cloneBufferArrayTest() {
+    Buffer[] srcBuffers = new Buffer[3];
+    Buffer[] clonedBuffers = new Buffer[3];
+    // Create srcBuffers and initialize them
+    Pointer result = Frame.cloneBufferArray(srcBuffers, clonedBuffers);
+    // Add assertions to test the result
+    assertNotNull(result);
+}
+
+
+No.7 generated result --------------------------
+
+
+public void cloneBufferArrayTest() {
+  // Create input buffers
+  ByteBuffer byteBuffer = ByteBuffer.allocate(10);
+  ShortBuffer shortBuffer = ShortBuffer.allocate(10);
+  IntBuffer intBuffer = IntBuffer.allocate(10);
+  LongBuffer longBuffer = LongBuffer.allocate(10);
+  FloatBuffer floatBuffer = FloatBuffer.allocate(10);
+  DoubleBuffer doubleBuffer = DoubleBuffer.allocate(10);
+  Buffer[] srcBuffers = { byteBuffer, shortBuffer, intBuffer, longBuffer, floatBuffer, doubleBuffer };
+
+  // Create cloned buffers
+  Buffer[] clonedBuffers = new Buffer[6];
+
+  // Call the method to be tested
+  Pointer result = cloneBufferArray(srcBuffers, clonedBuffers);
+
+  // Perform assertions on the result
+  assertNotNull(result);
+  // Add more assertions as needed
+}
+
+
+No.8 generated result --------------------------
+
+@Test
+public void cloneBufferArrayTest() {
+    Buffer[] srcBuffers = new Buffer[10];
+    Buffer[] clonedBuffers = new Buffer[10];
+    Pointer result = cloneBufferArray(srcBuffers, clonedBuffers);
+    assertNotNull(result);
+}
+
+
+No.9 generated result --------------------------
+
+ java
+Buffer[] srcBuffers = new Buffer[3];
+Buffer[] clonedBuffers = new Buffer[3];
+
+// Add buffer elements to srcBuffers
+// ...
+
+
+
+
+No.10 generated result --------------------------
+
+@Test
+public void cloneBufferArrayTest() {
+    // Create source and cloned buffer arrays
+    Buffer[] srcBuffers = new Buffer[5];
+    Buffer[] clonedBuffers = new Buffer[5];
+    
+    // Fill source buffers with some data
+    ByteBuffer byteBuffer = ByteBuffer.allocate(10);
+    byteBuffer.put("hello".getBytes());
+    byteBuffer.rewind();
+    srcBuffers[0] = byteBuffer;
+    
+    // Perform the unit test
+    Pointer result = Frame.cloneBufferArray(srcBuffers, clonedBuffers);
+    
+    // Add assertions to check the result
+    assertNotNull(result);
+    assertTrue(result instanceof BytePointer);
+    // Add more assertions as needed for specific cases
+}
+
+

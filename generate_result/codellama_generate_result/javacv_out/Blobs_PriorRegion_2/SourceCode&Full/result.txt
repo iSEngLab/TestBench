@@ -1,0 +1,435 @@
+Source code: 
+
+// Determine the prior (lower number) region that meets the desired conditions
+public static int PriorRegion(int Parent, int Color, double MinArea, double MaxArea, int Label)
+{
+    double DParent = (double) Parent; 
+    double DColor = (double) Color; if(DColor > 0) DColor = 1;
+    
+    int i;
+    for(i = Label; i >= 0; i--)
+    {
+        double [] Region = RegionData[i];
+        double ThisParent = Region[BLOBPARENT];
+        double ThisColor = Region[BLOBCOLOR];
+        if(DParent >= 0 && DParent != ThisParent) continue;
+        if(DColor >= 0 && DColor != ThisColor) continue;
+        if(Region[BLOBAREA] < MinArea || Region[BLOBAREA] > MaxArea) continue;  
+        break;      // We have a match!
+    }
+    if(i < 0) i = -1;   // Use -1 to flag that there was no match
+    return i;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+    @Test
+    public void PriorRegionTest() {
+        double[][] image = new double[][]{
+            { 0, 1, 2 },
+            { 3, 4, 5 },
+            { 6, 7, 8 }
+        };
+        Blobs blobs = new Blobs();
+        blobs.LabelImage(image);
+        
+        // Test that the region with label 1 is correctly subsumed by the neighboring region with label 2
+        double[] regionData = blobs.PriorRegion(-1, -1, 0);
+        assertArrayEquals(new double[]{5.67, 13.34, 21.0}, regionData, 1E-8);
+    }
+}
+
+
+No.2 generated result --------------------------
+
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
+import java.io.IOException;
+import java.io.File;
+import java.util.*;
+
+public class Blobs {
+    static BufferedImage image;
+    static int MaxLabel = 0;
+    
+    public static void main(String[] args) throws IOException {
+        File file = new File("image.jpg"); // change the image name according to your requirements
+        image = ImageIO.read(file);
+        
+        // call the BlobDetection method for getting the blobs in an image
+        GetBlobs();
+    }
+    
+    public static void GetBlobs() {
+        int width = image.getWidth();
+        int height = image.getHeight();
+        int [][] pixelData = new int[height][width]; // create a 2D array of integers to store the RGB values of each pixel
+        
+        for(int i=0;i<height;i++) {
+            for(int j=0;j<width;j++) {
+                pixelData[i][j] = image.getRGB(i, j); // fill the array with the RGB values of each pixel
+            }
+        }
+        
+        int [][] labelData = new int[height][width]; // create a 2D array to store the labels of each blob
+        for(int i=0;i<height;i++) {
+            for(int j=0;j<width;j++) {
+                if((pixelData[i][j] & 0xff) < 150) // thresholding to identify pixels corresponding to black color
+                    labelData[i][j] = 255;
+            }
+        }
+        
+        // apply connected component labeling on the binary image generated from the above step
+        int noOfLabels = LabelComponents(labelData);
+        System.out.println("No of labels = " + noOfLabels);
+    }
+    
+    public static int LabelComponents(int [][] BinaryImage) {
+        int height = BinaryImage.length;
+        int width = BinaryImage[0].length;
+        
+        // initialize the labelData array to -1, which means no labels have been assigned to the pixels yet
+        int [][] labelData = new int[height][width];
+        for(int i=0;i<height;i++) {
+            for(int j=0;j<width;j++)
+                labelData[i][j] = -1;
+        }
+        
+        // iterate through each pixel in the image
+        for(int i=0;i<height;i++) {
+            for(int j=0;j<width;j++) {
+                if((BinaryImage[i][j] & 0xff) == 255 && labelData[i][j] != 0) // check whether the pixel is black (& 0xff to extract only the lower 8 bits) and not previously labeled
+                    FloodFill(labelData, i, j); // call the flood fill method on this pixel
+            }
+        }
+        
+        // find the maximum label assigned by the flood fill method
+        for(int i=0;i<height;i++) {
+            for(int j=0;j<width;j++) {
+                if(labelData[i][j] > MaxLabel)
+                    MaxLabel = labelData[i][j]; // update the maximum label assigned so far
+        }
+    }
+    
+    // method to flood fill a blob
+    public static void FloodFill(int [][] BinaryImage, int i, int j) {
+        if((BinaryImage[i][j] & 0xff) == 255)) // check whether the current pixel is black (& 0xff to extract only the lower 8 bits)
+            labelData[i][j] = MaxLabel + 1; // assign a new label to the current pixel
+        
+        if(labelData[i+1][j] < 0 && BinaryImage[i+1][j] == 255)) // check whether the pixel below the current one is black and not previously labeled
+            FloodFill(BinaryImage, i+1, j); // recurse on this new pixel with the same label as that of the current one
+        
+        if(labelData[i][j+1] < 0 && BinaryImage[i][j+1] == 255)) // check whether the pixel to the right of the current one is black and not previously labeled
+            FloodFill(BinaryImage, i, j+1); // recurse on this new pixel with the same label as that of the current one
+        
+        if(labelData[i-1][j] < 0 && BinaryImage[i-1][j] == 255)) // check whether the pixel above the current one is black and not previously labeled
+            FloodFill(BinaryImage, i-1, j); // recurse on this new pixel with the same label as that of the current one
+        
+        if(labelData[i][j-1] < 0 && BinaryImage[i][j-1] == 255)) // check whether the pixel to the left of the current one is black and not previously labeled
+            FloodFill(BinaryImage, i, j-1); // recurse on this new pixel with the same label as that of the current one
+    }
+}
+
+
+No.3 generated result --------------------------
+
+// We have to use an "in-place" algorithm because we are operating directly on the source image.
+// Here is a simple example of how to do this:
+
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+
+using namespace cv;
+using namespace std;
+
+void PriorRegionTest(Mat &src, Mat &dst) {
+    // Convert image to grayscale
+    cvtColor(src, src, COLOR_BGR2GRAY);
+    
+    // Threshold the image
+    threshold(src, src, 100.0, 255.0, THRESH_BINARY);
+    
+    // Find contours in the binary image using a contour apporach
+    vector<vector<Point>> contours;
+    findContours(src, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+    
+    // For each contour, draw it on the original image
+    for (int i = 0; i < contours.size(); i++) {
+        vector<Point> thisContour = contours[i];
+        
+        // Draw the contour using a red color
+        Scalar red(255, 0, 0);
+        drawContours(dst, thisContour, -1, red, FILLED, LINE_8);
+    }
+}
+
+// Example usage:
+int main() {
+    // Load an image
+    Mat src = imread("path/to/image.jpg");
+    
+    // Create a destination image with the same size and type as the source image
+    Mat dst(src.size(), src.type());
+    
+    // Apply our filter to the images
+    PriorRegionTest(src, dst);
+    
+    // Save the resulting image
+    imwrite("path/to/result.jpg", dst);
+}
+
+
+No.4 generated result --------------------------
+
+@Nickname
+Hello! I'm happy to help with your question. However, I need more context to provide a helpful response. Could you please clarify the situation or provide more information about what you are trying to do? Additionally, it would be helpful if you could let me know which language and platform you are using so that I can provide you with tailored advice.
+
+
+No.5 generated result --------------------------
+
+    public void PriorRegionTest() {
+        // Set up blobs
+        double [] RegionData = new double [10];
+        RegionData[BLOBLABEL] = (double) 1;
+        RegionData[BLOBPARENT] = (double) 0;
+        RegionData[BLOBAREA] = (double) 32.0E+3;
+        RegionData[BLOBSUMX] = (double) 64.0;
+        RegionData[BLOBSUMY] = (double) 192.0;
+        RegionData[BLOBSUMXX] = (double) 1600.0;
+        RegionData[BLOBSUMYY] = (double) 5760.0;
+        RegionData[BLOBSUMXY] = (double) -480.0;
+
+        double [] PriorRegion = new double [10];
+        PriorRegion[BLOBLABEL] = (double) 2;
+        PriorRegion[BLOBPARENT] = (double) 0;
+        PriorRegion[BLOBAREA] = (double) 32.0E+3;
+        PriorRegion[BLOBSUMX] = (double) 64.0;
+        PriorRegion[BLOBSUMY] = (double) 192.0;
+        PriorRegion[BLOBSUMXX] = (double) 1600.0;
+        PriorRegion[BLOBSUMYY] = (double) 5760.0;
+        PriorRegion[BLOBSUMXY] = (double) -480.0;
+        
+        // Extract region information
+        int MaxLabel = Blobs.Extract(PriorRegion);
+        
+        // Test results
+        assertTrue(MaxLabel == 2, "Wrong number of labels");
+        
+        for (int i=1; i<=MaxLabel; ++i) {
+            double [] ThisRegion = RegionData[i];
+            
+            int Label = (int) ThisRegion[BLOBLABEL];
+            assertTrue(Label == i, "Wrong label");
+            
+            // Extract fields
+            double Area = ThisRegion[BLOBAREA];
+            double SumX = ThisRegion[BLOBSUMX];
+            double SumY = ThisRegion[BLOBSUMY];
+            double SumXX = ThisRegion[BLOBSUMXX];
+            double SumYY = ThisRegion[BLOBSUMYY];
+            double SumXY = ThisRegion[BLOBSUMXY];
+            
+            // Get averages
+            SumX /= Area;
+            SumY /= Area;
+            SumXX /= Area;
+            SumYY /= Area;
+            SumXY /= Area;
+            
+            // Create moments
+            SumXX -= SumX * SumX;
+            SumYY -= SumY * SumY;
+            SumXY -= SumX * SumY;
+            
+            if (i==1) {
+                assertTrue(Area == 32.0E+3, "Wrong area for label %d", i);
+                assertTrue(SumX == 64.0, "Wrong sum x for label %d", i);
+                assertTrue(SumY == 19.99999997884185833320, "Wrong sum y for label %d", i);
+                assertTrue(SumXX == 1600.0E+2, "Wrong sum xx for label %d", i);
+                assertTrue(SumYY == 5760.0E+2, "Wrong sum yy for label %d", i);
+            } else {
+                assertTrue(Area == 32.0E+3, "Wrong area for label %d", i);
+                assertTrue(SumX == 64.0E+2, "Wrong sum x for label %d", i);
+                assertTrue(SumY == 192.0E+2, "Wrong sum y for label %d", i);
+                assertTrue(SumXX == 1600.0E+4, "Wrong sum xx for label %d", i);
+                assertTrue(SumYY == 5760.0E+4, "Wrong sum yy for label %d", i);
+            }
+        }
+    }
+}
+
+
+No.6 generated result --------------------------
+
+
+@SuppressWarnings("unused")
+public class BlobsTest {
+    private static final int [][] TestData = new int[10][3];
+    
+    @BeforeAll
+    public static void setUpClass() throws Exception {
+        // Fill the test data array with valid regions and a few border regions.
+        
+        for(int i = 0; i < 5; i++)
+            TestData[i][BLOBLABEL] = TestData[i+5][BLOBLABEL] = i;
+    }
+    
+    @Test
+    public void PriorRegionTest() {
+        // Blobs.PriorRegion(int Label)
+        int ResultLabel = -1;
+        
+        // Test 1: Pass valid label
+        for(int Label = 0; Label < 5; Label++)
+            assertEquals(ResultLabel, Blobs.PriorRegion(Label));
+            
+        // Test 2: Pass border label
+        assertEquals(-1, Blobs.PriorRegion(0));
+    }
+    
+}
+
+
+No.7 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+
+public class BlobsTest {
+    @Test
+    public void PriorRegionTest() {
+        int[] priorRegions = new int[10];
+        for (int i = 0; i < 10; i++) {
+            priorRegions[i] = i + 2;
+        }
+        
+        // Test case 1: No overlapping regions.
+        assertEquals(Blobs.PriorRegion(priorRegions, 4), -1);
+        
+        // Test case 2: Overlapping region exists.
+        priorRegions[8] = 3;
+        assertEquals(Blobs.PriorRegion(priorRegions, 4), 3);
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+    @Test
+    public void PriorRegionTest() {
+        // Test case 1: No previous region
+        int Label = 5;
+        double [] ThisRegion = RegionData[Label];
+        double Parent = SubsumptionChain(ThisRegion[BLOBPARENT]);
+        
+        if(Parent == -1)
+            assertTrue(PriorRegionTest(Label, 0)); // No previous region to compare against
+    }
+}
+
+
+No.9 generated result --------------------------
+
+/**
+ * Checks if a region is within a given rectangular boundary.
+ * 
+ * @param RegionData The data of the region.
+ * @param xmin Minimum X-coordinate value in the rectangular boundary.
+ * @param ymin Minimum Y-coordinate value in the rectangular boundary.
+ * @param xmax Maximum X-coordinate value in the rectangular boundary.
+ * @param ymax Maximum Y-coordinate value in the rectangular boundary.
+ * 
+ * @return `true` if the region is within the given rectangular boundary, otherwise `false`.
+ */
+public static boolean PriorRegion(double[] RegionData, double xmin, double ymin, double xmax, double ymax) {
+    int Label = (int) RegionData[BLOBLABEL];
+    if (Label == 0 || Label == -1) {
+        return false; // Border region or invalid region is always outside any rectangular boundary.
+    }
+    
+    double xcenter = RegionData[BLOBXCENTER];
+    double ycenter = RegionData[BLOBYCENTER];
+    if (xmin <= xcenter && xmax >= xcenter && ymin <= ycenter && ymax >= ycenter) {
+        return true; // The region is fully within the given rectangular boundary.
+    }
+    
+    double Width = RegionData[BLOBWIDTH];
+    double Height = RegionData[BLOBHEIGHT];
+    if (xmin - xcenter > Width || xmax - xcenter < 0) {
+        return false; // The region is not intersecting the given rectangular boundary in the X-axis.
+    } else if (ymin - ycenter > Height || ymax - ycenter < 0) {
+        return false; // The region is not intersecting the given rectangular boundary in the Y-axis.
+    }
+    
+    return true; // The region is partially or fully within the given rectangular boundary.
+}
+
+
+No.10 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+    @Test
+    public void PriorRegionTest() {
+        // Test case 1: Check that the `PriorRegion()` method returns the correct parent label when there is no subsampling.
+        double[] region = new double[BLOBDATACOUNT];
+        region[BLOBLABEL] = 5;
+        region[BLOBPARENT] = 5;
+        assertEquals(0, Blobs.PriorRegion(region));
+        
+        // Test case 2: Check that the `PriorRegion()` method returns the correct parent label when there is subsampling.
+        double[] parentLabels = {5, 10};
+        region[BLOBLABEL] = 10;
+        for (int i = 0; i < 2; ++i) {
+            // Check that the `PriorRegion()` method returns the correct parent label when there is subsampling.
+            assertEquals(parentLabels[i], Blobs.PriorRegion(region));
+        }
+        
+        // Test case 3: Check that the `PriorRegion()` method returns the correct parent label when there are multiple subsampling levels.
+        double[] subsamplingLevels = {5, 10};
+        region[BLOBLABEL] = 20;
+        
+        for (int i = 0; i < 2; ++i) {
+            // Check that the `PriorRegion()` method returns the correct parent label when there are multiple subsampling levels.
+            assertEquals(parentLabels[i], Blobs.PriorRegion(region));
+        }
+        
+        // Test case 4: Check that the `PriorRegion()` method returns correctly when there are multiple parents in the subsampling chain.
+        parentLabels = {10, 20};
+        region[BLOBLABEL] = 35;
+        
+        for (int i = 0; i < 2; ++i) {
+            // Check that the `PriorRegion()` method returns correctly when there are multiple parents in the subsampling chain.
+            assertEquals(parentLabels[i], Blobs.PriorRegion(region));
+        }
+        
+        // Test case 5: Check that the `PriorRegion()` method returns correctly when there are multiple parents in the subsampling chain and some labels are not present (i.e., they have been removed during condensation).
+        parentLabels = {10, 20};
+        region[BLOBLABEL] = 35;
+        
+        for (int i = 0; i < 2; ++i) {
+            // Check that the `PriorRegion()` method returns correctly when there are multiple parents in the subsampling chain and some labels are not present (i.e., they have been removed during condensation).
+            assertEquals(parentLabels[i], Blobs.PriorRegion(region));
+        }
+    }
+}
+
+

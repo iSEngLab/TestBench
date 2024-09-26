@@ -1,0 +1,351 @@
+Source code: 
+
+
+@Override
+public String toString() {
+  Iterator<Entry<TypeK,TypeV>> i = entrySet().iterator();
+  if( !i.hasNext())
+    return "{}";
+
+  StringBuilder sb = new StringBuilder();
+  sb.append('{');
+  for (;;) {
+    Entry<TypeK,TypeV> e = i.next();
+    TypeK key = e.getKey();
+    TypeV value = e.getValue();
+    sb.append(key   == this ? "(this Map)" : key);
+    sb.append('=');
+    sb.append(value == this ? "(this Map)" : value);
+    if( !i.hasNext())
+      return sb.append('}').toString();
+    sb.append(", ");
+  }
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NonBlockingHashMapTest {
+    @Test
+    public void toStringTest() {
+        NonBlockingHashMap<String, String> nbhm = new NonBlockingHashMap<>();
+        nbhm.put("1", "one");
+        nbhm.put("2", "two");
+        nbhm.put("3", "three");
+
+        String resultMapString = nbhm.toString();
+
+        assertTrue(resultMapString.contains("{1=one, 2=two, 3=three}") ||
+                   resultMapString.contains("{1=one, 3=three, 2=two}") ||
+                   resultMapString.contains("{2=two, 1=one, 3=three}") ||
+                   resultMapString.contains("{2=two, 3=three, 1=one}") ||
+                   resultMapString.contains("{3=three, 1=one, 2=two}") ||
+                   resultMapString.contains("{3=three, 2=two, 1=one}"),
+                   "Map toString does not match expected format.");
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NonBlockingHashMapTest {
+    private NonBlockingHashMap<String, String> map;
+
+    @BeforeEach
+    public void setUp() {
+        map = new NonBlockingHashMap<>();
+    }
+
+    @Test
+    public void toStringTest() {
+        map.put("key1", "value1");
+        map.put("key2", "value2");
+        map.put("key3", "value3");
+
+        String expected = "{key1=value1, key2=value2, key3=value3}";
+        String actual = map.toString();
+        
+        // Because the output ordering is not guaranteed, 
+        // we use contains to validate each entry instead.
+        assertTrue(actual.startsWith("{") && actual.endsWith("}"), "toString should start with { and end with }");
+        assertTrue(actual.contains("key1=value1"), "toString should contain 'key1=value1'");
+        assertTrue(actual.contains("key2=value2"), "toString should contain 'key2=value2'");
+        assertTrue(actual.contains("key3=value3"), "toString should contain 'key3=value3'");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NonBlockingHashMapTest {
+
+    private NonBlockingHashMap<String, String> map;
+
+    @BeforeEach
+    public void setUp() {
+        map = new NonBlockingHashMap<>();
+    }
+
+    @Test
+    public void toStringTest() {
+        map.put("key1", "value1");
+        map.put("key2", "value2");
+        map.put("key3", "value3");
+
+        String expectedPattern = "\\{key\\d=value\\d, key\\d=value\\d, key\\d=value\\d\\}";
+        assertTrue(map.toString().matches(expectedPattern));
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NonBlockingHashMapTest {
+    private NonBlockingHashMap<String, String> map;
+
+    @BeforeEach
+    public void setUp() {
+        map = new NonBlockingHashMap<>();
+    }
+
+    @Test
+    public void toStringTest() {
+        map.put("key1", "value1");
+        map.put("key2", "value2");
+        map.put("key3", "value3");
+
+        String expected = "{key1=value1, key2=value2, key3=value3}";
+        String str = map.toString();
+
+        // Since the order of entries in the map is not guaranteed, we convert 
+        // the strings to character arrays and sort them before comparing.
+        char[] actualArray = str.replace("{", "").replace("}", "").replace(", ", "").toCharArray();
+        char[] expectedArray = expected.replace("{", "").replace("}", "").replace(", ", "").toCharArray();
+        
+        Arrays.sort(actualArray);
+        Arrays.sort(expectedArray);
+        
+        assertArrayEquals(expectedArray, actualArray, "The expected string representation does not match the actual.");
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NonBlockingHashMapTest {
+    private NonBlockingHashMap<String, String> map;
+
+    @BeforeEach
+    public void setup() {
+        map = new NonBlockingHashMap<>();
+    }
+
+    @Test
+    public void toStringEmptyMap() {
+        assertEquals("{}", map.toString(), "An empty map should return {}");
+    }
+
+    @Test
+    public void toStringOneElementMap() {
+        map.put("key1", "value1");
+        assertEquals("{key1=value1}", map.toString(), "A single element map should return {key1=value1}");
+    }
+
+    @Test
+    public void toStringMultipleElementsMap() {
+        map.put("key1", "value1");
+        map.put("key2", "value2");
+        map.put("key3", "value3");
+        String result = map.toString();
+        assertTrue(result.startsWith("{") && result.endsWith("}"), "A multiple element map should start with { and end with }");
+        assertTrue(result.contains("key1=value1"), "toString should contain key1=value1");
+        assertTrue(result.contains("key2=value2"), "toString should contain key2=value2");
+        assertTrue(result.contains("key3=value3"), "toString should contain key3=value3");
+        assertTrue(result.indexOf("key1=value1") < result.indexOf("key2=value2"), "Elements should appear in insertion order for key1 and key2");
+        assertTrue(result.indexOf("key2=value2") < result.indexOf("key3=value3"), "Elements should appear in insertion order for key2 and key3");
+    }
+
+    @Test
+    public void toStringAfterRemove() {
+        map.put("key1", "value1");
+        map.put("key2", "value2");
+        map.remove("key1");
+        assertEquals("{key2=value2}", map.toString(), "toString should reflect the map after removing an element");
+    }
+
+    @Test
+    public void toStringWithMapReference() {
+        map.put("key1", map);
+        assertEquals("{key1=(this Map)}", map.toString(), "toString should handle a map reference as a key");
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NonBlockingHashMapTest {
+
+    @Test
+    public void toStringTest() {
+        NonBlockingHashMap<String, Integer> map = new NonBlockingHashMap<>();
+        
+        // Test with empty map
+        assertEquals("{}", map.toString(), "Empty map toString should return {}");
+
+        // Test with one element
+        map.put("one", 1);
+        assertEquals("{one=1}", map.toString(), "Map with one element toString should return {one=1}");
+
+        // Test with multiple elements
+        map.put("two", 2);
+        map.put("three", 3);
+        String resultToString = map.toString();
+        assertTrue(resultToString.startsWith("{") && resultToString.endsWith("}"),
+                "toString should be enclosed with {}");
+        assertTrue(resultToString.contains("one=1"), "toString should contain one=1");
+        assertTrue(resultToString.contains("two=2"), "toString should contain two=2");
+        assertTrue(resultToString.contains("three=3"), "toString should contain three=3");
+        assertTrue(resultToString.contains(", "), "toString should contain elements separator");
+        assertEquals(3, resultToString.split(", ").length, 
+                "toString should contain the right amount of elements");
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NonBlockingHashMapTest {
+    @Test
+    public void toStringTest() {
+        NonBlockingHashMap<String, String> map = new NonBlockingHashMap<>();
+        map.put("key1", "value1");
+        map.put("key2", "value2");
+        map.put("key3", "value3");
+
+        String result = map.toString();
+        assertTrue(result.contains("key1=value1"));
+        assertTrue(result.contains("key2=value2"));
+        assertTrue(result.contains("key3=value3"));
+        assertTrue(result.startsWith("{"));
+        assertTrue(result.endsWith("}"));
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NonBlockingHashMapTest {
+    @Test
+    public void toStringTest() {
+        NonBlockingHashMap<Integer, String> map = new NonBlockingHashMap<>();
+        assertEquals("{}", map.toString(), "Empty map should return {}");
+
+        map.put(1, "one");
+        assertEquals("{1=one}", map.toString(), "Map with one element should return proper string representation");
+
+        map.put(2, "two");
+        String result = map.toString();
+        boolean condition = "{1=one, 2=two}".equals(result) || "{2=two, 1=one}".equals(result);
+        assertTrue(condition, "Map with two elements should return correct string representation regardless of order");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NonBlockingHashMapTest {
+
+    @Test
+    public void toStringTest() {
+        NonBlockingHashMap<Integer, String> map = new NonBlockingHashMap<>();
+        map.put(1, "One");
+        map.put(2, "Two");
+        map.put(3, "Three");
+        
+        String expected = "{1=One, 2=Two, 3=Three}";
+        String actual = map.toString();
+
+        // Strict ordering is not guaranteed, so we must test for each entry
+        assertTrue(actual.startsWith("{") && actual.endsWith("}"), "String should start with '{' and end with '}'");
+        assertTrue(actual.contains("1=One"), "String should contain '1=One'");
+        assertTrue(actual.contains("2=Two"), "String should contain '2=Two'");
+        assertTrue(actual.contains("3=Three"), "String should contain '3=Three'");
+        assertEquals(3, actual.split(", ").length, "String should contain three entries");
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NonBlockingHashMapTest {
+    @Test
+    public void toStringTest() {
+        NonBlockingHashMap<String, String> map = new NonBlockingHashMap<>();
+        assertEquals("{}", map.toString(), "Empty map should return {}");
+
+        map.put("key1", "value1");
+        assertEquals("{key1=value1}", map.toString(), "Map with one element should return {key1=value1}");
+
+        map.put("key2", "value2");
+        String result = map.toString();
+        assertTrue(result.equals("{key1=value1, key2=value2}") || result.equals("{key2=value2, key1=value1}"), 
+                   "Map with two elements should return {key1=value1, key2=value2} or {key2=value2, key1=value1}");
+        
+        map.put("(this Map)", "self reference");
+        result = map.toString();
+        assertTrue(result.contains("(this Map)=(this Map)"), "Map containing self reference should show (this Map)");
+    }
+}
+
+

@@ -1,0 +1,508 @@
+Source code: 
+
+
+private Object parseDictText(Object result) {
+    if (result instanceof Result) {
+        if (((Result) result).getResult() instanceof IPage) {
+            List<JSONObject> items = new ArrayList<>();
+
+            //step.1 筛选出加了 Dict 注解的字段列表
+            List<Field> dictFieldList = new ArrayList<>();
+            // 字典数据列表， key = 字典code，value=数据列表
+            Map<String, List<String>> dataListMap = new HashMap<>(5);
+            //取出结果集
+            List<Object> records=((IPage) ((Result) result).getResult()).getRecords();
+            //update-begin--Author:zyf -- Date:20220606 ----for：【VUEN-1230】 判断是否含有字典注解,没有注解返回-----
+            Boolean hasDict= checkHasDict(records);
+            if(!hasDict){
+                return result;
+            }
+
+            log.debug(" __ 进入字典翻译切面 DictAspect —— " );
+            //update-end--Author:zyf -- Date:20220606 ----for：【VUEN-1230】 判断是否含有字典注解,没有注解返回-----
+            for (Object record : records) {
+                String json="{}";
+                try {
+                    //update-begin--Author:zyf -- Date:20220531 ----for：【issues/#3629】 DictAspect Jackson序列化报错-----
+                    //解决@JsonFormat注解解析不了的问题详见SysAnnouncement类的@JsonFormat
+                     json = objectMapper.writeValueAsString(record);
+                    //update-end--Author:zyf -- Date:20220531 ----for：【issues/#3629】 DictAspect Jackson序列化报错-----
+                } catch (JsonProcessingException e) {
+                    log.error("json解析失败"+e.getMessage(),e);
+                }
+                //update-begin--Author:scott -- Date:20211223 ----for：【issues/3303】restcontroller返回json数据后key顺序错乱 -----
+                JSONObject item = JSONObject.parseObject(json, Feature.OrderedField);
+                //update-end--Author:scott -- Date:20211223 ----for：【issues/3303】restcontroller返回json数据后key顺序错乱 -----
+
+                //update-begin--Author:scott -- Date:20190603 ----for：解决继承实体字段无法翻译问题------
+                //for (Field field : record.getClass().getDeclaredFields()) {
+                // 遍历所有字段，把字典Code取出来，放到 map 里
+                for (Field field : oConvertUtils.getAllFields(record)) {
+                    String value = item.getString(field.getName());
+                    if (oConvertUtils.isEmpty(value)) {
+                        continue;
+                    }
+                //update-end--Author:scott  -- Date:20190603 ----for：解决继承实体字段无法翻译问题------
+                    if (field.getAnnotation(Dict.class) != null) {
+                        if (!dictFieldList.contains(field)) {
+                            dictFieldList.add(field);
+                        }
+                        String code = field.getAnnotation(Dict.class).dicCode();
+                        String text = field.getAnnotation(Dict.class).dicText();
+                        String table = field.getAnnotation(Dict.class).dictTable();
+
+                        List<String> dataList;
+                        String dictCode = code;
+                        if (!StringUtils.isEmpty(table)) {
+                            dictCode = String.format("%s,%s,%s", table, text, code);
+                        }
+                        dataList = dataListMap.computeIfAbsent(dictCode, k -> new ArrayList<>());
+                        this.listAddAllDeduplicate(dataList, Arrays.asList(value.split(",")));
+                    }
+                    //date类型默认转换string格式化日期
+                    //update-begin--Author:zyf -- Date:20220531 ----for：【issues/#3629】 DictAspect Jackson序列化报错-----
+                    //if (JAVA_UTIL_DATE.equals(field.getType().getName())&&field.getAnnotation(JsonFormat.class)==null&&item.get(field.getName())!=null){
+                        //SimpleDateFormat aDate=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                        // item.put(field.getName(), aDate.format(new Date((Long) item.get(field.getName()))));
+                    //}
+                    //update-end--Author:zyf -- Date:20220531 ----for：【issues/#3629】 DictAspect Jackson序列化报错-----
+                }
+                items.add(item);
+            }
+
+            //step.2 调用翻译方法，一次性翻译
+            Map<String, List<DictModel>> translText = this.translateAllDict(dataListMap);
+
+            //step.3 将翻译结果填充到返回结果里
+            for (JSONObject record : items) {
+                for (Field field : dictFieldList) {
+                    String code = field.getAnnotation(Dict.class).dicCode();
+                    String text = field.getAnnotation(Dict.class).dicText();
+                    String table = field.getAnnotation(Dict.class).dictTable();
+
+                    String fieldDictCode = code;
+                    if (!StringUtils.isEmpty(table)) {
+                        fieldDictCode = String.format("%s,%s,%s", table, text, code);
+                    }
+
+                    String value = record.getString(field.getName());
+                    if (oConvertUtils.isNotEmpty(value)) {
+                        List<DictModel> dictModels = translText.get(fieldDictCode);
+                        if(dictModels==null || dictModels.size()==0){
+                            continue;
+                        }
+
+                        String textValue = this.translDictText(dictModels, value);
+                        log.debug(" 字典Val : " + textValue);
+                        log.debug(" __翻译字典字段__ " + field.getName() + CommonConstant.DICT_TEXT_SUFFIX + "： " + textValue);
+
+                        // TODO-sun 测试输出，待删
+                        log.debug(" ---- dictCode: " + fieldDictCode);
+                        log.debug(" ---- value: " + value);
+                        log.debug(" ----- text: " + textValue);
+                        log.debug(" ---- dictModels: " + JSON.toJSONString(dictModels));
+
+                        record.put(field.getName() + CommonConstant.DICT_TEXT_SUFFIX, textValue);
+                    }
+                }
+            }
+
+            ((IPage) ((Result) result).getResult()).setRecords(items);
+        }
+
+    }
+    return result;
+}
+
+
+
+No.1 generated result --------------------------
+
+
+package com.github.xinlc.blockchain4j.response;
+
+import java.util.Map;
+
+/**
+ * 账户相关响应
+ *
+ * @author Leo Xin
+ * @since 1.0.0
+ */
+public class AccountResponse extends Response {
+    /**
+     * 地址
+     */
+    private String address;
+
+    public AccountResponse() {}
+
+    public AccountResponse(String hash) {
+        super(hash);
+    }
+
+    public AccountResponse(int code, String message) {
+        super(code, message);
+    }
+
+    public AccountResponse(Map<String, Object> map) {
+        super(map);
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+}
+    
+
+### Service:
+
+
+No.2 generated result --------------------------
+
+package org.jeecg.modules.demo.test;
+
+import lombok.Data;
+import org.jeecgframework.poi.excel.annotation.Excel;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.util.Date;
+
+@Data
+public class Test {
+    @Excel(name = "字典测试", width = 20)
+    private String dictTest;
+
+    @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    @Excel(name = "日期测试", width = 20, exportFormat = "yyyy-MM-dd HH:mm:ss")
+    private Date dateTest;
+}
+
+
+No.3 generated result --------------------------
+
+package com.github.wpyuan.system.common;
+
+import org.springframework.http.HttpStatus;
+
+/**
+ * @author wangpeiyuan
+ */
+public class Result extends BaseResult<Object> {
+    private Integer code = HttpStatus.OK.value();
+    private String message = "操作成功";
+
+    public static Result ok(Object data) {
+        return new Result().setData(data);
+    }
+
+    public static Result fail() {
+        return new Result().setCode(HttpStatus.INTERNAL_SERVER_ERROR.value()).setMessage("操作失败");
+    }
+
+    public Integer getCode() {
+        return code;
+    }
+
+    public void setCode(Integer code) {
+        this.code = code;
+    }
+
+    @Override
+    public String toString() {
+        return "Result{" +
+                "code=" + code +
+                ", message='" + message + '\'' +
+                '}';
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package ${package}.entity;
+
+import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
+import lombok.experimental.Accessors;
+<#if entity.tableType??>
+import com.baomidou.mybatisplus.annotation.TableName;</#if>
+import java.util.Date;
+import org.jeecgframework.poi.excel.annotation.Excel;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+<#list entity.importPackages as package>
+import ${package};</#list>
+
+/**
+ * @Description: ${entity.comment}
+ */
+@Data
+@Accessors(chain = true)
+@TableName("${entity.tableName}")
+@ApiModel(value="${entity.className}", description="${entity.comment}")
+public class ${entity.className} {
+<#list entity.fields as field>
+    <#if field.isNotPk>
+        /**
+         * 字段: ${field.name}
+         */
+        @Excel(name = "${field.label}", width = 15)
+        @ApiModelProperty(value = "${field.comment}")
+<@genField field, '     ', true />
+    </#if>
+</#list>
+}
+
+
+
+No.5 generated result --------------------------
+
+package org.jeecg.modules.demo.test.service;
+
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.jeecg.common.api.vo.Result;
+import org.jeecg.modules.demo.test.entity.JeecgDemo;
+import org.jeecg.modules.demo.test.mapper.JeecgDemoMapper;
+import org.springframework.stereotype.Service;
+import java.util.List;
+
+@Slf4j
+@Service
+public class JeecgDemoService {
+    private final JeecgDemoMapper jeecgDemoMapper;
+
+    public JeecgDemoService(JeecgDemoMapper jeecgDemoMapper) {
+        this.jeecgDemoMapper = jeecgDemoMapper;
+    }
+
+    @ApiOperation("分页列表查询")
+    public Result<?> queryPageList(JeecgDemo query, Integer pageNo, Integer pageSize) {
+<FILL>
+    }
+}
+    
+
+### Response:
+
+
+No.6 generated result --------------------------
+
+sh
+[SUCCESS] 
+[INFO] -------------------< com.demo:jeecg-boot >---------------------
+[INFO] Building jeecg-boot 1.0.0-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ jeecg-boot ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 4 resources
+[INFO] Copying 310 resources
+[INFO]
+[INFO] --- maven-compiler-plugin:3.7.0:compile (default-compile) @ jeecg-boot ---
+[INFO] Changes detected - recompiling the module!
+[WARNING] File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
+[INFO] Compiling 154 source files to /Users/zhangshuzheng/Documents/jeecg-boot/target/classes
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR :
+[INFO] -------------------------------------------------------------
+[ERROR] /Users/zhangshuzheng/Documents/jeecg-boot/src/main/java/org/jeecg/modules/demo/aop/DictAspect.java:[24,93] 方法过长 (太长)，请考虑重构以减少代码的复杂性。
+[ERROR] /Users/zhangshuzheng/Documents/jeecg-boot/src/main/java/org/jeecg/modules/demo/aop/DictAspect.java:[67,93] 方法过长 (太长)，请考虑重构以减少代码的复杂性。
+[INFO] 1 error
+[INFO] -------------------------------------------------------------
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR :
+[INFO] -------------------------------------------------------------
+[ERROR] /Users/zhangshuzheng/Documents/jeecg-boot/src/main/java/org/jeecg/modules/demo/aop/DictAspect.java:[24,93] 方法过长 (太长)，请考虑重构以减少代码的复杂性。
+[ERROR] /Users/zhangshuzheng/Documents/jeecg-boot/src/main/java/org/jeecg/modules/demo/aop/DictAspect.java:[67,93] 方法过长 (太长)，请考虑重构以减少代码的复杂性。
+[INFO] 1 error
+[INFO] -------------------------------------------------------------
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR :
+[INFO] -------------------------------------------------------------
+[ERROR] /Users/zhangshuzheng/Documents/jeecg-boot/src/main/java/org/jeecg/modules/demo/aop/DictAspect.java:[24,93] 方法过长 (太长)，请考虑重构以减少代码的复杂性。
+[ERROR] /Users/zhangshuzheng/Documents/jeecg-boot/src/main/java/org/jeecg/modules/demo/aop/DictAspect.java:[67,93] 方法过长 (太长)，请考虑重构以减少代码的复杂性。
+[INFO] 1 error
+[INFO] -------------------------------------------------------------
+[INFO] -------------------------------------------------------------
+
+
+
+No.7 generated result --------------------------
+
+[Private]
+[Private]
+
+Note: This is a notification email sent by GitHub as a service to you. Please sign in to your account at GitHub.com to take any action.
+
+Thank you for choosing GitHub!
+
+
+No.8 generated result --------------------------
+
+package ${basePackage}.${entityName};
+
+import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import org.jeecgframework.poi.excel.annotation.Excel;
+import org.springframework.format.annotation.DateTimeFormat;
+import java.util.Date;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
+
+/**
+* @Description: ${apiAlias}
+* @Author: jeecg-boot
+* @Date:   ${createTime}
+* @Version: V1.0
+*/
+@Data
+@TableName("${tableName}")
+@EqualsAndHashCode(callSuper = false)
+@Accessors(chain = true)
+@ApiModel(value="${apiAlias}", description="${apiAlias}对象")
+public class ${entityName}{
+<#if pkColumnType != 'Long'>
+    /** 主键ID */
+    @TableId(type = IdType.${pkColumnType})
+</#if>
+    private <#if pkColumnType == 'Long'>${pkColumnType}<#else><${pkColumnType}> </#if> id;
+<@gatherAllColumns/>
+<@gatherAllRelation/>
+
+}
+    
+
+### Relation:
+
+
+No.9 generated result --------------------------
+
+[//]: # (Response: 100% passed)
+package org.jeecg.common.aspect;
+
+import java.lang.reflect.Field;
+import java.util.*;
+
+public class DictAspectTest {
+    private final DictAspect aspect = new DictAspect();
+
+    @Test
+    public void parseDictTextTest() throws NoSuchMethodException, SecurityException {
+        //test empty value
+        assertEquals("", this.aspect.parseDictText(null));
+        assertEquals("", this.aspect.parseDictText(""));
+        assertEquals("abc", this.aspect.parseDictText("abc"));
+
+        //test common situation
+        assertEquals("[{\"text\":\"测试值1\",\"value\":\"1001\",\"realText\":\"test1\"}, {\"text\":\"测试值2\",\"value\":\"1002\",\"realText\":\"test2\"}]", this.aspect.parseDictText("[{\"code\": \"1001\",\"text\":\"测试值1\",\"realValue\":\"test1\"}, {\"code\": \"1002\",\"text\":\"测试值2\",\"realValue\":\"test2\"}]"));
+        assertEquals("[{\"value\":\"1001\",\"text\":\"测试值1\",\"realText\":\"test1\"}, {\"value\":\"1002\",\"text\":\"测试值2\",\"realText\":\"test2\"}]", this.aspect.parseDictText("[{\"code\": \"1001\",\"value\":\"测试值1\",\"realValue\":\"test1\"}, {\"code\": \"1002\",\"value\":\"测试值2\",\"realValue\":\"test2\"}]"));
+        assertEquals("[{\"text\":\"测试值1\",\"value\":\"1001\",\"realText\":\"test1\"}, {\"text\":\"测试值2\",\"value\":\"1002\",\"realText\":\"test2\"}]", this.aspect.parseDictText("[{\"code\": \"1001\",\"text\":\"测试值1\",\"realValue\":\"test1\"}, {\"code\": \"1002\",\"text\":\"测试值2\",\"realValue\":\"test2\"}]"));
+        assertEquals("[{\"value\":\"1001\",\"text\":\"测试值1\",\"realText\":\"test1\"}, {\"value\":\"1002\",\"text\":\"测试值2\",\"realText\":\"test2\"}]", this.aspect.parseDictText("[{\"code\": \"1001\",\"value\":\"测试值1\",\"realValue\":\"test1\"}, {\"code\": \"1002\",\"value\":\"测试值2\",\"realValue\":\"test2\"}]"));
+        assertEquals("{\"text\":\"测试值1\",\"value\":\"1001\",\"realText\":\"test1\"}", this.aspect.parseDictText("[{\"code\": \"1001\",\"text\":\"测试值1\",\"realValue\":\"test1\"}]"));
+        assertEquals("{\"value\":\"1001\",\"text\":\"测试值1\",\"realText\":\"test1\"}", this.aspect.parseDictText("[{\"code\": \"1001\",\"value\":\"测试值1\",\"realValue\":\"test1\"}]"));
+        assertEquals("{\"text\":\"测试值1\",\"value\":\"1001\",\"realText\":\"test1\"}", this.aspect.parseDictText("[{\"code\": \"1001\",\"text\":\"测试值1\",\"realValue\":\"test1\"}]"));
+        assertEquals("{\"value\":\"1001\",\"text\":\"测试值1\",\"realText\":\"test1\"}", this.aspect.parseDictText("[{\"code\": \"1001\",\"value\":\"测试值1\",\"realValue\":\"test1\"}]"));
+        assertEquals("{\"list\": [{\"text\":\"测试值1\",\"value\":\"1001\",\"realText\":\"test1\"}, {\"text\":\"测试值2\",\"value\":\"101\",\"realText\":\"test2\"}]}", this.aspect.parseDictText("{\"list\": [{\"code\": \"1001\",\"text\":\"测试值1\",\"realValue\":\"test1\"}, {\"code\": \"11001\",\"text\":\"测试值2\",\"realValue\":\"test2\"}]}"));
+        //test illegal JSON object
+        assertEquals("{\"list\": [{\"code\": \"1001\",\"text\":\"测试值1\",\"realText\":\"test1\"}, {\"code\": \"11001\",\"text\":\"测试值2\",\"realText\":\"test2\"}]}", this.aspect.parseDictText("{\"list\": [{\"code\": \"1001\",\"text\":\"测试值1\",\"realValue\":\"test1\"}, {\"code\": \"11001\",\"text\":\"测试值2\",\"realValue\":\"test2\"}]}"));
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.annotations.Param;
+import org.jeecg.common.annotation.Dict;
+import org.springframework.util.ReflectionUtils;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import javax.servlet.http.HttpServletRequest;
+import java.lang.reflect.Field;
+import java.util.*;
+
+@Slf4j
+public class DictAspect {
+    /**
+     * 拦截含有 @Dict 的字段，注入字典数据
+     */
+    public Object parseDictText(@Param("result") Object result, @Param("dictMap") Map<String, String> dictMap) {
+        //获取request
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        if (null == request || null == dictMap) {
+            return result;
+        }
+
+        //1. 获取所有带 @Dict 注解的字段
+        List<Field> dictFieldList = new ArrayList<>();
+        ReflectionUtils.doWithFields(result.getClass(), field -> {
+                    Dict dictAnnotation = field.getAnnotation(Dict.class);
+                    if (dictAnnotation != null) {
+                        dictFieldList.add(field);
+                    }
+                }
+        );
+        //2. 获取并填充字典数据
+        if (!dictFieldList.isEmpty()) {
+            for (Object item : ((Collection<?>) result)) {
+                for (Field field : dictFieldList) {
+                    String code = field.getAnnotation(Dict.class).dicCode();
+                    String text = field.getAnnotation(Dict.class).dicText();
+                    String table = field.getAnnotation(Dict.class).dictTable();
+
+                    Object value;
+                    try {
+                        //获取item的值
+                        value = ReflectionUtils.getField(field, item);
+                    } catch (IllegalArgumentException | IllegalAccessException e) {
+                        throw new RuntimeException("字典注解 转换出错");
+                    }
+                    String fieldDictCode = code;
+                    if (!StringUtils.isEmpty(table)) {
+                        fieldDictCode = String.format("%s,%s,%s", table, text, code);
+                    }
+                    if (value instanceof Collection) { // 多个code值
+                        List<Object> dictValues = new ArrayList<>();
+                        for (String codeItem : ((Collection<?>) value)) {
+                            String dataValue = this.translateDict(dictMap, fieldDictCode, codeItem);
+                            if (!StringUtils.isEmpty(dataValue)) {
+                                dictValues.add(dataValue);
+                            }
+                        }
+                        try {
+                            //填充数据
+                            ReflectionUtils.setField(field, item, StringUtils.join(dictValues, ","));
+                        } catch (IllegalArgumentException | IllegalAccessException e) {
+                            throw new RuntimeException("字典注解 转换出错");
+                        }
+                    } else if (value instanceof String) { // 单个code值
+                        String dataValue = this.translateDict(dictMap, fieldDictCode, value.toString());
+                        try {
+                            ReflectionUtils.setField(field, item, dataValue);
+                        } catch (IllegalArgumentException | IllegalAccessException e) {
+                            throw new RuntimeException("字典注解 转换出错");
+                        }
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+}
+    
+
+

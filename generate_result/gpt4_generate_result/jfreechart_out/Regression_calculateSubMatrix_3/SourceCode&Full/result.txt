@@ -1,0 +1,441 @@
+Source code: 
+
+
+private static double[][] calculateSubMatrix(double[][] matrix){
+    int equations = matrix.length;
+    int coefficients = matrix[0].length;
+    double[][] result = new double[equations - 1][coefficients - 1];
+    for (int eq = 1; eq < equations; eq++) {
+        double factor = matrix[0][0] / matrix[eq][0];
+        for (int coe = 1; coe < coefficients; coe++) {
+            result[eq - 1][coe -1] = matrix[0][coe] - matrix[eq][coe]
+                    * factor;
+        }
+    }
+    if (equations == 1) {
+        return result;
+    }
+    // check for zero pivot element
+    if (result[0][0] == 0) {
+        boolean found = false;
+        for (int i = 0; i < result.length; i ++) {
+            if (result[i][0] != 0) {
+                found = true;
+                double[] temp = result[0];
+                System.arraycopy(result[i], 0, result[0], 0, 
+                        result[i].length);
+                System.arraycopy(temp, 0, result[i], 0, temp.length);
+                break;
+            }
+        }
+        if (!found) {
+            //System.out.println("Equation has no solution!");
+            return new double[equations - 1][coefficients - 1];
+        }
+    }
+    double[][] subMatrix = calculateSubMatrix(result);
+    for (int eq = 1; eq < equations -  1; eq++) {
+        result[eq][0] = 0;
+        if (coefficients - 1 - 1 >= 0) System.arraycopy(subMatrix[eq - 1], 0, result[eq], 1, coefficients - 1 - 1);
+    }
+    return result;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jfree.data.statistics;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RegressionTest {
+
+    @Test
+    public void calculateSubMatrixTest() {
+        // 3x3 matrix example
+        double[][] inputMatrix = new double[][]{
+                {1, 2, 3},
+                {2, 5, 3},
+                {1, 0, 8}
+        };
+        
+        double[][] expectedSubMatrix = new double[][]{
+                {1, -2.5},
+                {0, 5.5 }
+        };
+        
+        // Invoke private method using reflection
+        try {
+            java.lang.reflect.Method method = Regression.class.getDeclaredMethod("calculateSubMatrix", double[][].class);
+            method.setAccessible(true);
+            double[][] resultSubMatrix = (double[][]) method.invoke(null, (Object) inputMatrix);
+            
+            assertNotNull(resultSubMatrix, "SubMatrix should not be null");
+            assertArrayEquals(expectedSubMatrix, resultSubMatrix, "The subMatrix calculation is incorrect");
+            
+        } catch (NoSuchMethodException e) {
+            fail("Method calculateSubMatrix does not exist");
+        } catch (IllegalAccessException e) {
+            fail("Method calculateSubMatrix cannot be accessed");
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            fail("Method calculateSubMatrix threw an exception: " + e.getCause());
+        }
+    }
+    
+}
+
+
+No.2 generated result --------------------------
+
+package org.jfree.data.statistics;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RegressionTest {
+
+    @Test
+    public void calculateSubMatrixTest() {
+        // Test data matrix
+        double[][] matrix = {
+            {1.0, 2.0, 3.0},
+            {4.0, 5.0, 6.0},
+            {7.0, 8.0, 9.0}
+        };
+        // Expected submatrix result after calculation
+        double[][] expected = {
+            {1.0, 2.0},
+            {0.0, 0.0}
+        };
+
+        // Making the calculateSubMatrix method accessible
+        try {
+            java.lang.reflect.Method method = Regression.class.getDeclaredMethod("calculateSubMatrix", double[][].class);
+            method.setAccessible(true);
+            double[][] result = (double[][]) method.invoke(null, (Object) matrix);
+            // Check the result against the expected submatrix
+            assertArrayEquals(expected, result, "The submatrix calculation did not return the expected result.");
+        } catch (Exception e) {
+            fail("Exception during reflection: " + e.getMessage());
+        }
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jfree.data.statistics;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RegressionTest {
+    
+    @Test
+    public void calculateSubMatrixTest() {
+        double[][] inputMatrix = {
+                {2.0, 4.0, 6.0},
+                {1.0, 2.0, 3.0},
+                {3.0, 6.0, 9.0}
+        };
+        double[][] expectedSubMatrix = {
+                {0.0, 2.0}
+        };
+
+        // Since the method 'calculateSubMatrix' is private, we need to use reflection
+        // to invoke it for the test
+        try {
+            java.lang.reflect.Method method = Regression.class.getDeclaredMethod("calculateSubMatrix", double[][].class);
+            method.setAccessible(true);
+            double[][] resultSubMatrix = (double[][]) method.invoke(null, (Object) inputMatrix);
+            assertArrayEquals(expectedSubMatrix[0], resultSubMatrix[0], "The sub-matrix row does not match expected results.");
+        } catch (NoSuchMethodException e) {
+            fail("Method 'calculateSubMatrix' does not exist", e);
+        } catch (IllegalAccessException e) {
+            fail("Method 'calculateSubMatrix' is not accessible", e);
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            fail("Method 'calculateSubMatrix' could not be invoked", e);
+        }
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jfree.data.statistics;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+
+public class RegressionTest {
+
+    @Test
+    public void calculateSubMatrixTest() {
+        double[][] inputMatrix = {
+            {1, 2, 3},
+            {4, 5, 6},
+            {7, 8, 9}
+        };
+
+        double[][] expected = {
+            {3, 3},
+            {0, 0}
+        };
+
+        // Call the method we want to test (assume it is package-private now)
+        double[][] result = Regression.calculateSubMatrix(inputMatrix);
+
+        // Check that the result matches our expected outcome
+        assertArrayEquals(expected[0], result[0], 1e-10);
+        assertArrayEquals(expected[1], result[1], 1e-10);
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jfree.data.statistics;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RegressionTest {
+
+    @Test
+    public void calculateSubMatrixTest() {
+        double[][] inputMatrix = new double[][]{
+                {2.0, -3.0, 0.0},
+                {4.0, -6.0, 0.0},
+                {-2.0, 3.0, 0.0}
+        };
+
+        double[][] expected = new double[][]{{}};
+
+        double[][] actual = Regression.calculateSubMatrix(inputMatrix);
+
+        assertArrayEquals(expected, actual, "The subMatrix should be empty as the first pivot element is zero and no row swap can fix it.");
+    }
+
+    @Test
+    public void calculateSubMatrixTestWithValidInput() {
+        double[][] inputMatrix = new double[][]{
+                {4.0, 2.0, 2.0},
+                {4.0, 5.0, 6.0},
+                {2.0, -4.0, 2.0}
+        };
+
+        double[][] expected = new double[][]{
+                {1.5, 4.0},
+                {0.0, -1.0}
+        };
+
+        double[][] actual = Regression.calculateSubMatrix(inputMatrix);
+
+        for (int i = 0; i < expected.length; i++) {
+            assertArrayEquals(expected[i], actual[i], 0.01, "Submatrix row " + i + " doesn't match expected result");
+        }
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jfree.data.statistics;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RegressionTest {
+    
+    private static final double DELTA = 1e-15;
+
+    @Test
+    public void calculateSubMatrixTest() {
+        // Define a sample matrix for testing.
+        double[][] matrix = {
+            {1, 2, 3},
+            {4, 5, 6},
+            {7, 8, 9}
+        };
+
+        // Perform calculation.
+        double[][] result = Regression.calculateSubMatrix(matrix);
+
+        // Define the expected result of the sub-matrix calculation.
+        double[][] expected = {
+            {0, -3},
+            {0, 0}
+        };
+
+        // Check the dimensions of the result.
+        assertEquals(expected.length, result.length, "The number of rows is incorrect.");
+        assertEquals(expected[0].length, result[0].length, "The number of columns is incorrect.");
+
+        // Check each element of the resulting matrix.
+        for (int i = 0; i < result.length; i++) {
+            for (int j = 0; j < result[0].length; j++) {
+                assertEquals(expected[i][j], result[i][j], DELTA, 
+                             "Mismatch at position [" + i + "][" + j + "]");
+            }
+        }
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jfree.data.statistics;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RegressionTest {
+    
+    @Test
+    public void calculateSubMatrixTest() {
+        double[][] inputMatrix = {
+            {4.0, 2.0, 8.0},
+            {2.0, 6.0, 18.0}
+        };
+
+        double[][] expectedMatrix = {
+            {7.0, 17.0}
+        };
+
+        double[][] resultMatrix = Regression.calculateSubMatrix(inputMatrix);
+
+        assertNotNull(resultMatrix);
+        assertEquals(expectedMatrix.length, resultMatrix.length);
+        assertEquals(expectedMatrix[0].length, resultMatrix[0].length);
+
+        for (int i = 0; i < resultMatrix.length; i++) {
+            assertArrayEquals(expectedMatrix[i], resultMatrix[i], "The subMatrix row " + i + " does not match the expected result");
+        }
+    }
+
+    // Additional tests could be added below for different scenarios
+
+}
+
+
+No.8 generated result --------------------------
+
+package org.jfree.data.statistics;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RegressionTest {
+
+    @Test
+    public void calculateSubMatrixTest() {
+        // Mock input matrix for the test
+        double[][] inputMatrix = {
+                { 4, 2, 2 },
+                { 2, 4, 2 },
+                { 2, 2, 4 }
+        };
+
+        // Expected output matrix after applying calculateSubMatrix
+        double[][] expectedMatrix = {
+                { 2.0, 0.0 },
+                { 0.0, 2.0 }
+        };
+
+        // Call the private method 'calculateSubMatrix' using reflection
+        double[][] resultMatrix = null;
+        try {
+            java.lang.reflect.Method method = Regression.class.getDeclaredMethod("calculateSubMatrix", double[][].class);
+            method.setAccessible(true);
+            resultMatrix = (double[][]) method.invoke(null, (Object) inputMatrix);
+        } catch (Exception e) {
+            fail("Exception thrown during reflection usage: " + e.getMessage());
+        }
+
+        // Check if the resulting matrix has correct dimensions
+        assertEquals(expectedMatrix.length, resultMatrix.length, "Row count does not match.");
+        assertEquals(expectedMatrix[0].length, resultMatrix[0].length, "Column count does not match.");
+
+        // Check if the expected matrix matches the actual result
+        for (int i = 0; i < resultMatrix.length; i++) {
+            assertArrayEquals(expectedMatrix[i], resultMatrix[i], "Matrix rows do not match.");
+        }
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jfree.data.statistics;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RegressionTest {
+    
+    @Test
+    public void calculateSubMatrixTest() {
+        double[][] input = {
+            { 1.0, 2.0, 3.0 },
+            { 4.0, 5.0, 6.0 },
+            { 7.0, 8.0, 9.0 }
+        };
+
+        double[][] expected = {
+            { 3.0, 3.0 }
+        };
+
+        double[][] result = Regression.calculateSubMatrix(input);
+
+        assertArrayEquals(expected, result);
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jfree.data.statistics;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RegressionTest {
+
+    @Test
+    public void calculateSubMatrixTest() {
+        double[][] inputMatrix = {
+            {2.0, 4.0, 6.0},
+            {1.0, 3.0, 5.0}
+        };
+
+        double[][] expectedMatrix = {
+            {2.0}
+        };
+
+        double[][] resultMatrix = Regression.calculateSubMatrix(inputMatrix);
+
+        // Verifying the number of rows and columns
+        assertEquals(expectedMatrix.length, resultMatrix.length,
+            "The sub-matrix should have one less row than the input matrix");
+        assertEquals(expectedMatrix[0].length, resultMatrix[0].length,
+            "The sub-matrix should have one less column than the input matrix");
+
+        // Verifying each element of the sub-matrix
+        for (int i = 0; i < resultMatrix.length; i++) {
+            for (int j = 0; j < resultMatrix[0].length; j++) {
+                assertEquals(expectedMatrix[i][j], resultMatrix[i][j],
+                    "The sub-matrix values are not as expected");
+            }
+        }
+    }
+
+    // Note: The method `calculateSubMatrix` is declared private in the source class, which
+    // would normally prevent it from being accessed in a unit test. For the test to compile
+    // and run, the method's access modifier would need to be changed to package-private, protected,
+    // or public, either in the actual class or via reflection. This response assumes the proper
+    // access has been provided in the Regression class to allow testing of the method.
+}
+
+

@@ -1,0 +1,522 @@
+Source code: 
+
+
+@Override
+public boolean offer(final E e)
+{
+    // Objects.requireNonNull(e);
+    if (null == e)
+    {
+        throw new NullPointerException();
+    }
+    // local load of field to avoid repeated loads after volatile reads
+    final E[] buffer = producerBuffer;
+    final long index = lpProducerIndex();
+    final long mask = producerMask;
+    final long offset = calcCircularRefElementOffset(index, mask);
+    // expected hot path
+    if (index < producerBufferLimit)
+    {
+        writeToQueue(buffer, e, index, offset);
+        return true;
+    }
+    return offerColdPath(buffer, mask, index, offset, e, null);
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseSpscLinkedArrayQueueTest {
+    @Test
+    public void offerNonNullElementShouldSucceed() {
+        BaseSpscLinkedArrayQueue<Integer> queue = new BaseSpscLinkedArrayQueue<Integer>() {
+            @Override
+            public boolean offerColdPath(Integer buffer, long mask, long pIndex, long offset, Integer e, java.util.function.Supplier<Integer> s) {
+                // Implementation of offerColdPath for this test
+                return false;
+            }
+        };
+        assertTrue(queue.offer(1), "Queue should accept non-null element and return true.");
+    }
+
+    @Test
+    public void offerNullElementShouldThrowException() {
+        BaseSpscLinkedArrayQueue<Integer> queue = new BaseSpscLinkedArrayQueue<Integer>() {
+            @Override
+            public boolean offerColdPath(Integer buffer, long mask, long pIndex, long offset, Integer v, java.util.function.Supplier<Integer> s) {
+                // Implementation of offerColdPath for this test
+                return false;
+            }
+        };
+        Exception exception = assertThrows(NullPointerException.class, () -> {
+            queue.offer(null);
+        }, "Queue should throw NullPointerException when offering a null element.");
+        assertEquals("Null elements are not allowed in the queue.", exception.getMessage());
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseSpscLinkedArrayQueueTest {
+
+    private BaseSpscLinkedArrayQueue<Integer> queue;
+
+    @BeforeEach
+    public void setUp() {
+        // Assumption: BaseSpscLinkedArrayQueue is a concrete class that can be instantiated.
+        // If that is not the case, we might need to mock the behavior or use a derived class.
+        queue = new BaseSpscLinkedArrayQueue<>();
+    }
+
+    @Test
+    public void offerTestNonNullElement() {
+        final int testElement = 1;
+        assertTrue(queue.offer(testElement), "Offer should return true for non-null element.");
+    }
+
+    @Test
+    public void offerTestNullElement() {
+        assertThrows(NullPointerException.class, () -> {
+            queue.offer(null);
+        }, "Offering a null element should throw NullPointerException.");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseSpscLinkedArrayQueuePrePadTest {
+    private BaseSpscLinkedArrayQueue<Object> queue;
+    
+    @BeforeEach
+    public void setUp() {
+        // Assuming a concrete subclass of BaseSpscLinkedArrayQueue is available named ConcreteSpscLinkedArrayQueue
+        // which provides the concrete implementation of the abstract methods.
+        queue = new ConcreteSpscLinkedArrayQueue<>(1024);
+    }
+
+    @Test
+    public void offerTest() {
+        assertThrows(NullPointerException.class, () -> {
+            queue.offer(null);
+        }, "Offering null should throw NullPointerException");
+
+        assertTrue(queue.offer(new Object()), "Offering a non-null value should return true");
+        
+        // You could also test the offerColdPath but it requires manipulating the state of
+        // the producerBufferLimit and producerMask to simulate the cold path condition.
+    }
+}
+
+// Dummy concrete implementation for the sake of the test - this would need to actually implement methods for a real test
+class ConcreteSpscLinkedArrayQueue<E> extends BaseSpscLinkedArrayQueue<E> {
+
+    ConcreteSpscLinkedArrayQueue(int capacity) {
+        // Initialize necessary fields for the queue to function properly
+    }
+
+    @Override
+    boolean offerColdPath(Object buffer, long mask, long pIndex, long offset, Object v, Supplier<Object> s) {
+        // Implement cold path behavior
+        return false;
+    }
+
+    @Override
+    public void soProducerIndex(long newValue) {
+        // Implement the necessary state change
+    }
+
+    @Override
+    public void soConsumerIndex(long newValue) {
+        // Implement the necessary state change
+    }
+
+    @Override
+    public void soNext(Object curr, Object next) {
+        // Implement the necessary state change
+    }
+
+    @Override
+    public Object lvNextArrayAndUnlink(Object curr) {
+        // Implement fetching the next array and unlinking behavior
+        return null;
+    }
+
+    @Override
+    void writeToQueue(Object buffer, Object e, long index, long offset) {
+        // Implement the actual write-to-queue logic
+    }
+
+    @Override
+    public long lpProducerIndex() {
+        // Return the current producer index
+        return 0;
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseSpscLinkedArrayQueuePrePadTest {
+
+    private static class TestQueue extends BaseSpscLinkedArrayQueue<Integer> {
+        // Implement all the required abstract methods with minimum functionality for test
+        @Override
+        boolean offerColdPath(Integer buffer, long mask, long pIndex, long offset, Integer v, Supplier<Integer> s) {
+            // Mocked cold path offering that always returns false for the test.
+            return false;
+        }
+
+        // The following methods are only presented to satisfy the abstract class requirements.
+        // These can be left as is or mocked appropriately as needed.
+        @Override
+        public Integer poll() {
+            return null;
+        }
+
+        @Override
+        public Integer peek() {
+            return null;
+        }
+
+        @Override
+        public Iterator<Integer> iterator() {
+            return null;
+        }
+
+        @Override
+        public int size() {
+            return 0;
+        }
+
+        final void linkOldToNew(long currIndex, Integer oldBuffer, long offset, Integer newBuffer, long offsetInNew, Integer e) {
+            // Mock implementation for linkOldToNew
+        }
+
+        final void writeToQueue(Integer buffer, Integer e, long index, long offset) {
+            // Mock implementation for writeToQueue
+        }
+    }
+
+    @Test
+    public void offerTest() {
+        TestQueue queue = new TestQueue();
+
+        // Set up scenario for a successful offer on "hot path"
+        queue.producerBufferLimit = 10; // assumed based on hot path condition
+        queue.producerBuffer = new Integer[16]; // simplifying with a size of 16
+        queue.producerMask = 15; // assumed mask for the chosen buffer size
+
+        assertDoesNotThrow(() -> queue.offer(1), "Offer should not throw an exception for a non-null value on hot path.");
+        assertTrue(queue.producerBuffer[0].equals(1), "Element should be written to the queue on hot path.");
+
+        // Test to ensure NullPointerException is thrown when a null value is passed
+        Exception exception = assertThrows(NullPointerException.class, () -> queue.offer(null), "Offer should throw NullPointerException for null value.");
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+// Assuming we have a concrete class called SpscLinkedArrayQueue that extends from BaseSpscLinkedArrayQueue
+class SpscLinkedArrayQueue<E> extends BaseSpscLinkedArrayQueue<E> {
+    // Assume there are implementation details here specific to SpscLinkedArrayQueue
+    @Override
+    boolean offerColdPath(E buffer, long mask, long pIndex, long offset, E v, Supplier<E> s) {
+        // Assume cold path implementation or mock it if necessary
+        return false;
+    }
+}
+
+public class BaseSpscLinkedArrayQueuePrePadTest {
+    @Test
+    public void offerTest() {
+        SpscLinkedArrayQueue<Integer> queue = new SpscLinkedArrayQueue<>();
+
+        // Test that offering a non-null element returns true
+        assertTrue(queue.offer(1), "Offer should return true");
+
+        // Test offering another element
+        assertTrue(queue.offer(2), "Offer should return true");
+
+        // Test that offering a null element throws NullPointerException
+        assertThrows(NullPointerException.class, () -> queue.offer(null), "Offering null should throw NullPointerException");
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseSpscLinkedArrayQueueTest {
+
+    private BaseSpscLinkedArrayQueue<Integer> queue;
+    
+    @BeforeEach
+    public void setUp() {
+        // Assuming BaseSpscLinkedArrayQueue is abstract and we have a concrete implementation
+        // For example: queue = new ConcreteSpscLinkedArrayQueue<Integer>();
+
+        // For this hypothetical case, we'll just instantiate a mock or use an anonymous inner class
+        queue = new BaseSpscLinkedArrayQueue<Integer>() {
+            // Overriding abstract methods with mock implementations, if required
+            @Override
+            boolean offerColdPath(Integer buffer, long mask, long pIndex, long offset, Integer v, Supplier<Integer> s) {
+                // Mock implementation that always returns true, could simulate cold path behavior as required
+                return true;
+            }
+            
+            // Other abstract method implementations...
+        };
+    }
+    
+    @Test
+    public void offerShouldSucceedWithNonNullElement() {
+        assertTrue(queue.offer(1), "Offer should return true when adding non-null element");
+    }
+
+    @Test
+    public void offerShouldThrowExceptionWithNullElement() {
+        assertThrows(NullPointerException.class, () -> queue.offer(null),
+                "Offer should throw NullPointerException when adding null element");
+    }
+    
+    @AfterEach
+    public void tearDown() {
+        queue = null;
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class BaseSpscLinkedArrayQueuePrePadTest {
+    private BaseSpscLinkedArrayQueue<Integer> queue;
+    private static final Integer TEST_ELEMENT = 1;
+
+    @BeforeEach
+    public void setUp() {
+        // As BaseSpscLinkedArrayQueue is abstract, it must either be instantiated with a concrete implementation
+        // or mocked for the purposes of this test.
+        // Assuming a mock for simplicity.
+        queue = mock(BaseSpscLinkedArrayQueue.class);
+    }
+
+    @Test
+    public void offerNonNullElementShouldSucceed() {
+        when(queue.offer(TEST_ELEMENT)).thenCallRealMethod();
+        when(queue.lpProducerIndex()).thenReturn(0L);
+        when(queue.offerColdPath(any(), anyLong(), anyLong(), anyLong(), eq(TEST_ELEMENT), isNull())).thenReturn(true);
+
+        // Define the behaviour for writeToQueue, which is a void method, but we need to know that it was invoked.
+        doAnswer(invocation -> {
+            Object[] args = invocation.getArguments();
+            assertEquals(TEST_ELEMENT, args[1]); // Assert that the element passed is indeed TEST_ELEMENT
+            return null;
+        }).when(queue).writeToQueue(any(), eq(TEST_ELEMENT), anyLong(), anyLong());
+
+        // Perform the operation.
+        boolean result = queue.offer(TEST_ELEMENT);
+
+        // Verify behavior and state.
+        verify(queue).writeToQueue(any(), eq(TEST_ELEMENT), anyLong(), anyLong()); // Ensure writeToQueue is called
+        assertTrue(result, "Offer should return true for non-null element");
+    }
+
+    @Test
+    public void offerNullElementShouldThrowException() {
+        when(queue.offer(null)).thenCallRealMethod();
+        
+        // Perform the operation.
+        Exception exception = assertThrows(NullPointerException.class, () -> queue.offer(null));
+
+        // Verify behavior and state.
+        String expectedMessage = "Cannot offer a null element to the queue";
+        String actualMessage = exception.getMessage();
+
+        assertTrue(actualMessage.contains(expectedMessage));
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+class BaseSpscLinkedArrayQueueMock<E> extends BaseSpscLinkedArrayQueue<E> {
+    public BaseSpscLinkedArrayQueueMock() {
+        // Initialize the necessary fields for the producer to simulate the offer operation
+        this.producerMask = 1023; // For example, the mask for a size 1024 array (size - 1)
+        this.producerBufferLimit = this.producerMask - 1; // Arbitrary limit for testing
+        this.producerBuffer = (E[]) new Object[(int) (this.producerMask + 1)]; // The actual buffer array
+    }
+
+    @Override
+    boolean offerColdPath(E buffer, long mask, long pIndex, long offset, E v, Supplier<E> s) {
+        // This is for the cold path, not testing this now, so just return false
+        return false;
+    }
+
+    // Assuming lpProducerIndex() and writeToQueue(E buffer, E e, long index, long offset) methods are trivial
+}
+
+public class BaseSpscLinkedArrayQueuePrePadTest {
+
+    @Test
+    public void offerTest() {
+        BaseSpscLinkedArrayQueueMock<Integer> queue = new BaseSpscLinkedArrayQueueMock<>();
+        
+        // Test offering a non-null element
+        Integer element = 5;
+        assertTrue(queue.offer(element), "Queue should accept non-null element and return true");
+
+        // Test offering a null element, expecting a NullPointerException
+        Exception e = assertThrows(NullPointerException.class, () -> queue.offer(null), "Offering null should throw NullPointerException");
+        assertNotNull(e.getMessage());
+    }
+}
+
+
+
+No.9 generated result --------------------------
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseSpscLinkedArrayQueueTest extends BaseSpscLinkedArrayQueue<Integer> {
+    
+    // Let's assume that the BaseSpscLinkedArrayQueue is the class containing the offer method
+    // As the actual BaseSpscLinkedArrayQueue is abstract, for testing purpose we will need a concrete subclass
+    // For the unit test to run, one would need to instantiate a real version of the queue or mock necessary components.
+    // Here, let's create a minimal stub to subclass it for our test
+
+    BaseSpscLinkedArrayQueue<Integer> queue;
+
+    @BeforeEach
+    public void setUp() {
+        // Intentionally left blank. A real test should initialize the queue with a proper size or use a mock.
+        queue = new BaseSpscLinkedArrayQueue<Integer>() {
+            // We may need to override methods from BaseSpscLinkedArrayQueue if they are called within offer()
+            // Since the source code for those methods is not given, the body will be left as 'return false'
+            // In a real case scenario, these would have concrete implementations or be mocked accordingly
+            @Override
+            boolean offerColdPath(Integer buffer, long mask, long pIndex, long offset, Integer v, Supplier<Integer> s) {
+                // Intentional stubbed response for test purposes
+                return false;
+            }
+
+            // Other methods necessary to make this queue operational would be similarly stubbed or properly implemented
+        };
+    }
+
+    @Test
+    public void offerTest() {
+        // Test that offering a null element throws NullPointerException
+        Exception exception = assertThrows(NullPointerException.class, () -> {
+            queue.offer(null);
+        });
+
+        // Test offering a non-null element returns true and that the element is indeed added to the queue
+        // For a real implementation, one would also check the actual internal state of the queue, for example,
+        // by ensuring the element is retrievable, the size has incremented, etc.
+        assertTrue(queue.offer(1), "Offering a non-null element should return true");
+
+        // More tests could be added here to test offering elements when the queue is full (if there's a bound),
+        // or when the queue transitions to the 'cold path', or for any other edge cases or behaviors that are
+        // part of the `offer` method's contract.
+    }
+}
+
+// NOTE: This unit test makes a few assumptions:
+// 1. There are no additional dependencies injected into or required by the `offer` method.
+// 2. The `offer` method's hot path is supposed to return true as long as the element is not null.
+// 3. The `offer` method's cold path is not triggered, as we cannot create a real instance of the queue.
+// 4. The test ignores multithreaded considerations, given the single producer/single consumer context.
+// 5. The actual queue behavior like storage and retrieval of elements is not being tested since
+//    the crucial methods are not defined (those methods would require either a concrete subclass or mocking).
+
+
+No.10 generated result --------------------------
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class BaseSpscLinkedArrayQueuePrePadTest {
+
+    @Test
+    public void offerTest() {
+        BaseSpscLinkedArrayQueue<Integer> queue = spy(new BaseSpscLinkedArrayQueue<Integer>() {
+            @Override
+            boolean offerColdPath(Integer buffer, long mask, long pIndex, long offset, Integer v, Supplier<Integer> s) {
+                return false; 
+            }
+        });
+
+        Integer valueToOffer = 10;
+
+        // Assume these methods are implemented in the actual class
+        when(queue.lvProducerIndex()).thenReturn(0L);
+        when(queue.producerBufferLimit).thenReturn(1L);
+        queue.producerMask = 0L;
+        queue.producerBuffer = (Integer[]) new Integer[1];
+
+        // Test for offer success path
+        assertTrue(queue.offer(valueToOffer), "Offer should return true when successful");
+
+        // Test for offer failing on the cold path
+        // Need to adjust the producerBufferLimit for the buffer to take the cold path
+        when(queue.producerBufferLimit).thenReturn(0L);
+        assertFalse(queue.offer(valueToOffer), "Offer should return false when cold path fails");
+
+        // Test for the NullPointerException when offering null
+        assertThrows(NullPointerException.class, () -> queue.offer(null), "Offering null should throw a NullPointerException");
+    }
+}
+
+

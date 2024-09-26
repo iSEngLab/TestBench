@@ -1,0 +1,547 @@
+Source code: 
+
+
+public static String getUserNameByToken(HttpServletRequest request) throws JeecgBootException {
+	String accessToken = request.getHeader("X-Access-Token");
+	String username = getUsername(accessToken);
+	if (oConvertUtils.isEmpty(username)) {
+		throw new JeecgBootException("未获取到用户");
+	}
+	return username;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jeecg.common.system.util;
+
+import org.jeecg.common.exception.JeecgBootException;
+import org.jeecg.common.util.oConvertUtils;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import javax.servlet.http.HttpServletRequest;
+
+import static org.mockito.Mockito.*;
+
+public class JwtUtilTest {
+    @Test
+    public void getUserNameByTokenTest() {
+        // Mock the HttpServletRequest
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        
+        // Define the accessToken and the expected username
+        String accessToken = "testToken123";
+        String expectedUsername = "testUser";
+
+        // Mock the getHeader method to return the accessToken when "X-Access-Token" is requested
+        when(request.getHeader("X-Access-Token")).thenReturn(accessToken);
+
+        // Mock the getUsername static method to return the expectedUsername when accessToken is passed
+        JwtUtil util = mock(JwtUtil.class);
+        when(util.getUsername(accessToken)).thenReturn(expectedUsername);
+
+        // Assume oConvertUtils.isEmpty returns false for a non-empty string
+        when(oConvertUtils.isEmpty(expectedUsername)).thenReturn(false);
+        
+        // Call the method to test
+        try {
+            String username = JwtUtil.getUserNameByToken(request);
+
+            // Validate the result
+            assertEquals(expectedUsername, username, "The username should match the expected value");
+        } catch (JeecgBootException e) {
+            fail("The method should not have thrown an exception: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void getUserNameByTokenTestThrowsException() {
+        // Mock the HttpServletRequest
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        
+        // Define the accessToken and return null for the username to simulate an invalid token or user not found
+        String accessToken = "invalidToken123";
+        
+        // Mock the getHeader method to return the accessToken when "X-Access-Token" is requested
+        when(request.getHeader("X-Access-Token")).thenReturn(accessToken);
+
+        // Mock the getUsername static method to return null when accessToken is passed
+        JwtUtil util = mock(JwtUtil.class);
+        when(util.getUsername(accessToken)).thenReturn(null);
+        
+        // Assume oConvertUtils.isEmpty returns true for a null string
+        when(oConvertUtils.isEmpty(null)).thenReturn(true);
+
+        // Call the method to test and expect an exception
+        Exception exception = assertThrows(JeecgBootException.class, () -> {
+            JwtUtil.getUserNameByToken(request);
+        });
+
+        // Validate the exception message
+        assertEquals("未获取到用户", exception.getMessage(), "The exception message should match the expected message");
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jeecg.common.system.util;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import javax.servlet.http.HttpServletRequest;
+
+public class JwtUtilTest {
+
+    @Test
+    public void getUserNameByTokenSuccessfulTest() {
+        // Create a mock HttpServletRequest
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        
+        // Stub the getHeader method to return a fake access token
+        when(request.getHeader("X-Access-Token")).thenReturn("fakeAccessToken");
+        
+        // Stub the getUsername static method
+        // Assuming getUsername is a static method of the class containing getUserNameByToken
+        // And assuming we have a way to mock static methods (e.g., using Mockito's mockStatic)
+        try (var mocked = mockStatic(JwtUtil.class)) {
+            mocked.when(() -> JwtUtil.getUsername("fakeAccessToken")).thenReturn("TestUser");
+            
+            // Test the actual method
+            String username = JwtUtil.getUserNameByToken(request);
+
+            // Verify the result
+            assertEquals("TestUser", username);
+        }
+    }
+
+    @Test
+    public void getUserNameByTokenThrowsExceptionTest() {
+        // Create a mock HttpServletRequest
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        
+        // Stub the getHeader method to return null or an empty access token
+        when(request.getHeader("X-Access-Token")).thenReturn(null);
+        
+        // Stub the getUsername static method to return an empty string
+        try (var mocked = mockStatic(JwtUtil.class)) {
+            mocked.when(() -> JwtUtil.getUsername(null)).thenReturn("");
+            
+            // Test the method
+            JeecgBootException exception = assertThrows(JeecgBootException.class, () -> {
+                JwtUtil.getUserNameByToken(request);
+            });
+            
+            // Verify the exception message
+            assertEquals("未获取到用户", exception.getMessage());
+        }
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jeecg.common.system.util;
+
+import org.junit.jupiter.api.*;
+import javax.servlet.http.HttpServletRequest;
+import static org.junit.jupiter.api.Assertions.*;
+import org.mockito.Mockito;
+import static org.mockito.Mockito.when;
+
+public class JwtUtilTest {
+
+    @Test
+    public void getUserNameByTokenTest() {
+        // Mock HttpServletRequest
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+        // Define input and expected result
+        String accessToken = "testAccessToken";
+        String expectedUsername = "testUser";
+
+        // When "X-Access-Token" header is requested, return the test access token
+        when(request.getHeader("X-Access-Token")).thenReturn(accessToken);
+
+        // Mock the static method getUsername - assuming a method can be mocked/expected result is set (this may require PowerMockito to handle the static method if it's from another utility class)
+        String actualUsername = JwtUtil.getUserNameByToken(request);
+
+        // Verify the result
+        assertEquals(expectedUsername, actualUsername, "The username should be equal to the expected username.");
+    }
+    
+    @Test
+    public void getUserNameByTokenWhenTokenInvalidTest() {
+        // Mock HttpServletRequest
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+
+        // When "X-Access-Token" header is requested, return null or empty indicating an invalid or missing token
+        when(request.getHeader("X-Access-Token")).thenReturn(null);
+
+        // Assert that the JeecgBootException is thrown due to the invalid token
+        Exception exception = assertThrows(JeecgBootException.class, () -> {
+            JwtUtil.getUserNameByToken(request);
+        });
+
+        // Verify the exception message
+        String expectedMessage = "未获取到用户";
+        String actualMessage = exception.getMessage();
+        assertTrue(actualMessage.contains(expectedMessage), "The exception message should contain the expected text.");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jeecg.common.system.util;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import javax.servlet.http.HttpServletRequest;
+import org.mockito.Mockito;
+import org.jeecg.common.exception.JeecgBootException;
+
+public class JwtUtilTest {
+    
+    @Test
+    public void getUserNameByTokenTest() {
+        HttpServletRequest mockRequest = Mockito.mock(HttpServletRequest.class);
+        Mockito.when(mockRequest.getHeader("X-Access-Token")).thenReturn("testToken");
+
+        // Simulate the getUsername static method behavior
+        // Here we assume there is a static method JwtUtil.getUsername that is used 
+        // in the getUserNameByToken method. You will need to create a mock for 
+        // this static method if it's not directly testable or under your control.
+        String expectedUsername = "testUser";
+        // Assuming JwtUtil has a static method 'getUsername' that is to be mocked
+        Mockito.when(JwtUtil.getUsername("testToken")).thenReturn(expectedUsername);
+
+        String result = JwtUtil.getUserNameByToken(mockRequest);
+
+        assertEquals(expectedUsername, result);
+    }
+
+    @Test
+    public void getUserNameByTokenWhenUsernameIsEmptyTest() {
+        HttpServletRequest mockRequest = Mockito.mock(HttpServletRequest.class);
+        Mockito.when(mockRequest.getHeader("X-Access-Token")).thenReturn("emptyToken");
+
+        // Again, simulating the getUsername method but returning an empty string this time
+        Mockito.when(JwtUtil.getUsername("emptyToken")).thenReturn("");
+
+        Exception exception = assertThrows(JeecgBootException.class, () -> {
+            JwtUtil.getUserNameByToken(mockRequest);
+        });
+
+        String expectedMessage = "未获取到用户";
+        String actualMessage = exception.getMessage();
+
+        assertTrue(actualMessage.contains(expectedMessage));
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jeecg.common.system.util;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.springframework.mock.web.MockHttpServletRequest;
+
+public class JwtUtilTest {
+
+    // Assuming we also have a mock method for mockGetUsername
+    private static String mockGetUsername(String accessToken) {
+        // this method should mimic the actual getUsername() behavior
+        if("knownToken".equals(accessToken)) {
+            return "testUser";
+        } else {
+            return null;
+        }
+    }
+
+    // Replace getUsername method call with the mock method within the unit test
+    public static String getUserNameByToken(HttpServletRequest request) throws JeecgBootException {
+        String accessToken = request.getHeader("X-Access-Token");
+        String username = mockGetUsername(accessToken);
+        if(username == null || username.isEmpty()) {
+            throw new JeecgBootException("未获取到用户");
+        }
+        return username;
+    }
+
+    @Test
+    public void getUserNameByTokenTestValidToken() {
+        // Setup
+        String expectedUsername = "testUser";
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("X-Access-Token", "knownToken");
+
+        // Execution
+        String actualUsername = getUserNameByToken(request);
+
+        // Verification
+        assertEquals(expectedUsername, actualUsername, "Expected username to match the actual username");
+    }
+
+    @Test
+    public void getUserNameByTokenTestInvalidToken() {
+        // Setup
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("X-Access-Token", "unknownToken");
+
+        // Execution & Verification
+        JeecgBootException exception = assertThrows(JeecgBootException.class, () -> {
+            getUserNameByToken(request);
+        }, "Expected JeecgBootException to be thrown");
+
+        // Verify the exception message
+        assertEquals("未获取到用户", exception.getMessage(), "Exception message should match the expected message");
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jeecg.common.system.util;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import javax.servlet.http.HttpServletRequest;
+import org.mockito.Mockito;
+
+public class JwtUtilTest {
+
+    @Test
+    public void getUserNameByTokenTest_WhenUsernameIsNotEmpty() {
+        // Arrange
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+        Mockito.when(request.getHeader("X-Access-Token")).thenReturn("validToken");
+        Mockito.when(JwtUtil.getUsername("validToken")).thenReturn("expectedUsername");
+        Mockito.when(JwtUtil.oConvertUtils.isEmpty("expectedUsername")).thenReturn(false);
+
+        // Act
+        String result = JwtUtil.getUserNameByToken(request);
+
+        // Assert
+        assertEquals("expectedUsername", result);
+    }
+
+    @Test
+    public void getUserNameByTokenTest_WhenUsernameIsEmpty() {
+        // Arrange
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+        Mockito.when(request.getHeader("X-Access-Token")).thenReturn("invalidToken");
+        Mockito.when(JwtUtil.getUsername("invalidToken")).thenReturn("");
+        Mockito.when(JwtUtil.oConvertUtils.isEmpty("")).thenReturn(true);
+
+        // Act & Assert
+        JeecgBootException thrownException = assertThrows(JeecgBootException.class, () -> {
+            JwtUtil.getUserNameByToken(request);
+        });
+        assertEquals("未获取到用户", thrownException.getMessage());
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jeecg.common.system.util;
+
+import org.jeecg.common.exception.JeecgBootException;
+import org.jeecg.common.util.oConvertUtils;
+import org.junit.jupiter.api.*;
+import javax.servlet.http.HttpServletRequest;
+
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JwtUtilTest {
+
+    @Test
+    public void getUserNameByTokenTest() {
+        // Create a mock HttpServletRequest
+        HttpServletRequest request = mock(HttpServletRequest.class);
+
+        // Define the behavior of request.getHeader for "X-Access-Token" to return a valid token
+        when(request.getHeader("X-Access-Token")).thenReturn("validToken");
+
+        // Define a static method stub for getUsername to return a username when presented with a "validToken"
+        mockStatic(JwtUtil.class);
+        when(JwtUtil.getUsername("validToken")).thenReturn("TestUser");
+
+        // Test for a valid username
+        assertDoesNotThrow(() -> {
+            String username = JwtUtil.getUserNameByToken(request);
+            assertNotNull(username);
+            assertEquals("TestUser", username);
+        });
+
+        // Define the behavior of request.getHeader to return null for a missing token
+        when(request.getHeader("X-Access-Token")).thenReturn(null);
+
+        // Test for exception when token is not present or invalid
+        JeecgBootException thrownException = assertThrows(JeecgBootException.class, () -> {
+            JwtUtil.getUserNameByToken(request);
+        });
+
+        // Assert that the message of the thrown exception is as expected
+        assertEquals("未获取到用户", thrownException.getMessage());
+    }
+    
+    // Helper static method mocked to simulate JwtUtil.getUsername
+    private static String getUsername(String accessToken) {
+        // This method should return a username associated with the accessToken
+        // Placeholder method for testing; in actual case, it will communicate with JWT library or user service
+        if ("validToken".equals(accessToken)) {
+            return "TestUser";
+        } else {
+            return null;
+        }
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.jeecg.common.system.util;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+import javax.servlet.http.HttpServletRequest;
+
+public class JwtUtilTest {
+
+    @Test
+    public void getUserNameByTokenValidTokenTest() {
+        // Arrange
+        HttpServletRequest mockRequest = mock(HttpServletRequest.class);
+        String expectedUsername = "testUser";
+        String validAccessToken = "validToken";
+
+        when(mockRequest.getHeader("X-Access-Token")).thenReturn(validAccessToken);
+        // Here we're assuming 'getUsername' is a static method on some class (which is not shown in the given Java source code)
+        // We will need to use PowerMockito or some other mechanism to mock this static method since Mockito does not support static methods for versions before 3.4.0.
+        // For Mockito 3.4.0 and newer, we can use Mockito.mockStatic.
+        // Assuming it is on a class called AccessTokenProcessor for the sake of this example:
+        try (MockedStatic<AccessTokenProcessor> mockedStatic = mockStatic(AccessTokenProcessor.class)) {
+            mockedStatic.when(() -> AccessTokenProcessor.getUsername(validAccessToken)).thenReturn(expectedUsername);
+
+            // Act
+            String actualUsername = JwtUtil.getUserNameByToken(mockRequest);
+
+            // Assert
+            assertEquals(expectedUsername, actualUsername);
+        }
+    }
+
+    @Test
+    public void getUserNameByTokenInvalidTokenTest() {
+        // Arrange
+        HttpServletRequest mockRequest = mock(HttpServletRequest.class);
+        String invalidAccessToken = "invalidToken";
+
+        when(mockRequest.getHeader("X-Access-Token")).thenReturn(invalidAccessToken);
+        // Assuming 'getUsername' is a static method on a class called AccessTokenProcessor
+        try (MockedStatic<AccessTokenProcessor> mockedStatic = mockStatic(AccessTokenProcessor.class)) {
+            mockedStatic.when(() -> AccessTokenProcessor.getUsername(invalidAccessToken)).thenReturn(null);
+
+            // Act & Assert
+            assertThrows(JeecgBootException.class, () -> JwtUtil.getUserNameByToken(mockRequest));
+        }
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jeecg.common.system.util;
+
+import org.junit.jupiter.api.*;
+import org.mockito.*;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import javax.servlet.http.HttpServletRequest;
+
+public class JwtUtilTest {
+
+    @Mock
+    private HttpServletRequest request;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void getUserNameByTokenTestValidToken() {
+        // Arrange
+        String validToken = "validToken123";
+        String expectedUsername = "testUser";
+        when(request.getHeader("X-Access-Token")).thenReturn(validToken);
+        when(JwtUtil.getUsername(validToken)).thenReturn(expectedUsername);
+
+        // Act
+        String username = JwtUtil.getUserNameByToken(request);
+
+        // Assert
+        assertEquals(expectedUsername, username);
+    }
+
+    @Test
+    public void getUserNameByTokenTestInvalidToken() {
+        // Arrange
+        String invalidToken = "invalidToken123";
+        when(request.getHeader("X-Access-Token")).thenReturn(invalidToken);
+        when(JwtUtil.getUsername(invalidToken)).thenReturn("");
+
+        // Act and Assert
+        assertThrows(JeecgBootException.class, () -> {
+            JwtUtil.getUserNameByToken(request);
+        });
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.common.system.util;
+
+import org.junit.jupiter.api.*;
+import javax.servlet.http.HttpServletRequest;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class JwtUtilTest {
+    @Test
+    public void getUserNameByTokenTest() {
+        // Mock HttpServletRequest
+        HttpServletRequest mockRequest = mock(HttpServletRequest.class);
+        when(mockRequest.getHeader("X-Access-Token")).thenReturn("mockedAccessToken");
+
+        // Assuming the existence of JwtUtil method getUsername() and mocking its behavior
+        JwtUtil mockJwtUtil = mock(JwtUtil.class);
+        when(mockJwtUtil.getUsername("mockedAccessToken")).thenReturn("mockedUser");
+
+        // When username is retrieved successfully
+        String expectedUsername = "mockedUser";
+        try {
+            String result = JwtUtil.getUserNameByToken(mockRequest);
+            assertEquals(expectedUsername, result, "The user name should match the expected value");
+        } catch (JeecgBootException e) {
+            fail("Should not throw an exception when username is found");
+        }
+
+        // When username is not found and an exception is expected
+        when(mockJwtUtil.getUsername("mockedAccessToken")).thenReturn(""); // or return null for a null check
+        assertThrows(JeecgBootException.class, () -> JwtUtil.getUserNameByToken(mockRequest), "Should throw a JeecgBootException when username is empty");
+    }
+}
+
+

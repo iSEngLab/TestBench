@@ -1,0 +1,404 @@
+Source code: 
+
+@Transactional
+public GrayReleaseRule updateRulesReleaseId(String appId, String clusterName,
+                                 String namespaceName, String branchName,
+                                 long latestReleaseId, String operator) {
+  GrayReleaseRule oldRules = grayReleaseRuleRepository.
+      findTopByAppIdAndClusterNameAndNamespaceNameAndBranchNameOrderByIdDesc(appId, clusterName, namespaceName, branchName);
+
+  if (oldRules == null) {
+    return null;
+  }
+
+  GrayReleaseRule newRules = new GrayReleaseRule();
+  newRules.setBranchStatus(NamespaceBranchStatus.ACTIVE);
+  newRules.setReleaseId(latestReleaseId);
+  newRules.setRules(oldRules.getRules());
+  newRules.setAppId(oldRules.getAppId());
+  newRules.setClusterName(oldRules.getClusterName());
+  newRules.setNamespaceName(oldRules.getNamespaceName());
+  newRules.setBranchName(oldRules.getBranchName());
+  newRules.setDataChangeCreatedBy(operator);
+  newRules.setDataChangeLastModifiedBy(operator);
+
+  grayReleaseRuleRepository.save(newRules);
+
+  grayReleaseRuleRepository.delete(oldRules);
+
+  return newRules;
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.service;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NamespaceBranchServiceTest {
+    @Test
+    public void updateRulesReleaseIdTest() {
+        // <fill>
+    }
+}
+    
+
+
+
+No.2 generated result --------------------------
+
+
+@Service
+public class NamespaceService {
+  @Autowired
+  private NamespaceRepository namespaceRepository;
+  
+  public Namespace findByNameAndParentCluster(String name, Cluster parentCluster) {
+    return namespaceRepository.findByNameAndParentCluster(name, parentCluster);
+  }
+}
+
+
+
+No.3 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.service;
+
+import org.springframework.stereotype.Service;
+
+@Service
+public class NamespaceBranchService {
+  @Autowired
+  private ReleaseService releaseService;
+  @Autowired
+  private GrayReleaseRuleRepository grayReleaseRuleRepository;
+
+  public List<GrayReleaseRule> findActiveRules(String appId, String clusterName,
+                                               String namespaceName) {
+    return grayReleaseRuleRepository.findByAppIdAndClusterNameAndNamespaceNameOrderByIdDesc(appId, clusterName, namespaceName);
+  }
+
+  public GrayReleaseRule updateGrayRules(String appId, String clusterName,
+                                         String namespaceName, String branchName,
+                                         List<GrayReleaseRuleItem> items) {
+    //find active rule for current env
+    GrayReleaseRule latestRule = grayReleaseRuleRepository.
+        findTopByAppIdAndClusterNameAndNamespaceNameOrderByIdDesc(appId, clusterName, namespaceName);
+
+    if (latestRule == null || items.size() == 0) {
+      return null;
+    }
+
+    GrayReleaseRule newGrayReleaseRule = new GrayReleaseRule();
+    List<GrayReleaseRuleItem> ruleItems = latestRule.getRules().stream()
+        .map(rule -> {
+          if (rule.getBranchName().equalsIgnoreCase(branchName)) {
+            //found the branch, copy all rules and update gray release version
+            GrayReleaseRuleItem newRule = new GrayReleaseRuleItem();
+            BeanUtils.copyProperties(rule, newRule);
+            newRule.setGrayReleaseVersion(items.get(0).getGrayReleaseVersion());
+          } else {
+            //keep other branches
+            return rule;
+          }
+        }).collect(Collectors.toList());
+    newGrayReleaseRule.setBranchName("");
+    newGrayReleaseRule.setRules(ruleItems);
+    newGrayReleaseRule.setAppId(latestRule.getAppId());
+    newGrayReleaseRule.setClusterName(latestRule.getClusterName());
+    newGrayReleaseRule.setNamespaceName(latestRule.getNamespaceName());
+    newGrayReleaseRule.setDataChangeCreatedBy(items.get(0).getDataChangeLastModifiedBy());
+    newGrayReleaseRule.setDataChangeLastModifiedBy(items.get(0).getDataChangeLastModifiedBy());
+    //save gray release rule
+    return grayReleaseRuleRepository.save(newGrayReleaseRule);
+  }
+}
+    
+
+
+No.4 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.service;
+
+import com.google.common.base.Joiner;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
+
+import com.ctrip.framework.apollo.biz.entity.*;
+import com.ctrip.framework.apollo.common.constants.GrayReleaseRuleItemFields;
+import com.ctrip.framework.apollo.core.enums.Env;
+import com.ctrip.framework.apollo.tracer.Tracer;
+
+@Service
+public class GrayReleaseRuleService {
+  @Autowired
+  private NamespaceBranchService namespaceBranchService;
+  @Autowired
+  private ItemService itemService;
+  @Autowired
+  private InstanceService instanceService;
+
+  public String assembleGrayRules(Env env, long releaseId) {
+    //1. get all rules from db
+    List<GrayReleaseRuleItem> items = getGrayRulesFromDb(env, releaseId);
+
+    if (CollectionUtils.isEmpty(items)) {
+      Tracer.logEvent("Apollo.GrayReleaseRules.NotFound", env + "+" + releaseId);
+      return ""; //empty json array
+    }
+
+    Set<String> clientAppIds = getClientAppIdsFromItems(items);
+    List<GrayReleaseRuleItemDTO> dtoList = transformFromItemsToDto(items, clientAppIds);
+
+    Collections.sort(dtoList);
+
+    Tracer.logEvent("Apollo.GrayReleaseRules.Assemble", env + "+" + releaseId);
+
+    return JSONArray.toJSONString(dtoList);
+  }
+
+  private List<GrayReleaseRuleItem> getGrayRulesFromDb(Env env, long releaseId) {
+    String sql = "SELECT * FROM GrayReleaseRuleItems WHERE env=? AND releaseId=?";
+
+    return jdbcTemplate.query(sql, args -> {
+      args.setString(1, env.name());
+      args.setLong(2, releaseId);
+    }, (rs, rowNum) -> {
+      GrayReleaseRuleItem item = new GrayReleaseRuleItem();
+      item.setEnv(env.name());
+      item.setAppId(rs.getString("appId"));
+      item.setClusterName(rs.getString("clusterName"));
+      item.setNamespaceName(rs.getString("namespaceName"));
+      item.setBranchName(rs.getString("branchName"));
+      item.setReleaseId(releaseId);
+      return item;
+    });
+  }
+
+  private Set<String> getClientAppIdsFromItems(List<GrayReleaseRuleItem> items) {
+    Set<String> clientAppIds = new HashSet<>();
+    for (GrayReleaseRuleItem item : items) {
+      if (!item.getBranchName().equals(ConfigConsts.NO_APPID_PLACEHOLDER)) {
+        //assemble clientAppIds
+        clientAppIds.add(item.getAppId());
+      }
+    }
+    return clientAppIds;
+  }
+
+  private List<GrayReleaseRuleItemDTO> transformFromItemsToDto(List<GrayReleaseRuleItem> items, Set<String> clientAppIds) {
+    //2. assemble dto list
+    Map<Env, List<GrayReleaseRuleItem>> itemsMap = groupByEnv(items);
+
+    return itemsMap.entrySet().stream()
+        .map(e -> new GrayReleaseRuleItemDTO(e.getKey(), e.getValue(), clientAppIds))
+        .collect(Collectors.toList());
+  }
+}
+    
+
+
+
+No.5 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.service;
+
+import org.springframework.stereotype.Service;
+import com.google.common.collect.Maps;
+import com.google.gson.Gson;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+public class ReleaseService {
+  private static final Gson gson = new Gson();
+
+  @Transactional
+  public NamespaceReleaseHistory createRelease(NamespaceReleaseHistory namespaceRelease, String operator) {
+    log.debug("creating release {} for namespace {}", gson.toJson(namespaceRelease), namespaceRelease.getNamespaceId());
+    if (namespaceRelease.isEmergencyPublish()) {
+      return emergencyPublishNamespace(namespaceRelease, operator);
+    } else {
+      return createNormalRelease(namespaceRelease, operator);
+    }
+  }
+
+  private NamespaceReleaseHistory createNormalRelease(NamespaceReleaseHistory namespaceRelease, String operator) {
+    long releaseId = sequenceService.getNextVal();
+
+    namespaceRelease.setId(releaseId);
+    namespaceRelease.setDataChangeLastModifiedBy(operator);
+    namespaceRelease.setDataChangeCreatedBy(operator);
+
+    namespaceReleaseHistoryRepository.save(namespaceRelease);
+
+    return namespaceRelease;
+  }
+
+  private NamespaceReleaseHistory emergencyPublishNamespace(NamespaceReleaseHistory namespaceRelease, String operator) {
+    log.debug("creating emergency release for {} by {}, content:{}", namespaceRelease.getNamespaceId(), operator, gson.toJson(namespaceRelease));
+
+    NamespaceReleaseHistory previousEmergencyRelease = getPreviousEmergencyRelease(namespaceRelease);
+
+    if (previousEmergencyRelease != null) {
+      log.debug("found previous emergency release {} for {}, rolling back it", previousEmergencyRelease.getId(), namespaceRelease.getNamespaceId());
+
+      rollbackEmergencyRelease(previousEmergencyRelease, operator);
+    }
+
+    long releaseId = sequenceService.getNextVal();
+    NamespaceReleaseHistory emergencyNamespaceRelease = buildEmergencyRelease(namespaceRelease, releaseId);
+
+    namespaceReleaseHistoryRepository.save(emergencyNamespaceRelease);
+
+    return emergencyNamespaceRelease;
+  }
+
+  private NamespaceReleaseHistory rollbackEmergencyRelease(NamespaceReleaseHistory previousEmergencyRelease, String operator) {
+    previousEmergencyRelease.setRollback();
+    previousEmergencyRelease.setDataChangeLastModifiedBy(operator);
+
+    namespaceReleaseHistoryRepository.save(previousEmergencyRelease);
+
+    return previousEmergencyRelease;
+  }
+
+  private NamespaceReleaseHistory getPreviousEmergencyRelease(NamespaceReleaseHistory emergencyRelease) {
+    return namespaceReleaseHistoryRepository.findFirstByNamespaceIdAndIsRollbackFalseOrderByIdDesc(emergencyRelease.getNamespaceId());
+  }
+
+  private NamespaceReleaseHistory buildEmergencyRelease(NamespaceReleaseHistory previousRelease, long releaseId) {
+    NamespaceReleaseHistory emergencyRelease = new NamespaceReleaseHistory();
+    emergencyRelease.setAppId(previousRelease.getAppId());
+    emergencyRelease.setClusterName(previousRelease.getClusterName());
+    emergencyRelease.setNamespaceName(previousRelease.getNamespaceName());
+    emergencyRelease.setBaseReleaseId(previousRelease.getId());
+    emergencyRelease.setRollbackId(releaseId);
+    emergencyRelease.setDataChangeCreatedBy(previousRelease.getDataChangeCreatedBy());
+    emergencyRelease.setDataChangeLastModifiedBy(previousRelease.getDataChangeLastModifiedBy());
+
+    return emergencyRelease;
+  }
+}
+    
+### Test Case:
+
+
+No.6 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.service;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class NamespaceBranchServiceTest {
+  @InjectMocks
+  private NamespaceBranchService namespaceBranchService;
+  @Mock
+  private GrayReleaseRuleRepository grayReleaseRuleRepository;
+
+  @BeforeEach
+  public void setUp() {
+    MockitoAnnotations.initMocks(this);
+  }
+
+  @Test
+  public void updateRulesReleaseIdTest() {
+    String appId = "someApp";
+    String clusterName = "defaultCluster";
+    String namespaceName = "testNamespace";
+    String branchName = "newBranch";
+    long latestReleaseId = 12345L;
+    String operator = "apollo-tester";
+
+    GrayReleaseRule oldRules = new GrayReleaseRule();
+    oldRules.setAppId(appId);
+    oldRules.setClusterName(clusterName);
+    oldRules.setNamespaceName(namespaceName);
+    oldRules.setBranchName(branchName);
+    oldRules.setRules("[{\"clientAppId\": \"someClientApp\", \"grayPercentage\": 0.2}]");
+    grayReleaseRuleRepository.save(oldRules);
+
+    GrayReleaseRule newRules = namespaceBranchService.updateRulesReleaseId(appId, clusterName, namespaceName, branchName, latestReleaseId, operator);
+
+    assertNotNull(newRules);
+    assertEquals(latestReleaseId, newRules.getReleaseId());
+  }
+}
+
+
+No.7 generated result --------------------------
+
+Thank you for reaching out! We are here to help. However, it seems like your request is not urgent and cannot be addressed in a timely manner due to the large volume of support requests we receive daily. 
+
+If you have specific requirements or questions regarding Apollo Biz Service, please feel free to ask us at any time. We would be more than happy to help.  
+
+
+No.8 generated result --------------------------
+
+Timeout
+
+
+No.9 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.service;
+
+import java.util.Optional;
+import org.junit.jupiter.api.*;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.junit.Assert.*;
+import org.mockito.InjectMocks;
+import org.mockito.Spy;
+import org.mockito.MockitoAnnotations;
+import com.ctrip.framework.apollo.biz.AbstractIntegrationTest;
+import com.ctrip.framework.apollo.biz.entity.*;
+import com.ctrip.framework.apollo.common.exception.NotFoundException;
+import java.util.List;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+@ExtendWith(SpringExtension.class)
+public class NamespaceBranchServiceTest extends AbstractIntegrationTest {
+  @Mock
+  private GrayReleaseRuleRepository grayReleaseRuleRepository;
+  @Mock
+  private ReleaseService releaseService;
+  
+  @InjectMocks
+  private NamespaceBranchService namespaceBranchService = new NamespaceBranchService();
+
+  @BeforeEach
+  public void setUp() {
+    MockitoAnnotations.initMocks(this);
+  }
+
+  @Test
+  public void updateRulesReleaseIdTest() {
+    long releaseId = 1L;
+    when(grayReleaseRuleRepository.findTopByAppIdAndClusterNameAndNamespaceNameAndBranchNameOrderByIdDesc("1", "default", "1", "1"))
+        .thenReturn(Optional.of(new GrayReleaseRule()));
+    
+    NamespaceBranchService.GrayRulesUpdateResult result = namespaceBranchService.updateRulesReleaseId("1", "default", "1", releaseId, "1");
+    assertEquals(NamespaceBranchService.GrayRulesUpdateResult.SUCCESS, result);
+  }
+}
+
+
+No.10 generated result --------------------------
+
+@RestController
+public class YourController {
+    @Autowired
+    private Gson gson;
+    
+    // ...
+}
+
+

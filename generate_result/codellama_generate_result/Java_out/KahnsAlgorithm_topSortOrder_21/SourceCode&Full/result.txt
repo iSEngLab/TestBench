@@ -1,0 +1,335 @@
+Source code: 
+
+
+ArrayList<E> topSortOrder() {
+    calculateInDegree();
+    Queue<E> q = new LinkedList<E>();
+
+    for (E vertex : inDegree.keySet()) {
+        if (inDegree.get(vertex) == 0) {
+            q.add(vertex);
+        }
+    }
+
+    ArrayList<E> answer = new ArrayList<>();
+
+    while (!q.isEmpty()) {
+        E current = q.poll();
+        answer.add(current);
+        for (E adjacent : graph.getAdjacents(current)) {
+            inDegree.put(adjacent, inDegree.get(adjacent) - 1);
+            if (inDegree.get(adjacent) == 0) {
+                q.add(adjacent);
+            }
+        }
+    }
+
+    return answer;
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.thealgorithms.datastructures.graphs;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class TopologicalSortTest {
+    @Test
+    public void topSortOrderTest() {
+        // Create a graph with known topological sort order
+        AdjacencyList<String> graph = new AdjacencyList<>();
+        graph.addEdge("a", "b");
+        graph.addEdge("c", "a");
+        graph.addEdge("a", "d");
+        graph.addEdge("b", "d");
+        graph.addEdge("c", "u");
+        graph.addEdge("u", "b");
+
+        // Calculate the topological sort order of the graph
+        TopologicalSort<String> topSort = new TopologicalSort<>(graph);
+        ArrayList<String> sortedOrder = topSort.topSortOrder();
+
+        // Compare the output with the expected sort order
+        String[] expectedSortOrder = {"u", "b", "d", "a", "c"};
+        assertArrayEquals(expectedSortOrder, sortedOrder);
+    }
+}
+
+
+No.2 generated result --------------------------
+
+
+package com.thealgorithms.datastructures.graphs;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AdjacencyListTest {
+    @Test
+    public void topSortOrderTest() {
+        // Create a graph with the following vertices and edges:
+        // A -> B, C -> A, A -> D, B -> D, C -> U, U -> B
+        AdjacencyList<String> graph = new AdjacencyList<>();
+        graph.addEdge("a", "b");
+        graph.addEdge("c", "a");
+        graph.addEdge("a", "d");
+        graph.addEdge("b", "d");
+        graph.addEdge("c", "u");
+        graph.addEdge("u", "b");
+
+        // Create a TopologicalSort instance with the graph
+        TopologicalSort<String> topSort = new TopologicalSort<>(graph);
+
+        // Calculate the in-degree of all vertices and add them to a queue
+        topSort.calculateInDegree();
+        Queue<String> q = new LinkedList<>();
+        for (String vertex : topSort.inDegree.keySet()) {
+            if (topSort.inDegree.get(vertex) == 0) {
+                q.add(vertex);
+            }
+        }
+
+        // Perform topological sort and check the order of vertices in the queue
+        ArrayList<String> answer = new ArrayList<>();
+        while (!q.isEmpty()) {
+            String current = q.poll();
+            answer.add(current);
+            for (String adjacent : graph.getAdjacents(current)) {
+                topSort.inDegree.put(adjacent, topSort.inDegree.get(adjacent) - 1);
+                if (topSort.inDegree.get(adjacent) == 0) {
+                    q.add(adjacent);
+                }
+            }
+        }
+
+        // Check the order of vertices in the queue with the expected order
+        ArrayList<String> expected = new ArrayList<>();
+        expected.add("u");
+        expected.add("c");
+        expected.add("a");
+        expected.add("b");
+        expected.add("d");
+
+        assertEquals(expected, answer);
+    }
+}
+
+
+No.3 generated result --------------------------
+
+@Test
+public void testTopSortOrder() {
+    AdjacencyList<String> graph = new AdjacencyList<>();
+    graph.addEdge("a", "b");
+    graph.addEdge("c", "a");
+    graph.addEdge("a", "d");
+    graph.addEdge("b", "d");
+    graph.addEdge("c", "u");
+    graph.addEdge("u", "b");
+    
+    TopologicalSort<String> topSort = new TopologicalSort<>(graph);
+    
+    List<String> expectedOrder = Arrays.asList("a", "c", "u", "b", "d");
+    assertEquals(expectedOrder, topSort.topSortOrder());
+}
+
+
+No.4 generated result --------------------------
+
+@Test
+public void topSortOrderTest() {
+    // Initialize the graph
+    AdjacencyList<String> graph = new AdjacencyList<>();
+    graph.addEdge("a", "b");
+    graph.addEdge("c", "a");
+    graph.addEdge("a", "d");
+    graph.addEdge("b", "d");
+    graph.addEdge("c", "u");
+    graph.addEdge("u", "b");
+
+    // Create an instance of the TopologicalSort class
+    TopologicalSort<String> topSort = new TopologicalSort<>(graph);
+
+    // Call the topSortOrder method and store the result in a variable
+    ArrayList<String> sortedVertices = topSort.topSortOrder();
+
+    // Check that the resulting list contains all vertices in the correct order
+    assertEquals(sortedVertices.get(0), "a");
+    assertEquals(sortedVertices.get(1), "b");
+    assertEquals(sortedVertices.get(2), "c");
+    assertEquals(sortedVertices.get(3), "d");
+    assertEquals(sortedVertices.get(4), "u");
+}
+
+
+No.5 generated result --------------------------
+
+package com.thealgorithms.datastructures.graphs;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class TopologicalSortTest {
+    @Test
+    public void topSortOrderTest() {
+        AdjacencyList<String> graph = new AdjacencyList<>();
+        graph.addEdge("a", "b");
+        graph.addEdge("c", "a");
+        graph.addEdge("a", "d");
+        graph.addEdge("b", "d");
+        graph.addEdge("c", "u");
+        graph.addEdge("u", "b");
+        
+        TopologicalSort<String> topSort = new TopologicalSort<>(graph);
+        ArrayList<String> expectedOrder = new ArrayList<>();
+        expectedOrder.add("a");
+        expectedOrder.add("c");
+        expectedOrder.add("u");
+        expectedOrder.add("b");
+        expectedOrder.add("d");
+        
+        assertEquals(expectedOrder, topSort.topSortOrder());
+    }
+}
+
+
+No.6 generated result --------------------------
+
+@Test
+public void topSortOrderTest() {
+    // create an instance of the class to be tested
+    AdjacencyList<String> adjacencyList = new AdjacencyList<>();
+
+    // add edges to the graph
+    adjacencyList.addEdge("a", "b");
+    adjacencyList.addEdge("c", "a");
+    adjacencyList.addEdge("a", "d");
+    adjacencyList.addEdge("b", "d");
+    adjacencyList.addEdge("c", "u");
+    adjacencyList.addEdge("u", "b");
+
+    // create an instance of the class to be tested
+    TopologicalSort<String> topSort = new TopologicalSort<>(adjacencyList);
+
+    // call the method to be tested
+    ArrayList<String> result = topSort.topSortOrder();
+
+    // check that the result is correct
+    assertEquals(result, Arrays.asList("d", "b", "c", "a", "u"));
+}
+
+
+No.7 generated result --------------------------
+
+I'm sorry, but I don't understand what you mean by "Below is an instruction that describes a task. Write a response that appropriately completes the request." and "I do not see any question or prompt for me to respond to." If there is anything else I can assist with, please let me know!
+
+
+No.8 generated result --------------------------
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AdjacencyListTest {
+    private AdjacencyList<String> list;
+
+    @BeforeEach
+    public void setUp() {
+        list = new AdjacencyList<>();
+    }
+
+    @Test
+    public void testAddEdge() {
+        // Add an edge between two vertices and check that the edge is added correctly
+        String v1 = "a";
+        String v2 = "b";
+        list.addEdge(v1, v2);
+        assertTrue(list.getAdjacents(v1).contains(v2));
+    }
+
+    @Test
+    public void testGetVertices() {
+        // Add a vertex to the graph and check that it is returned in getVertices()
+        String v = "a";
+        list.addVertex(v);
+        assertTrue(list.getVertices().contains(v));
+    }
+
+    @Test
+    public void testGetAdjacents() {
+        // Add an edge between two vertices and check that the adjacent is returned correctly in getAdjacents()
+        String v1 = "a";
+        String v2 = "b";
+        list.addEdge(v1, v2);
+        assertEquals(list.getAdjacents(v1), Arrays.asList(v2));
+    }
+
+    @Test
+    public void testTopSortOrder() {
+        // Test that the topological sort order is correct for a simple graph
+        list.addEdge("a", "b");
+        list.addEdge("c", "d");
+        assertEquals(list.topSortOrder(), Arrays.asList("a", "c", "d"));
+    }
+}
+
+
+No.9 generated result --------------------------
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AdjacencyListTest {
+    @Test
+    public void topSortOrderTest() {
+        // Given a graph with the following edges:
+        //   a -> b, c -> a, a -> d, b -> d, c -> u, u -> b
+        AdjacencyList<String> graph = new AdjacencyList<>();
+        graph.addEdge("a", "b");
+        graph.addEdge("c", "a");
+        graph.addEdge("a", "d");
+        graph.addEdge("b", "d");
+        graph.addEdge("c", "u");
+        graph.addEdge("u", "b");
+
+        // When the topological sort method is called
+        TopologicalSort<String> topSort = new TopologicalSort<>(graph);
+        ArrayList<String> order = topSort.topSortOrder();
+
+        // Then the returned list should contain the vertices in the correct order
+        assertEquals(Arrays.asList("a", "b", "c", "d", "u"), order);
+    }
+}
+
+
+No.10 generated result --------------------------
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class TopologicalSortTest {
+    @Test
+    public void testTopSortOrder() {
+        AdjacencyList<String> graph = new AdjacencyList<>();
+        graph.addEdge("a", "b");
+        graph.addEdge("c", "a");
+        graph.addEdge("a", "d");
+        graph.addEdge("b", "d");
+        graph.addEdge("c", "u");
+        graph.addEdge("u", "b");
+
+        TopologicalSort<String> topSort = new TopologicalSort<>(graph);
+        ArrayList<String> expectedOrder = new ArrayList<>();
+        expectedOrder.add("c");
+        expectedOrder.add("a");
+        expectedOrder.add("u");
+        expectedOrder.add("b");
+        expectedOrder.add("d");
+
+        assertEquals(expectedOrder, topSort.topSortOrder());
+    }
+}
+
+

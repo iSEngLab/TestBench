@@ -1,0 +1,294 @@
+Source code: 
+
+
+public ResultPoint[] detect() throws NotFoundException {
+
+  int left = leftInit;
+  int right = rightInit;
+  int up = upInit;
+  int down = downInit;
+  boolean sizeExceeded = false;
+  boolean aBlackPointFoundOnBorder = true;
+
+  boolean atLeastOneBlackPointFoundOnRight = false;
+  boolean atLeastOneBlackPointFoundOnBottom = false;
+  boolean atLeastOneBlackPointFoundOnLeft = false;
+  boolean atLeastOneBlackPointFoundOnTop = false;
+
+  while (aBlackPointFoundOnBorder) {
+
+    aBlackPointFoundOnBorder = false;
+
+    // .....
+    // .   |
+    // .....
+    boolean rightBorderNotWhite = true;
+    while ((rightBorderNotWhite || !atLeastOneBlackPointFoundOnRight) && right < width) {
+      rightBorderNotWhite = containsBlackPoint(up, down, right, false);
+      if (rightBorderNotWhite) {
+        right++;
+        aBlackPointFoundOnBorder = true;
+        atLeastOneBlackPointFoundOnRight = true;
+      } else if (!atLeastOneBlackPointFoundOnRight) {
+        right++;
+      }
+    }
+
+    if (right >= width) {
+      sizeExceeded = true;
+      break;
+    }
+
+    // .....
+    // .   .
+    // .___.
+    boolean bottomBorderNotWhite = true;
+    while ((bottomBorderNotWhite || !atLeastOneBlackPointFoundOnBottom) && down < height) {
+      bottomBorderNotWhite = containsBlackPoint(left, right, down, true);
+      if (bottomBorderNotWhite) {
+        down++;
+        aBlackPointFoundOnBorder = true;
+        atLeastOneBlackPointFoundOnBottom = true;
+      } else if (!atLeastOneBlackPointFoundOnBottom) {
+        down++;
+      }
+    }
+
+    if (down >= height) {
+      sizeExceeded = true;
+      break;
+    }
+
+    // .....
+    // |   .
+    // .....
+    boolean leftBorderNotWhite = true;
+    while ((leftBorderNotWhite || !atLeastOneBlackPointFoundOnLeft) && left >= 0) {
+      leftBorderNotWhite = containsBlackPoint(up, down, left, false);
+      if (leftBorderNotWhite) {
+        left--;
+        aBlackPointFoundOnBorder = true;
+        atLeastOneBlackPointFoundOnLeft = true;
+      } else if (!atLeastOneBlackPointFoundOnLeft) {
+        left--;
+      }
+    }
+
+    if (left < 0) {
+      sizeExceeded = true;
+      break;
+    }
+
+    // .___.
+    // .   .
+    // .....
+    boolean topBorderNotWhite = true;
+    while ((topBorderNotWhite || !atLeastOneBlackPointFoundOnTop) && up >= 0) {
+      topBorderNotWhite = containsBlackPoint(left, right, up, true);
+      if (topBorderNotWhite) {
+        up--;
+        aBlackPointFoundOnBorder = true;
+        atLeastOneBlackPointFoundOnTop = true;
+      } else if (!atLeastOneBlackPointFoundOnTop) {
+        up--;
+      }
+    }
+
+    if (up < 0) {
+      sizeExceeded = true;
+      break;
+    }
+
+  }
+
+  if (!sizeExceeded) {
+
+    int maxSize = right - left;
+
+    ResultPoint z = null;
+    for (int i = 1; z == null && i < maxSize; i++) {
+      z = getBlackPointOnSegment(left, down - i, left + i, down);
+    }
+
+    if (z == null) {
+      throw NotFoundException.getNotFoundInstance();
+    }
+
+    ResultPoint t = null;
+    //go down right
+    for (int i = 1; t == null && i < maxSize; i++) {
+      t = getBlackPointOnSegment(left, up + i, left + i, up);
+    }
+
+    if (t == null) {
+      throw NotFoundException.getNotFoundInstance();
+    }
+
+    ResultPoint x = null;
+    //go down left
+    for (int i = 1; x == null && i < maxSize; i++) {
+      x = getBlackPointOnSegment(right, up + i, right - i, up);
+    }
+
+    if (x == null) {
+      throw NotFoundException.getNotFoundInstance();
+    }
+
+    ResultPoint y = null;
+    //go up left
+    for (int i = 1; y == null && i < maxSize; i++) {
+      y = getBlackPointOnSegment(right, down - i, right - i, down);
+    }
+
+    if (y == null) {
+      throw NotFoundException.getNotFoundInstance();
+    }
+
+    return centerEdges(y, z, x, t);
+
+  } else {
+    throw NotFoundException.getNotFoundInstance();
+  }
+}
+
+
+
+No.1 generated result --------------------------
+
+// given
+BitMatrix image = new BitMatrix(10);
+WhiteRectangleDetector detector = new WhiteRectangleDetector(image);
+
+// when
+ResultPoint[] result = null;
+Exception exception = null;
+try {
+    result = detector.detect();
+} catch (NotFoundException e) {
+    exception = e;
+}
+
+// then
+assertNull(exception);
+assertNotNull(result);
+assertEquals(4, result.length);
+
+
+No.2 generated result --------------------------
+
+ResultPoint[] result = null;
+WhiteRectangleDetector detector = new WhiteRectangleDetector(new BitMatrix(10, 10));
+try {
+  result = detector.detect();
+  assertTrue(result.length > 0);
+} catch (NotFoundException e) {
+  fail("NotFoundException thrown");
+}
+
+
+No.3 generated result --------------------------
+
+@Test
+public void detectTest() {
+    // Given
+    BitMatrix bitMatrix = new BitMatrix(10, 10);
+    WhiteRectangleDetector whiteRectangleDetector = new WhiteRectangleDetector(bitMatrix);
+    
+    // When
+    ResultPoint[] resultPoints = whiteRectangleDetector.detect();
+
+    // Then
+    // Add assertions here to verify the expected result points
+}
+
+
+No.4 generated result --------------------------
+
+@Test
+public void detectTest() {
+    try {
+        WhiteRectangleDetector detector = new WhiteRectangleDetector(new BitMatrix(width, height));
+        ResultPoint[] points = detector.detect();
+        assertNotNull(points);
+        assertEquals(4, points.length);
+        // Add specific assertions for the result points here
+    } catch (NotFoundException e) {
+        fail("Exception thrown during detection");
+    }
+}
+
+
+No.5 generated result --------------------------
+
+ResultPoint[] resultPoints;
+try {
+    resultPoints = whiteRectangleDetector.detect();
+    assertNotNull(resultPoints);
+} catch (NotFoundException e) {
+    fail("NotFoundException thrown: " + e.getMessage());
+}
+
+
+No.6 generated result --------------------------
+
+@Test
+public void detectTest() throws NotFoundException {
+    BitMatrix bitMatrix = new BitMatrix(10, 10);
+    WhiteRectangleDetector whiteRectangleDetector = new WhiteRectangleDetector(bitMatrix);
+    ResultPoint[] resultPoints = whiteRectangleDetector.detect();
+    assertNotNull(resultPoints);
+}
+
+
+No.7 generated result --------------------------
+
+ @Test
+    public void detectTest() {
+        try {
+            BitMatrix image = new BitMatrix(10, 10);
+            WhiteRectangleDetector detector = new WhiteRectangleDetector(image);
+            ResultPoint[] result = detector.detect();
+            assertNotNull(result);
+        } catch (NotFoundException e) {
+            fail("Exception thrown");
+        }
+    }
+
+
+No.8 generated result --------------------------
+
+ResultPoint[] result = new ResultPoint[4];
+result[0] = new ResultPoint(10, 20);
+result[1] = new ResultPoint(30, 40);
+result[2] = new ResultPoint(50, 60);
+result[3] = new ResultPoint(70, 80);
+
+assertArrayEquals(result, new WhiteRectangleDetector(image).detect());
+
+
+No.9 generated result --------------------------
+
+        WhiteRectangleDetector whiteRectangleDetector = new WhiteRectangleDetector(image);
+        ResultPoint[] result = whiteRectangleDetector.detect();
+        assertNotNull(result);
+
+
+No.10 generated result --------------------------
+
+@Test
+public void detectTest() {
+    // Create a BitMatrix with test data
+    BitMatrix testMatrix = new BitMatrix(10, 10);
+    WhiteRectangleDetector detector = new WhiteRectangleDetector(testMatrix);
+    
+    // Perform the detection
+    try {
+        ResultPoint[] result = detector.detect();
+        assertNotNull(result);
+        // Add assertions for the expected result
+    } catch (NotFoundException e) {
+        fail("Exception thrown: " + e.getMessage());
+    }
+}
+
+

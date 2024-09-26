@@ -1,0 +1,545 @@
+Source code: 
+
+
+public static ArrayList<Complex> fft(ArrayList<Complex> x, boolean inverse) {
+    /* Pad the signal with zeros if necessary */
+    paddingPowerOfTwo(x);
+    int N = x.size();
+    int log2N = findLog2(N);
+    x = fftBitReversal(N, log2N, x);
+    int direction = inverse ? -1 : 1;
+
+    /* Main loop of the algorithm */
+    for (int len = 2; len <= N; len *= 2) {
+        double angle = -2 * Math.PI / len * direction;
+        Complex wlen = new Complex(Math.cos(angle), Math.sin(angle));
+        for (int i = 0; i < N; i += len) {
+            Complex w = new Complex(1, 0);
+            for (int j = 0; j < len / 2; j++) {
+                Complex u = x.get(i + j);
+                Complex v = w.multiply(x.get(i + j + len / 2));
+                x.set(i + j, u.add(v));
+                x.set(i + j + len / 2, u.subtract(v));
+                w = w.multiply(wlen);
+            }
+        }
+    }
+    x = inverseFFT(N, inverse, x);
+    return x;
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.thealgorithms.maths;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FFTTest {
+    @Test
+    public void fftTest() {
+        ArrayList<Complex> input = new ArrayList<>();
+        // Adding 4 sample complex numbers (Assuming Complex class has a constructor taking real and imaginary parts)
+        input.add(new Complex(0, 0));
+        input.add(new Complex(1, 1));
+        input.add(new Complex(3, 3));
+        input.add(new Complex(4, 4));
+        
+        // Perform FFT
+        ArrayList<Complex> forwardTransformed = FFT.fft(input, false);
+        
+        // Check the size is the same
+        assertEquals(input.size(), forwardTransformed.size());
+        
+        // Perform inverse FFT
+        ArrayList<Complex> inverseTransformed = FFT.fft(forwardTransformed, true);
+        
+        // Check that the original array is recovered after the inverse transform
+        for (int i = 0; i < input.size(); i++) {
+            assertEquals(input.get(i).getReal(), inverseTransformed.get(i).getReal(), 1e-12); // Check real part
+            assertEquals(input.get(i).getImaginary(), inverseTransformed.get(i).getImaginary(), 1e-12); // Check imaginary part
+        }
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package com.thealgorithms.maths;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FFTTest {
+
+    @Test
+    public void fftTest() {
+        // Prepare the input data
+        ArrayList<Complex> inputData = new ArrayList<Complex>();
+        inputData.add(new Complex(1.0, 0.0));
+        inputData.add(new Complex(1.0, 0.0));
+        inputData.add(new Complex(1.0, 0.0));
+        inputData.add(new Complex(1.0, 0.0));
+        inputData.add(new Complex(0.0, 0.0));
+        inputData.add(new Complex(0.0, 0.0));
+        inputData.add(new Complex(0.0, 0.0));
+        inputData.add(new Complex(0.0, 0.0));
+
+        // Perform FFT
+        ArrayList<Complex> outputData = FFT.fft(inputData, false);
+
+        // Expected results (for an 8-point DFT of the vector (1, 1, 1, 1, 0, 0, 0, 0))
+        Complex[] expectedResults = {
+            new Complex(4.0, 0.0), // DC component
+            new Complex(1.0, -2.414213562), // Fundamental and harmonics
+            new Complex(0.0, 0.0),
+            new Complex(1.0, -0.414213562),
+            new Complex(0.0, 0.0),
+            new Complex(1.0, 0.414213562),
+            new Complex(0.0, 0.0),
+            new Complex(1.0, 2.414213562)
+        };
+
+        // Assertions (check if the FFT output is close to expected output)
+        assertEquals(expectedResults.length, outputData.size(), "The FFT output size should match the expected output size.");
+        for (int i = 0; i < outputData.size(); i++) {
+            assertEquals(expectedResults[i].real(), outputData.get(i).real(), 0.0001, "Real part does not match for index " + i);
+            assertEquals(expectedResults[i].imaginary(), outputData.get(i).imaginary(), 0.0001, "Imaginary part does not match for index " + i);
+        }
+
+        // Test inverse FFT
+        ArrayList<Complex> inverseOutputData = FFT.fft(outputData, true);
+
+        // Assertions (check if the inverse FFT restores the original time-domain signal)
+        for (int i = 0; i < inputData.size(); i++) {
+            assertEquals(inputData.get(i).real(), inverseOutputData.get(i).real(), 0.0001, "Real part of original signal does not match after inverse FFT for index " + i);
+            assertEquals(inputData.get(i).imaginary(), inverseOutputData.get(i).imaginary(), 0.0001, "Imaginary part of original signal does not match after inverse FFT for index " + i);
+        }
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.thealgorithms.maths;
+
+import org.junit.jupiter.api.*;
+import java.util.ArrayList;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FFTTest {
+
+    private static final double DELTA = 1e-6;
+
+    private Complex[] createComplexArray(double[] real, double[] imag) {
+        Complex[] arr = new Complex[real.length];
+        for (int i = 0; i < real.length; i++) {
+            arr[i] = new Complex(real[i], imag[i]);
+        }
+        return arr;
+    }
+
+    private ArrayList<Complex> toArrayList(Complex[] arr) {
+        ArrayList<Complex> list = new ArrayList<>();
+        for (Complex c : arr) {
+            list.add(c);
+        }
+        return list;
+    }
+
+    @Test
+    public void fftTest() {
+        // Prepare the input and the expected result
+        double[] realInput = {1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0};
+        double[] imagInput = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+        ArrayList<Complex> inputList = toArrayList(createComplexArray(realInput, imagInput));
+
+        double[] realExpected = {4.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0};
+        double[] imagExpected = {0.0, -2.41421356, 0.0, -0.41421356, 0.0, 0.41421356, 0.0, 2.41421356};
+        ArrayList<Complex> expectedList = toArrayList(createComplexArray(realExpected, imagExpected));
+
+        // Perform the FFT
+        boolean inverse = false;
+        ArrayList<Complex> actualList = FFT.fft(inputList, inverse);
+
+        // Assert the FFT result with the expected values
+        assertEquals(expectedList.size(), actualList.size(), "The output size should match the expected size.");
+        for (int i = 0; i < expectedList.size(); i++) {
+            assertEquals(expectedList.get(i).real(), actualList.get(i).real(), DELTA, "The real parts of the output do not match the expected output at index " + i);
+            assertEquals(expectedList.get(i).imag(), actualList.get(i).imag(), DELTA, "The imaginary parts of the output do not match the expected output at index " + i);
+        }
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.thealgorithms.maths;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.ArrayList;
+
+public class FFTTest {
+    @Test
+    public void fftTest() {
+        // Prepare test data
+        ArrayList<Complex> x = new ArrayList<>();
+        x.add(new Complex(0, 0));
+        x.add(new Complex(1, 1));
+        x.add(new Complex(2, 2));
+        x.add(new Complex(3, 3));
+
+        // Add padding if needed (assuming `paddingPowerOfTwo()` would have handled this)
+        // Assuming `fft` method also calculates complex FFT correctly
+
+        // Perform FFT
+        ArrayList<Complex> resultForward = FFT.fft(x, false);
+
+        // Perform inverse FFT
+        ArrayList<Complex> resultInverse = FFT.fft(resultForward, true);
+
+        // The result of the inverse FFT should be close to the original input, allowing for some floating point error.
+        for (int i = 0; i < x.size(); i++) {
+            assertEquals(x.get(i).re(), resultInverse.get(i).re(), "Real part of inverse FFT should match original input");
+            assertEquals(x.get(i).im(), resultInverse.get(i).im(), "Imaginary part of inverse FFT should match original input");
+        }
+
+        // Assuming a valid implementation of Complex.toString(),
+        // for actual values comparison, you would check the results with known correct values.
+        // For example:
+        // assertEquals(expectedComplexResult, resultForward.get(i).toString());
+
+        // To ensure the method can also handle the inverse FFT
+        assertTrue(Math.abs(x.get(0).re() - resultInverse.get(0).re()) < 1e-6, "Inverse FFT should give original signal within tolerance");
+        assertTrue(Math.abs(x.get(0).im() - resultInverse.get(0).im()) < 1e-6, "Inverse FFT should give original signal within tolerance");
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.thealgorithms.maths;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.ArrayList;
+
+public class FFTTest {
+
+    private static final double DELTA = 1e-6;
+
+    private static ArrayList<Complex> createSimpleComplexArray() {
+        ArrayList<Complex> x = new ArrayList<Complex>();
+        x.add(new Complex(0, 0));
+        x.add(new Complex(1, 1));
+        x.add(new Complex(2, 2));
+        x.add(new Complex(3, 3));
+        return x;
+    }
+
+    @Test
+    public void fftTest() {
+        ArrayList<Complex> inputArray = createSimpleComplexArray();
+        ArrayList<Complex> transformedArray = FFT.fft(inputArray, false);
+
+        // Assuming here the expected values after performing FFT (This would need actual values)
+        ArrayList<Complex> expected = new ArrayList<Complex>();
+        expected.add(new Complex(6, 6)); // Example value, replace with expected output
+        expected.add(new Complex(-2, -2)); // Example value, replace with expected output
+        expected.add(new Complex(-2, -2)); // Example value, replace with expected output
+        expected.add(new Complex(-2, -2)); // Example value, replace with expected output
+
+        assertNotNull(transformedArray);
+        assertEquals(expected.size(), transformedArray.size());
+
+        for (int i = 0; i < transformedArray.size(); i++) {
+            assertEquals(expected.get(i).real(), transformedArray.get(i).real(), DELTA, "Real parts are not equal");
+            assertEquals(expected.get(i).imag(), transformedArray.get(i).imag(), DELTA, "Imaginary parts are not equal");
+        }
+    }
+
+    // Inverse FFT test case is not provided but could be similar to the above test case
+}
+
+
+No.6 generated result --------------------------
+
+package com.thealgorithms.maths;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+class FFTTest {
+
+    @Test
+    public void fftTest() {
+        // Create input array of complex numbers
+        ArrayList<Complex> input = new ArrayList<>();
+        input.add(new Complex(0, 0));
+        input.add(new Complex(1, 0));
+        input.add(new Complex(0, 0));
+        input.add(new Complex(-1, 0));
+
+        // Perform the FFT
+        ArrayList<Complex> result = FFT.fft(input, false);
+
+        // Check that the size is correct
+        assertEquals(4, result.size(), "FFT result should have the same size as the input.");
+
+        // Expected values for this input after FFT
+        ArrayList<Complex> expected = new ArrayList<>();
+        expected.add(new Complex(0, 0));       // DC component
+        expected.add(new Complex(0, -2));      // Positive frequency component
+        expected.add(new Complex(0, 0));       // Nyquist frequency
+        expected.add(new Complex(0, 2));       // Negative frequency component
+
+        // Tolerance for comparing floating point numbers
+        double delta = 1e-6;
+
+        // Check if the result from fft function is similar to expected value
+        for (int i = 0; i < expected.size(); i++) {
+            assertEquals(expected.get(i).real(), result.get(i).real(), delta, "Real part of FFT result should match expected values.");
+            assertEquals(expected.get(i).imaginary(), result.get(i).imaginary(), delta, "Imaginary part of FFT result should match expected values.");
+        }
+
+        // Optionally, test the inverse FFT
+        ArrayList<Complex> inverseResult = FFT.fft(result, true);
+
+        // Check that the size is correct
+        assertEquals(4, inverseResult.size(), "Inverse FFT result should have the same size as the input.");
+
+        // Check if the result from inverse fft function matches the original input
+        for (int i = 0; i < input.size(); i++) {
+            assertEquals(input.get(i).real(), inverseResult.get(i).real(), delta, "Real part of inverse FFT result should match original input values.");
+            assertEquals(input.get(i).imaginary(), inverseResult.get(i).imaginary(), delta, "Imaginary part of inverse FFT result should match original input values.");
+        }
+    }
+
+    // Mock Complex class for the sake of the test
+    // In practice, replace this mock with the actual implementation
+    static class Complex {
+        private final double re;
+        private final double im;
+
+        Complex(double real, double imaginary) {
+            this.re = real;
+            this.im = imaginary;
+        }
+
+        double real() {
+            return re;
+        }
+
+        double imaginary() {
+            return im;
+        }
+
+        Complex add(Complex b) {
+            return new Complex(this.re + b.re, this.im + b.im);
+        }
+
+        Complex subtract(Complex b) {
+            return new Complex(this.re - b.re, this.im - b.im);
+        }
+
+        Complex multiply(Complex b) {
+            double real = this.re * b.re - this.im * b.im;
+            double imag = this.re * b.im + this.im * b.re;
+            return new Complex(real, imag);
+        }
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.thealgorithms.maths;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.ArrayList;
+
+public class FFTTest {
+
+    @Test
+    public void fftTest() {
+        ArrayList<Complex> signal = new ArrayList<>();
+        // Assuming Complex is a type that has a constructor taking two doubles for real and imaginary parts
+        signal.add(new Complex(0.0, 0.0));
+        signal.add(new Complex(1.0, 0.0));
+        signal.add(new Complex(0.0, 1.0));
+        signal.add(new Complex(1.0, 1.0));
+
+        // Perform FFT
+        ArrayList<Complex> result = FFT.fft(signal, false);
+        // Perform inverse FFT
+        ArrayList<Complex> inverseResult = FFT.fft(result, true);
+
+        assertNotNull(result, "FFT result should not be null");
+        assertEquals(signal.size(), result.size(), "FFT result size should be same as input size");
+
+        assertNotNull(inverseResult, "Inverse FFT result should not be null");
+        assertEquals(signal.size(), inverseResult.size(), "Inverse FFT result size should be same as input size");
+        
+        // Validate if inverse FFT gives back original signal
+        // This is a simple approximate check, a more thorough test may be needed for actual use
+        for (int i = 0; i < signal.size(); i++) {
+            assertEquals(signal.get(i).re(), inverseResult.get(i).re(), 1e-6, "Real part should match original signal within error margin");
+            assertEquals(signal.get(i).im(), inverseResult.get(i).im(), 1e-6, "Imaginary part should match original signal within error margin");
+        }
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package com.thealgorithms.maths;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.ArrayList;
+
+public class FFTTest {
+    @Test
+    public void fftTest() {
+        // Create input for the FFT
+        ArrayList<Complex> input = new ArrayList<>();
+        input.add(new Complex(0, 0));
+        input.add(new Complex(1, 1));
+        input.add(new Complex(3, 3));
+        input.add(new Complex(4, 4));
+        input.add(new Complex(2, 2));
+        input.add(new Complex(2, 2));
+
+        // Perform FFT
+        ArrayList<Complex> result = MyMath.fft(input, false);
+
+        // Verify the size of the result
+        assertEquals(input.size(), result.size(), "FFT output size should be the same as the input size.");
+
+        // Verify the correctness of the FFT result manually or using a known correct result
+        // In practice, it is a good idea to calculate the result by hand or use a reliable source
+        // Here, we will check against a hand-calculated or expected value (please replace the expected values below)
+        ArrayList<Complex> expected = new ArrayList<>();
+        expected.add(new Complex(-2, -2)); // Expected values should be the result of manually calculated FFT
+        expected.add(new Complex(0, 1));
+        expected.add(new Complex(1, 1));
+        expected.add(new Complex(0, 2));
+        expected.add(new Complex(1, 2));
+        expected.add(new Complex(0, 3));
+
+        // Verify that the expected and actual FFT outputs match
+        for (int i = 0; i < expected.size(); i++) {
+            assertTrue(expected.get(i).equals(result.get(i)), "FFT result at index " + i + " should match the expected value.");
+        }
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package com.thealgorithms.maths;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FFTTest {
+    @Test
+    public void fftTest() {
+        // Given
+        ArrayList<Complex> input = new ArrayList<>();
+        // Populate the input array with sample complex numbers
+        input.add(new Complex(1, 0));
+        input.add(new Complex(-1, 0));
+        input.add(new Complex(1, 0));
+        input.add(new Complex(-1, 0));
+
+        // Expected results for non-inverse FFT
+        ArrayList<Complex> expected = new ArrayList<>();
+        expected.add(new Complex(0, 0));
+        expected.add(new Complex(0, 0));
+        expected.add(new Complex(4, 0));
+        expected.add(new Complex(0, 0));
+
+        // When Forward FFT is applied
+        ArrayList<Complex> result = FFT.fft(input, false);
+
+        // Then Verify the results for non-inverse FFT
+        assertAll("Forward FFT results should match the expected values",
+            () -> assertEquals(expected.size(), result.size(), "Resulting array should be the same size as input."),
+            () -> {
+                for (int i = 0; i < expected.size(); i++) {
+                    assertEquals(expected.get(i).getReal(), result.get(i).getReal(), 1e-9, "Real parts should be equal.");
+                    assertEquals(expected.get(i).getImaginary(), result.get(i).getImaginary(), 1e-9, "Imaginary parts should be equal.");
+                }
+            }
+        );
+
+        // When Inverse FFT is applied to the result
+        ArrayList<Complex> inverseResult = FFT.fft(result, true);
+
+        // Normalize - due to the nature of FFT, the result of an inverse needs to be scaled down by N = input.size()
+        for (int i = 0; i < inverseResult.size(); i++) {
+            inverseResult.set(i, inverseResult.get(i).scale(1.0 / input.size()));
+        }
+
+        // Then Verify that inverse FFT restores the original array
+        assertAll("Inverse FFT results should match the original values",
+            () -> assertEquals(input.size(), inverseResult.size(), "Resulting array should be the same size as input."),
+            () -> {
+                for (int i = 0; i < input.size(); i++) {
+                    assertEquals(input.get(i).getReal(), inverseResult.get(i).getReal(), 1e-9, "Real parts should be equal after inverse FFT.");
+                    assertEquals(input.get(i).getImaginary(), inverseResult.get(i).getImaginary(), 1e-9, "Imaginary parts should be equal after inverse FFT.");
+                }
+            }
+        );
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.thealgorithms.maths;
+
+import org.junit.jupiter.api.*;
+import java.util.ArrayList;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FFTTest {
+    
+    private final double delta = 1e-6; // Acceptable delta for floating-point comparisons.
+
+    @Test
+    public void fftTest() {
+        // Sample inputs (for simplicity, using an array with complex numbers representing a signal with power of two length)
+        ArrayList<Complex> input = new ArrayList<>();
+        input.add(new Complex(0, 0));
+        input.add(new Complex(1, 0));
+        input.add(new Complex(0, 0));
+        input.add(new Complex(-1, 0));
+        
+        // Expected FFT results for the above input (presuming these are pre-computed or known)
+        ArrayList<Complex> expected = new ArrayList<>();
+        expected.add(new Complex(0, 0));
+        expected.add(new Complex(0, -2));
+        expected.add(new Complex(0, 0));
+        expected.add(new Complex(0, 2));
+        
+        // Perform the FFT on the input
+        ArrayList<Complex> result = FFT.fft(input, false); // assuming the FFT class is properly named
+        
+        // Verify the size of the result is as expected
+        assertEquals(expected.size(), result.size(), "The result should have the same size as the input.");
+
+        // Verify each element in the result matches the expected output within the acceptable delta
+        for (int i = 0; i < result.size(); i++) {
+            assertEquals(expected.get(i).real(), result.get(i).real(), delta, "Real part does not match for index " + i);
+            assertEquals(expected.get(i).imaginary(), result.get(i).imaginary(), delta, "Imaginary part does not match for index " + i);
+        }
+    }
+}
+
+

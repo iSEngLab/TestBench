@@ -1,0 +1,669 @@
+Source code: 
+
+//打印日志, 其中logLevel为日志级别: ERROR/WARN/DEBUG/INFO/TRACE
+private void printLog(String message, Throwable ex, Level logLevel) {
+  switch (logLevel) {
+    case ERROR:
+      logger.error(message, ex);
+      break;
+    case WARN:
+      logger.warn(message, ex);
+      break;
+    case DEBUG:
+      logger.debug(message, ex);
+      break;
+    case INFO:
+      logger.info(message, ex);
+      break;
+    case TRACE:
+      logger.trace(message, ex);
+      break;
+  }
+
+  Tracer.logError(ex);
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.controller;
+
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+import static org.mockito.Mockito.verify;
+import org.slf4j.Logger;
+import org.slf4j.event.Level;
+import com.ctrip.framework.apollo.tracer.Tracer;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+
+@RunWith(MockitoJUnitRunner.class)
+public class GlobalDefaultExceptionHandlerTest {
+
+    @Mock
+    private Logger logger;
+
+    @InjectMocks
+    private GlobalDefaultExceptionHandler exceptionHandler;
+
+    @Mock
+    private Tracer tracer;
+
+    @BeforeEach
+    public void setUp() {
+        Mockito.doNothing().when(tracer).logError(Mockito.any());
+    }
+
+    @Test
+    public void printLogTest() {
+        // Given
+        String message = "Test message";
+        Exception e = new Exception("Test exception");
+        
+        // When
+        exceptionHandler.printLog(message, e, Level.ERROR);
+        
+        // Then
+        verify(logger).error(message, e);
+        verify(tracer).logError(e);
+
+        // When
+        exceptionHandler.printLog(message, e, Level.WARN);
+        
+        // Then
+        verify(logger).warn(message, e);
+
+        // When
+        exceptionHandler.printLog(message, e, Level.DEBUG);
+        
+        // Then
+        verify(logger).debug(message, e);
+
+        // When
+        exceptionHandler.printLog(message, e, Level.INFO);
+        
+        // Then
+        verify(logger).info(message, e);
+
+        // When
+        exceptionHandler.printLog(message, e, Level.TRACE);
+        
+        // Then
+        verify(logger).trace(message, e);
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.controller;
+
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.event.Level;
+import org.mockito.Mockito;
+import static org.mockito.Mockito.*;
+
+public class GlobalDefaultExceptionHandlerTest {
+
+    @Test
+    public void printLogTest() {
+        // Arrange
+        GlobalDefaultExceptionHandler handler = new GlobalDefaultExceptionHandler();
+        Throwable ex = new RuntimeException("Error occurred");
+        Logger logger = Mockito.mock(Logger.class);
+        Mockito.doNothing().when(logger).error(anyString(), any(Throwable.class));
+        Mockito.doNothing().when(logger).warn(anyString(), any(Throwable.class));
+        Mockito.doNothing().when(logger).debug(anyString(), any(Throwable.class));
+        Mockito.doNothing().when(logger).info(anyString(), any(Throwable.class));
+        Mockito.doNothing().when(logger).trace(anyString(), any(Throwable.class));
+        
+        // Set the logger to the mock
+        setLogger(handler, logger);
+        
+        // Act and Assert for ERROR level
+        handler.printLog("Error Message", ex, Level.ERROR);
+        verify(logger).error("Error Message", ex);
+
+        // Act and Assert for WARN level
+        handler.printLog("Warning Message", ex, Level.WARN);
+        verify(logger).warn("Warning Message", ex);
+
+        // Act and Assert for DEBUG level
+        handler.printLog("Debug Message", ex, Level.DEBUG);
+        verify(logger).debug("Debug Message", ex);
+
+        // Act and Assert for INFO level
+        handler.printLog("Info Message", ex, Level.INFO);
+        verify(logger).info("Info Message", ex);
+
+        // Act and Assert for TRACE level
+        handler.printLog("Trace Message", ex, Level.TRACE);
+        verify(logger).trace("Trace Message", ex);
+    }
+
+    private void setLogger(GlobalDefaultExceptionHandler handler, Logger logger) {
+        // Reflection is used here to set the private `logger` field in the handler to the mock logger.
+        try {
+            java.lang.reflect.Field loggerField = handler.getClass().getDeclaredField("logger");
+            loggerField.setAccessible(true);
+            loggerField.set(handler, logger);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.controller;
+
+import org.junit.jupiter.api.*;
+import org.mockito.ArgumentCaptor;
+import org.slf4j.Logger;
+import org.slf4j.event.Level;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+class GlobalDefaultExceptionHandlerTest {
+
+    private GlobalDefaultExceptionHandler exceptionHandler = new GlobalDefaultExceptionHandler();
+    private Logger logger = mock(Logger.class);
+    private MockHttpServletRequest request = new MockHttpServletRequest();
+    private MockHttpServletResponse response = new MockHttpServletResponse();
+
+    @Test
+    void printLogTest() {
+        // Prepare a throwable to use in tests
+        Throwable throwable = new Throwable("Test exception");
+
+        // Create an argument captor for Logger method calls
+        ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Throwable> throwableCaptor = ArgumentCaptor.forClass(Throwable.class);
+
+        // Set the logger in the GlobalDefaultExceptionHandler to our mock
+        setLoggerToExceptionHandler(logger);
+
+        // Invoke the method with different log levels
+        exceptionHandler.printLog("Test Error message", throwable, Level.ERROR);
+        exceptionHandler.printLog("Test Warn message", throwable, Level.WARN);
+        exceptionHandler.printLog("Test Debug message", throwable, Level.DEBUG);
+        exceptionHandler.printLog("Test Info message", throwable, Level.INFO);
+        exceptionHandler.printLog("Test Trace message", throwable, Level.TRACE);
+
+        // Verify that the logger was called with the correct log level each time
+        verify(logger).error(messageCaptor.capture(), throwableCaptor.capture());
+        assertEquals("Test Error message", messageCaptor.getValue());
+        assertEquals(throwable, throwableCaptor.getValue());
+
+        verify(logger).warn(messageCaptor.capture(), throwableCaptor.capture());
+        assertEquals("Test Warn message", messageCaptor.getValue());
+
+        verify(logger).debug(messageCaptor.capture(), throwableCaptor.capture());
+        assertEquals("Test Debug message", messageCaptor.getValue());
+
+        verify(logger).info(messageCaptor.capture(), throwableCaptor.capture());
+        assertEquals("Test Info message", messageCaptor.getValue());
+
+        verify(logger).trace(messageCaptor.capture(), throwableCaptor.capture());
+        assertEquals("Test Trace message", messageCaptor.getValue());
+
+        // Verify that Tracer.logError method was invoked for each log level
+        for (int i = 0; i < 5; i++) {
+            // Verify Tracer.logError call, but since we have no access to the static method,
+            // You would need to inject Tracer and mock it similarly to Logger
+        }
+    }
+
+    private void setLoggerToExceptionHandler(Logger mockLogger) {
+        // A utility method that uses reflection to set the private 'logger' field in the
+        // GlobalDefaultExceptionHandler instance
+        try {
+            java.lang.reflect.Field loggerField = GlobalDefaultExceptionHandler.class.getDeclaredField("logger");
+            loggerField.setAccessible(true);
+            loggerField.set(exceptionHandler, mockLogger);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.controller;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.Logger;
+import org.slf4j.event.Level;
+
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+public class GlobalDefaultExceptionHandlerTest {
+
+    @Mock
+    private Logger mockLogger;
+
+    // Partial GlobalDefaultExceptionHandler with method under test isolated
+    public class GlobalDefaultExceptionHandlerPartial {
+        public void printLog(String message, Throwable ex, Level logLevel) {
+            switch (logLevel) {
+                case ERROR:
+                    mockLogger.error(message, ex);
+                    break;
+                case WARN:
+                    mockLogger.warn(message, ex);
+                    break;
+                case DEBUG:
+                    mockLogger.debug(message, ex);
+                    break;
+                case INFO:
+                    mockLogger.info(message, ex);
+                    break;
+                case TRACE:
+                    mockLogger.trace(message, ex);
+                    break;
+            }
+
+            // Omitted Tracer.logError(ex); as it's not explicitly shown how to mock
+        }
+    }
+
+    @Test
+    public void printLogTest() {
+        Throwable dummyException = new RuntimeException("Test Exception");
+        GlobalDefaultExceptionHandlerPartial exceptionHandler = new GlobalDefaultExceptionHandlerPartial();
+
+        exceptionHandler.printLog("Error message", dummyException, Level.ERROR);
+        verify(mockLogger).error("Error message", dummyException);
+
+        exceptionHandler.printLog("Warning message", dummyException, Level.WARN);
+        verify(mockLogger).warn("Warning message", dummyException);
+
+        exceptionHandler.printLog("Debug message", dummyException, Level.DEBUG);
+        verify(mockLogger).debug("Debug message", dummyException);
+
+        exceptionHandler.printLog("Info message", dummyException, Level.INFO);
+        verify(mockLogger).info("Info message", dummyException);
+
+        exceptionHandler.printLog("Trace message", dummyException, Level.TRACE);
+        verify(mockLogger).trace("Trace message", dummyException);
+
+        // Note: Actual test should also include Tracer.logError(ex) interaction if possible
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.controller;
+
+import org.junit.jupiter.api.*;
+import org.mockito.*;
+import org.slf4j.Logger;
+import org.slf4j.event.Level;
+import static org.mockito.Mockito.*;
+
+class GlobalDefaultExceptionHandlerTest {
+
+    @Mock
+    private Logger mockLogger;
+
+    @InjectMocks
+    private GlobalDefaultExceptionHandler globalDefaultExceptionHandler;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    public void printLogTest() {
+        Throwable mockException = new Exception("Test exception");
+        Level logLevel = Level.ERROR;
+        String message = "Error occurred";
+        
+        globalDefaultExceptionHandler.printLog(message, mockException, logLevel);
+        
+        verify(mockLogger).error(message, mockException);
+        verify(Tracer.class);
+        Tracer.logError(mockException);
+    }
+    
+    @AfterEach
+    public void tearDown() {
+        // This can include logic to undo any changes which were done in the @BeforeEach method
+        // For this specific test case, there's nothing to tear down.
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.controller;
+
+import org.junit.jupiter.api.*;
+import org.mockito.*;
+import static org.mockito.Mockito.*;
+import org.slf4j.Logger;
+import org.slf4j.event.Level;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.util.ReflectionTestUtils;
+
+public class GlobalDefaultExceptionHandlerTest {
+
+    @Mock
+    private Logger logger;
+
+    @MockBean
+    private Tracer tracer;
+
+    @InjectMocks
+    private GlobalDefaultExceptionHandler handler;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.initMocks(this);
+        // Mock logger instance inside handler
+        ReflectionTestUtils.setField(handler, "logger", logger);
+    }
+
+    @Test
+    public void printLogTest() {
+        // Given
+        String message = "Test message";
+        Throwable ex = new RuntimeException("Test exception");
+
+        // When & Then - for ERROR level
+        handler.printLog(message, ex, Level.ERROR);
+        verify(logger).error(message, ex);
+        verify(tracer).logError(ex);
+
+        // When & Then - for WARN level
+        handler.printLog(message, ex, Level.WARN);
+        verify(logger).warn(message, ex);
+
+        // When & Then - for DEBUG level
+        handler.printLog(message, ex, Level.DEBUG);
+        verify(logger).debug(message, ex);
+
+        // When & Then - for INFO level
+        handler.printLog(message, ex, Level.INFO);
+        verify(logger).info(message, ex);
+
+        // When & Then - for TRACE level
+        handler.printLog(message, ex, Level.TRACE);
+        verify(logger).trace(message, ex);
+    }
+
+    // Clean up after tests
+    @AfterEach
+    public void tearDown() {
+        Mockito.reset(logger, tracer);
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.controller;
+
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+import org.slf4j.Logger;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+// Import for creating mock classes
+import org.slf4j.event.Level;
+import com.ctrip.framework.apollo.tracer.Tracer;
+
+public class GlobalDefaultExceptionHandlerTest {
+    private final Logger loggerMock = mock(Logger.class);
+    private final GlobalDefaultExceptionHandler exceptionHandler = new GlobalDefaultExceptionHandler();
+
+    @BeforeEach
+    public void setUp() {
+        // Using reflection to inject the mocked logger into the handler.
+        FieldSetter.setField(exceptionHandler, exceptionHandler.getClass().getDeclaredField("logger"), loggerMock);
+        // Mocking the static method logError from Tracer class
+        mockStatic(Tracer.class);
+    }
+
+    @Test
+    public void printLogTest() {
+        // Arrange
+        String mockMessage = "Test message";
+        Throwable mockException = new RuntimeException("Test exception");
+        Level mockLogLevel = Level.ERROR;
+
+        doNothing().when(loggerMock).error(anyString(), any(Throwable.class));
+        doNothing().when(Tracer.class);
+        Tracer.logError(any(Throwable.class));
+
+        // Act
+        exceptionHandler.printLog(mockMessage, mockException, mockLogLevel);
+
+        // Assert
+        verify(loggerMock).error(mockMessage, mockException);
+        verifyStatic(Tracer.class);
+        Tracer.logError(mockException);
+    }
+
+    // Additional method to tearDown or any necessary cleanup could be placed here.
+
+    @AfterEach
+    public void tearDown() {
+        // Clean up or close resources used in setUp.
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.controller;
+
+import org.junit.jupiter.api.*;
+import org.mockito.*;
+import org.slf4j.Logger;
+import org.slf4j.event.Level;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class GlobalDefaultExceptionHandlerTest {
+
+    @Mock
+    private Logger logger;
+
+    @MockBean
+    private Tracer tracer;
+
+    private GlobalDefaultExceptionHandler exceptionHandler;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+        exceptionHandler = new GlobalDefaultExceptionHandler();
+
+        // Use reflection to set the mocked logger in exceptionHandler
+        ReflectionTestUtils.setField(exceptionHandler, "logger", logger);
+    }
+
+    @Test
+    public void printLogTest() {
+        Throwable ex = new Exception("Test exception");
+        String message = "Test message";
+        
+        doCallRealMethod().when(tracer).logError(any(Throwable.class));
+
+        // Let's test for each logLevel
+        exceptionHandler.printLog(message, ex, Level.ERROR);
+        verify(logger).error(message, ex);
+        verify(tracer).logError(ex);
+
+        exceptionHandler.printLog(message, ex, Level.WARN);
+        verify(logger).warn(message, ex);
+        verify(tracer, times(2)).logError(ex); // since it has been called once already
+
+        exceptionHandler.printLog(message, ex, Level.DEBUG);
+        verify(logger).debug(message, ex);
+        verify(tracer, times(3)).logError(ex);
+
+        exceptionHandler.printLog(message, ex, Level.INFO);
+        verify(logger).info(message, ex);
+        verify(tracer, times(4)).logError(ex);
+
+        exceptionHandler.printLog(message, ex, Level.TRACE);
+        verify(logger).trace(message, ex);
+        verify(tracer, times(5)).logError(ex);
+    }
+
+    @AfterEach
+    public void tearDown() {
+        // Cleanup the mocks
+        Mockito.framework().clearInlineMocks();
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.controller;
+
+import org.junit.jupiter.api.*;
+import org.mockito.*;
+import org.slf4j.Logger;
+import org.slf4j.event.Level;
+import org.springframework.boot.test.mock.mockito.MockBean;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
+
+public class GlobalDefaultExceptionHandlerTest {
+
+    @MockBean
+    private Logger logger;
+
+    @InjectMocks
+    private GlobalDefaultExceptionHandler handler;
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    public void printLogTest() {
+        // Given
+        String message = "Test message";
+        Throwable ex = new RuntimeException("Test exception");
+        Level[] levels = {Level.ERROR, Level.WARN, Level.DEBUG, Level.INFO, Level.TRACE};
+
+        // When & Then
+        for (Level level : levels) {
+            handler.printLog(message, ex, level);
+            switch (level) {
+                case ERROR:
+                    verify(logger, times(1)).error(message, ex);
+                    break;
+                case WARN:
+                    verify(logger, times(1)).warn(message, ex);
+                    break;
+                case DEBUG:
+                    verify(logger, times(1)).debug(message, ex);
+                    break;
+                case INFO:
+                    verify(logger, times(1)).info(message, ex);
+                    break;
+                case TRACE:
+                    verify(logger, times(1)).trace(message, ex);
+                    break;
+            }
+            // Resetting mocks after each verification because we are reusing the same mocks
+            Mockito.reset(logger);
+        }
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.controller;
+
+import org.junit.jupiter.api.*;
+import org.mockito.*;
+import org.slf4j.Logger;
+import org.slf4j.event.Level;
+import static org.mockito.Mockito.*;
+import com.ctrip.framework.apollo.tracer.Tracer;
+
+public class GlobalDefaultExceptionHandlerTest {
+
+    private GlobalDefaultExceptionHandler globalDefaultExceptionHandler;
+    private Logger logger = mock(Logger.class);
+
+    @BeforeEach
+    void setUp() {
+        globalDefaultExceptionHandler = Mockito.spy(new GlobalDefaultExceptionHandler());
+        // Inject the mocked logger into the globalDefaultExceptionHandler.
+        ReflectionTestUtils.setField(globalDefaultExceptionHandler, "logger", logger);
+    }
+
+    @Test
+    public void printLogTest() {
+        // Here we create a mock Throwable to be passed into the printLog method.
+        Throwable mockThrowable = new RuntimeException("Sample Error");
+
+        // Assuming we are also testing if Tracer.logError is called, though the mock setup for Tracer needs to be done if it's a static method.
+        // Mock Tracer as well if needed and capture the Throwable passed to the logError method.
+        // MockedStatic<Tracer> mockedTracer = mockStatic(Tracer.class);
+
+        // Test each log level
+        Level[] levels = {Level.ERROR, Level.WARN, Level.DEBUG, Level.INFO, Level.TRACE};
+        for (Level level : levels) {
+            globalDefaultExceptionHandler.printLog("Test message", mockThrowable, level);
+            
+            switch (level) {
+                case ERROR:
+                    verify(logger, times(1)).error("Test message", mockThrowable);
+                    break;
+                case WARN:
+                    verify(logger, times(1)).warn("Test message", mockThrowable);
+                    break;
+                case DEBUG:
+                    verify(logger, times(1)).debug("Test message", mockThrowable);
+                    break;
+                case INFO:
+                    verify(logger, times(1)).info("Test message", mockThrowable);
+                    break;
+                case TRACE:
+                    verify(logger, times(1)).trace("Test message", mockThrowable);
+                    break;
+            }
+            
+            // Verify that Tracer.logError is called and the correct throwable object is passed to it.
+            // mockedTracer.verify(() -> Tracer.logError(mockThrowable));
+        }
+
+        // After all tests, close the mocked tracer object.
+        // mockedTracer.close();
+    }
+    
+    // Any additional tests or clean-up can go here.
+}
+
+

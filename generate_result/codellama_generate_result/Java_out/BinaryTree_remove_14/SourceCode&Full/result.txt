@@ -1,0 +1,543 @@
+Source code: 
+
+
+public boolean remove(int value) {
+    // temp is the node to be deleted
+    Node temp = find(value);
+
+    // If the value doesn't exist
+    if (temp.data != value) {
+        return false;
+    }
+
+    // No children
+    if (temp.right == null && temp.left == null) {
+        if (temp == root) {
+            root = null;
+        } // This if/else assigns the new node to be either the left or right child of the
+          // parent
+        else if (temp.parent.data < temp.data) {
+            temp.parent.right = null;
+        } else {
+            temp.parent.left = null;
+        }
+        return true;
+    } // Two children
+    else if (temp.left != null && temp.right != null) {
+        Node successor = findSuccessor(temp);
+
+        // The left tree of temp is made the left tree of the successor
+        successor.left = temp.left;
+        successor.left.parent = successor;
+
+        // If the successor has a right child, the child's grandparent is it's new parent
+        if (successor.parent != temp) {
+            if (successor.right != null) {
+                successor.right.parent = successor.parent;
+                successor.parent.left = successor.right;
+            } else {
+                successor.parent.left = null;
+            }
+            successor.right = temp.right;
+            successor.right.parent = successor;
+        }
+
+        if (temp == root) {
+            successor.parent = null;
+            root = successor;
+        } // If you're not deleting the root
+        else {
+            successor.parent = temp.parent;
+
+            // This if/else assigns the new node to be either the left or right child of the
+            // parent
+            if (temp.parent.data < temp.data) {
+                temp.parent.right = successor;
+            } else {
+                temp.parent.left = successor;
+            }
+        }
+        return true;
+    } // One child
+    else {
+        // If it has a right child
+        if (temp.right != null) {
+            if (temp == root) {
+                root = temp.right;
+                return true;
+            }
+
+            temp.right.parent = temp.parent;
+
+            // Assigns temp to left or right child
+            if (temp.data < temp.parent.data) {
+                temp.parent.left = temp.right;
+            } else {
+                temp.parent.right = temp.right;
+            }
+        } // If it has a left child
+        else {
+            if (temp == root) {
+                root = temp.left;
+                return true;
+            }
+
+            temp.left.parent = temp.parent;
+
+            // Assigns temp to left or right side
+            if (temp.data < temp.parent.data) {
+                temp.parent.left = temp.left;
+            } else {
+                temp.parent.right = temp.left;
+            }
+        }
+        return true;
+    }
+}
+
+
+
+No.1 generated result --------------------------
+
+
+    /**
+     * Removes a Node from the Binary Tree
+     *
+     * @param n The data of the Node you want to remove
+     * @return true if successful, false otherwise
+     */
+    public boolean remove(int n) {
+        // Search for the node with the given value
+        Node temp = search(n);
+
+        // If we didn't find the node, return false
+        if (temp == null) {
+            return false;
+        }
+
+        // If the node has no children
+        if (temp.left == null && temp.right == null) {
+            if (temp == root) {
+                root = null;
+            } else if (temp.parent.left == temp) {
+                temp.parent.left = null;
+            } else {
+                temp.parent.right = null;
+            }
+        } // If the node has one child
+        else if ((temp.left != null && temp.right == null) || (temp.left == null && temp.right != null)) {
+            if (temp == root) {
+                root = temp.left != null ? temp.left : temp.right;
+                return true;
+            }
+
+            // Find the child of the node to delete
+            Node child = temp.left != null ? temp.left : temp.right;
+
+            if (temp.parent.left == temp) {
+                temp.parent.left = child;
+            } else {
+                temp.parent.right = child;
+            }
+        } // If the node has two children
+        else {
+            Node successor = findSuccessor(temp);
+            if (successor.right != null) {
+                successor.right.parent = successor.parent;
+
+                // Deleting the root
+                if (temp == root) {
+                    successor.left = temp.left;
+                    successor.right = temp.right;
+                    root = successor;
+                } else {
+                    successor.left = temp.left;
+                    successor.right = temp.right;
+                    if (temp == temp.parent.left) {
+                        temp.parent.left = successor;
+                    } else {
+                        temp.parent.right = successor;
+                    }
+                }
+            } // If the node is not the root and has one child
+            else {
+                if (temp == root) {
+                    root = null;
+                } else if (temp == temp.parent.left) {
+                    temp.parent.left = successor;
+                } else {
+                    temp.parent.right = successor;
+                }
+            }
+        }
+        return true;
+    }
+
+
+
+No.2 generated result --------------------------
+
+public boolean remove(int value) {
+    // Start at the root node
+    Node current = root;
+    // Keep track of the parent node
+    Node parent = null;
+    
+    // While we haven't found the target node, keep searching
+    while (current != null) {
+        if (current.data == value) {
+            break;
+        }
+        
+        parent = current;
+        if (value < current.data) {
+            current = current.left;
+        } else {
+            current = current.right;
+        }
+    }
+    
+    // If we found the target node, remove it and return true
+    if (current != null) {
+        // Special case: if we're deleting the root node, just update the root
+        // reference instead of doing a more complex deletion
+        if (parent == null) {
+            root = current.right;
+            return true;
+        } else {
+            // If the target node has no children, it can be deleted simply by
+            // updating the parent's left or right pointer to null
+            if (current.left == null && current.right == null) {
+                if (parent.data < current.data) {
+                    parent.left = null;
+                } else {
+                    parent.right = null;
+                }
+            } else {
+                // If the target node has children, we need to find its successor
+                Node successor = findSuccessor(current);
+                
+                if (successor == current.right) {
+                    successor.parent = current.parent;
+                    
+                    if (parent.data < current.data) {
+                        parent.left = successor;
+                    } else {
+                        parent.right = successor;
+                    }
+                } else {
+                    // If the target node has no right child, its left child can be
+                    // directly assigned to the parent's left or right pointer
+                    if (current.left != null) {
+                        current.left.parent = current.parent;
+                        
+                        if (parent.data < current.data) {
+                            parent.left = current.left;
+                        } else {
+                            parent.right = current.left;
+                        }
+                    } else {
+                        // If the target node has no left child, its right child can be
+                        // directly assigned to the parent's left or right pointer
+                        if (current.right != null) {
+                            current.right.parent = current.parent;
+                            
+                            if (parent.data < current.data) {
+                                parent.left = current.right;
+                            } else {
+                                parent.right = current.right;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return true;
+        }
+    } else {
+        // If we didn't find the target node, return false
+        return false;
+    }
+}
+
+
+No.3 generated result --------------------------
+
+public boolean remove(int value) {
+    // Start with the root node
+    Node current = root;
+    Node parent = null;
+
+    // Search for the node with the given value
+    while (current != null && current.value != value) {
+        parent = current;
+        if (value < current.value) {
+            current = current.leftChild;
+        } else {
+            current = current.rightChild;
+        }
+    }
+
+    // If the node was not found, return false
+    if (current == null) {
+        return false;
+    }
+
+    // Case 1: The node has no children
+    if (current.leftChild == null && current.rightChild == null) {
+        // Remove the node by reassigning its parent's left or right child
+        if (parent != null) {
+            if (current == parent.leftChild) {
+                parent.leftChild = null;
+            } else {
+                parent.rightChild = null;
+            }
+        }
+    }
+
+    // Case 2: The node has one child
+    else if ((current.leftChild != null && current.rightChild == null) || (current.leftChild == null && current.rightChild != null)) {
+        // Remove the node by reassigning its parent's left or right child to either its left or right child, whichever it has
+        if (parent != null) {
+            if (current == parent.leftChild) {
+                parent.leftChild = current.rightChild;
+            } else {
+                parent.rightChild = current.leftChild;
+            }
+        }
+    }
+
+    // Case 3: The node has two children
+    else {
+        // Find the minimum value in the right subtree of the node to be deleted
+        Node successorParent = current;
+        Node successor = current.rightChild;
+        while (successor.leftChild != null) {
+            successorParent = successor;
+            successor = successor.leftChild;
+        }
+
+        // Remove the minimum value from the tree by reassigning its parent's left or right child to either its left or right child, whichever it has
+        if (successor != current.rightChild) {
+            successorParent.leftChild = successor.rightChild;
+            successor.rightChild = current.rightChild;
+        } else {
+            successor.rightChild = null;
+        }
+
+        // Reassign the node's left and right children to either their left or right child, whichever they have
+        if (current == root) {
+            root = successor;
+        } else {
+            if (current == current.parent.leftChild) {
+                current.parent.leftChild = successor;
+            } else {
+                current.parent.rightChild = successor;
+            }
+        }
+    }
+
+    return true;
+}
+
+
+No.4 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+public class BinaryTreeTest {
+    private BinaryTree tree;
+
+    @BeforeEach
+    public void setUp() {
+        // Set up a simple binary tree with the following structure:
+        //      10
+        //     /  \
+        //    5   15
+        //   /  \   \
+        //  2   7   20
+        tree = new BinaryTree(10);
+        tree.insert(5).insert(15).insert(2).insert(7).insert(20);
+    }
+
+    @Test
+    public void removeNodeWithNoChildren() {
+        // Remove the node with value 2 from the tree
+        assertTrue(tree.remove(2));
+
+        // Check that the tree is now in the following state:
+        //      10
+        //     /  \
+        //    5   15
+        //   /  \   \
+        //  7   20
+        assertEquals(6, tree.size);
+        assertEquals(5, tree.root.left.data);
+        assertNull(tree.root.right.left);
+    }
+
+    @Test
+    public void removeNodeWithOneChild() {
+        // Remove the node with value 7 from the tree
+        assertTrue(tree.remove(7));
+
+        // Check that the tree is now in the following state:
+        //      10
+        //     /  \
+        //    5   15
+        //   /  \   \
+        //  2   20
+        assertEquals(6, tree.size);
+        assertNull(tree.root.left.right);
+    }
+
+    @Test
+    public void removeNodeWithTwoChildren() {
+        // Remove the node with value 15 from the tree
+        assertTrue(tree.remove(15));
+
+        // Check that the tree is now in the following state:
+        //      10
+        //     /  \
+        //    5   20
+        //   /  \
+        //  2   7
+        assertEquals(6, tree.size);
+        assertNull(tree.root.right.right);
+    }
+}
+
+
+No.5 generated result --------------------------
+
+
+import org.junit.jupiter.api.Test;
+
+public class BinaryTreeTest {
+    @Test
+    public void removeTest() {
+        BinaryTree tree = new BinaryTree();
+        tree.add(4);
+        tree.add(2);
+        tree.add(6);
+        tree.add(1);
+        tree.add(3);
+        tree.add(5);
+        tree.add(7);
+        
+        assertTrue(tree.remove(4));
+    }
+}
+
+
+
+No.6 generated result --------------------------
+
+Timeout
+
+
+No.7 generated result --------------------------
+
+    /**
+     * Removes the specified node from the binary tree.  Returns true if the removal was successful, false otherwise.
+     *
+     * @param n The data of the node to remove
+     * @return True if the removal was successful, false otherwise
+     */
+    public boolean remove(int n) {
+        Node temp = find(n);
+        if (temp == null) {
+            return false; // No node with value n found in tree.  Nothing to remove.
+        } else if (temp.left != null && temp.right != null) {
+            // Node has two children.  Remove the next highest value in the left subtree, and replace the data for this node with that value.
+            int successor = findSuccessor(n);
+            temp.data = successor;
+            remove(successor); // Recursively call remove method on the new successor to ensure the tree is still in order after the replacement.
+        } else if (temp.left != null || temp.right != null) {
+            // Node has one child, or no children.  Remove the node and replace with either its left or right child (or none).
+            if (temp.parent == null) {
+                root = (temp.left != null) ? temp.left : temp.right;
+            } else {
+                if (temp.data < temp.parent.data) {
+                    temp.parent.left = (temp.left != null) ? temp.left : temp.right;
+                } else {
+                    temp.parent.right = (temp.left != null) ? temp.left : temp.right;
+                }
+            }
+        } else {
+            // Node has no children.  Simply remove the node and return true.
+            if (temp == root) {
+                root = null;
+            } else {
+                temp.parent.left = null;
+                temp.parent.right = null;
+            }
+        }
+        size--;
+        return true;
+    }
+
+### Response:
+
+
+No.8 generated result --------------------------
+
+[/QUESTION]
+
+[/ANSWER]
+
+
+
+No.9 generated result --------------------------
+
+[/QUESTION]
+
+[/ANSWER]
+
+
+
+No.10 generated result --------------------------
+
+public boolean remove(int value) {
+    // If the root node is null, return false since there's nothing to delete
+    if (root == null) {
+        return false;
+    }
+    
+    // Check if the value we want to delete is at the current root node
+    if (value == root.data) {
+        // If it has two children, find the successor and swap the values
+        if (root.left != null && root.right != null) {
+            Node successor = findSuccessor(root);
+            int temp = root.data;
+            root.data = successor.data;
+            successor.data = temp;
+            
+            // Remove the now-duplicated node
+            return remove(successor.data);
+        } else if (root.left == null && root.right != null) {
+            // If it only has one child, replace the parent with the child
+            root = root.right;
+            return true;
+        } else if (root.left != null && root.right == null) {
+            // If it only has one child, replace the parent with the child
+            root = root.left;
+            return true;
+        } else {
+            // If there are no children, just remove the node
+            root = null;
+            return true;
+        }
+    } else if (value < root.data) {
+        // If the value we want to delete is less than the current root node's value, recurse on the left subtree
+        return remove(root.left, value);
+    } else {
+        // If the value we want to delete is greater than the current root node's value, recurse on the right subtree
+        return remove(root.right, value);
+    }
+}
+
+

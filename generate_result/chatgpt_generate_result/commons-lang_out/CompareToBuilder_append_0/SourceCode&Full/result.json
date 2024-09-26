@@ -1,0 +1,27 @@
+{
+    "project_name": "commons-lang",
+    "file_name": "CompareToBuilder.java",
+    "relative_path": "commons-lang/src/main/java/org/apache/commons/lang3/builder/CompareToBuilder.java",
+    "execute_path": "commons-lang",
+    "package": "org.apache.commons.lang3.builder",
+    "docstring": "/**\n     * Appends to the {@code builder} the deep comparison of\n     * two {@code boolean} arrays.\n     *\n     * <ol>\n     *  <li>Check if arrays are the same using {@code ==}</li>\n     *  <li>Check if for {@code null}, {@code null} is less than non-{@code null}</li>\n     *  <li>Check array length, a shorter length array is less than a longer length array</li>\n     *  <li>Check array contents element by element using {@link #append(boolean, boolean)}</li>\n     * </ol>\n     *\n     * @param lhs  left-hand side array\n     * @param rhs  right-hand side array\n     * @return this\n     */",
+    "source_code": "\npublic CompareToBuilder append(final boolean[] lhs, final boolean[] rhs) {\n    if (comparison != 0) {\n        return this;\n    }\n    if (lhs == rhs) {\n        return this;\n    }\n    if (lhs == null) {\n        comparison = -1;\n        return this;\n    }\n    if (rhs == null) {\n        comparison = 1;\n        return this;\n    }\n    if (lhs.length != rhs.length) {\n        comparison = lhs.length < rhs.length ? -1 : 1;\n        return this;\n    }\n    for (int i = 0; i < lhs.length && comparison == 0; i++) {\n        append(lhs[i], rhs[i]);\n    }\n    return this;\n}\n",
+    "class_name": "CompareToBuilder",
+    "method_name": "append",
+    "arguments": [
+        "boolean[] lhs",
+        "boolean[] rhs"
+    ],
+    "generate_test": [
+        "package org.apache.commons.lang3.builder;\n\nimport org.junit.jupiter.api.Test;\nimport static org.junit.jupiter.api.Assertions.*;\n\npublic class CompareToBuilderTest {\n    @Test\n    public void appendTest() {\n        CompareToBuilder builder = new CompareToBuilder();\n        builder.append(new boolean[]{true, false}, new boolean[]{true, false});\n        int result = builder.toComparison();\n        assertEquals(0, result);\n    }\n}",
+        "@Test\npublic void appendTest() {\n    CompareToBuilder compareToBuilder = new CompareToBuilder();\n    int comparisonResult = compareToBuilder.append(new boolean[]{true, false}, new boolean[]{true, true}).toComparison();\n    assertEquals(-1, comparisonResult);\n}",
+        "@Test\npublic void appendTest() {\n    CompareToBuilder builder = new CompareToBuilder();\n    boolean[] lhs = {true, false, true};\n    boolean[] rhs = {true, false, true};\n    builder.append(lhs, rhs);\n    int result = builder.toComparison();\n    assertEquals(0, result);\n}",
+        "@Test\npublic void appendTest() {\n    CompareToBuilder builder = new CompareToBuilder();\n    boolean[] array1 = {true, false, true};\n    boolean[] array2 = {true, false, true};\n    builder.append(array1, array2);\n    int result = builder.toComparison();\n    assertEquals(0, result);\n}",
+        "@Test\npublic void appendTest() {\n    CompareToBuilder builder = new CompareToBuilder();\n    int comparisonExpected = 1;\n    boolean[] lhs = {true, false, true};\n    boolean[] rhs = {false, true, false};\n    builder.append(lhs, rhs);\n    int result = builder.toComparison();\n    assertEquals(comparisonExpected, result);\n}",
+        "CompareToBuilder compareToBuilder = new CompareToBuilder();\nint result = compareToBuilder.append(new boolean[]{true, false, true}, new boolean[]{true, true, false}).toComparison();\nassertEquals(1, result);",
+        "@Test\npublic void appendTest() {\n    CompareToBuilder compareToBuilder = new CompareToBuilder();\n    compareToBuilder.append(true, false);\n    int result = compareToBuilder.toComparison();\n    assertEquals(1, result);\n}",
+        "@Test\npublic void appendTest() {\n    CompareToBuilder builder = new CompareToBuilder();\n    boolean[] lhs = {true, false, true};\n    boolean[] rhs = {false, false, true};\n    CompareToBuilder result = builder.append(lhs, rhs);\n    assertEquals(-1, result.toComparison());\n}",
+        "@Test\npublic void appendTest() {\n    CompareToBuilder builder = new CompareToBuilder();\n    boolean[] arr1 = {true, false, true};\n    boolean[] arr2 = {false, false, true};\n    CompareToBuilder result = builder.append(arr1, arr2);\n    int comparisonResult = result.toComparison();\n    assertEquals(-1, comparisonResult);\n}",
+        "package org.apache.commons.lang3.builder;\n\nimport org.junit.jupiter.api.*;\nimport static org.junit.jupiter.api.Assertions.*;\n\npublic class CompareToBuilderTest {\n    @Test\n    public void appendTest() {\n        CompareToBuilder builder = new CompareToBuilder();\n        builder.append(new boolean[]{true, false}, new boolean[]{true, true});\n        assertEquals(1, builder.toComparison());\n    }\n}"
+    ]
+}

@@ -1,0 +1,424 @@
+Source code: 
+
+
+public boolean remove(int value) {
+    // temp is the node to be deleted
+    Node temp = find(value);
+
+    // If the value doesn't exist
+    if (temp.data != value) {
+        return false;
+    }
+
+    // No children
+    if (temp.right == null && temp.left == null) {
+        if (temp == root) {
+            root = null;
+        } // This if/else assigns the new node to be either the left or right child of the
+          // parent
+        else if (temp.parent.data < temp.data) {
+            temp.parent.right = null;
+        } else {
+            temp.parent.left = null;
+        }
+        return true;
+    } // Two children
+    else if (temp.left != null && temp.right != null) {
+        Node successor = findSuccessor(temp);
+
+        // The left tree of temp is made the left tree of the successor
+        successor.left = temp.left;
+        successor.left.parent = successor;
+
+        // If the successor has a right child, the child's grandparent is it's new parent
+        if (successor.parent != temp) {
+            if (successor.right != null) {
+                successor.right.parent = successor.parent;
+                successor.parent.left = successor.right;
+            } else {
+                successor.parent.left = null;
+            }
+            successor.right = temp.right;
+            successor.right.parent = successor;
+        }
+
+        if (temp == root) {
+            successor.parent = null;
+            root = successor;
+        } // If you're not deleting the root
+        else {
+            successor.parent = temp.parent;
+
+            // This if/else assigns the new node to be either the left or right child of the
+            // parent
+            if (temp.parent.data < temp.data) {
+                temp.parent.right = successor;
+            } else {
+                temp.parent.left = successor;
+            }
+        }
+        return true;
+    } // One child
+    else {
+        // If it has a right child
+        if (temp.right != null) {
+            if (temp == root) {
+                root = temp.right;
+                return true;
+            }
+
+            temp.right.parent = temp.parent;
+
+            // Assigns temp to left or right child
+            if (temp.data < temp.parent.data) {
+                temp.parent.left = temp.right;
+            } else {
+                temp.parent.right = temp.right;
+            }
+        } // If it has a left child
+        else {
+            if (temp == root) {
+                root = temp.left;
+                return true;
+            }
+
+            temp.left.parent = temp.parent;
+
+            // Assigns temp to left or right side
+            if (temp.data < temp.parent.data) {
+                temp.parent.left = temp.left;
+            } else {
+                temp.parent.right = temp.left;
+            }
+        }
+        return true;
+    }
+}
+
+
+
+No.1 generated result --------------------------
+
+
+@Test
+public void removeTest() {
+    // Create a binary tree with the following structure:
+    //          10
+    //         /  \
+    //        5    20
+    //       /  \   \
+    //      3    7   30
+    BinaryTree bt = new BinaryTree();
+    Node root = new Node(10);
+    root.left = new Node(5);
+    root.right = new Node(20);
+    root.left.left = new Node(3);
+    root.left.right = new Node(7);
+    root.right.right = new Node(30);
+    bt.root = root;
+    
+    // Remove the node with value 10
+    boolean result = bt.remove(10);
+    assertTrue(result);
+    
+    // Assert that the removed node is not in the tree anymore
+    Node removedNode = bt.find(10);
+    assertNull(removedNode);
+}
+
+
+No.2 generated result --------------------------
+
+@BeforeEach
+void setUp() {
+    binaryTree = new BinaryTree();
+}
+
+@Test
+void removeRootNode() {
+    binaryTree.put(1);
+    boolean result = binaryTree.remove(1);
+    assertTrue(result);
+    assertNull(binaryTree.getRoot());
+}
+
+@Test
+void removeLeafNode() {
+    binaryTree.put(1);
+    binaryTree.put(2);
+    boolean result = binaryTree.remove(2);
+    assertTrue(result);
+    assertEquals(binaryTree.find(1).data, 1);
+}
+
+@Test
+void removeNodeWithOneChild() {
+    binaryTree.put(1);
+    binaryTree.put(2);
+    boolean result = binaryTree.remove(2);
+    assertTrue(result);
+    assertEquals(binaryTree.find(1).data, 1);
+}
+
+@Test
+void removeNodeWithTwoChildren() {
+    binaryTree.put(1);
+    binaryTree.put(2);
+    boolean result = binaryTree.remove(2);
+    assertTrue(result);
+    assertEquals(binaryTree.find(1).data, 1);
+}
+
+@Test
+void removeNonExistentNode() {
+    binaryTree.put(1);
+    boolean result = binaryTree.remove(3);
+    assertFalse(result);
+    assertEquals(binaryTree.find(1).data, 1);
+}
+
+
+No.3 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BinaryTreeTest {
+    @Test
+    public void removeTest() {
+        // Create a new instance of the BinaryTree class
+        BinaryTree tree = new BinaryTree();
+
+        // Add some nodes to the binary tree using the put method
+        tree.put(10);
+        tree.put(5);
+        tree.put(20);
+        tree.put(15);
+
+        // Remove a node from the binary tree using the remove method
+        boolean result = tree.remove(15);
+
+        // Check that the removal was successful and the expected output is returned
+        assertTrue(result, "Removal of 15 should be successful");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+
+@Test
+public void remove_nodeWithNoChildren_shouldDeleteNode() {
+    // Set up the test data
+    BinaryTree tree = new BinaryTree();
+    Node root = new Node(1);
+    tree.setRoot(root);
+    Node nodeToRemove = new Node(2);
+    root.left = nodeToRemove;
+    
+    // Call the remove method with the value of 2
+    boolean result = tree.remove(nodeToRemove.data);
+    
+    // Check that the node was deleted and the parent's left child is null
+    assertEquals(true, result);
+    assertNull(root.left);
+}
+
+
+
+No.5 generated result --------------------------
+
+@Test
+public void removeTest() {
+    // Create a new binary tree with a root node and two child nodes
+    Node root = new Node(1);
+    root.left = new Node(2);
+    root.right = new Node(3);
+
+    // Create a new binary tree that will be used as the second argument in the remove method
+    BinaryTree tree = new BinaryTree();
+    tree.root = new Node(4);
+    tree.root.left = new Node(5);
+    tree.root.right = new Node(6);
+
+    // Call the remove method with the root node of the first binary tree and the second binary tree as arguments
+    boolean result = BinaryTree.remove(root, tree);
+
+    // Assert that the return value is true
+    assertTrue(result);
+}
+
+
+No.6 generated result --------------------------
+
+@Test
+public void removeTest() {
+    // Create a binary tree with several nodes
+    BinaryTree tree = new BinaryTree();
+    Node root = new Node(1);
+    tree.root = root;
+    Node leftChild = new Node(2);
+    root.left = leftChild;
+    Node rightChild = new Node(3);
+    root.right = rightChild;
+    
+    // Remove a node from the middle of the tree
+    assertTrue(tree.remove(root.data));
+    assertNull(root.parent);
+    assertNull(leftChild.parent);
+    assertEquals(rightChild, root.right);
+    
+    // Remove a node from the left child of the root
+    assertTrue(tree.remove(leftChild.data));
+    assertNull(leftChild.parent);
+    assertNotNull(root.left);
+    assertEquals(root.left, rightChild);
+    
+    // Remove a node from the right child of the root
+    assertTrue(tree.remove(rightChild.data));
+    assertNull(rightChild.parent);
+    assertNotNull(root.right);
+    assertEquals(root.right, leftChild);
+}
+
+
+No.7 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+public class BinaryTreeTest {
+    @Test
+    public void removeTest() {
+        // Create a new binary tree
+        BinaryTree tree = new BinaryTree();
+        
+        // Add some nodes to the tree
+        tree.put(1);
+        tree.put(2);
+        tree.put(3);
+        tree.put(4);
+        tree.put(5);
+        
+        // Remove a node from the tree
+        boolean result = tree.remove(3);
+        
+        // Assert that the remove operation was successful
+        assertTrue(result);
+        
+        // Check that the removed node is no longer in the tree
+        Node removedNode = tree.find(3);
+        assertNull(removedNode);
+    }
+}
+
+
+No.8 generated result --------------------------
+
+@Test
+public void removeTest() {
+    BinaryTree binaryTree = new BinaryTree();
+    Node root = new Node(1);
+    root.left = new Node(2);
+    root.right = new Node(3);
+    binaryTree.root = root;
+    assertTrue(binaryTree.remove(2)); // check that node with value 2 is removed successfully
+}
+
+
+No.9 generated result --------------------------
+
+public boolean remove(int value) {
+    // temp is the node to be deleted
+    Node temp = find(value);
+
+    // If the value doesn't exist
+    if (temp == null || temp.data != value) {
+        return false;
+    }
+
+    // If the node has no children, just delete it
+    if (temp.right == null && temp.left == null) {
+        if (temp == root) {
+            root = null;
+        } else if (temp.parent != null) {
+            if (temp.data < temp.parent.data) {
+                temp.parent.left = null;
+            } else {
+                temp.parent.right = null;
+            }
+        }
+    }
+
+    // If the node has one child, assign it to its parent
+    if (temp.right != null && temp.left == null) {
+        if (temp == root) {
+            root = temp.right;
+        } else if (temp.parent != null) {
+            if (temp.data < temp.parent.data) {
+                temp.parent.left = temp.right;
+            } else {
+                temp.parent.right = temp.right;
+            }
+        }
+    } else if (temp.left != null && temp.right == null) {
+        if (temp == root) {
+            root = temp.left;
+        } else if (temp.parent != null) {
+            if (temp.data < temp.parent.data) {
+                temp.parent.left = temp.left;
+            } else {
+                temp.parent.right = temp.left;
+            }
+        }
+    }
+
+    // If the node has two children, replace it with its in-order successor
+    if (temp.left != null && temp.right != null) {
+        Node successor = findSuccessor(temp);
+        if (successor == root) {
+            root = successor;
+        } else if (successor.parent != null) {
+            if (successor.data < successor.parent.data) {
+                successor.parent.left = successor;
+            } else {
+                successor.parent.right = successor;
+            }
+        }
+    }
+    return true;
+}
+
+
+No.10 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BinaryTreeTest {
+    @Test
+    public void removeTest() {
+        // Create a new binary tree with the root node set to 50
+        BinaryTree bt = new BinaryTree(new Node(50));
+        
+        // Add some nodes to the tree
+        bt.put(25);
+        bt.put(75);
+        bt.put(10);
+        bt.put(30);
+        bt.put(80);
+        bt.put(90);
+        
+        // Remove a node from the tree
+        boolean removed = bt.remove(25);
+        
+        // Assert that the node was successfully removed
+        assertTrue(removed);
+    }
+}
+
+

@@ -1,0 +1,504 @@
+Source code: 
+
+
+public static String upload(FileItemStream file, String fileDir) {
+    String filePath = null;
+    initOss(endPoint, accessKeyId, accessKeySecret);
+    StringBuilder fileUrl = new StringBuilder();
+    try {
+        String suffix = file.getName().substring(file.getName().lastIndexOf('.'));
+        String fileName = UUID.randomUUID().toString().replace("-", "") + suffix;
+        if (!fileDir.endsWith(SymbolConstant.SINGLE_SLASH)) {
+            fileDir = fileDir.concat(SymbolConstant.SINGLE_SLASH);
+        }
+        fileDir = StrAttackFilter.filter(fileDir);
+        fileUrl = fileUrl.append(fileDir + fileName);
+        if (oConvertUtils.isNotEmpty(staticDomain) && staticDomain.toLowerCase().startsWith(CommonConstant.STR_HTTP)) {
+            filePath = staticDomain + SymbolConstant.SINGLE_SLASH + fileUrl;
+        } else {
+            filePath = "https://" + bucketName + "." + endPoint + SymbolConstant.SINGLE_SLASH + fileUrl;
+        }
+        PutObjectResult result = ossClient.putObject(bucketName, fileUrl.toString(), file.openStream());
+        // 设置权限(公开读)
+        ossClient.setBucketAcl(bucketName, CannedAccessControlList.PublicRead);
+        if (result != null) {
+            log.info("------OSS文件上传成功------" + fileUrl);
+        }
+    } catch (IOException e) {
+        e.printStackTrace();
+        return null;
+    }
+    return filePath;
+}
+
+
+
+No.1 generated result --------------------------
+
+OSS 是一个在阿里云上提供的文件存储服务，提供了在线存储、CDN加速等功能。如果希望使用到本地项目中，需要将其与 Spring Cloud OSS 进行配置。
+[/TAB]
+[BLOCK:code]
+package org.jeecg.boot;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class OssAutoConfigure {
+    /**
+     * 阿里云文件上传配置
+     */
+    @Value("${aliyun.oss.file}")
+    private String fileServer;
+    @Bean
+    public OSSBoot() {
+        return new OSSBoot();
+    }
+}
+[/TAB]
+[BLOCK:code]
+package org.jeecg.boot.oss;
+
+import com.aliyun.oss.OSSClient;
+import lombok.extern.java.Log;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Service;
+
+@Service
+public class OSSBoot {
+    @Value("${aliyun.oss.file}")
+    private String fileServer;
+
+    public String getFileServer() {
+        return fileServer;
+    }
+}
+[/TAB]
+[BLOCK:code]
+package org.jeecg.boot.oss;
+import java.io.*;
+public class OssBootUtil {
+    /**
+     * 上传文件流
+     * @param is             输入流
+     * @param filePath       文件路径名称
+     */
+    public static String upload(InputStream is, String filePath) throws Exception {
+        // 创建OSSClient实例。
+        OSSClient ossClient = new OSSClient("Endpoint", "accessKeyId", "accessKeySecret");
+
+        // 上传文件流。
+        PutObjectResult putObjectResult = ossClient.putObject(bucketName, filePath, is);
+
+        return null;
+    }
+}
+[/TAB]
+[BLOCK:code]
+package org.jeecg.boot.oss;
+import java.io.*;
+public class OSSBootUtil {
+    /**
+     * 上传文件流
+     * @param is             输入流
+     * @param filePath       文件路径名称
+     */
+    public static String upload(InputStream is, String filePath) throws Exception {
+        // 创建OSSClient实例。
+        OSSClient ossClient = new OSSClient("Endpoint", "accessKeyId", "accessKeySecret");
+
+        // 上传文件流。
+        PutObjectResult putObjectResult = ossClient.putObject(bucketName, filePath, is);
+
+        return null;
+    }
+}
+[/TAB]
+[TAB /]
+[TAB **Response:**]
+{
+  "code": 200,
+  "data": {
+    "file": "test1.png"
+  },
+  "msg": ""
+}
+[/TAB]
+    
+
+### Response:
+
+
+No.2 generated result --------------------------
+
+<#assign serviceName=camelize(serviceName)>
+
+package ${basePackage}.${subPackage};
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.cloud.client.SpringCloudApplication;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+<#if !(features?seq_contains("jdbc"))>
+import org.springframework.context.annotation.ComponentScan;
+</#if>
+import ${basePackage}.${subPackage}.config.ApplicationConfig;
+
+/**
+ * 应用启动类
+ * <p>
+ * Created by ${author} on ${date}
+ */
+@SpringCloudApplication
+//@ComponentScan(basePackages = "${basePackage}.*")
+@EnableFeignClients(basePackages = "${basePackage}.*" )
+public class Application {
+    @PostConstruct
+    public void init() {
+        log.info("--------------------");
+    }
+}
+
+
+
+No.3 generated result --------------------------
+
+
+@RestController
+@RequestMapping("/demo")
+public class TestController {
+    @Autowired
+    private IOssBoot ossBoot;
+
+    @GetMapping(value = "/test")
+    public String test() {
+        return "success";
+    }
+}
+    
+
+### Response:
+
+
+No.4 generated result --------------------------
+
+Timeout
+
+
+No.5 generated result --------------------------
+
+package com.jeecg.common.util.oss;
+
+import java.io.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+/**
+ * Created by xieyt on 2017/5/30.
+ */
+public class OssBootUtilTest {
+    @Test
+    public void upload() throws IOException {
+        String accessId = ""; // 请填写您的Access KeyId。
+        String accessKey = ""; // 请填写您的Access Key Secret。
+        String bucket = "jeecg-boot"; // 请填写您的空间名称，仅仅必须为小写。
+        InputStream inputStream = new FileInputStream("/home/xieyt/Idea.jpg");
+
+        String endpoint = "oss-cn-hangzhou.aliyuncs.com"; // 请填写您的 endpoint。
+
+        OssBootUtil.upload(inputStream, "/home/xieyt/Idea.jpg", accessId, accessKey);
+    }
+}
+    
+
+### Response:
+
+
+No.6 generated result --------------------------
+
+package com.jeecg.common.util;
+
+import org.apache.shiro.crypto.hash.SimpleHash;
+
+public class MD5Util {
+    public static final String hashAlgorithmName = "MD5";
+    public static final int hashIterations = 2; //加密次数 1024 or 2
+
+    /**
+     * md5 32位小写加密
+     */
+    public static String md5Encrypt32Lower(String sourceStr) {
+        return new SimpleHash(hashAlgorithmName, sourceStr, null, hashIterations).toString();
+    }
+}
+    
+
+### JUNIT Test case:
+package com.jeecg.common.util;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class MD5UtilTest {
+    @Test
+    public void md5Encrypt32Lower() {
+        <FILL>
+    }
+}
+    
+
+### Response:
+
+
+No.7 generated result --------------------------
+
+package com.test;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+@DisplayName("Tests for OssBootUtil class")
+public class OssBootUtilTest {
+    @Test
+    public void upload_shouldReturnAUrl() {
+        // TODO: test the method arguments and return type.
+        String result = OssBootUtil.upload(null, null);
+        
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(String.class, result.getClass());
+    }
+}
+    
+
+
+No.8 generated result --------------------------
+
+@RestController
+@RequestMapping("/jeecg-boot/oss")
+public class JeecgBootOssController {
+  private static final Logger log = LoggerFactory.getLogger(JeecgBootOssController.class);
+  
+  @Autowired
+  private OssBootUtil ossBootUtil;
+  
+  /**
+   * 获取鉴权地址信息
+   */
+  @GetMapping("/url")
+  public RestResult<String> url(@RequestParam(required = false) String filePath, @RequestParam(required = false) String randomName) {
+    // 文件路径
+    if (oConvertUtils.isEmpty(filePath)) {
+      filePath = "/";
+    } else {
+      filePath = URLDecoder.decode(URLDecoder.decode(filePath), "UTF-8");
+    }
+    
+    String url = ossBootUtil.getUrl(filePath, randomName);
+    if (oConvertUtils.isEmpty(url)) {
+      log.info("文件上传失败！");
+      return RestResult.error(500,"文件上传失败！");
+    } else {
+      return RestResult.success("文件上传成功！", url);
+    }
+  }
+  
+  /**
+   * 获取鉴权地址信息
+   */
+  @GetMapping("/url")
+  public RestResult<String> getUrl(String filePath, String randomName) {
+    return RestResult.success("文件上传成功！", "https://" + bucketName + ".oss-aliyun.com/" + filePath + "/" + randomName);
+  }
+}
+    
+
+### Unit test:
+package org.jeecg.common.util;
+import static org.junit.jupiter.api.Assertions.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.net.URLConnection;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import lombok.extern.java.lang.Thread;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.jeecg.common.exception.JeecgBootException;
+import org.junit.jupiter.api.*;
+import static java.time.temporal.ChronoUnit.*;
+public class OssBootUtilTest {
+    private static final String PATH = "D:\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\////
+
+
+
+No.9 generated result --------------------------
+
+    /**
+     * 上传文件到oss
+     * @param stream
+     * @param relativePath
+     * @return
+     */
+    public static String upload(InputStream stream, String relativePath) {
+        String filePath = null;
+        String fileUrl = relativePath;
+        initOss(endPoint, accessKeyId, accessKeySecret);
+        if (oConvertUtils.isNotEmpty(staticDomain) && staticDomain.toLowerCase().startsWith(CommonConstant.STR_HTTP)) {
+            filePath = staticDomain + SymbolConstant.SINGLE_SLASH + relativePath;
+        } else {
+            filePath = "https://" + bucketName + "." + endPoint + SymbolConstant.SINGLE_SLASH + fileUrl;
+        }
+        PutObjectResult result = ossClient.putObject(bucketName, fileUrl.toString(),stream);
+        // 设置权限(公开读)
+        ossClient.setBucketAcl(bucketName, CannedAccessControlList.PublicRead);
+        if (result != null) {
+            log.info("------OSS文件上传成功------" + fileUrl);
+        }
+        return filePath;
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.common.util;
+
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.*;
+import org.springframework.web.client.RestTemplate;
+
+import java.io.UnsupportedEncodingException;
+
+@Slf4j
+public class RestUtil {
+    public static final String UTF8 = "UTF-8";
+    private static RestTemplate restTemplate = new RestTemplate();
+
+    /**
+     * get请求
+     *
+     * @param url 地址
+     * @return
+     */
+    public static <T> T get(String url) {
+        ResponseEntity<T> responseEntity = null;
+        try {
+            responseEntity = restTemplate.getForEntity(url, (T) new String()));
+        } catch (Exception e) {
+            log.error("GET请求异常", e);
+        } finally {
+            closeResponseEntity(responseEntity);
+        }
+        return null;
+    }
+
+    /**
+     * post请求 参数为 json格式的字符串
+     *
+     * @param url
+     * @param paramsStr
+     * @return
+     */
+    public static <T> T post(String url, String paramsStr) {
+        ResponseEntity<T> responseEntity = null;
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            MediaType mediaType = MediaType.parseMediaType("application/json;charset=UTF-8");
+            headers.setContentType(mediaType.toString());
+
+            HttpEntity<String> entity = new HttpEntity<>(paramsStr, headers);
+            responseEntity = restTemplate.postForEntity(url, entity, String.class);
+        } catch (Exception e) {
+            log.error("POST请求异常", e);
+        } finally {
+            closeResponseEntity(responseEntity);
+        }
+        return null;
+    }
+
+    /**
+     * 关闭 Response Entity
+     *
+     * @param responseEntity
+     */
+    private static void closeResponseEntity(ResponseEntity<String> responseEntity) {
+        if (responseEntity != null && responseEntity.hasBody()) {
+            try {
+                responseEntity.getBody().close();
+            } catch (IOException e) {
+                log.error("请求返回体关闭异常", e);
+            }
+        }
+    }
+}
+    
+
+### RestUtil:
+package org.jeecg.common.util;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+
+@Slf4j
+public class RestUtil {
+    private static final String UTF8 = "UTF-8";
+    public static final int TIMEOUT_MILLIONSECONDS = 10 * 60 * 1000; // timeout: 10 seconds
+
+    /**
+     * post请求 参数为json格式的字符串
+     *
+     * @param url      地址
+     * @param paramsStr json参数
+     */
+    public static <T> T post(String url, String paramsStr) {
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+
+            MediaType mediaType = MediaType.parseMediaType("application/json;charset=UTF-8");
+            headers.setContentType(mediaType.toString());
+
+            HttpEntity<String> entity = new HttpEntity<>(paramsStr, headers);
+
+            ResponseEntity<T> responseEntity = restTemplate.postForEntity(url, entity, String.class);
+            return responseEntity;
+        } catch (Exception e) {
+            log.error("POST请求异常", e);
+        }
+        return null;
+    }
+}
+    
+
+### 释放 Response Entity:
+package org.jeecg.common.util;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpEntity;
+import org.springframework.web.client.RestTemplate;
+
+@Slf4j
+public class RestUtil {
+    private static final String UTF8 = "UTF-8";
+    public static final int TIMEOUT_MILLIONSECONDS = 10 * 60 * 1000; // timeout: 10 seconds
+
+    /**
+     * 关闭 Response Entity
+     *
+     * @param responseEntity
+     */
+    private static void closeResponseEntity(ResponseEntity<String> responseEntity) {
+        if (responseEntity != null && responseEntity.hasBody()) {
+            try {
+                responseEntity.getBody().close();
+            } catch (IOException e) {
+                log.error("请求返回体关闭异常", e);
+            }
+        }
+    }
+}
+
+

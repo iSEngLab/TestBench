@@ -1,0 +1,705 @@
+Source code: 
+
+
+public Frame grab() throws Exception {
+    device.wait_for_frames();
+
+      frameNumber++; 
+    // For Framegrabber
+    if (colorEnabled && behaveAsColorFrameGrabber) {
+        IplImage image = grabVideo();
+
+        if (returnImage == null) {
+            int deviceWidth = device.get_stream_width(RealSense.color);
+            int deviceHeight = device.get_stream_height(RealSense.color);
+              returnImage = IplImage.create(deviceWidth, deviceHeight, IPL_DEPTH_8U, 3);
+            returnImage = IplImage.create(deviceWidth, deviceHeight, IPL_DEPTH_8U, 1);
+        }
+        cvCvtColor(image, returnImage, CV_BGR2GRAY);
+        return converter.convert(returnImage);
+    } else {
+        if (IREnabled) {
+            return converter.convert(grabIR());
+        } else {
+            if (depthEnabled) {
+                
+                // Fake colors
+                IplImage image = grabDepth();
+                if (returnImage == null) {
+                    int deviceWidth = device.get_stream_width(RealSense.depth);
+                    int deviceHeight = device.get_stream_height(RealSense.depth);
+              returnImage = IplImage.create(deviceWidth, deviceHeight, IPL_DEPTH_8U, 3);
+                    returnImage = IplImage.create(deviceWidth, deviceHeight, IPL_DEPTH_8U, 1);
+                } 
+                return converter.convert(returnImage);
+            }
+        }
+    }
+
+    return null;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class RealSenseFrameGrabberTest {
+    private RealSenseFrameGrabber grabber;
+    private Device device; // Assuming 'Device' is an interface or class that will be mocked
+    private IplImage image;
+    private RealSenseFrameConverter converter;
+
+    @BeforeEach
+    public void setUp() {
+        grabber = new RealSenseFrameGrabber();
+        device = mock(Device.class); // Mock the Device
+        image = mock(IplImage.class); // Mock the IplImage
+        converter = mock(RealSenseFrameConverter.class); // Mock the FrameConverter
+
+        grabber.device = device; // Assigning our mocked device to grabber's device
+        grabber.converter = converter; // Assigning our mocked converter to grabber's converter
+    }
+
+    @Test
+    public void grab_whenColorEnabled_berhavesAsColorFrameGrabber() {
+        // Preparing the scenario
+        grabber.colorEnabled = true;
+        grabber.behaveAsColorFrameGrabber = true;
+        when(device.wait_for_frames()).thenAnswer(invocation -> null);
+        when(device.get_stream_width(RealSense.color)).thenReturn(640);
+        when(device.get_stream_height(RealSense.color)).thenReturn(480);
+        when(grabber.grabVideo()).thenReturn(image);
+
+        when(converter.convert(any(IplImage.class))).thenAnswer(invocation -> new Frame()); // Fake conversion to Frame
+
+        // Executing the test
+        Exception exception = assertDoesNotThrow(() -> grabber.grab());
+
+        // Verifying the result
+        assertNull(exception);
+        verify(device).get_stream_width(RealSense.color);
+        verify(device).get_stream_height(RealSense.color);
+        verify(grabber).grabVideo();
+        verify(converter).convert(any(IplImage.class));
+    }
+
+    // Similarly, tests can be written for the other branches, such as grab_whenIREnabled(), grab_whenDepthEnabled()
+
+    // Don't forget to tearDown or clean up if necessary
+    @AfterEach
+    public void tearDown() {
+        grabber = null;
+        device = null;
+        image = null;
+        converter = null;
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class RealSenseFrameGrabberTest {
+
+    private RealSense device;
+    private RealSenseFrameGrabber frameGrabber;
+    private Frame frame;
+    private IplImage image;
+    private Converter converter;
+
+    @BeforeEach
+    public void setUp() {
+        device = mock(RealSense.class);
+        frameGrabber = new RealSenseFrameGrabber(device);
+        image = mock(IplImage.class);
+        converter = mock(Converter.class);
+        frame = mock(Frame.class);
+    }
+
+    @Test
+    public void grabTestColorEnabled() throws Exception {
+        when(device.wait_for_frames()).thenReturn(null);
+        when(device.get_stream_width(RealSense.color)).thenReturn(640);
+        when(device.get_stream_height(RealSense.color)).thenReturn(480);
+        when(frameGrabber.grabVideo()).thenReturn(image);
+        when(converter.convert(any(IplImage.class))).thenReturn(frame);
+        
+        frameGrabber.colorEnabled = true;
+        frameGrabber.behaveAsColorFrameGrabber = true;
+        
+        Frame resultFrame = frameGrabber.grab();
+        
+        assertNotNull(resultFrame);
+        verify(device, times(1)).get_stream_width(RealSense.color);
+        verify(device, times(1)).get_stream_height(RealSense.color);
+        verify(converter, times(1)).convert(any(IplImage.class));
+    }
+
+    @Test
+    public void grabTestDepthEnabled() throws Exception {
+        when(device.wait_for_frames()).thenReturn(null);
+        when(device.get_stream_width(RealSense.depth)).thenReturn(640);
+        when(device.get_stream_height(RealSense.depth)).thenReturn(480);
+        when(frameGrabber.grabDepth()).thenReturn(image);
+        when(converter.convert(any(IplImage.class))).thenReturn(frame);
+        
+        frameGrabber.depthEnabled = true;
+        
+        Frame resultFrame = frameGrabber.grab();
+        
+        assertNotNull(resultFrame);
+        verify(device, times(1)).get_stream_width(RealSense.depth);
+        verify(device, times(1)).get_stream_height(RealSense.depth);
+        verify(converter, times(1)).convert(any(IplImage.class));
+    }
+
+    @Test
+    public void grabTestIREnabled() throws Exception {
+        when(device.wait_for_frames()).thenReturn(null);
+        when(frameGrabber.grabIR()).thenReturn(image);
+        when(converter.convert(any(IplImage.class))).thenReturn(frame);
+        
+        frameGrabber.IREnabled = true;
+        
+        Frame resultFrame = frameGrabber.grab();
+        
+        assertNotNull(resultFrame);
+        verify(converter, times(1)).convert(any(IplImage.class));
+    }
+
+    @Test
+    public void grabTestNoConditionsMet() throws Exception {
+        when(device.wait_for_frames()).thenReturn(null);
+        
+        frameGrabber.colorEnabled = false;
+        frameGrabber.IREnabled = false;
+        frameGrabber.depthEnabled = false;
+        
+        Frame resultFrame = frameGrabber.grab();
+        
+        assertNull(resultFrame);
+    }
+}
+
+
+No.3 generated result --------------------------
+
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RealSenseFrameGrabberTest {
+    
+    private RealSenseFrameGrabber frameGrabber;
+    private FrameConverter<?> converter;
+    private Device device; // This is a hypothetical class representing the device. 
+    
+    @BeforeEach
+    public void setUp() {
+        // Assuming a Device class and a FrameConverter class are available and properly implemented
+        device = mock(Device.class);
+        converter = mock(FrameConverter.class);
+        frameGrabber = new RealSenseFrameGrabber(device, converter);
+        
+        // Also assuming the RealSense constants and methods required by the frame grabber method
+        when(device.get_stream_width(any())).thenReturn(640);
+        when(device.get_stream_height(any())).thenReturn(480);
+        
+        IplImage dummyImage = IplImage.create(640, 480, IPL_DEPTH_8U, 3);
+        when(frameGrabber.grabVideo()).thenReturn(dummyImage);
+        when(frameGrabber.grabIR()).thenReturn(dummyImage);
+        when(frameGrabber.grabDepth()).thenReturn(dummyImage);
+        
+        when(converter.convert(any(IplImage.class))).thenAnswer(invocation -> new Frame()); // Assume a Frame is returned
+        
+        // Assume that the 'colorEnabled', 'behaveAsColorFrameGrabber', and others are accessible and mutable
+        frameGrabber.colorEnabled = true;
+        frameGrabber.behaveAsColorFrameGrabber = true;
+        frameGrabber.IREnabled = false;
+        frameGrabber.depthEnabled = false;
+    }
+    
+    @Test
+    public void grabTest() throws Exception {
+        device.wait_for_frames(); // Would be an actual call in the real code, here just for illustration
+        Frame result = frameGrabber.grab();
+        
+        assertNotNull(result, "The frame should not be null when color is enabled");
+        
+        // Test changing conditions
+        frameGrabber.colorEnabled = false;
+        frameGrabber.IREnabled = true;
+        result = frameGrabber.grab();
+        assertNotNull(result, "The frame should not be null when IR is enabled");
+        
+        frameGrabber.IREnabled = false;
+        frameGrabber.depthEnabled = true;
+        result = frameGrabber.grab();
+        assertNotNull(result, "The frame should not be null when depth is enabled");
+        
+        frameGrabber.depthEnabled = false;
+        result = frameGrabber.grab();
+        assertNull(result, "The frame should be null when no mode is enabled");
+    }
+    
+    // Additional helper methods and mock setups would be needed here
+}
+
+
+
+No.4 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.bytedeco.javacv.FrameGrabber.Exception;
+import org.bytedeco.opencv.opencv_core.IplImage;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
+import static org.bytedeco.opencv.global.opencv_imgproc.CV_BGR2GRAY;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class RealSenseFrameGrabberTest {
+
+    private RealSenseFrameGrabber grabber;
+    private RealSense device;
+    private FrameConverter converter;
+
+    @BeforeEach
+    public void setUp() throws Exception {
+        // Initialize grabber with mocked RealSense device and FrameConverter
+        device = mock(RealSense.class);
+        converter = mock(FrameConverter.class);
+        grabber = new RealSenseFrameGrabber(device);
+        grabber.colorEnabled = true;
+        grabber.behaveAsColorFrameGrabber = true;
+        grabber.IREnabled = false;
+        grabber.depthEnabled = false;
+        grabber.converter = converter;
+    }
+    
+    @Test
+    public void grabTest() throws Exception {
+        // Define the expected image dimensions
+        int expectedWidth = 640;
+        int expectedHeight = 480;
+        
+        // Mock the device responses
+        when(device.get_stream_width(RealSense.color)).thenReturn(expectedWidth);
+        when(device.get_stream_height(RealSense.color)).thenReturn(expectedHeight);
+        when(device.wait_for_frames()).thenReturn(true);
+        
+        // Create a mock IplImage as the return value for grabVideo
+        IplImage mockImage = IplImage.create(expectedWidth, expectedHeight, IPL_DEPTH_8U, 3);
+        when(grabber.grabVideo()).thenReturn(mockImage);
+        
+        // Create a mock Frame that should be returned by the converter
+        Frame mockFrame = new Frame(expectedWidth, expectedHeight, Frame.DEPTH_UBYTE, 1);
+        when(converter.convert(any(IplImage.class))).thenReturn(mockFrame);
+        
+        // Perform the actual test
+        Frame resultFrame = grabber.grab();
+        
+        // Verify the behavior and the result
+        verify(device).wait_for_frames();
+        assertNotNull(resultFrame);
+        assertEquals(expectedWidth, resultFrame.imageWidth);
+        assertEquals(expectedHeight, resultFrame.imageHeight);
+    }
+    
+    @AfterEach
+    public void tearDown() {
+        // Clean up after test
+        grabber = null;
+        device = null;
+        converter = null;
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.bytedeco.javacv.FrameGrabber.Exception;
+import org.bytedeco.opencv.opencv_core.IplImage;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.bytedeco.opencv.global.opencv_imgproc.CV_BGR2GRAY;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class RealSenseFrameGrabberTest {
+    RealSenseFrameGrabber grabber;
+    RealSense device;
+    OpenCVFrameConverter.ToIplImage converter;
+
+    @BeforeEach
+    public void setUp() {
+        device = mock(RealSense.class);
+        converter = new OpenCVFrameConverter.ToIplImage();
+        grabber = new RealSenseFrameGrabber(device);
+        grabber.colorEnabled = true;
+        grabber.behaveAsColorFrameGrabber = true;
+        grabber.IREnabled = false;
+        grabber.depthEnabled = false;
+        grabber.converter = converter;
+    }
+
+    @Test
+    public void grabTest() throws Exception {
+        int deviceWidth = 640;
+        int deviceHeight = 480;
+
+        IplImage fakeImage = IplImage.create(deviceWidth, deviceHeight, IplImage.IPL_DEPTH_8U, 3);
+        cvCvtColor(fakeImage, fakeImage, CV_BGR2GRAY);
+
+        when(device.get_stream_width(RealSense.color)).thenReturn(deviceWidth);
+        when(device.get_stream_height(RealSense.color)).thenReturn(deviceHeight);
+        when(device.wait_for_frames()).thenReturn(true);
+        when(grabber.grabVideo()).thenReturn(fakeImage);
+
+        Frame result = grabber.grab();
+
+        assertNotNull(result, "Frame should not be null");
+        verify(device).wait_for_frames();
+        verify(device).get_stream_width(RealSense.color);
+        verify(device).get_stream_height(RealSense.color);
+        verify(grabber).grabVideo();
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RealSenseFrameGrabberTest {
+
+    private RealSenseFrameGrabber grabber;
+    private RealSense device;
+    private FrameConverter converter;
+
+    @BeforeEach
+    public void setUp() {
+        device = mock(RealSense.class);
+        converter = mock(FrameConverter.class);
+        grabber = new RealSenseFrameGrabber(device);
+
+        grabber.colorEnabled = true;
+        grabber.behaveAsColorFrameGrabber = true;
+        grabber.IREnabled = false;
+        grabber.depthEnabled = false;
+    }
+
+    @Test
+    public void grabTest() {
+        when(device.wait_for_frames()).thenReturn(true);
+        when(device.get_stream_width(any())).thenReturn(640);
+        when(device.get_stream_height(any())).thenReturn(480);
+        IplImage fakeImage = IplImage.create(640, 480, IPL_DEPTH_8U, 3);
+        Frame fakeFrame = new Frame();
+
+        when(grabber.grabVideo()).thenReturn(fakeImage);
+        when(converter.convert(any(IplImage.class))).thenReturn(fakeFrame);
+
+        // Execute the method to be tested
+        Frame result = grabber.grab();
+
+        // Verify that the grabber is calling the expected methods on its dependencies
+        verify(device).wait_for_frames();
+        verify(grabber).grabVideo();
+        verify(converter).convert(any(IplImage.class));
+
+        // Asserts that the grabbed frame is not null and is the expected result
+        assertNotNull(result);
+        assertEquals(fakeFrame, result);
+    }
+
+    // additional tests for IR and depth streams could follow a similar pattern
+}
+
+
+No.7 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.bytedeco.javacv.FrameGrabber.Exception;
+import org.junit.jupiter.api.*;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RealSenseFrameGrabberTest {
+    // Assuming RealSense and FrameGrabberException are part of the classes used
+    // In case these are not the exact names of the classes or interfaces, please adjust accordingly
+    private RealSense device;
+    private RealSenseFrameGrabber grabber;
+
+    @BeforeEach
+    public void setUp() {
+        device = mock(RealSense.class);
+        grabber = new RealSenseFrameGrabber(device);
+    }
+    
+    @Test
+    public void grabTest() throws Exception {
+        // Assuming the variables like colorEnabled and behaveAsColorFrameGrabber are accessible and modifiable
+        grabber.colorEnabled = true;
+        grabber.behaveAsColorFrameGrabber = true;
+        
+        int deviceWidth = 640; // Example width
+        int deviceHeight = 480; // Example height
+        IplImage mockImage = IplImage.create(deviceWidth, deviceHeight, IPL_DEPTH_8U, 3);
+        Frame expectedFrame = new Frame();
+
+        when(device.wait_for_frames()).thenReturn(null);
+        when(device.get_stream_width(RealSense.color)).thenReturn(deviceWidth);
+        when(device.get_stream_height(RealSense.color)).thenReturn(deviceHeight);
+        when(grabber.grabVideo()).thenReturn(mockImage);
+        when(grabber.converter.convert(any(IplImage.class))).thenReturn(expectedFrame);
+
+        Frame actualFrame = grabber.grab();
+
+        assertNotNull(actualFrame, "Frame should not be null when colorEnabled and behaveAsColorFrameGrabber are true");
+        assertEquals(expectedFrame, actualFrame, "Expected frame was not returned");
+        
+        // More tests could be written similar to the above for different conditions such as:
+        // - when `IREnabled` is true
+        // - when `depthEnabled` is true
+        // - when none of the conditions are met and `null` is supposed to be returned
+        // Each test would mock the necessary methods and verify the correct behavior of `grab` method
+    }
+
+    @AfterEach
+    public void tearDown() {
+        // Clean up resources, if any, used in the tests
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class RealSenseFrameGrabberTest {
+    private RealSenseFrameGrabber grabber;
+    private RealSense device;
+    private FrameConverter converter;
+    private IplImage image;
+    private Frame frame;
+
+    @BeforeEach
+    public void setUp() {
+        device = mock(RealSense.class);
+        converter = mock(FrameConverter.class);
+        image = mock(IplImage.class);
+        frame = new Frame();
+
+        grabber = new RealSenseFrameGrabber();
+        grabber.device = device;
+        grabber.converter = converter;
+        grabber.behaveAsColorFrameGrabber = true;
+        grabber.colorEnabled = true;
+        grabber.IREnabled = false;
+        grabber.depthEnabled = false;
+    }
+
+    @Test
+    public void grabTest() {
+        // Set expectations for device interaction
+        when(device.wait_for_frames()).thenReturn(null);
+        when(device.get_stream_width(RealSense.color)).thenReturn(640);
+        when(device.get_stream_height(RealSense.color)).thenReturn(480);
+        when(grabber.grabVideo()).thenReturn(image);
+        when(converter.convert(any(IplImage.class))).thenReturn(frame);
+
+        // Set expectations for IplImage creation and manipulation
+        when(IplImage.create(anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(image);
+
+        // Actual test execution
+        Frame result = null;
+        try {
+            result = grabber.grab();
+        } catch (Exception e) {
+            fail("Unexpected exception thrown during grab(): " + e.getMessage());
+        }
+
+        // Assertions to verify behavior
+        assertNotNull(result, "The result should not be null");
+        verify(device).wait_for_frames();
+        verify(device).get_stream_width(RealSense.color);
+        verify(device).get_stream_height(RealSense.color);
+        verify(converter).convert(any(IplImage.class));
+
+        // Additional, more complex assertions might be needed depending on the logic inside grab(), such as verifying image manipulations.
+
+        // Clean up
+        grabber.close();
+    }
+
+    @AfterEach
+    public void tearDown() {
+        grabber = null;
+        device = null;
+        converter = null;
+        image = null;
+        frame = null;
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.bytedeco.javacv.FrameGrabber.Exception;
+import org.bytedeco.opencv.opencv_core.IplImage;
+import static org.bytedeco.opencv.global.opencv_imgproc.CV_BGR2GRAY;
+import static org.bytedeco.opencv.global.opencv_imgproc.cvCvtColor;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RealSenseFrameGrabberTest {
+    private RealSenseFrameGrabber grabber;
+    private FrameConverter<IplImage> converter;
+
+    @BeforeEach
+    public void setUp() throws Exception {
+        grabber = new RealSenseFrameGrabber();
+        converter = new FrameConverter<IplImage>() {
+            @Override
+            public Frame convert(IplImage src) {
+                return new Frame(src.width(), src.height(), Frame.DEPTH_UBYTE, src.nChannels());
+            }
+        };
+        grabber.colorEnabled = true;
+        grabber.behaveAsColorFrameGrabber = true;
+        grabber.IREnabled = false;
+        grabber.depthEnabled = false;
+    }
+
+    @Test
+    public void grabTest() throws Exception {
+        // Assume the setup has correctly started the grabber and we can mock the required methods.
+        // In a real test environment, mocking frameworks like Mockito would be used.
+        
+        IplImage image = IplImage.create(640, 480, IPL_DEPTH_8U, 3);
+        // Pretend grabVideo returns a valid IplImage object
+        grabber.returnImage = null;
+
+        // Implement a stub for grabVideo and other device related methods
+        FrameGrabber.Device device = new FrameGrabber.Device() {
+            public void wait_for_frames() {}
+
+            public int get_stream_width(StreamType type) {
+                return 640;
+            }
+
+            public int get_stream_height(StreamType type) {
+                return 480;
+            }
+
+            public IplImage grabVideo() {
+                return image;
+            }
+        };
+        grabber.device = device;
+
+        // Invoke the grab method
+        Frame frame = grabber.grab();
+
+        assertNotNull(frame, "Frame should not be null");
+        assertEquals(640, frame.imageWidth, "Frame width should be equal to device stream width");
+        assertEquals(480, frame.imageHeight, "Frame height should be equal to device stream height");
+        assertEquals(Frame.DEPTH_UBYTE, frame.depth, "Frame depth should be DEPTH_UBYTE");
+        assertEquals(1, frame.imageChannels, "Frame channels should be 1");
+
+        // Reset returnImage to simulate grabbing a color frame as grayscale
+        grabber.returnImage = null;
+        grabber.colorEnabled = true;
+        grabber.behaveAsColorFrameGrabber = true;
+
+        // Grab the frame
+        Frame grayFrame = grabber.grab();
+
+        // cvCvtColor is used here to convert the image to grayscale, so we expect the image to have one channel.
+        assertNotNull(grayFrame, "Gray Frame should not be null");
+        assertEquals(1, grayFrame.imageChannels, "Gray Frame channels should be 1");
+    }
+
+    @AfterEach
+    public void tearDown() {
+        // Cleanup resources if necessary
+        if (grabber != null) {
+            grabber.stop();
+            grabber.release();
+        }
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.bytedeco.opencv.global.opencv_imgproc.CV_BGR2GRAY;
+import static org.bytedeco.opencv.global.opencv_core.IPL_DEPTH_8U;
+
+public class RealSenseFrameGrabberTest {
+
+    @Test
+    public void grabTest() throws Exception {
+        // Create a mock of the RealSense class as the 'device' object
+        RealSense mockedDevice = Mockito.mock(RealSense.class);
+        // Assuming RealSenseFrameGrabber is the class containing the grab() method
+        RealSenseFrameGrabber frameGrabber = new RealSenseFrameGrabber(mockedDevice);
+        
+        // Set up the necessary conditions for the grab method
+        Mockito.when(mockedDevice.get_stream_width(RealSense.color)).thenReturn(640);
+        Mockito.when(mockedDevice.get_stream_height(RealSense.color)).thenReturn(480);
+        Mockito.when(mockedDevice.get_stream_width(RealSense.depth)).thenReturn(640);
+        Mockito.when(mockedDevice.get_stream_height(RealSense.depth)).thenReturn(480);
+        frameGrabber.colorEnabled = true;
+        frameGrabber.behaveAsColorFrameGrabber = true;
+        frameGrabber.IREnabled = false;
+        frameGrabber.depthEnabled = false;
+        
+        // Assuming grabVideo() should return a valid IplImage instance
+        IplImage mockedImage = IplImage.create(640, 480, IPL_DEPTH_8U, 3);
+        Mockito.when(frameGrabber.grabVideo()).thenReturn(mockedImage);
+
+        // Call the grab() method which should not throw an exception
+        Frame grabbedFrame = frameGrabber.grab();
+        assertNotNull(grabbedFrame, "The grabbed frame should not be null");
+
+        // You can add additional assertions here to verify the behavior of the grab() method
+        // For example, verify if cvCvtColor was called with the correct arguments
+        // Mockito.verify(...);
+    }
+}
+
+

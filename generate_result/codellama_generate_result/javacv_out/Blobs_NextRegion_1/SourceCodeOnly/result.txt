@@ -1,0 +1,314 @@
+Source code: 
+
+// Determine the next (higher number) region that meets the desired conditions
+public static int NextRegion(int Parent, int Color, double MinArea, double MaxArea, int Label)
+{
+    double DParent = (double) Parent; 
+    double DColor = (double) Color; if(DColor > 0) DColor = 1;
+    
+    int i;
+    for(i = Label; i <= MaxLabel; i++)
+    {
+        double [] Region = RegionData[i];
+        double ThisParent = Region[BLOBPARENT];
+        double ThisColor = Region[BLOBCOLOR];
+        if(DParent >= 0 && DParent != ThisParent) continue;
+        if(DColor >= 0 && DColor != ThisColor) continue;
+        if(Region[BLOBAREA] < MinArea || Region[BLOBAREA] > MaxArea) continue;  
+        break;      // We have a match!
+    }
+    if(i > MaxLabel) i = -1;    // Use -1 to flag that there was no match
+    return i;
+}
+
+
+
+No.1 generated result --------------------------
+
+
+package org.bytedeco.javacv;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+    @Test
+    public void NextRegionTest() {
+        int parent = 10;
+        int color = 255;
+        double minArea = 100;
+        double maxArea = 500;
+        int label = 1;
+
+        // Call the method with the parameters
+        int result = Blobs.NextRegion(parent, color, minArea, maxArea, label);
+
+        // Check that the result is correct
+        assertEquals(2, result);
+    }
+}
+
+
+No.2 generated result --------------------------
+
+
+@Test
+public void NextRegionTest() {
+    int parent = 10;
+    int color = 255;
+    double minArea = 10.0;
+    double maxArea = 100.0;
+    int label = 5;
+    
+    assertEquals(7, NextRegion(parent, color, minArea, maxArea, label));
+}
+
+
+
+No.3 generated result --------------------------
+
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+    @Test
+    public void NextRegionTest() {
+        double[][] regionData = new double[][] {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+        int parent = 1;
+        int color = 0;
+        double minArea = 1.5;
+        double maxArea = 2.5;
+        int label = 0;
+
+        int result = Blobs.NextRegion(parent, color, minArea, maxArea, label);
+
+        assertEquals(result, 1);
+    }
+}
+
+
+
+No.4 generated result --------------------------
+
+
+public class BlobsTest {
+    @Test
+    public void NextRegionTest() {
+        int parent = 1;
+        int color = 0;
+        double minArea = 10.5;
+        double maxArea = 20.5;
+        int label = 1;
+        
+        // Call the method with valid inputs and check if it returns the expected value
+        int result = NextRegion(parent, color, minArea, maxArea, label);
+        assertEquals(result, 1);
+        
+        // Call the method with invalid parent and check if it returns -1
+        parent = -1;
+        result = NextRegion(parent, color, minArea, maxArea, label);
+        assertEquals(result, -1);
+        
+        // Call the method with invalid color and check if it returns -1
+        parent = 1;
+        color = -1;
+        result = NextRegion(parent, color, minArea, maxArea, label);
+        assertEquals(result, -1);
+    }
+}
+
+
+No.5 generated result --------------------------
+
+
+package org.bytedeco.javacv;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+    @Test
+    public void NextRegionTest() {
+        int parent = 1234;
+        int color = 5678;
+        double minArea = 0.1;
+        double maxArea = 0.5;
+        int label = 9012;
+        
+        int nextRegion = Blobs.NextRegion(parent, color, minArea, maxArea, label);
+        
+        assertTrue(nextRegion >= 0);
+    }
+}
+
+
+No.6 generated result --------------------------
+
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+    @Test
+    public void NextRegionTest() {
+        int parent = 12345; // Parent of the region to find
+        int color = 0; // Color of the region to find (if -1, any color is acceptable)
+        double minArea = 100.0; // Minimum area of the region to find
+        double maxArea = 200.0; // Maximum area of the region to find
+        int label = 0; // Initial label to start searching from (if -1, any label is acceptable)
+        
+        assertEquals(NextRegion(parent, color, minArea, maxArea, label), 5678); // Expected output: 5678
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+    @Test
+    public void NextRegionTest() {
+        // Test case 1: Parent and Color are both -1, MinArea = 0, MaxArea = 10, Label = 5
+        int parent = -1;
+        int color = -1;
+        double minArea = 0.0;
+        double maxArea = 10.0;
+        int label = 5;
+        assertEquals(NextRegion(parent, color, minArea, maxArea, label), 5);
+        
+        // Test case 2: Parent and Color are both -1, MinArea = 5, MaxArea = 10, Label = 5
+        parent = -1;
+        color = -1;
+        minArea = 5.0;
+        maxArea = 10.0;
+        label = 5;
+        assertEquals(NextRegion(parent, color, minArea, maxArea, label), 5);
+        
+        // Test case 3: Parent and Color are both -1, MinArea = 0, MaxArea = 10, Label = 15
+        parent = -1;
+        color = -1;
+        minArea = 0.0;
+        maxArea = 10.0;
+        label = 15;
+        assertEquals(NextRegion(parent, color, minArea, maxArea, label), -1);
+        
+        // Test case 4: Parent and Color are both -1, MinArea = 0, MaxArea = 10, Label = 10
+        parent = -1;
+        color = -1;
+        minArea = 0.0;
+        maxArea = 10.0;
+        label = 10;
+        assertEquals(NextRegion(parent, color, minArea, maxArea, label), 10);
+        
+        // Test case 5: Parent and Color are both -1, MinArea = 0, MaxArea = 10, Label = 7
+        parent = -1;
+        color = -1;
+        minArea = 0.0;
+        maxArea = 10.0;
+        label = 7;
+        assertEquals(NextRegion(parent, color, minArea, maxArea, label), 7);
+    }
+}
+
+
+No.8 generated result --------------------------
+
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+    @Test
+    public void NextRegionTest() {
+        int parent = 1;
+        int color = 0;
+        double minArea = 100.0;
+        double maxArea = 200.0;
+        int label = 5;
+        
+        // Call the method with the given parameters
+        int nextRegion = Blobs.NextRegion(parent, color, minArea, maxArea, label);
+        
+        // Check that the returned value is correct
+        assertEquals(-1, nextRegion);
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+    @Test
+    public void NextRegionTest() {
+        // Test case 1: Parent = -1, Color = -1, MinArea = 0, MaxArea = Double.MAX_VALUE, Label = 0
+        int parent = -1;
+        int color = -1;
+        double minArea = 0;
+        double maxArea = Double.MAX_VALUE;
+        int label = 0;
+        
+        assertEquals(label, Blobs.NextRegion(parent, color, minArea, maxArea, label));
+        
+        // Test case 2: Parent = 1, Color = -1, MinArea = 0, MaxArea = Double.MAX_VALUE, Label = 0
+        parent = 1;
+        assertEquals(-1, Blobs.NextRegion(parent, color, minArea, maxArea, label));
+        
+        // Test case 3: Parent = -1, Color = 2, MinArea = 0, MaxArea = Double.MAX_VALUE, Label = 0
+        parent = -1;
+        color = 2;
+        assertEquals(-1, Blobs.NextRegion(parent, color, minArea, maxArea, label));
+        
+        // Test case 4: Parent = -1, Color = -1, MinArea = 500, MaxArea = Double.MAX_VALUE, Label = 0
+        parent = -1;
+        color = -1;
+        minArea = 500;
+        assertEquals(-1, Blobs.NextRegion(parent, color, minArea, maxArea, label));
+        
+        // Test case 5: Parent = -1, Color = -1, MinArea = 0, MaxArea = 200, Label = 0
+        parent = -1;
+        color = -1;
+        minArea = 0;
+        maxArea = 200;
+        assertEquals(-1, Blobs.NextRegion(parent, color, minArea, maxArea, label));
+        
+        // Test case 6: Parent = -1, Color = -1, MinArea = 0, MaxArea = Double.MAX_VALUE, Label = 100
+        parent = -1;
+        color = -1;
+        minArea = 0;
+        maxArea = Double.MAX_VALUE;
+        label = 100;
+        
+        assertEquals(label, Blobs.NextRegion(parent, color, minArea, maxArea, label));
+    }
+}
+
+
+No.10 generated result --------------------------
+
+
+package org.bytedeco.javacv;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+    @Test
+    public void NextRegionTest() {
+        int parent = 100;
+        int color = 255;
+        double minArea = 30;
+        double maxArea = 50;
+        int label = 1;
+        
+        assertEquals(NextRegion(parent, color, minArea, maxArea, label), 2);
+    }
+}
+
+

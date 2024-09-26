@@ -1,0 +1,749 @@
+Source code: 
+
+
+@Override
+public Frame clone() {
+    Frame newFrame = new Frame();
+
+    // Video part
+    newFrame.imageWidth = imageWidth;
+    newFrame.imageHeight = imageHeight;
+    newFrame.imageDepth = imageDepth;
+    newFrame.imageChannels = imageChannels;
+    newFrame.imageStride = imageStride;
+    newFrame.keyFrame = keyFrame;
+    newFrame.pictType = pictType;
+    newFrame.streamIndex = streamIndex;
+    newFrame.type = type;
+    newFrame.opaque = new Pointer[3];
+    if (image != null) {
+        newFrame.image = new Buffer[image.length];
+        ((Pointer[])newFrame.opaque)[0] = cloneBufferArray(image, newFrame.image);
+    }
+
+    // Audio part
+    newFrame.audioChannels = audioChannels;
+    newFrame.sampleRate = sampleRate;
+    if (samples != null) {
+        newFrame.samples = new Buffer[samples.length];
+        ((Pointer[])newFrame.opaque)[1] = cloneBufferArray(samples, newFrame.samples);
+    }
+
+    // Other data streams
+    if (data != null) {
+        ByteBuffer[] dst = new ByteBuffer[1];
+        ((Pointer[])newFrame.opaque)[2] = cloneBufferArray(new ByteBuffer[]{data}, dst);
+        newFrame.data = dst[0];
+    }
+
+    // Add timestamp
+    newFrame.timestamp = timestamp;
+
+    return newFrame;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FrameTest {
+    @Test
+    public void cloneTest() {
+        // Initialize a new Frame object with some test data
+        Frame originalFrame = new Frame();
+        originalFrame.imageWidth = 640;
+        originalFrame.imageHeight = 480;
+        originalFrame.imageDepth = 8;
+        originalFrame.imageChannels = 3;
+        originalFrame.imageStride = 1920;
+        originalFrame.keyFrame = true;
+        originalFrame.pictType = 1;
+        originalFrame.streamIndex = 0;
+        originalFrame.type = Frame.IMAGE;
+        originalFrame.audioChannels = 2;
+        originalFrame.sampleRate = 44100;
+        originalFrame.timestamp = 123456789L;
+        // Assume `cloneBufferArray` properly clones the buffers
+        // for this example, leave these as null (no actual buffers tested)
+        originalFrame.image = null;
+        originalFrame.samples = null;
+        originalFrame.data = null;
+        
+        // Clone the frame
+        Frame clonedFrame = originalFrame.clone();
+
+        // Assert that all properties are equal
+        assertEquals(originalFrame.imageWidth, clonedFrame.imageWidth);
+        assertEquals(originalFrame.imageHeight, clonedFrame.imageHeight);
+        assertEquals(originalFrame.imageDepth, clonedFrame.imageDepth);
+        assertEquals(originalFrame.imageChannels, clonedFrame.imageChannels);
+        assertEquals(originalFrame.imageStride, clonedFrame.imageStride);
+        assertEquals(originalFrame.keyFrame, clonedFrame.keyFrame);
+        assertEquals(originalFrame.pictType, clonedFrame.pictType);
+        assertEquals(originalFrame.streamIndex, clonedFrame.streamIndex);
+        assertEquals(originalFrame.type, clonedFrame.type);
+        // Check if opaque is created but not the same object (shallow copy)
+        assertNotNull(clonedFrame.opaque);
+        assertNotSame(originalFrame.opaque, clonedFrame.opaque);
+        // Check audio properties
+        assertEquals(originalFrame.audioChannels, clonedFrame.audioChannels);
+        assertEquals(originalFrame.sampleRate, clonedFrame.sampleRate);
+        // Check other data streams (skipped actual buffer cloning assertions as they are set to null)
+        assertEquals(originalFrame.data, clonedFrame.data);
+        // Check timestamp
+        assertEquals(originalFrame.timestamp, clonedFrame.timestamp);
+
+        // If originalFrame.image, originalFrame.samples, or originalFrame.data were non-null,
+        // appropriate assertNotSame checks would be required here to ensure they are not the same object.
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+
+public class FrameTest {
+    @Test
+    public void cloneTest() {
+        // Create and initialize a Frame
+        Frame originalFrame = new Frame();
+        originalFrame.imageWidth = 640;
+        originalFrame.imageHeight = 480;
+        originalFrame.imageDepth = Frame.DEPTH_UBYTE;
+        originalFrame.imageChannels = 3;
+        originalFrame.imageStride = 1920;
+        originalFrame.keyFrame = true;
+        originalFrame.pictType = Frame.PICT_KEY;
+        originalFrame.streamIndex = 0;
+        originalFrame.type = Frame.Type.VIDEO;
+        originalFrame.samples = new Buffer[]{Buffer.allocate(1024)};
+        originalFrame.data = ByteBuffer.allocate(256);
+        originalFrame.timestamp = 123456789L;
+
+        // Clone the Frame
+        Frame clonedFrame = originalFrame.clone();
+
+        // Verify that cloned Frame maintains the properties
+        assertEquals(originalFrame.imageWidth, clonedFrame.imageWidth);
+        assertEquals(originalFrame.imageHeight, clonedFrame.imageHeight);
+        assertEquals(originalFrame.imageDepth, clonedFrame.imageDepth);
+        assertEquals(originalFrame.imageChannels, clonedFrame.imageChannels);
+        assertEquals(originalFrame.imageStride, clonedFrame.imageStride);
+        assertEquals(originalFrame.keyFrame, clonedFrame.keyFrame);
+        assertEquals(originalFrame.pictType, clonedFrame.pictType);
+        assertEquals(originalFrame.streamIndex, clonedFrame.streamIndex);
+        assertEquals(originalFrame.type, clonedFrame.type);
+        assertEquals(originalFrame.audioChannels, clonedFrame.audioChannels);
+        assertEquals(originalFrame.sampleRate, clonedFrame.sampleRate);
+        assertEquals(originalFrame.timestamp, clonedFrame.timestamp);
+
+        // Verify that the buffers are cloned and not the same instance (shallow copy)
+        assertNotSame(originalFrame.image, clonedFrame.image);
+        assertNotSame(originalFrame.samples, clonedFrame.samples);
+        assertNotSame(originalFrame.data, clonedFrame.data);
+
+        // Optionally, if the intended behavior is also to clone the contents of the buffers
+        // Uncomment the following code to test buffer contents equality
+        /*
+        if (originalFrame.image != null && clonedFrame.image != null) {
+            assertEquals(BufferUtils.contentEquals(originalFrame.image, clonedFrame.image), true);
+        }
+        if (originalFrame.samples != null && clonedFrame.samples != null) {
+            assertEquals(BufferUtils.contentEquals(originalFrame.samples, clonedFrame.samples), true);
+        }
+        if (originalFrame.data != null && clonedFrame.data != null) {
+            assertEquals(BufferUtils.contentEquals(originalFrame.data, clonedFrame.data), true);
+        }
+        */
+
+        // Verify if opaque field is properly cloned
+        assertNotNull(clonedFrame.opaque);
+        assertNotSame(originalFrame.opaque, clonedFrame.opaque);
+    }
+
+    // Utility method for buffer content equality check (optional)
+    private static boolean contentEquals(Buffer[] buf1, Buffer[] buf2) {
+        if (buf1.length != buf2.length) return false;
+        for (int i = 0; i < buf1.length; i++) {
+            if (!buf1[i].equals(buf2[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
+
+
+No.3 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import java.nio.ByteBuffer;
+import org.bytedeco.javacpp.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FrameTest {
+    
+    @Test
+    public void cloneTest() {
+        // Initialize a new Frame with test data
+        Frame original = new Frame();
+        original.imageWidth = 640;
+        original.imageHeight = 480;
+        original.imageDepth = Frame.DEPTH_UBYTE;
+        original.imageChannels = 3;
+        original.imageStride = 1920;
+        original.keyFrame = true;
+        original.pictType = Frame.PICTURE_TYPE_I;
+        original.streamIndex = 0;
+        original.type = Frame.Type.VIDEO;
+        original.opaque = new Pointer[]{new Pointer(), new Pointer(), new Pointer()};
+        
+        // Set up dummy data for image, samples, data arrays
+        original.image = new Buffer[]{ ByteBuffer.allocate(100) };
+        original.samples = new Buffer[]{ ByteBuffer.allocate(200) };
+        original.data = ByteBuffer.allocate(50);
+        
+        original.audioChannels = 2;
+        original.sampleRate = 44100;
+        original.timestamp = 123456789;
+        
+        // Perform clone operation
+        Frame clone = original.clone();
+        
+        // Assert that all properties are copied correctly
+        assertEquals(original.imageWidth, clone.imageWidth);
+        assertEquals(original.imageHeight, clone.imageHeight);
+        assertEquals(original.imageDepth, clone.imageDepth);
+        assertEquals(original.imageChannels, clone.imageChannels);
+        assertEquals(original.imageStride, clone.imageStride);
+        assertEquals(original.keyFrame, clone.keyFrame);
+        assertEquals(original.pictType, clone.pictType);
+        assertEquals(original.streamIndex, clone.streamIndex);
+        assertEquals(original.type, clone.type);
+        assertNotNull(clone.opaque);
+        assertNotNull(clone.image);
+        assertNotSame(original.image, clone.image); // The array should be different (deep clone)
+        assertNotSame(original.image[0], clone.image[0]); // The contents should be different
+        assertEquals(original.audioChannels, clone.audioChannels);
+        assertEquals(original.sampleRate, clone.sampleRate);
+        assertNotNull(clone.samples);
+        assertNotSame(original.samples, clone.samples);
+        assertNotSame(original.samples[0], clone.samples[0]);
+        assertEquals(original.timestamp, clone.timestamp);
+        
+        // Check for deep cloning of the data (Buffer)
+        assertNotNull(clone.data);
+        assertNotSame(original.data, clone.data); // Ensure that the buffer itself is also cloned
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+
+import org.junit.jupiter.api.Test;
+
+public class FrameTest {
+    @Test
+    public void cloneTest() {
+        Frame originalFrame = new Frame();
+        
+        // Video part
+        originalFrame.imageWidth = 640;
+        originalFrame.imageHeight = 480;
+        originalFrame.imageDepth = Frame.DEPTH_UBYTE;
+        originalFrame.imageChannels = 3;
+        originalFrame.imageStride = 1920;
+        originalFrame.keyFrame = true;
+        originalFrame.pictType = Frame.PICT_FRAME;
+        originalFrame.streamIndex = 0;
+        originalFrame.type = Frame.Type.VIDEO;
+        originalFrame.image = new Buffer[]{new Buffer(1024)};
+        
+        // Audio part
+        originalFrame.audioChannels = 2;
+        originalFrame.sampleRate = 44100;
+        originalFrame.samples = new Buffer[]{new Buffer(2048)};
+        
+        // Other data streams
+        originalFrame.data = java.nio.ByteBuffer.allocate(256);
+        
+        // Timestamp
+        originalFrame.timestamp = 1000L;
+        
+        // Perform cloning
+        Frame clonedFrame = originalFrame.clone();
+        
+        // Verify that the cloned frame is not the same instance
+        assertNotSame(originalFrame, clonedFrame);
+        
+        // Verify video part
+        assertEquals(originalFrame.imageWidth, clonedFrame.imageWidth);
+        assertEquals(originalFrame.imageHeight, clonedFrame.imageHeight);
+        assertEquals(originalFrame.imageDepth, clonedFrame.imageDepth);
+        assertEquals(originalFrame.imageChannels, clonedFrame.imageChannels);
+        assertEquals(originalFrame.imageStride, clonedFrame.imageStride);
+        assertEquals(originalFrame.keyFrame, clonedFrame.keyFrame);
+        assertEquals(originalFrame.pictType, clonedFrame.pictType);
+        assertEquals(originalFrame.streamIndex, clonedFrame.streamIndex);
+        assertEquals(originalFrame.type, clonedFrame.type);
+        assertNotNull(clonedFrame.image);
+        assertNotSame(originalFrame.image, clonedFrame.image);
+        
+        // Verify audio part
+        assertEquals(originalFrame.audioChannels, clonedFrame.audioChannels);
+        assertEquals(originalFrame.sampleRate, clonedFrame.sampleRate);
+        assertNotNull(clonedFrame.samples);
+        assertNotSame(originalFrame.samples, clonedFrame.samples);
+        
+        // Verify other data streams
+        assertNotNull(clonedFrame.data);
+        assertNotSame(originalFrame.data, clonedFrame.data);
+        
+        // Verify timestamp
+        assertEquals(originalFrame.timestamp, clonedFrame.timestamp);
+        
+        // Verify opaque data (optional and depends on implementation details)
+        assertNotNull(clonedFrame.opaque);
+        assertNotSame(originalFrame.opaque, clonedFrame.opaque);
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FrameTest {
+    @Test
+    public void cloneTest() {
+        // Initialize a Frame instance with arbitrary values
+        Frame originalFrame = new Frame();
+        originalFrame.imageWidth = 1920;
+        originalFrame.imageHeight = 1080;
+        originalFrame.imageDepth = Frame.DEPTH_UBYTE;
+        originalFrame.imageChannels = 3;
+        originalFrame.imageStride = 5760;
+        originalFrame.keyFrame = true;
+        originalFrame.pictType = 1;
+        originalFrame.streamIndex = 0;
+        originalFrame.type = Frame.Type.VIDEO;
+        originalFrame.timestamp = 123456789;
+        
+        // Assuming Frame class has methods like 'set image', 'set samples', etc.
+        // If not, we should add them to the Frame class or provide sample arrays directly.
+        originalFrame.image = new Buffer[]{ /* sample image buffers */ };
+        originalFrame.samples = new Buffer[]{ /* sample audio buffers */ };
+        originalFrame.data = ByteBuffer.wrap(new byte[]{ /* sample data bytes */ });
+
+        // Clone the Frame
+        Frame clonedFrame = originalFrame.clone();
+
+        // Verify the cloned properties
+        assertNotNull(clonedFrame);
+        assertEquals(originalFrame.imageWidth, clonedFrame.imageWidth);
+        assertEquals(originalFrame.imageHeight, clonedFrame.imageHeight);
+        assertEquals(originalFrame.imageDepth, clonedFrame.imageDepth);
+        assertEquals(originalFrame.imageChannels, clonedFrame.imageChannels);
+        assertEquals(originalFrame.imageStride, clonedFrame.imageStride);
+        assertEquals(originalFrame.keyFrame, clonedFrame.keyFrame);
+        assertEquals(originalFrame.pictType, clonedFrame.pictType);
+        assertEquals(originalFrame.streamIndex, clonedFrame.streamIndex);
+        assertEquals(originalFrame.type, clonedFrame.type);
+        assertNotNull(clonedFrame.image);
+        assertNotNull(clonedFrame.samples);
+        assertNotNull(clonedFrame.data);
+        assertEquals(originalFrame.timestamp, clonedFrame.timestamp);
+
+        // Check that clone is deep copy
+        assertNotEquals(System.identityHashCode(originalFrame.image), System.identityHashCode(clonedFrame.image));
+        assertNotEquals(System.identityHashCode(originalFrame.samples), System.identityHashCode(clonedFrame.samples));
+        assertNotEquals(System.identityHashCode(originalFrame.data), System.identityHashCode(clonedFrame.data));
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+
+public class FrameTest {
+
+    @Test
+    public void cloneTest() {
+        Frame original = new Frame();
+
+        // Initialize testing data for original frame (with hypothetical values)
+        original.imageWidth = 640;
+        original.imageHeight = 480;
+        original.imageDepth = 8;
+        original.imageChannels = 3;
+        original.audioChannels = 2;
+        original.sampleRate = 44100;
+        original.streamIndex = 1;
+        original.keyFrame = true;
+        original.pictType = 1;
+        original.type = 7; // Assuming 'type' is an integer representation
+        original.timestamp = System.currentTimeMillis();
+
+        // Assume 'image' and 'samples' as simple Buffer objects for the purpose of the test
+        original.image = new Buffer[] { ByteBuffer.allocate(1024) };
+        original.samples = new Buffer[] { ByteBuffer.allocate(2048) };
+        original.data = ByteBuffer.allocate(256);
+
+        // Clone the frame
+        Frame cloned = original.clone();
+
+        // Verify that primitives are identical
+        assertEquals(original.imageWidth, cloned.imageWidth);
+        assertEquals(original.imageHeight, cloned.imageHeight);
+        assertEquals(original.imageDepth, cloned.imageDepth);
+        assertEquals(original.imageChannels, cloned.imageChannels);
+        assertEquals(original.audioChannels, cloned.audioChannels);
+        assertEquals(original.sampleRate, cloned.sampleRate);
+        assertEquals(original.streamIndex, cloned.streamIndex);
+        assertEquals(original.keyFrame, cloned.keyFrame);
+        assertEquals(original.pictType, cloned.pictType);
+        assertEquals(original.type, cloned.type);
+        assertEquals(original.timestamp, cloned.timestamp);
+
+        // Verify arrays are different objects but have identical content
+        assertNotSame(original.image, cloned.image);
+        assertNotSame(original.samples, cloned.samples);
+        assertNotSame(original.data, cloned.data);
+
+        // Further assume that we can compare Buffer objects with hypothetical helper method
+        assertTrue(bufferArraysEqual(original.image, cloned.image));
+        assertTrue(bufferArraysEqual(original.samples, cloned.samples));
+        assertEquals(original.data, cloned.data); // Assuming ByteBuffer's equals checks content
+
+        // Optionally check for nulls if 'image', 'samples', or 'data' could have been null
+        assertNotNull(cloned.image);
+        assertNotNull(cloned.samples);
+        assertNotNull(cloned.data);
+    }
+   
+    // Hypothetical helper method for comparing the contents of two Buffer arrays
+    private static boolean bufferArraysEqual(Buffer[] array1, Buffer[] array2) {
+        if (array1 == array2) {
+            return true;
+        }
+        if (array1 == null || array2 == null || array1.length != array2.length) {
+            return false;
+        }
+        for (int i = 0; i < array1.length; i++) {
+            if (!buffersEqual(array1[i], array2[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // Hypothetical helper method for comparing the contents of two Buffers
+    private static boolean buffersEqual(Buffer buf1, Buffer buf2) {
+        // This needs to be implemented to check if two Buffer objects have the same content
+        // As Buffer's equals method does not check for content equality
+        return true;
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import java.nio.ByteBuffer;
+
+public class FrameTest {
+
+    @Test
+    public void cloneTest() {
+        // Create a frame and set some properties for the sake of testing
+        Frame originalFrame = new Frame();
+        originalFrame.imageWidth = 1920;
+        originalFrame.imageHeight = 1080;
+        originalFrame.imageDepth = 24;
+        originalFrame.imageChannels = 3;
+        originalFrame.imageStride = 1920; // Assuming each pixel width is a single byte
+        originalFrame.keyFrame = true;
+        originalFrame.pictType = 1;
+        originalFrame.streamIndex = 0;
+        originalFrame.type = Frame.Type.VIDEO;
+        originalFrame.opaque = new Pointer[3];
+        originalFrame.timestamp = 1000;
+
+        // Simulate image and audio data
+        Buffer[] image = {ByteBuffer.allocate(1920 * 1080 * 3)};
+        originalFrame.image = image;
+
+        Buffer[] samples = {ByteBuffer.allocate(48000)};
+        originalFrame.samples = samples;
+
+        ByteBuffer data = ByteBuffer.allocate(1024);
+        originalFrame.data = data;
+
+        // Clone the frame
+        Frame clonedFrame = originalFrame.clone();
+
+        // Assert that the cloned frame has the same properties
+        assertEquals(originalFrame.imageWidth, clonedFrame.imageWidth);
+        assertEquals(originalFrame.imageHeight, clonedFrame.imageHeight);
+        assertEquals(originalFrame.imageDepth, clonedFrame.imageDepth);
+        assertEquals(originalFrame.imageChannels, clonedFrame.imageChannels);
+        assertEquals(originalFrame.imageStride, clonedFrame.imageStride);
+        assertEquals(originalFrame.keyFrame, clonedFrame.keyFrame);
+        assertEquals(originalFrame.pictType, clonedFrame.pictType);
+        assertEquals(originalFrame.streamIndex, clonedFrame.streamIndex);
+        assertEquals(originalFrame.type, clonedFrame.type);
+        assertNotNull(clonedFrame.opaque);
+
+        // Assert that the image and audio data have been cloned but are not the same objects (deep clone)
+        assertNotNull(clonedFrame.image);
+        assertNotSame(originalFrame.image, clonedFrame.image);
+        assertEquals(((ByteBuffer)originalFrame.image[0]).capacity(), ((ByteBuffer)clonedFrame.image[0]).capacity());
+
+        assertNotNull(clonedFrame.samples);
+        assertNotSame(originalFrame.samples, clonedFrame.samples);
+        assertEquals(((ByteBuffer)originalFrame.samples[0]).capacity(), ((ByteBuffer)clonedFrame.samples[0]).capacity());
+
+        assertNotNull(clonedFrame.data);
+        assertNotSame(originalFrame.data, clonedFrame.data);
+        assertEquals(originalFrame.data.capacity(), clonedFrame.data.capacity());
+
+        // Assert the timestamp has also been cloned
+        assertEquals(originalFrame.timestamp, clonedFrame.timestamp);
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.nio.ByteBuffer;
+
+public class FrameTest {
+    @Test
+    public void cloneTest() {
+        Frame originalFrame = new Frame();
+        
+        // Assuming we have setters or public fields for Frame to assign these values:
+        originalFrame.imageWidth = 1920;
+        originalFrame.imageHeight = 1080;
+        originalFrame.imageDepth = Frame.DEPTH_UBYTE;
+        originalFrame.imageChannels = 3;
+        originalFrame.imageStride = originalFrame.imageWidth * originalFrame.imageChannels;
+        originalFrame.keyFrame = true;
+        originalFrame.pictType = Frame.PICT_TYPE_I;
+        originalFrame.streamIndex = 0;
+        originalFrame.type = Frame.TYPE_VIDEO;
+        
+        originalFrame.audioChannels = 2;
+        originalFrame.sampleRate = 44100;
+        
+        // For testing, assuming we have some ByteBuffer implementations ready, and cloneBufferArray method:
+        originalFrame.image = new Buffer[] { ByteBuffer.allocate(100) };
+        originalFrame.samples = new Buffer[] { ByteBuffer.allocate(100) };
+        originalFrame.data = ByteBuffer.allocate(100);
+        
+        originalFrame.timestamp = 100L;
+        
+        // Clone the frame
+        Frame clonedFrame = originalFrame.clone();
+        
+        // Video part
+        assertEquals(originalFrame.imageWidth, clonedFrame.imageWidth);
+        assertEquals(originalFrame.imageHeight, clonedFrame.imageHeight);
+        assertEquals(originalFrame.imageDepth, clonedFrame.imageDepth);
+        assertEquals(originalFrame.imageChannels, clonedFrame.imageChannels);
+        assertEquals(originalFrame.imageStride, clonedFrame.imageStride);
+        assertEquals(originalFrame.keyFrame, clonedFrame.keyFrame);
+        assertEquals(originalFrame.pictType, clonedFrame.pictType);
+        assertEquals(originalFrame.streamIndex, clonedFrame.streamIndex);
+        assertEquals(originalFrame.type, clonedFrame.type);
+        
+        assertNotNull(clonedFrame.image);
+        assertNotSame(originalFrame.image, clonedFrame.image);
+        assertEquals(((ByteBuffer)originalFrame.image[0]).capacity(), ((ByteBuffer)clonedFrame.image[0]).capacity());
+        
+        // Audio part
+        assertEquals(originalFrame.audioChannels, clonedFrame.audioChannels);
+        assertEquals(originalFrame.sampleRate, clonedFrame.sampleRate);
+        
+        assertNotNull(clonedFrame.samples);
+        assertNotSame(originalFrame.samples, clonedFrame.samples);
+        assertEquals(((ByteBuffer)originalFrame.samples[0]).capacity(), ((ByteBuffer)clonedFrame.samples[0]).capacity());
+        
+        // Other data streams
+        assertNotNull(clonedFrame.data);
+        assertNotSame(originalFrame.data, clonedFrame.data);
+        assertEquals(originalFrame.data.capacity(), clonedFrame.data.capacity());
+        
+        // Add timestamp
+        assertEquals(originalFrame.timestamp, clonedFrame.timestamp);
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FrameTest {
+
+    @Test
+    public void cloneTest() {
+        // Setup the original frame with some arbitrary values
+        Frame original = new Frame();
+        original.imageWidth = 640;
+        original.imageHeight = 480;
+        original.imageDepth = 24;
+        original.imageChannels = 3;
+        original.imageStride = 1920;
+        original.keyFrame = true;
+        original.pictType = 1;
+        original.streamIndex = 2;
+        original.type = Frame.Type.VIDEO;
+        original.audioChannels = 2;
+        original.sampleRate = 44100;
+        original.timestamp = 123456789;
+
+        // Presume existence of methods to create buffers
+        original.image = new Buffer[]{/* Create Image Buffer */};
+        original.samples = new Buffer[]{/* Create Audio Sample Buffer */};
+        original.data = ByteBuffer.allocate(512);
+
+        // Clone the frame
+        Frame cloned = original.clone();
+
+        // Verify that the cloned frame is not the same as the original
+        assertNotSame(original, cloned);
+
+        // Verify that primitive fields are identical
+        assertEquals(original.imageWidth, cloned.imageWidth);
+        assertEquals(original.imageHeight, cloned.imageHeight);
+        assertEquals(original.imageDepth, cloned.imageDepth);
+        assertEquals(original.imageChannels, cloned.imageChannels);
+        assertEquals(original.imageStride, cloned.imageStride);
+        assertEquals(original.keyFrame, cloned.keyFrame);
+        assertEquals(original.pictType, cloned.pictType);
+        assertEquals(original.streamIndex, cloned.streamIndex);
+        assertEquals(original.type, cloned.type);
+        assertEquals(original.audioChannels, cloned.audioChannels);
+        assertEquals(original.sampleRate, cloned.sampleRate);
+        assertEquals(original.timestamp, cloned.timestamp);
+
+        // Verify that object fields are correctly cloned (deep copy where appropriate)
+        assertNotSame(original.image, cloned.image);
+        assertNotSame(original.samples, cloned.samples);
+        assertNotSame(original.data, cloned.data);
+        
+        // Additional checks to ensure the contents of the objects are equal
+        // This assumes an overridden equals method in Buffer class or use of Arrays.equals
+        assertEquals(Arrays.equals(original.image, cloned.image), true);
+        assertEquals(Arrays.equals(original.samples, cloned.samples), true);
+        assertEquals(original.data.equals(cloned.data), true);
+        
+        // Verify opaque fields, if relevant and accessible, or this can be skipped
+        // assertEquals(((Pointer[])original.opaque)[0], ((Pointer[])cloned.opaque)[0]);
+        // assertEquals(((Pointer[])original.opaque)[1], ((Pointer[])cloned.opaque)[1]);
+        // assertEquals(((Pointer[])original.opaque)[2], ((Pointer[])cloned.opaque)[2]);
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FrameTest {
+
+    @Test
+    public void cloneTest() {
+        Frame originalFrame = new Frame();
+        
+        // Assuming initial values for the Frame object
+        originalFrame.imageWidth = 640;
+        originalFrame.imageHeight = 480;
+        originalFrame.imageDepth = 8;
+        originalFrame.imageChannels = 3;
+        originalFrame.imageStride = 1920;
+        originalFrame.keyFrame = true;
+        originalFrame.pictType = 1;
+        originalFrame.streamIndex = 5;
+        originalFrame.type = Frame.Type.VIDEO;
+        originalFrame.timestamp = 123456789L;
+
+        // Initializing the image, samples and data as null for simplicity
+        originalFrame.image = null;
+        originalFrame.samples = null;
+        originalFrame.data = null;
+
+        // Cloning the original frame
+        Frame clonedFrame = originalFrame.clone();
+
+        // Assertions to check if the cloned object properties are the same as the original
+        assertEquals(originalFrame.imageWidth, clonedFrame.imageWidth);
+        assertEquals(originalFrame.imageHeight, clonedFrame.imageHeight);
+        assertEquals(originalFrame.imageDepth, clonedFrame.imageDepth);
+        assertEquals(originalFrame.imageChannels, clonedFrame.imageChannels);
+        assertEquals(originalFrame.imageStride, clonedFrame.imageStride);
+        assertEquals(originalFrame.keyFrame, clonedFrame.keyFrame);
+        assertEquals(originalFrame.pictType, clonedFrame.pictType);
+        assertEquals(originalFrame.streamIndex, clonedFrame.streamIndex);
+        assertEquals(originalFrame.type, clonedFrame.type);
+        assertEquals(originalFrame.timestamp, clonedFrame.timestamp);
+
+        // Since we have initialized image, samples and data as null,
+        // no need to clone them, just check if they are null in clonedFrame
+        assertNull(clonedFrame.image);
+        assertNull(clonedFrame.samples);
+        assertNull(clonedFrame.data);
+
+        // This is necessary because the opaques (pointers) are part of the cloned state
+        // Let's verify that they were cloned correctly as empty or null
+        assertNotNull(clonedFrame.opaque);
+        assertEquals(3, clonedFrame.opaque.length);
+        assertNull(((Pointer[])clonedFrame.opaque)[0]);
+        assertNull(((Pointer[])clonedFrame.opaque)[1]);
+        assertNull(((Pointer[])clonedFrame.opaque)[2]);
+    }
+}
+
+

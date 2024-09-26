@@ -1,0 +1,646 @@
+Source code: 
+
+
+public boolean compareAndSetFeatures(double[] expect,
+                                     double[] update) {
+    if (update.length != size) {
+        throw new NeuralNetException(NeuralNetException.SIZE_MISMATCH,
+                                     update.length, size);
+    }
+
+    // Get the internal reference. Note that this must not be a copy;
+    // otherwise the "compareAndSet" below will always fail.
+    final double[] current = features.get();
+    if (!containSameValues(current, expect)) {
+        // Some other thread already modified the state.
+        return false;
+    }
+
+    // Increment attempt counter.
+    numberOfAttemptedUpdates.incrementAndGet();
+
+    if (features.compareAndSet(current, update.clone())) {
+        // The current thread could atomically update the state (attempt succeeded).
+        numberOfSuccessfulUpdates.incrementAndGet();
+        return true;
+    } else {
+        // Some other thread came first (attempt failed).
+        return false;
+    }
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.apache.commons.math4.neuralnet;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicInteger;
+
+class NeuralNetException extends RuntimeException {
+    static final int SIZE_MISMATCH = 1;
+
+    public NeuralNetException(int errorCode, int updateSize, int expectedSize) {
+        super(String.format("Error Code: %d, Update Size: %d, Expected Size: %d",
+                errorCode, updateSize, expectedSize));
+    }
+}
+
+// Assuming the class that contains `compareAndSetFeatures` is named `Neuron`
+public class NeuronTest {
+
+    private Neuron neuron;
+    private final int size = 3; // Defined size for the tests
+    private AtomicReference<double[]> features;
+    private AtomicInteger numberOfAttemptedUpdates;
+    private AtomicInteger numberOfSuccessfulUpdates;
+
+    @BeforeEach
+    public void setUp() {
+        neuron = new Neuron(); // Assuming there is a constructor available
+        features = new AtomicReference<>(new double[size]);
+        numberOfAttemptedUpdates = new AtomicInteger(0);
+        numberOfSuccessfulUpdates = new AtomicInteger(0);
+        // Assuming you have setters or a way to inject these fields into the neuron object
+        neuron.setFeatures(features);
+        neuron.setNumberOfAttemptedUpdates(numberOfAttemptedUpdates);
+        neuron.setNumberOfSuccessfulUpdates(numberOfSuccessfulUpdates);
+    }
+
+    @Test
+    public void compareAndSetFeaturesTest() {
+        double[] expect = {0.5, 0.5, 0.5};
+        double[] update = {0.8, 0.8, 0.8};
+        double[] wrongSizeUpdate = {0.9, 0.9};
+
+        // Test correct size but values don't match
+        assertFalse(neuron.compareAndSetFeatures(new double[]{0.1, 0.1, 0.1}, update));
+        assertEquals(1, numberOfAttemptedUpdates.get());
+        assertEquals(0, numberOfSuccessfulUpdates.get());
+
+        // Test correct size and values match
+        features.set(expect.clone()); // Ensure the internal state matches 'expect'
+        assertTrue(neuron.compareAndSetFeatures(expect, update));
+        assertEquals(2, numberOfAttemptedUpdates.get());
+        assertEquals(1, numberOfSuccessfulUpdates.get());
+        assertArrayEquals(update.clone(), features.get());
+
+        // Test wrong size array
+        Exception exception = assertThrows(NeuralNetException.class, () -> {
+            neuron.compareAndSetFeatures(expect, wrongSizeUpdate);
+        });
+        assertTrue(exception.getMessage().contains("Error Code: " + NeuralNetException.SIZE_MISMATCH));
+        assertEquals(2, numberOfAttemptedUpdates.get());
+        assertEquals(1, numberOfSuccessfulUpdates.get());
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.apache.commons.math4.neuralnet;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NeuronTest {
+
+    private Neuron neuron;
+    private final double delta = 1e-6; // for comparing double values
+
+    @BeforeEach
+    public void setUp() {
+        neuron = new Neuron(); // Assuming there's a constructor for Neuron
+        // Initialize the neuron features with a certain size, assuming Neuron has such method.
+        neuron.initializeFeatures(3); // Assuming neuron should have 3 features
+    }
+
+    @Test
+    public void compareAndSetFeaturesTest() {
+        // Test for size mismatch exception
+        double[] expect = {0.1, 0.2, 0.3};
+        double[] update = {0.1, 0.2};
+        Exception exception = assertThrows(NeuralNetException.class, () -> {
+            neuron.compareAndSetFeatures(expect, update);
+        });
+        assertTrue(exception.getMessage().contains("Size mismatch"));
+
+        // Test for successful update
+        double[] currentFeatures = neuron.getFeatures(); // Assuming such getter exists
+        assertTrue(neuron.compareAndSetFeatures(currentFeatures, expect));
+        double[] updatedFeatures = neuron.getFeatures();
+        assertArrayEquals(expect, updatedFeatures, delta);
+
+        // Test for failing to update due to different expected values
+        double[] newExpect = {0.2, 0.3, 0.4};
+        assertFalse(neuron.compareAndSetFeatures(newExpect, expect));
+
+        // Test for incrementing attempt counter
+        int initialNumberOfAttempts = neuron.getNumberOfAttemptedUpdates(); // Assuming such getter exists
+        neuron.compareAndSetFeatures(currentFeatures, expect);
+        assertEquals(initialNumberOfAttempts + 1, neuron.getNumberOfAttemptedUpdates());
+
+        // Test for incrementing success counter only on successful update
+        int initialNumberOfSuccesses = neuron.getNumberOfSuccessfulUpdates(); // Assuming such getter exists
+        neuron.compareAndSetFeatures(currentFeatures, expect);
+        assertEquals(initialNumberOfSuccesses + 1, neuron.getNumberOfSuccessfulUpdates());
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.apache.commons.math4.neuralnet;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicInteger;
+
+class NeuralNetException extends RuntimeException {
+    public static final int SIZE_MISMATCH = 1;
+    NeuralNetException(int type, int updateLength, int size) {
+        super("NeuralNetException: Size mismatch");
+    }
+}
+
+public class NeuronTest {
+
+    private Neuron neuron;
+    private AtomicReference<double[]> features;
+    private AtomicInteger numberOfAttemptedUpdates;
+    private AtomicInteger numberOfSuccessfulUpdates;
+    private int size = 3;
+
+    @BeforeEach
+    void setUp() {
+        features = new AtomicReference<>();
+        numberOfAttemptedUpdates = new AtomicInteger();
+        numberOfSuccessfulUpdates = new AtomicInteger();
+        features.set(new double[]{1.0, 1.0, 1.0});
+        neuron = new Neuron(size, features, numberOfAttemptedUpdates, numberOfSuccessfulUpdates);
+    }
+
+    @Test
+    public void compareAndSetFeaturesTest() {
+        double[] expect = {1.0, 1.0, 1.0};
+        double[] update = {2.0, 2.0, 2.0};
+
+        // Case 1: successful compare and set
+        assertTrue(neuron.compareAndSetFeatures(expect, update));
+        assertArrayEquals(update, features.get());
+        assertEquals(1, numberOfAttemptedUpdates.get());
+        assertEquals(1, numberOfSuccessfulUpdates.get());
+
+        // Case 2: unsuccessful compare and set due to different expected values
+        double[] wrongExpect = {0.0, 0.0, 0.0};
+        assertFalse(neuron.compareAndSetFeatures(wrongExpect, update));
+        assertArrayEquals(update, features.get()); // No change to features
+        assertEquals(2, numberOfAttemptedUpdates.get()); // Attempted update count incremented
+        assertEquals(1, numberOfSuccessfulUpdates.get()); // Successful update count remains the same
+
+        // Case 3: unsuccessful compare and set due to size mismatch
+        double[] largeUpdate = {3.0, 3.0, 3.0, 3.0};
+        Exception exception = assertThrows(NeuralNetException.class, () -> {
+            neuron.compareAndSetFeatures(expect, largeUpdate);
+        });
+        String expectedMessage = "NeuralNetException: Size mismatch";
+        String actualMessage = exception.getMessage();
+        assertTrue(actualMessage.contains(expectedMessage));
+    }
+
+    // Add any helper methods or class modifications needed for the test
+    // For example, the Neuron constructor that accepts dependencies can be added
+    // along with the methods/properties assumed to exist. Here is a very basic mock-up:
+
+    static class Neuron {
+        // Assume these are the relevant members for the Neuron class
+        private final int size;
+        private final AtomicReference<double[]> features;
+        private final AtomicInteger numberOfAttemptedUpdates;
+        private final AtomicInteger numberOfSuccessfulUpdates;
+
+        Neuron(int size, AtomicReference<double[]> features, AtomicInteger numberOfAttemptedUpdates, AtomicInteger numberOfSuccessfulUpdates) {
+            this.size = size;
+            this.features = features;
+            this.numberOfAttemptedUpdates = numberOfAttemptedUpdates;
+            this.numberOfSuccessfulUpdates = numberOfSuccessfulUpdates;
+        }
+      
+        public boolean compareAndSetFeatures(double[] expect, double[] update) {
+            // Implementation of the method, as provided in the question
+        }
+
+        // Stub for containSameValues method used in compareAndSetFeatures.
+        private boolean containSameValues(double[] current, double[] expect) {
+            if (current.length != expect.length)
+                return false;
+
+            for (int i = 0; i < current.length; i++) {
+                if (current[i] != expect[i])
+                    return false;
+            }
+
+            return true;
+        }
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.apache.commons.math4.neuralnet;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NeuronTest {
+
+    private Neuron neuron;
+    private static final int SIZE = 3; // Assuming there's a variable indicating the size of the features.
+
+    @BeforeEach
+    public void setUp() {
+        neuron = new Neuron(SIZE);
+        // Mock or set the initial state of neuron for testing
+        // assuming there's a way to set initial features, e.g., setFeatures
+        double[] initialFeatures = {1.0, 1.0, 1.0};
+        neuron.setFeatures(initialFeatures);
+    }
+
+    @Test
+    public void compareAndSetFeaturesTest() {
+        double[] current = {1.0, 1.0, 1.0};
+        double[] update = {2.0, 2.0, 2.0};
+        double[] wrongSizeUpdate = {2.0, 2.0};
+        double[] differentFeatures = {1.0, 2.0, 1.0};
+        
+        // Test with correct expected and correctly-sized update values
+        assertTrue(neuron.compareAndSetFeatures(current, update), 
+                   "Should return true if the expected and current values match and the update is of correct size.");
+
+        // Test with a mismatch in the expected values
+        assertFalse(neuron.compareAndSetFeatures(differentFeatures, update),
+                    "Should return false if the expected values do not match the current values.");
+
+        // Test with an incorrect size for the update values
+        Exception exception = assertThrows(NeuralNetException.class, () -> {
+            neuron.compareAndSetFeatures(current, wrongSizeUpdate);
+        });
+        NeuralNetException neuralNetException = (NeuralNetException) exception;
+        assertEquals(NeuralNetException.SIZE_MISMATCH, neuralNetException.getErrorCode(),
+                     "Should throw NeuralNetException with SIZE_MISMATCH error code on wrong sized update array.");
+        assertEquals(wrongSizeUpdate.length, neuralNetException.getActualSize(),
+                     "Actual size should match the wrongSizeUpdate array length.");
+        assertEquals(SIZE, neuralNetException.getExpectedSize(),
+                     "Expected size should match the neuron size.");
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.apache.commons.math4.neuralnet;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class NeuronTest {
+
+    private Neuron neuron;
+    private AtomicReference<double[]> features;
+    private AtomicInteger numberOfAttemptedUpdates;
+    private AtomicInteger numberOfSuccessfulUpdates;
+    private final int size = 3; // Just an example size for the features array
+
+    @BeforeEach
+    public void setUp() {
+        features = new AtomicReference<>(new double[size]);
+        numberOfAttemptedUpdates = new AtomicInteger(0);
+        numberOfSuccessfulUpdates = new AtomicInteger(0);
+        neuron = new Neuron(features, numberOfAttemptedUpdates, numberOfSuccessfulUpdates, size);
+    }
+    
+    @Test
+    public void compareAndSetFeaturesTest() {
+        double[] expect = new double[] {1.0, 2.0, 3.0};
+        double[] update = new double[] {1.1, 2.1, 3.1};
+        features.set(expect.clone()); // Simulate the initial state of features
+
+        // Test for successful update
+        assertTrue(neuron.compareAndSetFeatures(expect, update));
+        assertArrayEquals(update, features.get());
+        assertEquals(1, numberOfAttemptedUpdates.get());
+        assertEquals(1, numberOfSuccessfulUpdates.get());
+
+        // Reset for the next test
+        features.set(expect.clone());
+        numberOfAttemptedUpdates.set(0);
+        numberOfSuccessfulUpdates.set(0);
+
+        // Test for failed update because of different expected values
+        double[] newExpect = new double[] {4.0, 5.0, 6.0};
+        assertFalse(neuron.compareAndSetFeatures(newExpect, update));
+        assertNotEquals(update, features.get()); // The update didn't happen
+        assertEquals(1, numberOfAttemptedUpdates.get());
+        assertEquals(0, numberOfSuccessfulUpdates.get());
+
+        // Test for size mismatch exception
+        double[] wrongSizeUpdate = new double[] {1.0, 2.0}; // Smaller than expected
+        Exception exception = assertThrows(NeuralNetException.class, () -> {
+            neuron.compareAndSetFeatures(expect, wrongSizeUpdate);
+        });
+        String expectedMessage = "SIZE_MISMATCH";
+        String actualMessage = exception.getMessage();
+        assertTrue(actualMessage.contains(expectedMessage));
+    }
+
+    // Additional helper methods for the `Neuron` class could be here
+}
+
+
+No.6 generated result --------------------------
+
+package org.apache.commons.math4.neuralnet;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class NeuronTest {
+
+    private static final class MockNeuron {
+        private final AtomicReferenceArray<double[]> features;
+        private final AtomicInteger numberOfAttemptedUpdates = new AtomicInteger(0);
+        private final AtomicInteger numberOfSuccessfulUpdates = new AtomicInteger(0);
+        private final int size;
+
+        public MockNeuron(int size) {
+            this.size = size;
+            this.features = new AtomicReferenceArray<>(new double[][]{new double[size]});
+        }
+
+        public boolean compareAndSetFeatures(double[] expect, double[] update) {
+            if (update.length != size) {
+                throw new NeuralNetException(NeuralNetException.SIZE_MISMATCH, update.length, size);
+            }
+
+            final double[] current = features.get(0);
+            if (!containSameValues(current, expect)) {
+                return false;
+            }
+
+            numberOfAttemptedUpdates.incrementAndGet();
+
+            if (features.compareAndSet(0, current, update.clone())) {
+                numberOfSuccessfulUpdates.incrementAndGet();
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        private boolean containSameValues(double[] array1, double[] array2) {
+            if (array1.length != array2.length) {
+                return false;
+            }
+            for (int i = 0; i < array1.length; i++) {
+                if (Double.compare(array1[i], array2[i]) != 0) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    @Test
+    public void compareAndSetFeaturesTest() {
+        MockNeuron neuron = new MockNeuron(3);
+        double[] initialFeatures = {0.1, 0.2, 0.3};
+        double[] expect = {0.1, 0.2, 0.3};
+        double[] update = {0.4, 0.5, 0.6};
+
+        assertTrue(neuron.compareAndSetFeatures(expect, update), "Should return true as features are expected");
+
+        double[] newExpect = {0.1, 0.2, 0.3};
+        assertFalse(neuron.compareAndSetFeatures(newExpect, update), "Should return false as features are not as expected");
+
+        assertThrows(NeuralNetException.class, () -> {
+            double[] incorrectSizeUpdate = {0.7, 0.8};
+            neuron.compareAndSetFeatures(expect, incorrectSizeUpdate);
+        }, "Should throw SIZE_MISMATCH exception");
+
+        assertEquals(1, neuron.numberOfAttemptedUpdates.get(), "Number of attempted updates should be 1");
+        assertEquals(1, neuron.numberOfSuccessfulUpdates.get(), "Number of successful updates should be 1");
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.apache.commons.math4.neuralnet;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NeuronTest {
+
+    private Neuron neuron;
+    private double[] initialFeatures;
+    private final int size = 3; // Assuming size is a constant defined somewhere for the neuron's features
+
+    @BeforeEach
+    public void setUp() {
+        initialFeatures = new double[] {1.0, 1.0, 1.0};
+        neuron = new Neuron(size, initialFeatures);
+    }
+
+    @Test
+    public void compareAndSetFeaturesTest() {
+        // Assuming variables such as features, numberOfAttemptedUpdates, etc. exist in the Neuron class context
+        
+        // setup initial state
+        double[] expect = {1.0, 1.0, 1.0};
+        double[] update = {2.0, 2.0, 2.0};
+        
+        // positive test case: expect is equal to current features
+        assertTrue(neuron.compareAndSetFeatures(expect, update));
+        assertEquals(1, neuron.numberOfSuccessfulUpdates.get());
+        
+        // negative test case: expect is not equal to current features
+        double[] newExpect = {0.0, 0.0, 0.0};
+        assertFalse(neuron.compareAndSetFeatures(newExpect, update));
+        
+        // test with size mismatch that should throw NeuralNetException
+        double[] wrongSizeUpdate = {1.0, 2.0}; // update array with wrong size
+        Exception exception = assertThrows(NeuralNetException.class, () -> {
+            neuron.compareAndSetFeatures(expect, wrongSizeUpdate);
+        });
+        String expectedMessage = "Size mismatch"; // assuming the NeuralNetException message for SIZE_MISMATCH error
+        String actualMessage = exception.getMessage();
+        assertTrue(actualMessage.contains(expectedMessage));
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.apache.commons.math4.neuralnet;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NeuronTest {
+
+    @Test
+    public void compareAndSetFeaturesTest() {
+        // Assuming a constructor is available to create an instance of the class with features and size
+        NeuralNetwork neuron = new NeuralNetwork(size);
+
+        // Assuming proper size
+        int size = 3;
+        
+        // Mock features and expected values for the test
+        double[] initial = {1.0, 2.0, 3.0};
+        neuron.setFeatures(initial); // Assuming there's a way to set the initial features
+
+        // Set expectations and updates
+        double[] expect = {1.0, 2.0, 3.0};
+        double[] update = {4.0, 5.0, 6.0};
+        
+        // Test successful compare and set
+        assertTrue(neuron.compareAndSetFeatures(expect, update));
+        
+        // Check if the updates were successful
+        assertArrayEquals(update, neuron.getFeatures()); // Assuming getFeatures is available
+        
+        // Test with incorrect expected values
+        double[] wrongExpect = {7.0, 8.0, 9.0};
+        assertFalse(neuron.compareAndSetFeatures(wrongExpect, update));
+        
+        // Test with update array of different size
+        double[] wrongSizeUpdate = {10.0, 11.0};
+        Exception exception = assertThrows(NeuralNetException.class, () -> {
+            neuron.compareAndSetFeatures(expect, wrongSizeUpdate);
+        });
+        String expectedMessage = "Size mismatch: Expected " + size + " but got " + wrongSizeUpdate.length;
+        String actualMessage = exception.getMessage();
+        assertTrue(actualMessage.contains(expectedMessage));
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.apache.commons.math4.neuralnet;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NeuronTest {
+    private Neuron neuron;
+    private final int size = 3; // Assuming size of the neuron's features.
+    
+    @BeforeEach
+    public void setUp() {
+        neuron = new Neuron(size); // Assuming a constructor is available.
+    }
+
+    @Test
+    public void compareAndSetFeaturesTest_SizeMismatch_ThrowsException() {
+        double[] expect = {0.1, 0.2, 0.3};
+        double[] updateWithDifferentSize = {0.1, 0.2}; // Smaller size than expected
+      
+        assertThrows(NeuralNetException.class, () -> neuron.compareAndSetFeatures(expect, updateWithDifferentSize));
+    }
+
+    @Test
+    public void compareAndSetFeaturesTest_UnsuccessfulUpdate_ReturnsFalse() {
+        double[] expect = {0.1, 0.2, 0.3};
+        double[] current = {0.1, 0.2, 0.3};
+        double[] update = {0.4, 0.5, 0.6};
+        
+        neuron.setFeatures(current); // Assuming a method to set the neuron's features directly
+        // Make sure the internal state is different from "expect"
+        neuron.setFeatures(new double[]{0.7, 0.8, 0.9}); // Assuming a setFeatures method
+
+        // Expect compareAndSetFeatures to return false because internal state is not the expected one
+        assertFalse(neuron.compareAndSetFeatures(expect, update));
+    }
+
+    @Test
+    public void compareAndSetFeaturesTest_SuccessfulUpdate_ReturnsTrue() {
+        double[] expect = {0.1, 0.2, 0.3};
+        double[] update = {0.4, 0.5, 0.6};
+        
+        neuron.setFeatures(expect.clone()); // Set the features to the expected state
+        // Assuming setFeatures method accurately sets internal state without any issues
+        
+        // Now the internal state and expect are the same, so we expect a successful update
+        assertTrue(neuron.compareAndSetFeatures(expect, update));
+        
+        // Verify the state has been updated
+        assertArrayEquals(update, neuron.getFeatures()); // Assuming a getFeatures method exists
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.apache.commons.math4.neuralnet;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NeuronTest {
+
+    private Neuron neuron;
+    private static final int SIZE = 3;
+
+    @BeforeEach
+    public void setUp() {
+        neuron = new Neuron(SIZE); // assuming a constructor exists to set up the object with 'size'
+    }
+
+    @Test
+    public void compareAndSetFeaturesTest() {
+        double[] expect = new double[] {1.0, 2.0, 3.0};
+        double[] wrongSizeUpdate = new double[] {1.0, 2.0}; // wrong size
+        double[] wrongUpdate = new double[] {4.0, 5.0, 6.0}; // different values
+        double[] correctUpdate = new double[] {1.0, 2.0, 3.0}; // same as 'expect'
+
+        // Set initial features
+        neuron.setFeatures(expect.clone());
+
+        // Test size mismatch
+        Exception sizeMismatchException = assertThrows(NeuralNetException.class, () -> {
+            neuron.compareAndSetFeatures(expect, wrongSizeUpdate);
+        });
+        String sizeMismatchMessage = sizeMismatchException.getMessage();
+        assertTrue(sizeMismatchMessage.contains("SIZE_MISMATCH"));
+
+        // Test unsuccessful compareAndSet due to value mismatch
+        boolean updateFailedDueToValueMismatch = neuron.compareAndSetFeatures(expect, wrongUpdate);
+        assertFalse(updateFailedDueToValueMismatch);
+
+        // Test successful compareAndSet
+        boolean updateSucceeded = neuron.compareAndSetFeatures(expect, correctUpdate);
+        assertTrue(updateSucceeded);
+    }
+    
+    // Helper methods, assume they are implemented as required
+    private void assertArrayEqualsWithTolerance(double[] expected, double[] actual, double tolerance) {
+        assertEquals(expected.length, actual.length, "Array lengths differ");
+        for (int i = 0; i < expected.length; i++) {
+            assertEquals(expected[i], actual[i], tolerance, "Array elements differ at index " + i);
+        }
+    }
+}
+
+

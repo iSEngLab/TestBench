@@ -1,0 +1,664 @@
+Source code: 
+
+
+public AztecDetectorResult detect(boolean isMirror) throws NotFoundException {
+
+  // 1. Get the center of the aztec matrix
+  Point pCenter = getMatrixCenter();
+
+  // 2. Get the center points of the four diagonal points just outside the bull's eye
+  //  [topRight, bottomRight, bottomLeft, topLeft]
+  ResultPoint[] bullsEyeCorners = getBullsEyeCorners(pCenter);
+
+  if (isMirror) {
+    ResultPoint temp = bullsEyeCorners[0];
+    bullsEyeCorners[0] = bullsEyeCorners[2];
+    bullsEyeCorners[2] = temp;
+  }
+
+  // 3. Get the size of the matrix and other parameters from the bull's eye
+  int errorsCorrected = extractParameters(bullsEyeCorners);
+
+  // 4. Sample the grid
+  BitMatrix bits = sampleGrid(image,
+                              bullsEyeCorners[shift % 4],
+                              bullsEyeCorners[(shift + 1) % 4],
+                              bullsEyeCorners[(shift + 2) % 4],
+                              bullsEyeCorners[(shift + 3) % 4]);
+
+  // 5. Get the corners of the matrix.
+  ResultPoint[] corners = getMatrixCornerPoints(bullsEyeCorners);
+
+  return new AztecDetectorResult(bits, corners, compact, nbDataBlocks, nbLayers, errorsCorrected);
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.google.zxing.aztec.detector;
+
+import com.google.zxing.NotFoundException;
+import com.google.zxing.aztec.AztecDetectorResult;
+import com.google.zxing.common.BitMatrix;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class DetectorTest {
+    @Test
+    public void detectTest() {
+        // Assuming we have a valid bit matrix for testing.
+        BitMatrix mockImage = mock(BitMatrix.class);
+        Detector detector = new Detector(mockImage);
+        
+        // Assume these are valid values for Point and ResultPoint.
+        Detector.Point mockCenterPoint = mock(Detector.Point.class);
+        ResultPoint[] mockBullsEyeCorners = new ResultPoint[]{
+            mock(ResultPoint.class), mock(ResultPoint.class),
+            mock(ResultPoint.class), mock(ResultPoint.class)
+        };
+        BitMatrix mockBits = mock(BitMatrix.class);
+        AztecDetectorResult mockDetectorResult = mock(AztecDetectorResult.class);
+        
+        // Set expectations for mocks.
+        try {
+            when(detector.getMatrixCenter()).thenReturn(mockCenterPoint);
+            when(detector.getBullsEyeCorners(mockCenterPoint)).thenReturn(mockBullsEyeCorners);
+            when(detector.sampleGrid(any(BitMatrix.class), any(ResultPoint.class), 
+                any(ResultPoint.class), any(ResultPoint.class), any(ResultPoint.class)))
+                .thenReturn(mockBits);
+        } catch (NotFoundException e) {
+            e.printStackTrace();
+        }
+        
+        // Set additional behavior and create the fake matrix corners.
+        ResultPoint[] mockMatrixCorners = new ResultPoint[]{
+            new ResultPoint(1.0f, 2.0f), new ResultPoint(3.0f, 4.0f),
+            new ResultPoint(5.0f, 6.0f), new ResultPoint(7.0f, 8.0f)
+        };
+        
+        try {
+            when(detector.getMatrixCornerPoints(mockBullsEyeCorners)).thenReturn(mockMatrixCorners);
+            
+            // Invoke the method under test.
+            AztecDetectorResult result = detector.detect(false);
+            
+            // Perform the appropriate assertions.
+            assertNotNull(result, "The result should not be null.");
+            assertArrayEquals(mockMatrixCorners, result.getCorners());
+            assertEquals(mockBits, result.getBits());
+            // More assertions could be performed depending on the behavior of the 
+            // extracted values like compact, nbDataBlocks, nbLayers, and errorsCorrected.
+            
+        } catch (NotFoundException e) {
+            fail("NotFoundException should not be thrown.");
+        }
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package com.google.zxing.aztec.detector;
+
+import com.google.zxing.NotFoundException;
+import com.google.zxing.common.BitMatrix;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class DetectorTest {
+    @Test
+    public void detectTest() throws NotFoundException {
+        // Prepare a mock BitMatrix with expected dimensions
+        BitMatrix mockMatrix = mock(BitMatrix.class);
+        when(mockMatrix.getWidth()).thenReturn(30);
+        when(mockMatrix.getHeight()).thenReturn(30);
+        
+        // Mock the necessary methods
+        Detector detector = new Detector(mockMatrix);
+        
+        // Assuming the methods called inside detect() are also mocked and return expected values.
+        // You need to use a mocking framework (e.g., Mockito) to stub method calls and setup expectations.
+        // For example:
+        // when(detector.getMatrixCenter()).thenReturn(new Detector.Point(15, 15));
+        
+        // Act
+        AztecDetectorResult result = detector.detect();
+        
+        // Assert
+        assertNotNull(result);
+        assertEquals(mockMatrix, result.getBits());
+        // Add more assertions based on expected Detector behavior and result
+    }
+}
+
+
+
+No.3 generated result --------------------------
+
+package com.google.zxing.aztec.detector;
+
+import com.google.zxing.NotFoundException;
+import com.google.zxing.ResultPoint;
+import com.google.zxing.common.BitMatrix;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class DetectorTest {
+
+    @Test
+    public void detectTest_Success() throws NotFoundException {
+        // Arrange
+        BitMatrix imageMock = mock(BitMatrix.class);
+        Detector detector = new Detector(imageMock);
+        when(imageMock.getWidth()).thenReturn(100);
+        when(imageMock.getHeight()).thenReturn(100);
+        // Add more mocks and when-thenReturn clauses as required by implementation details
+        
+        ResultPoint[] points = {
+            new ResultPoint(10, 10),
+            new ResultPoint(20, 20),
+            new ResultPoint(30, 30),
+            new ResultPoint(40, 40)
+        };
+        detector.getMatrixCenter(); // This should be a mock or stubbed call
+        detector.getBullsEyeCorners(any(Detector.Point.class)); // Same as above
+        detector.getMatrixCornerPoints(points); // Same as above
+        when(detector.detect()).thenReturn(new AztecDetectorResult(imageMock, points, true, 10, 10, 1));
+
+        // Act
+        AztecDetectorResult result = detector.detect();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(imageMock, result.getBits());
+        assertArrayEquals(points, result.getPoints());
+        assertTrue(result.isCompact());
+        assertEquals(10, result.getNbDatablocks());
+        assertEquals(10, result.getNbLayers());
+        assertEquals(1, result.getNbCenterLayers());
+    }
+
+    @Test
+    public void detectTest_NotFoundException() throws NotFoundException {
+        // Arrange
+        BitMatrix imageMock = mock(BitMatrix.class);
+        Detector detector = new Detector(imageMock);
+        when(imageMock.getWidth()).thenReturn(100);
+        when(imageMock.getHeight()).thenReturn(100);
+        // Add more mocks and when-thenReturn clauses as required by implementation details
+        
+        doThrow(new NotFoundException()).when(detector).detect();
+
+        // Act & Assert
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> {
+            detector.detect();
+        });
+        assertNotNull(exception);
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.google.zxing.aztec.detector;
+
+import com.google.zxing.NotFoundException;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.ResultPoint;
+import com.google.zxing.aztec.AztecDetectorResult;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DetectorTest {
+
+    @Test
+    public void detectTest() throws NotFoundException {
+        BitMatrix fakeImage = Mockito.mock(BitMatrix.class);
+        Detector detector = new Detector(fakeImage);
+        ResultPoint[] bullEyeCorners = new ResultPoint[]{
+            new ResultPoint(1, 1),
+            new ResultPoint(1, 2),
+            new ResultPoint(2, 2),
+            new ResultPoint(2, 1)
+        };
+        ResultPoint[] matrixCornerPoints = new ResultPoint[]{
+            new ResultPoint(1, 1),
+            new ResultPoint(1, 3),
+            new ResultPoint(3, 3),
+            new ResultPoint(3, 1)
+        };
+        BitMatrix bits = Mockito.mock(BitMatrix.class);
+        int correctableErrors = 3;
+        // Pretending these are the values that would be set inside the `detect` method
+        boolean compact = true;
+        int nbDataBlocks = 10;
+        int nbLayers = 2;
+
+        // Mock the detector's private methods called within detect()
+        Mockito.doReturn(new Point(0, 0)).when(detector).getMatrixCenter();
+        Mockito.doReturn(bullEyeCorners).when(detector).getBullsEyeCorners(Mockito.any(Detector.Point.class));
+        Mockito.doReturn(bits).when(detector).sampleGrid(
+            Mockito.any(BitMatrix.class), 
+            Mockito.any(ResultPoint.class), 
+            Mockito.any(ResultPoint.class), 
+            Mockito.any(ResultPoint.class), 
+            Mockito.any(ResultPoint.class)
+        );
+        Mockito.doReturn(matrixCornerPoints).when(detector).getMatrixCornerPoints(bullEyeCorners);
+        Mockito.doReturn(correctableErrors).when(detector).extractParameters(bullEyeCorners);
+
+        // No need to mock the following method as it is package-private and directly accessible
+        when(fakeImage.get(0, 0)).thenReturn(true);
+
+        // Execute the detect method
+        AztecDetectorResult result = detector.detect(false);
+
+        // Compare the results
+        assertNotNull(result);
+        assertArrayEquals(matrixCornerPoints, result.getPoints());
+        assertEquals(bits, result.getBits());
+        assertEquals(compact, result.isCompact());
+        assertEquals(nbDataBlocks, result.getNbDatablocks());
+        assertEquals(nbLayers, result.getNbLayers());
+        assertEquals(correctableErrors, result.getNbLayers());
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.google.zxing.aztec.detector;
+
+import com.google.zxing.NotFoundException;
+import com.google.zxing.aztec.AztecDetectorResult;
+import com.google.zxing.common.BitMatrix;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DetectorTest {
+
+    private Detector detector;
+    private BitMatrix fakeMatrix;
+
+    @BeforeEach
+    public void setUp() {
+        // A minimal mock BitMatrix implementation could be provided here.
+        // For our purpose, we just need a non-null BitMatrix.
+        fakeMatrix = mock(BitMatrix.class);
+        
+        detector = new Detector(fakeMatrix);
+    }
+
+    @Test
+    public void detectTest_notFoundException() {
+        // Mock the behavior of the BitMatrix get method to throw NotFoundException
+        when(fakeMatrix.getWidth()).thenReturn(100);
+        when(fakeMatrix.getHeight()).thenReturn(100);
+
+        assertThrows(NotFoundException.class, () -> {
+            detector.detect();
+        });
+    }
+
+    @Test
+    public void detectTest_validDetection() {
+        // Assuming valid conditions are met for detection, it's necessary to
+        // mock the Detector's methods as well.
+        
+        // Additional setup would be necessary to simulate a proper BitMatrix
+        // and expected responses.
+
+        // Simple Detector method mocking, for illustrative purposes. In reality,
+        // each mocked method should have defined behavior that corresponds with a
+        // valid Aztec code.
+        try {
+            Detector spyDetector = spy(detector);
+            
+            // Mock the getMatrixCenter method
+            Detector.Point centerPoint = spyDetector.new Point(50, 50);
+            doReturn(centerPoint).when(spyDetector).getMatrixCenter();
+            
+            // Mock the getBullsEyeCorners method
+            ResultPoint[] bullsEyeCorners = {
+                new ResultPoint(50f, 40f),
+                new ResultPoint(60f, 50f),
+                new ResultPoint(50f, 60f),
+                new ResultPoint(40f, 50f)
+            };
+            doReturn(bullsEyeCorners).when(spyDetector).getBullsEyeCorners(any(Detector.Point.class));
+            
+            // Mock the extractParameters method
+            doReturn(0).when(spyDetector).extractParameters(any(ResultPoint[].class));
+            
+            // Mock the sampleGrid method
+            BitMatrix bits = mock(BitMatrix.class);
+            doReturn(bits).when(spyDetector).sampleGrid(any(BitMatrix.class), any(ResultPoint.class), any(ResultPoint.class), any(ResultPoint.class), any(ResultPoint.class));
+            
+            // Mock the getMatrixCornerPoints method
+            ResultPoint[] corners = {
+                new ResultPoint(45f, 40f),
+                new ResultPoint(55f, 40f),
+                new ResultPoint(55f, 60f),
+                new ResultPoint(45f, 60f)
+            };
+            doReturn(corners).when(spyDetector).getMatrixCornerPoints(any(ResultPoint[].class));
+            
+            AztecDetectorResult result = spyDetector.detect();
+            assertNotNull(result);
+            
+            // Additional assertions could compare the actual content of the AztecDetectorResult
+            // with expected values.
+            
+        } catch (NotFoundException e) {
+            fail("NotFoundException was not expected here.");
+        }
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package com.google.zxing.aztec.detector;
+
+import com.google.zxing.NotFoundException;
+import com.google.zxing.ResultPoint;
+import com.google.zxing.aztec.AztecDetectorResult;
+import com.google.zxing.common.BitMatrix;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+class DetectorTest {
+
+    private Detector detector;
+    private BitMatrix fakeMatrix;
+
+    @BeforeEach
+    void setUp() {
+        // Mock a simple BitMatrix for test purposes
+        int dimension = 5;
+        fakeMatrix = new BitMatrix(dimension);
+        // Fill a center point for the matrix to consider as a part of the Aztec Code
+        fakeMatrix.set(dimension/2, dimension/2);
+
+        // Initialize Detector with the mocked BitMatrix
+        detector = new Detector(fakeMatrix);
+    }
+
+    @Test
+    void detect_withMirror() {
+        // Since the method uses several non-injectable internals,
+        // a full end-to-end test may require substantial setup or redesign of tested code for isolation.
+        // Here we check the basic functionality by mocking the Detector's behavior to a degree.
+
+        // For this simple case, we'll expect Detector to return a non-null AztecDetectorResult
+        try {
+            AztecDetectorResult result = detector.detect(true);
+            assertNotNull(result, "Result should not be null when a valid Aztec Code is detected.");
+        } catch (NotFoundException e) {
+            fail("NotFoundException should not be thrown when a valid Aztec Code is present.");
+        }
+    }
+
+    @Test
+    void detect_withoutMirror() {
+        // Similar to detect_withMirror, but for the non-mirrored case
+
+        try {
+            AztecDetectorResult result = detector.detect(false);
+            assertNotNull(result, "Result should not be null when a valid Aztec Code is detected.");
+        } catch (NotFoundException e) {
+            fail("NotFoundException should not be thrown when a valid Aztec Code is present.");
+        }
+    }
+
+    @Test
+    void detect_throwsNotFoundException() {
+        // Setup a scenario where the detect method should fail, due to no Aztec Code in the BitMatrix
+        // In this case, the test matrix does not contain an actual Aztec Code, so NotFoundException is expected
+        detector = new Detector(new BitMatrix(10)); // fresh matrix with no set bits
+
+        assertThrows(NotFoundException.class, () -> {
+            detector.detect(false);
+        }, "NotFoundException should be thrown when no Aztec Code is present.");
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.google.zxing.aztec.detector;
+
+import com.google.zxing.NotFoundException;
+import com.google.zxing.common.BitMatrix;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class DetectorTest {
+    private Detector detector;
+    private BitMatrix mockMatrix;
+    
+    @BeforeEach
+    public void setUp() {
+        // Assume that a BitMatrix mock can be created. The specifics of the image would matter in a real case.
+        mockMatrix = mock(BitMatrix.class);
+        when(mockMatrix.getWidth()).thenReturn(100);
+        when(mockMatrix.getHeight()).thenReturn(100);
+        detector = new Detector(mockMatrix);
+    }
+    
+    @Test
+    public void detectTest_mirrorFalse_DoesNotThrowNotFoundException() throws NotFoundException {
+        // Mock the necessary behavior for 'detect' to pass without throwing an exception.
+
+        // Assertions are challenging without concrete behavior mock-ups.
+        // For example, if getMatrixCenter() is expected to return a specific point, a mock should be configured.
+        // To keep this generic, we simply assert that an exception is not thrown.
+        
+        assertDoesNotThrow(() -> detector.detect(false));
+    }
+    
+    @Test
+    public void detectTest_mirrorTrue_DoesNotThrowNotFoundException() throws NotFoundException {
+        // Mock the necessary behavior for 'detect' to pass with a mirrored image.
+
+        // As above, assertions depend on behavior we do not have here.
+        assertDoesNotThrow(() -> detector.detect(true));
+    }
+    
+    @Test
+    public void detectTest_NotFoundExceptionThrown_WhenPointDetectionFails() {
+        // Assume the detector will throw NotFoundException if points are invalid.
+        when(detector.detect(anyBoolean())).thenThrow(NotFoundException.class);
+        
+        assertThrows(NotFoundException.class, () -> detector.detect(false));
+        assertThrows(NotFoundException.class, () -> detector.detect(true));
+    }
+    
+    // Additional test cases might be necessary to fully exercise the 'detect' method's behavior,
+    // such as verifying the returned AztecDetectorResult, checking for correct rotation and mirroring,
+    // and confirming the handling of corner case inputs.
+}
+
+
+No.8 generated result --------------------------
+
+package com.google.zxing.aztec.detector;
+
+import com.google.zxing.NotFoundException;
+import com.google.zxing.common.BitMatrix;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class DetectorTest {
+
+    @Test
+    public void detectTest() throws NotFoundException {
+        // Given
+        BitMatrix fakeImage = mock(BitMatrix.class);
+        Detector detector = new Detector(fakeImage);
+
+        // Assume these mocked methods are properly implemented & interact with the fakeImage
+        when(fakeImage.getWidth()).thenReturn(200);
+        when(fakeImage.getHeight()).thenReturn(200);
+        when(detector.detect()).thenCallRealMethod();
+        when(detector.detect(anyBoolean())).thenCallRealMethod();
+        when(detector.getMatrixCenter()).thenCallRealMethod();
+        // ... Other necessary mocks
+
+        ResultPoint[] expectedCorners = new ResultPoint[] {
+            mock(ResultPoint.class), mock(ResultPoint.class),
+            mock(ResultPoint.class), mock(ResultPoint.class)
+        };
+        when(detector.getBullsEyeCorners(any(Detector.Point.class))).thenReturn(expectedCorners);
+
+        AztecDetectorResult expectedDetectorResult = mock(AztecDetectorResult.class);
+        when(detector.sampleGrid(
+            any(BitMatrix.class),
+            any(ResultPoint.class),
+            any(ResultPoint.class),
+            any(ResultPoint.class),
+            any(ResultPoint.class)
+        )).thenReturn(new BitMatrix(100));
+
+        // When
+        boolean isMirror = false; // This can be toggled to test different behaviors
+        AztecDetectorResult result = detector.detect(isMirror);
+
+        // Then
+        assertNotNull(result);
+        
+        // Verify the interaction between the detector and the fake BitMatrix
+        verify(fakeImage, atLeastOnce()).getWidth();
+        verify(fakeImage, atLeastOnce()).getHeight();
+        // ... Other verifications
+
+        // If specifics of AztecDetectorResult are expected to be tested, use real methods and/or test these values
+        // For example, check that the result has the expected BitMatrix or corners:
+        // assertEquals(expectedBitMatrix, result.getBits());
+        // assertArrayEquals(expectedCorners, result.getCorners());
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package com.google.zxing.aztec.detector;
+
+import com.google.zxing.NotFoundException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class DetectorTest {
+
+    private BitMatrix mockImage;
+    private Detector detector;
+
+    @BeforeEach
+    public void setup() {
+        mockImage = Mockito.mock(BitMatrix.class);
+        detector = new Detector(mockImage);
+    }
+
+    @Test
+    public void detectTest() throws NotFoundException {
+        // Assuming getMatrixCenter, getBullsEyeCorners, extractParameters, sampleGrid, 
+        // and getMatrixCornerPoints are all mocked and return expected results.
+        Point mockCenter = Mockito.mock(Point.class);
+        ResultPoint[] mockCorners = new ResultPoint[]{
+            Mockito.mock(ResultPoint.class), // topRight
+            Mockito.mock(ResultPoint.class), // bottomRight
+            Mockito.mock(ResultPoint.class), // bottomLeft
+            Mockito.mock(ResultPoint.class)  // topLeft
+        };
+
+        int expectedErrorsCorrected = 1; // Assuming 1 correction was made by extractParameters
+
+        when(detector.getMatrixCenter()).thenReturn(mockCenter);
+        when(detector.getBullsEyeCorners(mockCenter)).thenReturn(mockCorners);
+        when(detector.extractParameters(mockCorners)).thenReturn(expectedErrorsCorrected);
+
+        // Mock the required private methods used in the detector
+        when(detector.sampleGrid(
+            any(BitMatrix.class),
+            any(ResultPoint.class),
+            any(ResultPoint.class),
+            any(ResultPoint.class),
+            any(ResultPoint.class)
+        )).thenReturn(mockImage);
+
+        when(detector.getMatrixCornerPoints(mockCorners)).thenReturn(mockCorners);
+
+        // Call the method to test
+        AztecDetectorResult result = detector.detect(false);
+
+        // Verify the result
+        assertArrayEquals(mockCorners, result.getCorners(), "The corners should match the expected corners.");
+        assertEquals(mockImage, result.getBits(), "The bits should match the expected BitMatrix.");
+        assertEquals(expectedErrorsCorrected, result.getErrorsCorrected(), "The number of errors corrected should match the expected value.");
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.google.zxing.aztec.detector;
+
+import com.google.zxing.NotFoundException;
+import com.google.zxing.common.BitMatrix;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DetectorTest {
+
+    // We might need a fake BitMatrix with predefined patterns for testing purposes.
+    
+    // Helper method to create a BitMatrix with a simple pattern
+    private BitMatrix createFakeBitMatrix(int dimension) {
+        BitMatrix matrix = new BitMatrix(dimension);
+        // Set some fake data in the BitMatrix
+        for (int i = 0; i < dimension; i += 2) {
+            for (int j = 0; j < dimension; j += 2) {
+                matrix.set(i, j);
+            }
+        }
+        return matrix;
+    }
+    
+    @Test
+    public void detectTest() {
+        // Create a fake BitMatrix to act as a mock image
+        BitMatrix fakeImage = createFakeBitMatrix(100);
+        Detector detector = new Detector(fakeImage);
+
+        // Execute the detect method
+        NotFoundException exception = assertThrows(
+            NotFoundException.class, 
+            () -> detector.detect(false),
+            "NotFoundException was expected"
+        );
+
+        // We expect a NotFoundException if the BitMatrix does not have a valid Aztec pattern.
+        // This is an example to show how to test the detect method for an exception scenario.
+        // For a successful detection, we would need a valid Aztec pattern in the BitMatrix.
+    }
+}
+
+

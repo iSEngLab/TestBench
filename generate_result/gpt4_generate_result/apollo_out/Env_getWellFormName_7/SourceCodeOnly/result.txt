@@ -1,0 +1,550 @@
+Source code: 
+
+
+private static String getWellFormName(String envName) {
+  if (StringUtils.isBlank(envName)) {
+    return "";
+  }
+
+  String envWellFormName = envName.trim().toUpperCase();
+
+  // special case for production in case of typo
+  if ("PROD".equals(envWellFormName)) {
+    return Env.PRO.name;
+  }
+
+  // special case that FAT & FWS should map to FAT
+  if ("FWS".equals(envWellFormName)) {
+    return Env.FAT.name;
+  }
+
+  return envWellFormName;
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.ctrip.framework.apollo.portal.environment;
+
+import org.apache.commons.lang3.StringUtils;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+class Env {
+    public static final Env PRO = new Env("PRODUCTION");
+    public static final Env FAT = new Env("FAT");
+    
+    public String name;
+
+    public Env(String name) {
+        this.name = name;
+    }
+}
+
+public class EnvTest {
+    private static String getWellFormName(String envName) {
+        if (StringUtils.isBlank(envName)) {
+            return "";
+        }
+
+        String envWellFormName = envName.trim().toUpperCase();
+
+        // special case for production in case of typo
+        if ("PROD".equals(envWellFormName)) {
+            return Env.PRO.name;
+        }
+
+        // special case that FAT & FWS should map to FAT
+        if ("FWS".equals(envWellFormName)) {
+            return Env.FAT.name;
+        }
+
+        return envWellFormName;
+    }
+
+    @Test
+    public void getWellFormNameTest() {
+        assertEquals("", getWellFormName(null), "Null input should return an empty string");
+        assertEquals("", getWellFormName(""), "Empty string input should return an empty string");
+        assertEquals("", getWellFormName("   "), "Whitespace input should return an empty string");
+        assertEquals("DEVELOPMENT", getWellFormName("development"), "Input 'development' should return 'DEVELOPMENT'");
+        assertEquals("DEVELOPMENT", getWellFormName("  development  "), "Input with leading and trailing spaces should return 'DEVELOPMENT'");
+        assertEquals("STAGING", getWellFormName("StAgInG"), "Input with mixed case should return 'STAGING'");
+        assertEquals(Env.PRO.name, getWellFormName("PROD"), "Input 'PROD' should return the special case for production.");
+        assertEquals(Env.FAT.name, getWellFormName("FAT"), "Input 'FAT' should return 'FAT'.");
+        assertEquals(Env.FAT.name, getWellFormName("FWS"), "Input 'FWS' should return the special case for FAT.");
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package com.ctrip.framework.apollo.portal.environment;
+
+import org.apache.commons.lang3.StringUtils;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class EnvTest {
+    
+    // Assuming there is an enum named Env with PRO and FAT members
+    enum Env {
+        PRO("Production"),
+        FAT("Feature Acceptance Testing");
+
+        public final String name;
+
+        Env(String name) {
+            this.name = name;
+        }
+    }
+    
+    // The method to be tested (assuming it is made accessible for testing)
+    private static String getWellFormName(String envName) {
+      if (StringUtils.isBlank(envName)) {
+        return "";
+      }
+
+      String envWellFormName = envName.trim().toUpperCase();
+
+      // special case for production in case of typo
+      if ("PROD".equals(envWellFormName)) {
+        return Env.PRO.name;
+      }
+
+      // special case that FAT & FWS should map to FAT
+      if ("FWS".equals(envWellFormName)) {
+        return Env.FAT.name;
+      }
+
+      return envWellFormName;
+    }
+
+    @Test
+    public void getWellFormNameTest() {
+        assertEquals("", getWellFormName(null), "Null string should return an empty string");
+        assertEquals("", getWellFormName(" "), "Blank string should return an empty string");
+        assertEquals("DEVELOPMENT", getWellFormName("  development "), "Whitespace should be trimmed and case transformed to upper");
+        assertEquals(Env.PRO.name, getWellFormName("prod"), "'prod' should return the name of the PRO");
+        assertEquals(Env.PRO.name, getWellFormName("PROD"), "'PROD' should return the name of the PRO");
+        assertEquals(Env.FAT.name, getWellFormName("fws"), "'fws' should return the name of the FAT");
+        assertEquals(Env.FAT.name, getWellFormName("FWS"), "'FWS' should return the name of the FAT");
+        assertEquals("STAGE", getWellFormName("stage"), "Other cases should return their upper case forms");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.ctrip.framework.apollo.portal.environment;
+
+import org.apache.commons.lang3.StringUtils;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class EnvTest {
+    @Test
+    public void getWellFormNameTest() {
+        assertEquals("", EnvUtils.getWellFormName(null));
+        assertEquals("", EnvUtils.getWellFormName(""));
+        assertEquals("", EnvUtils.getWellFormName("   "));
+        assertEquals("PRO", EnvUtils.getWellFormName("prod"));
+        assertEquals("PRO", EnvUtils.getWellFormName("PROD"));
+        assertEquals("PRO", EnvUtils.getWellFormName(" ProD "));
+        assertEquals("FAT", EnvUtils.getWellFormName("fat"));
+        assertEquals("FAT", EnvUtils.getWellFormName("FAT"));
+        assertEquals("FAT", EnvUtils.getWellFormName(" FAt "));
+        assertEquals("FAT", EnvUtils.getWellFormName("fws"));
+        assertEquals("FAT", EnvUtils.getWellFormName("FWS"));
+        assertEquals("FAT", EnvUtils.getWellFormName(" Fws "));
+        assertEquals("DEV", EnvUtils.getWellFormName("dev"));
+        assertEquals("DEV", EnvUtils.getWellFormName("DEV"));
+        assertEquals("DEV", EnvUtils.getWellFormName(" Dev "));
+        assertEquals("TEST", EnvUtils.getWellFormName("test"));
+        assertEquals("TEST", EnvUtils.getWellFormName("TEST"));
+        assertEquals("TEST", EnvUtils.getWellFormName(" Test "));
+        assertEquals("UAT", EnvUtils.getWellFormName("uat"));
+        assertEquals("UAT", EnvUtils.getWellFormName("UAT"));
+        assertEquals("UAT", EnvUtils.getWellFormName(" Uat "));
+        // More test cases if necessary...
+    }
+
+    // Assuming there are enum Env and method EnvUtils.getWellFormName available
+    enum Env {
+        PRO("PRO"), FAT("FAT"), DEV("DEV"), TEST("TEST"), UAT("UAT");
+
+        private String name;
+
+        Env(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+    }
+
+    private static class EnvUtils {
+        // Assuming this is the actual implementation of the getWellFormName method
+        private static String getWellFormName(String envName) {
+            if (StringUtils.isBlank(envName)) {
+                return "";
+            }
+
+            String envWellFormName = envName.trim().toUpperCase();
+
+            // special case for production in case of typo
+            if ("PROD".equals(envWellFormName)) {
+                return Env.PRO.getName();
+            }
+
+            // special case that FAT & FWS should map to FAT
+            if ("FWS".equals(envWellFormName)) {
+                return Env.FAT.getName();
+            }
+
+            return envWellFormName;
+        }
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.ctrip.framework.apollo.portal.environment;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class EnvTest {
+
+    private static String getWellFormName(String envName) {
+        // The actual method should be part of the class being tested.
+        // For this example, it's simply added here for completeness.
+        if (envName == null || envName.trim().isEmpty()) {
+            return "";
+        }
+
+        String envWellFormName = envName.trim().toUpperCase();
+  
+        // special case for production in case of typo
+        if ("PROD".equals(envWellFormName)) {
+            return Env.PRO.name;
+        }
+  
+        // special case that FAT & FWS should map to FAT
+        if ("FWS".equals(envWellFormName)) {
+            return Env.FAT.name;
+        }
+  
+        return envWellFormName;
+    }
+
+    @Test
+    public void getWellFormNameTest() {
+        assertEquals("", getWellFormName(null), "Should return an empty string for null input.");
+        assertEquals("", getWellFormName(" "), "Should return an empty string for blank input.");
+        assertEquals("DEVELOPMENT", getWellFormName(" development "), "Should return 'DEVELOPMENT' for ' development '.");
+        assertEquals(Env.PRO.name, getWellFormName("prod"), "Should return 'PRO' for 'prod'.");
+        assertEquals(Env.PRO.name, getWellFormName("PROD"), "Should return 'PRO' for 'PROD'.");
+        assertEquals(Env.FAT.name, getWellFormName("FAT"), "Should return 'FAT' for 'FAT'.");
+        assertEquals(Env.FAT.name, getWellFormName("FWS"), "Should return 'FAT' for 'FWS'.");
+        assertEquals("STAGING", getWellFormName("staging"), "Should return 'STAGING' for 'staging'.");
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.ctrip.framework.apollo.portal.environment;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class EnvTest {
+
+    @Test
+    public void getWellFormNameTest() {
+        // Test for empty input
+        assertEquals("", EnvUtil.getWellFormName("  "));
+        assertEquals("", EnvUtil.getWellFormName(null));
+        
+        // Test for normal input
+        assertEquals("DEVELOPMENT", EnvUtil.getWellFormName("development"));
+        assertEquals("DEVELOPMENT", EnvUtil.getWellFormName(" Development "));
+        
+        // Test for special cases
+        assertEquals(Env.PRO.name, EnvUtil.getWellFormName("prod"));
+        assertEquals(Env.PRO.name, EnvUtil.getWellFormName("pRoD  "));
+        assertEquals(Env.FAT.name, EnvUtil.getWellFormName("fws"));
+        assertEquals(Env.FAT.name, EnvUtil.getWellFormName(" FWS "));
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package com.ctrip.framework.apollo.portal.environment;
+
+import org.apache.commons.lang3.StringUtils;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class EnvTest {
+
+    @Test
+    public void getWellFormNameTest() {
+        // Test with null input
+        assertEquals("", Env.getWellFormName(null));
+
+        // Test with empty string
+        assertEquals("", Env.getWellFormName(""));
+
+        // Test with whitespaces only
+        assertEquals("", Env.getWellFormName("  "));
+
+        // Test with a regular environment name
+        assertEquals("DEVELOPMENT", Env.getWellFormName("development"));
+
+        // Test with leading and trailing whitespaces
+        assertEquals("DEVELOPMENT", Env.getWellFormName("  development  "));
+
+        // Test with uppercase input
+        assertEquals("STAGING", Env.getWellFormName("STAGING"));
+
+        // Test correction for PROD (special case)
+        assertEquals(Env.PRO.name, Env.getWellFormName("prod"));
+
+        // Test correction for PROD with typo (special case)
+        assertEquals(Env.PRO.name, Env.getWellFormName("PROd"));
+
+        // Test correction for FAT mapping - FWS to FAT (special case)
+        assertEquals(Env.FAT.name, Env.getWellFormName("FWS"));
+    }
+
+    /* Since Env.PRO and Env.FAT are used within the getWellFormName method,
+       these enums should be defined somewhere in the code.
+       Assuming they are defined like this:
+
+       public enum Env {
+           PRO("PRODUCTION"),
+           FAT("FAT");
+
+           public final String name;
+
+           Env(String name) {
+               this.name = name;
+           }
+       }
+    */
+
+    // Add additional code or helpers depending on actual code structure.
+    // The above Enum is written based on assumption as it is not defined in the provided code snippet.
+}
+
+
+No.7 generated result --------------------------
+
+package com.ctrip.framework.apollo.portal.environment;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class EnvTest {
+    
+    @Test
+    public void getWellFormNameTest() {
+        // Test null input
+        assertEquals("", EnvUtils.getWellFormName(null), "Null input should return empty string");
+
+        // Test empty string input
+        assertEquals("", EnvUtils.getWellFormName(""), "Empty string should return empty string");
+
+        // Test blank string input with spaces
+        assertEquals("", EnvUtils.getWellFormName("   "), "Blank string input should return empty string");
+
+        // Test normal environment name without special case
+        assertEquals("DEV", EnvUtils.getWellFormName("dev"), "Lowercase dev should be converted to uppercase DEV");
+
+        // Test trim and uppercase
+        assertEquals("STAGE", EnvUtils.getWellFormName(" stage "), "Environment name with spaces should be trimmed and converted to uppercase");
+
+        // Test special case for "PROD"
+        assertEquals(Env.PRO.name, EnvUtils.getWellFormName("proD"), "'PROD' special case should return 'PRO'");
+
+        // Test special case for "FWS" that should map to "FAT"
+        assertEquals(Env.FAT.name, EnvUtils.getWellFormName("fWs"), "'FWS' special case should map to 'FAT'");
+
+        // Test non-special case that is already in uppercase
+        assertEquals("TEST", EnvUtils.getWellFormName("TEST"), "Uppercase TEST should remain uppercase");
+    }
+    
+    // Assume these enums exist per the context provided by the original Java method
+    enum Env {
+        PRO("PRO"),
+        FAT("FAT");
+
+        public final String name;
+
+        Env(String name) {
+            this.name = name;
+        }
+    }
+    
+    // Utility class placeholder (assuming it exists in the same package)
+    // with getWellFormName method akin to the source code provided.
+    static class EnvUtils {
+        static String getWellFormName(String envName) {
+            // Existing source code logic here...
+        }
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package com.ctrip.framework.apollo.portal.environment;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+class EnvTest {
+
+    // Assuming that a static helper class Env exists with String constants for name
+    static class Env {
+        static final Env PRO = new Env("PRODUCTION");
+        static final Env FAT = new Env("FAT");
+
+        String name;
+
+        public Env(String name) {
+            this.name = name;
+        }
+    }
+
+    @Test
+    public void getWellFormNameTest() {
+        // Test with null input
+        assertEquals("", YourClassName.getWellFormName(null));
+
+        // Test with blank string
+        assertEquals("", YourClassName.getWellFormName(" "));
+
+        // Test with normal input should return uppercase version
+        assertEquals("DEVELOPMENT", YourClassName.getWellFormName("development"));
+
+        // Test with leading and trailing whitespaces
+        assertEquals("STAGING", YourClassName.getWellFormName(" staging "));
+
+        // Test with PROD special case
+        assertEquals(Env.PRO.name, YourClassName.getWellFormName("ProD"));
+
+        // Test with FWS special case
+        assertEquals(Env.FAT.name, YourClassName.getWellFormName("FWS"));
+    }
+
+    // Assuming that the following method is available in YourClassName where you implement getWellFormName
+    private static String getWellFormName(String envName) {
+        // ... (implement the actual method here)
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package com.ctrip.framework.apollo.portal.environment;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class EnvTest {
+
+    @Test
+    public void getWellFormNameTest() {
+        // Assuming Env.PRO.name equals "PROD" and Env.FAT.name equals "FAT"
+        assertEquals("PROD", Env.getWellFormName("PRO"));
+        assertEquals("PROD", Env.getWellFormName("pro"));
+        assertEquals("PROD", Env.getWellFormName("   PRO   "));
+        assertEquals("PROD", Env.getWellFormName("Prod"));
+        assertEquals("PROD", Env.getWellFormName("prod"));
+        
+        assertEquals("FAT", Env.getWellFormName("FAT"));
+        assertEquals("FAT", Env.getWellFormName("fat"));
+        assertEquals("FAT", Env.getWellFormName("   FAT   "));
+        assertEquals("FAT", Env.getWellFormName("FWS"));
+        assertEquals("FAT", Env.getWellFormName("fws"));
+        
+        assertEquals("", Env.getWellFormName(""));
+        assertEquals("", Env.getWellFormName("   "));
+        assertEquals("", Env.getWellFormName(null));
+        
+        assertEquals("DEV", Env.getWellFormName("DEV"));
+        assertEquals("DEV", Env.getWellFormName("dev"));
+        assertEquals("DEV", Env.getWellFormName("   dev   "));
+    }
+
+    // Utility method needed since getWellFormName is private.
+    // Modify the visibility of getWellFormName if necessary.
+    private static String getWellFormName(String envName) {
+        // Insert the actual implementation here
+        return ""; // Placeholder for the actual method logic
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.ctrip.framework.apollo.portal.environment;
+
+import org.apache.commons.lang3.StringUtils;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class EnvTest {
+
+    private static String getWellFormName(String envName) {
+      if (StringUtils.isBlank(envName)) {
+        return "";
+      }
+
+      String envWellFormName = envName.trim().toUpperCase();
+
+      // special case for production in case of typo
+      if ("PROD".equals(envWellFormName)) {
+        return Env.PRO.name;
+      }
+
+      // special case that FAT & FWS should map to FAT
+      if ("FWS".equals(envWellFormName)) {
+        return Env.FAT.name;
+      }
+
+      return envWellFormName;
+    }
+
+    enum Env {
+      PRO("PRODUCTION"),
+      FAT("FAT");
+
+      public final String name;
+
+      Env(String name) {
+          this.name = name;
+      }
+    }
+
+    @Test
+    public void getWellFormNameTest() {
+        assertEquals("", getWellFormName(null), "Should return empty string for null input.");
+        assertEquals("", getWellFormName(" "), "Should return empty string for blank string input.");
+        assertEquals("ENVIRONMENT", getWellFormName("  environment "), "Should return a trimmed uppercase string.");
+        assertEquals(Env.PRO.name, getWellFormName("proD"), "Should return 'PRODUCTION' for 'proD'.");
+        assertEquals(Env.PRO.name, getWellFormName("pRod"), "Should return 'PRODUCTION' for 'pRod'.");
+        assertEquals(Env.FAT.name, getWellFormName("Fat"), "Should return 'FAT' for 'Fat'.");
+        assertEquals(Env.FAT.name, getWellFormName("fwS"), "Should return 'FAT' for 'fwS' due to special case.");
+    }
+}
+
+

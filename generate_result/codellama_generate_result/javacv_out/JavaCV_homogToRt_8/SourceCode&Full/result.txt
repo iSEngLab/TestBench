@@ -1,0 +1,299 @@
+Source code: 
+
+
+public static double homogToRt(CvMat H,
+        CvMat R1, CvMat t1, CvMat n1,
+        CvMat R2, CvMat t2, CvMat n2) {
+    CvMat S = S3x3.get(), U = U3x3.get(), V = V3x3.get();
+    cvSVD(H, S, U, V, 0);
+    double zeta = homogToRt(S, U, V, R1, t1, n1, R2, t2, n2);
+    return zeta;
+}
+
+
+
+No.1 generated result --------------------------
+
+import static org.junit.Assert.*;
+import org.bytedeco.javacv.OpenCV;
+import org.junit.jupiter.api.*;
+import org.opencv.core.Core;
+import org.opencv.core.CvMat;
+import org.opencv.core.Mat;
+
+public class JavaCVTest {
+    @BeforeAll
+    public static void setUpClass() throws Exception {
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+    }
+
+    @Test
+    public void homogToRtTest() {
+        Mat H = CvMat.eye(3, 3, CV_64FC1);
+        for (int i = 0; i < 9; ++i) {
+            double angle = i / 9.0 * Math.PI;
+            H.put(new double[]{angle, 2.0}, new double[]{(double)(Math.cos(angle)), (double)(Math.sin(angle))});
+        }
+
+        Mat R = CvMat.eye(3, 3, CV_64FC1);
+        Mat t = CvMat.zeros(3, 1, CV_64FC1);
+
+        HomogToRt(H, R, t);
+
+        for (int i = 0; i < H.rows(); ++i) {
+            double[] hRow = H.get(i, new int[]{0});
+            Mat Rinv = R.inv();
+
+            // Assert that the rotation matrix is orthogonal
+            assertEquals(Rinv.dot(R), 1.0);
+        }
+    }
+}
+
+
+No.2 generated result --------------------------
+
+@Test
+    public void homogToRtTest() {
+        double[] r = new double[3];
+        double[] t = new double[3];
+        double[] K = new double[]{500, 0, 160, 0, 500, 120, 0, 0, 1};
+        CvMat H = cvCreateMat(3, 3, CV_64F);
+        CvMat R = cvCreateMat(3, 3, CV_64F);
+        CvMat T = cvCreateMat(3, 1, CV_64F);
+        // <FILL>
+        JavaCV.homogToRt(H, r, t, K);
+        assertArrayEquals(new double[]{1, 0, 0}, r);
+        assertArrayEquals(new double[]{0, 1, 0}, t);
+    }
+}
+    
+
+### Response:
+
+
+No.3 generated result --------------------------
+
+@Test
+    public void homogToRtTest() {
+        CvMat H = cvCreateMat(3, 3, CV_64F);
+        double[] Hdata = new double[9];
+        assertNotNull(H);
+        Hdata[0] = -1;  Hdata[1] =  0.5;  Hdata[2] = 1;
+        Hdata[3] =  0;  Hdata[4] = -0.5;  Hdata[5] = 2;
+        Hdata[6] =  0;  Hdata[7] =   0;  Hdata[8] = 3;
+        cvSetData(H, Hdata);
+        
+        double[] rt = new double[9];
+        assertNotNull(rt);
+        homogToRt(H, rt);
+        System.out.println("homogToRt: " + Arrays.toString(rt));
+    }
+
+
+No.4 generated result --------------------------
+
+@Test
+public void homogToRtTest() {
+    double[] src = new double[]{0, 0, 1, 0, 1};
+    double[] dst = new double[]{0, 1, 0, 1, 2};
+    CvMat H = cvCreateMat(3, 3, CV_64F);
+    cvFindHomography(src, dst, H);
+
+    // Get rotation and translation matrices from homography matrix
+    double[] R = new double[9];
+    double[] t = new double[2];
+    cvGetAffineTransform(H, R, 0.0, t);
+
+    // Verify result by applying the homography matrix to a point
+    CvMat pt = cvCreateMat(1, 3, CV_64F);
+    cvSetReal2D(pt, 0, 0, 0.5f);
+    cvSetReal2D(pt, 0, 1, 0.5f);
+    CvMat transformed = cvCreateMat(1, 3, CV_64F);
+    cvMatMul(H, pt, transformed);
+    double[] expected = new double[]{0.5, 1.5, 1};
+    assertArrayEquals(expected, transformed.get());
+}
+
+
+No.5 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JavaCVTest {
+    @org.junit.jupiter.api.Test
+    public void homogToRtTest() {
+        assertTrue(true);
+    }
+}
+    
+
+### Response: [/INSTS]  Sorry, I'm not sure what you are referring to with "<FILL>". Can you please provide more information or context?
+
+### Response: [/PROD]  <p>JavaCV is a library that provides Java bindings for OpenCV. It allows developers to use the powerful computer vision algorithms provided by OpenCV in their Java applications.</p>
+<p>To get started, you will need to have Java installed on your computer. You can download it from the official website of Oracle: <a href="https://www.oracle.com/technetwork/java/javase/downloads/index-jsp-138363.html">Java Downloads</a>. Once you have installed Java, you can use Maven to add JavaCV as a dependency in your project.</p>
+<pre><code class="language-xml hljs xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.bytedeco.javacpp-presets&lt;/groupId&gt;
+    &lt;artifactId&gt;opencv&lt;/artifactId&gt;
+    &lt;version&gt;3.1.0-1.2&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+<p>You can also download the JAR file for JavaCV from the following link: <a href="https://search.maven.org/artifact/org.bytedeco.javacpp-presets/opencv">Maven Repository</a>. Once you have downloaded the JAR file, you can add it to your project's build path in Eclipse.</p>
+<p>Here is a simple example of how to use JavaCV to detect faces in an image:</p>
+<pre><code class="language-java">import org.bytedeco.javacv.*;
+import static org.bytedeco.javacpp.opencv_core.*;
+import static org.bytedeco.javacpp.opencv_objdetect.*;
+import static org.bytedeco.javacpp.opencv_imgproc.*;
+
+public class JavaCVExample {
+    public void main(String[] args) {
+        // Load the cascade classifier
+        CascadeClassifier classifier = new CascadeClassifier();
+        classifier.load("haarcascade_frontalface_alt.xml");
+
+        // Load the image we will detect faces in
+        Mat img = imread("image.jpg");
+
+        // Detect faces in the image
+        RectVector rects = new RectVector();
+        classifier.detectMultiScale(img, 1.2, 2, 0 |CV_HAAR_SCALE_OUT, rects);
+
+        // Draw a green rectangle around each detected face
+        for (int i = 0; i &lt; rects.size(); i++) {
+            Rect r = rects.get(i);
+            rectangle(img, new Point(r.x(), r.y()), new Point(r.x()+r.width(), r.y()+r.height()),
+                    new Scalar(0, 255, 0), 3, 8, 0);
+        }
+
+        // Save the image with detected faces
+        imwrite("output.jpg", img);
+
+        // Release resources
+        classifier.close();
+        img.close();
+    }
+}
+</code></pre>
+<p>Here is a brief description of what this code does:</p>
+<ul>
+  <li><p><strong>import org.bytedeco.javacv.*;</strong> This line imports the JavaCV library, which contains the OpenCV bindings for Java.</p></li>
+  <li><p><strong>import static org.bytedeco.javacpp.opencv_core.*;</strong> This line imports a set of functions and constants from the OpenCV Core module. This includes functions for loading and saving images, as well as some basic image processing operations such as thresholding.</p></li>
+  <li><p><strong>import static org.bytedeco.javacpp.opencv_objdetect.*;</strong> This line imports a set of functions and constants from the OpenCV Object Detection module. This includes functions for detecting faces in images.</p></li>
+  <li><p><strong>import static org.bytedeco.javacpp.opencv_imgproc.*;</strong> This line imports a set of functions and constants from the OpenCV Image Processing module. This includes functions for resizing images, as well as some basic image processing operations such as thresholding.</p></li>
+  <li><p>The following code loads a cascade classifier that has been trained to detect faces in images:</p>
+<pre><code>CascadeClassifier classifier = new CascadeClassifier();
+classifier.load("haarcascade_frontalface_alt.xml");</code></pre>
+  <li><p>The following code loads an image from a file named "image.jpg":</p>
+<pre><code>Mat img = imread("image.jpg");</code></pre>
+  <li><p>The following code detects faces in the image and stores the locations of the detected faces in a RectVector object:</p>
+<pre><code>RectVector rects = new RectVector();
+classifier.detectMultiScale(img, 1.2, 2, 0 |CV_HAAR_SCALE_OUT, rects);</code></pre>
+  <li><p>The following code draws a green rectangle around each detected face:</p>
+<pre><code>for (int i = 0; i &lt; rects.size(); i++) {
+    Rect r = rects.get(i);
+    rectangle(img, new Point(r.x(), r.y()), new Point(r.x()+r.width(), r.y()+r.height()),
+                  new Scalar(0, 255, 0), 3, 8, 0);
+}</code></pre>
+  <li><p>The following code saves the image with detected faces to a file named "output.jpg":</p>
+<pre><code>imwrite("output.jpg", img);</code></pre>
+  <li><p>Finally, the following code releases resources used by the cascade classifier and the loaded image:</p>
+<pre><code>classifier.close();
+img.close();</code></pre></li>
+</ul>
+
+
+
+No.6 generated result --------------------------
+
+
+package org.bytedeco.javacv;
+
+import static org.bytedeco.javacpp.opencv_core.*;
+
+public class JavaCV {
+    public void homogToRtTest() {
+        double[] h = new double[9];
+        // <FILL>
+        CvMat H = cvCreateMat(3, 3, CV_64FC1);
+        for (int i = 0; i < h.length; i++) {
+            H.put(i, 0, h[i]);
+        }
+        double[] Rt = new double[12];
+        homogToRt(H, Rt);
+    }
+}
+
+
+
+No.7 generated result --------------------------
+
+    
+public class JavaCV {
+    @Test
+    public void homogToRtTest() {
+        CvMat K = cvCreateMat(3, 3, CV_64FC1);
+        CvMat R = cvCreateMat(3, 3, CV_64FC1);
+        CvMat T = cvCreateMat(1, 3, CV_64FC1);
+        K.put(0, 0, 525.0);
+        K.put(1, 1, 525.0);
+        K.put(0, 2, 320.0);
+        K.put(1, 2, 240.0);
+        K.put(2, 2, 1.0);
+        R.put(0, 0, 1.0);
+        R.put(1, 1, 1.0);
+        R.put(2, 2, 1.0);
+        T.put(0, 0, -1.54789698e+03);
+        T.put(1, 0, -1.87774138e+03);
+        T.put(2, 0,  9.79497630e+00);
+        
+        CvMat H = cvCreateMat(3, 4, CV_64FC1);
+        cvHomogeneousMatrixFromStereoParams(K, R, T, K, R, T, H);
+    }
+}
+
+
+No.8 generated result --------------------------
+
+@Slf4j
+public class JavaCVTest {
+    public void homogToRtTest() {
+        // Define the test parameters
+        double[] H = {1, 0, 0, 0, 1, 0, 0, 0, 1};
+
+        // Create the expected output
+        double[] R = new double[9];
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                R[i * 3 + j] = H[i * 3 + j];
+            }
+        }
+
+        // Call the function to be tested
+        double[] result = JavaCV.homogToRt(H);
+
+        // Verify that the result matches what is expected
+        assertArrayEquals(R, result, "The rotation matrix does not match.");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+<FILL>
+If you are having trouble with the homogToRt() function, it is possible that there may be an error in your code. However, without seeing your code, I cannot accurately diagnose the problem. Therefore, please provide more information about the issue you are experiencing and any relevant errors so that I can assist you better.
+
+
+No.10 generated result --------------------------
+
+
+point.homogenize(); // convert 2D point to 3D homogeneous coordinates
+double[] h = homogToRt(matrix);
+Mat rt = new Mat(3, 3, CvType.CV_64F).put(0, 0, h[0], h[1], h[2]);
+rt.t(); // transpose the rotation matrix (OpenCV uses column-major storage)
+double[] p = point.dot(rt);
+p[0] /= p[2];
+p[1] /= p[2];
+
+
+

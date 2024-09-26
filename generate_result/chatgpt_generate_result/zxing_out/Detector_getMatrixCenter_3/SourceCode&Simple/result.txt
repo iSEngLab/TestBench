@@ -1,0 +1,212 @@
+Source code: 
+
+
+private Point getMatrixCenter() {
+
+  ResultPoint pointA;
+  ResultPoint pointB;
+  ResultPoint pointC;
+  ResultPoint pointD;
+
+  //Get a white rectangle that can be the border of the matrix in center bull's eye or
+  try {
+
+    ResultPoint[] cornerPoints = new WhiteRectangleDetector(image).detect();
+    pointA = cornerPoints[0];
+    pointB = cornerPoints[1];
+    pointC = cornerPoints[2];
+    pointD = cornerPoints[3];
+
+  } catch (NotFoundException e) {
+
+    // This exception can be in case the initial rectangle is white
+    // In that case, surely in the bull's eye, we try to expand the rectangle.
+    int cx = image.getWidth() / 2;
+    int cy = image.getHeight() / 2;
+    pointA = getFirstDifferent(new Point(cx + 7, cy - 7), false, 1, -1).toResultPoint();
+    pointB = getFirstDifferent(new Point(cx + 7, cy + 7), false, 1, 1).toResultPoint();
+    pointC = getFirstDifferent(new Point(cx - 7, cy + 7), false, -1, 1).toResultPoint();
+    pointD = getFirstDifferent(new Point(cx - 7, cy - 7), false, -1, -1).toResultPoint();
+
+  }
+
+  //Compute the center of the rectangle
+  int cx = MathUtils.round((pointA.getX() + pointD.getX() + pointB.getX() + pointC.getX()) / 4.0f);
+  int cy = MathUtils.round((pointA.getY() + pointD.getY() + pointB.getY() + pointC.getY()) / 4.0f);
+
+  // Redetermine the white rectangle starting from previously computed center.
+  // This will ensure that we end up with a white rectangle in center bull's eye
+  // in order to compute a more accurate center.
+  try {
+    ResultPoint[] cornerPoints = new WhiteRectangleDetector(image, 15, cx, cy).detect();
+    pointA = cornerPoints[0];
+    pointB = cornerPoints[1];
+    pointC = cornerPoints[2];
+    pointD = cornerPoints[3];
+  } catch (NotFoundException e) {
+    // This exception can be in case the initial rectangle is white
+    // In that case we try to expand the rectangle.
+    pointA = getFirstDifferent(new Point(cx + 7, cy - 7), false, 1, -1).toResultPoint();
+    pointB = getFirstDifferent(new Point(cx + 7, cy + 7), false, 1, 1).toResultPoint();
+    pointC = getFirstDifferent(new Point(cx - 7, cy + 7), false, -1, 1).toResultPoint();
+    pointD = getFirstDifferent(new Point(cx - 7, cy - 7), false, -1, -1).toResultPoint();
+  }
+
+  // Recompute the center of the rectangle
+  cx = MathUtils.round((pointA.getX() + pointD.getX() + pointB.getX() + pointC.getX()) / 4.0f);
+  cy = MathUtils.round((pointA.getY() + pointD.getY() + pointB.getY() + pointC.getY()) / 4.0f);
+
+  return new Point(cx, cy);
+}
+
+
+
+No.1 generated result --------------------------
+
+// Create a mock BitMatrix object for testing
+BitMatrix mockImage = new BitMatrix(10, 10);
+Detector detector = new Detector(mockImage);
+Point expectedCenter = new Point(5, 5);
+Point actualCenter = detector.getMatrixCenter();
+assertEquals(expectedCenter.getX(), actualCenter.getX());
+assertEquals(expectedCenter.getY(), actualCenter.getY());
+
+
+No.2 generated result --------------------------
+
+Point center = new Point(25, 25);
+Point result = getMatrixCenter();
+assertEquals(center.getX(), result.getX());
+assertEquals(center.getY(), result.getY());
+
+
+No.3 generated result --------------------------
+
+@Test
+public void getMatrixCenterTest() {
+    // Create a new BitMatrix for testing purposes
+    BitMatrix testImage = new BitMatrix(10, 10);
+    private ResultPoint pointA = new ResultPoint(1, 1);
+    private ResultPoint pointB = new ResultPoint(3, 1);
+    private ResultPoint pointC = new ResultPoint(3, 3);
+    private ResultPoint pointD = new ResultPoint(1, 3);
+    pointA = new ResultPoint(1, 1);
+    pointB = new ResultPoint(3, 1);
+    pointC = new ResultPoint(3, 3);
+    pointD = new ResultPoint(1, 3);
+    // additional setup may be needed based on the specific requirements of the test
+    // call the method to get the matrix center
+    Point matrixCenter = getMatrixCenter(testImage);
+    // verify the expected result
+    assertEquals(new Point(2, 2), matrixCenter);
+}
+
+
+No.4 generated result --------------------------
+
+
+@Test
+public void getMatrixCenterTest() {
+    // Create a new BitMatrix and set it to the image
+    BitMatrix image = new BitMatrix(10, 10);
+    Detector detector = new Detector(image);
+    // Call the getMatrixCenter method
+    Point center = detector.getMatrixCenter();
+    // Use assertions to verify the expected outcome
+    assertEquals(5, center.getX());
+    assertEquals(5, center.getY());
+}
+
+
+No.5 generated result --------------------------
+
+@Test
+public void getMatrixCenterTest() {
+    // Create an instance of the Detector class
+    Detector detector = new Detector(bitMatrix);
+    
+    // Call the getMatrixCenter method
+    Point center = detector.getMatrixCenter();
+    
+    // Verify that the center point is not null
+    assertNotNull(center);
+    
+    // Verify that the X and Y coordinates of the center point are within the image dimensions
+    assertTrue(center.getX() >= 0 && center.getX() < bitMatrix.getWidth());
+    assertTrue(center.getY() >= 0 && center.getY() < bitMatrix.getHeight());
+}
+
+
+No.6 generated result --------------------------
+
+@Test
+public void getMatrixCenterTest() {
+    // Create a new BitMatrix for testing purposes
+    BitMatrix testMatrix = new BitMatrix(10, 10);
+    // Create a new Detector object for testing
+    Detector detector = new Detector(testMatrix);
+    
+    // Test the getMatrixCenter method
+    Point center = detector.getMatrixCenter();
+    
+    // Assert that the center point is not null
+    assertNotNull(center);
+    // Add additional assertions as needed
+}
+
+
+No.7 generated result --------------------------
+
+@Test
+public void getMatrixCenterTest() {
+    // Create a BitMatrix image object
+    BitMatrix image = new BitMatrix(10, 10);
+    Detector detector = new Detector(image);
+    // Call the getMatrixCenter method and store the result in a Point object
+    Point center = detector.getMatrixCenter();
+    // Verify that the center coordinates are as expected
+    assertEquals(5, center.getX());
+    assertEquals(5, center.getY());
+}
+
+
+No.8 generated result --------------------------
+
+@Test
+public void getMatrixCenterTest() {
+    // Create a new BitMatrix for testing
+    BitMatrix testMatrix = new BitMatrix(10, 10);
+    
+    // Call the getMatrixCenter method and assert that the returned Point is as expected
+    Detector detector = new Detector(testMatrix);
+    Point center = detector.getMatrixCenter();
+    assertEquals(new Point(5, 5), center);
+}
+
+
+No.9 generated result --------------------------
+
+// Create a new instance of the Detector class
+Detector detector = new Detector(new BitMatrix());
+// Initialize the image to be used for testing
+BitMatrix testImage = new BitMatrix();
+// Set the white rectangle detector to use the test image
+WhiteRectangleDetector whiteRectangleDetector = new WhiteRectangleDetector(testImage);
+// Get the matrix center using the white rectangle detector
+Point matrixCenter = detector.getMatrixCenter();
+// Check the expected value against the actual value
+Point expectedCenter = new Point(0, 0);
+assertEquals(expectedCenter, matrixCenter);
+
+
+No.10 generated result --------------------------
+
+@Test
+public void getMatrixCenterTest() {
+    BitMatrix image = new BitMatrix(10, 10);
+    Detector detector = new Detector(image);
+    Point matrixCenter = detector.getMatrixCenter();
+    assertNotNull(matrixCenter);
+}
+
+

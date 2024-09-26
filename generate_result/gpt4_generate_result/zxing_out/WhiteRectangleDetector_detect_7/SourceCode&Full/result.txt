@@ -1,0 +1,738 @@
+Source code: 
+
+
+public ResultPoint[] detect() throws NotFoundException {
+
+  int left = leftInit;
+  int right = rightInit;
+  int up = upInit;
+  int down = downInit;
+  boolean sizeExceeded = false;
+  boolean aBlackPointFoundOnBorder = true;
+
+  boolean atLeastOneBlackPointFoundOnRight = false;
+  boolean atLeastOneBlackPointFoundOnBottom = false;
+  boolean atLeastOneBlackPointFoundOnLeft = false;
+  boolean atLeastOneBlackPointFoundOnTop = false;
+
+  while (aBlackPointFoundOnBorder) {
+
+    aBlackPointFoundOnBorder = false;
+
+    // .....
+    // .   |
+    // .....
+    boolean rightBorderNotWhite = true;
+    while ((rightBorderNotWhite || !atLeastOneBlackPointFoundOnRight) && right < width) {
+      rightBorderNotWhite = containsBlackPoint(up, down, right, false);
+      if (rightBorderNotWhite) {
+        right++;
+        aBlackPointFoundOnBorder = true;
+        atLeastOneBlackPointFoundOnRight = true;
+      } else if (!atLeastOneBlackPointFoundOnRight) {
+        right++;
+      }
+    }
+
+    if (right >= width) {
+      sizeExceeded = true;
+      break;
+    }
+
+    // .....
+    // .   .
+    // .___.
+    boolean bottomBorderNotWhite = true;
+    while ((bottomBorderNotWhite || !atLeastOneBlackPointFoundOnBottom) && down < height) {
+      bottomBorderNotWhite = containsBlackPoint(left, right, down, true);
+      if (bottomBorderNotWhite) {
+        down++;
+        aBlackPointFoundOnBorder = true;
+        atLeastOneBlackPointFoundOnBottom = true;
+      } else if (!atLeastOneBlackPointFoundOnBottom) {
+        down++;
+      }
+    }
+
+    if (down >= height) {
+      sizeExceeded = true;
+      break;
+    }
+
+    // .....
+    // |   .
+    // .....
+    boolean leftBorderNotWhite = true;
+    while ((leftBorderNotWhite || !atLeastOneBlackPointFoundOnLeft) && left >= 0) {
+      leftBorderNotWhite = containsBlackPoint(up, down, left, false);
+      if (leftBorderNotWhite) {
+        left--;
+        aBlackPointFoundOnBorder = true;
+        atLeastOneBlackPointFoundOnLeft = true;
+      } else if (!atLeastOneBlackPointFoundOnLeft) {
+        left--;
+      }
+    }
+
+    if (left < 0) {
+      sizeExceeded = true;
+      break;
+    }
+
+    // .___.
+    // .   .
+    // .....
+    boolean topBorderNotWhite = true;
+    while ((topBorderNotWhite || !atLeastOneBlackPointFoundOnTop) && up >= 0) {
+      topBorderNotWhite = containsBlackPoint(left, right, up, true);
+      if (topBorderNotWhite) {
+        up--;
+        aBlackPointFoundOnBorder = true;
+        atLeastOneBlackPointFoundOnTop = true;
+      } else if (!atLeastOneBlackPointFoundOnTop) {
+        up--;
+      }
+    }
+
+    if (up < 0) {
+      sizeExceeded = true;
+      break;
+    }
+
+  }
+
+  if (!sizeExceeded) {
+
+    int maxSize = right - left;
+
+    ResultPoint z = null;
+    for (int i = 1; z == null && i < maxSize; i++) {
+      z = getBlackPointOnSegment(left, down - i, left + i, down);
+    }
+
+    if (z == null) {
+      throw NotFoundException.getNotFoundInstance();
+    }
+
+    ResultPoint t = null;
+    //go down right
+    for (int i = 1; t == null && i < maxSize; i++) {
+      t = getBlackPointOnSegment(left, up + i, left + i, up);
+    }
+
+    if (t == null) {
+      throw NotFoundException.getNotFoundInstance();
+    }
+
+    ResultPoint x = null;
+    //go down left
+    for (int i = 1; x == null && i < maxSize; i++) {
+      x = getBlackPointOnSegment(right, up + i, right - i, up);
+    }
+
+    if (x == null) {
+      throw NotFoundException.getNotFoundInstance();
+    }
+
+    ResultPoint y = null;
+    //go up left
+    for (int i = 1; y == null && i < maxSize; i++) {
+      y = getBlackPointOnSegment(right, down - i, right - i, down);
+    }
+
+    if (y == null) {
+      throw NotFoundException.getNotFoundInstance();
+    }
+
+    return centerEdges(y, z, x, t);
+
+  } else {
+    throw NotFoundException.getNotFoundInstance();
+  }
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.google.zxing.common.detector;
+
+import org.junit.jupiter.api.*;
+import com.google.zxing.NotFoundException;
+import com.google.zxing.ResultPoint;
+import static org.junit.jupiter.api.Assertions.*;
+import com.google.zxing.common.BitMatrix;
+
+/* Assuming a mock BitMatrix that would have a detectable rectangle. */
+class MockBitMatrix extends BitMatrix {
+    public MockBitMatrix(int width, int height) {
+        super(width, height);
+    }
+
+    @Override
+    public boolean get(int x, int y) {
+        // Assume a certain condition for mock where some points are black (true).
+        // This condition needs to match a case where a rectangle is actually detected.
+        // For example, a black border at (5,5) to (10,10)
+        return x >= 5 && x <= 10 && y >= 5 && y <= 10;
+    }
+}
+
+public class WhiteRectangleDetectorTest {
+
+    @Test
+    public void detectTest() throws NotFoundException {
+        // Assuming a square BitMatrix for simplicity where we expect to find a rectangle.
+        BitMatrix mockImage = new MockBitMatrix(200, 200);
+        WhiteRectangleDetector detector = new WhiteRectangleDetector(mockImage, 10, 100, 100);
+        
+        // Run detect method
+        ResultPoint[] result = detector.detect();
+
+        // Assert that an array of 4 points representing the corners of the rectangle is returned
+        assertNotNull(result);
+        assertEquals(4, result.length);
+
+        // Assert that the points are the expected corners of the rectangle
+        // The exact points depend on the implementation of the method and the test stub
+        // For example, assume expected points at:
+        // (5, 5), (5, 10), (10, 5), and (10, 10)
+        assertEquals(new ResultPoint(5, 5), result[0]);
+        assertEquals(new ResultPoint(5, 10), result[1]);
+        assertEquals(new ResultPoint(10, 5), result[2]);
+        assertEquals(new ResultPoint(10, 10), result[3]);
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package com.google.zxing.common.detector;
+
+import com.google.zxing.NotFoundException;
+import com.google.zxing.ResultPoint;
+import com.google.zxing.common.BitMatrix;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class WhiteRectangleDetectorTest {
+    private WhiteRectangleDetector whiteRectangleDetector;
+    private BitMatrix mockImage;
+
+    @BeforeEach
+    public void setUp() {
+        int width = 100; // width of the mock image
+        int height = 100; // height of the mock image
+        mockImage = new BitMatrix(width, height);
+        
+        // Let's assume that the mock image has a white rectangle in it
+        // Here we'll set the pixels to true for the black points and false
+        // for white areas of the mock image
+        for (int i = 30; i < 70; i++) {
+            for (int j = 30; j < 70; j++) {
+                if (i == 30 || i == 69 || j == 30 || j == 69) {
+                    mockImage.set(i, j); // Setting black border points
+                }
+            }
+        }
+        
+        // Initialize WhiteRectangleDetector with the created BitMatrix
+        try {
+            whiteRectangleDetector = new WhiteRectangleDetector(mockImage);
+        } catch (NotFoundException e) {
+            fail("Initialization of WhiteRectangleDetector threw NotFoundException.");
+        }
+    }
+
+    @Test
+    public void detectTest() {
+        assertDoesNotThrow(() -> {
+            ResultPoint[] resultPoints = whiteRectangleDetector.detect();
+            
+            // Ensure that four points were detected
+            assertEquals(4, resultPoints.length);
+            
+            // Check points for expected values, assuming we are looking for the outermost black points
+            assertEquals(new ResultPoint(30, 30), resultPoints[0]);
+            assertEquals(new ResultPoint(30, 69), resultPoints[1]);
+            assertEquals(new ResultPoint(69, 69), resultPoints[2]);
+            assertEquals(new ResultPoint(69, 30), resultPoints[3]);
+        });
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.google.zxing.common.detector;
+
+import com.google.zxing.NotFoundException;
+import com.google.zxing.ResultPoint;
+import com.google.zxing.common.BitMatrix;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class WhiteRectangleDetectorTest {
+
+    @Test
+    public void detectTest() throws NotFoundException {
+        // Given
+        int width = 100;
+        int height = 100;
+        BitMatrix image = new BitMatrix(width, height);
+        // Simulate a black point in the image at (50,50)
+        image.set(50, 50);
+        WhiteRectangleDetector detector = new WhiteRectangleDetector(image, 10, width / 2, height / 2);
+
+        // When
+        ResultPoint[] result = detector.detect();
+
+        // Then
+        assertNotNull(result);
+        assertEquals(4, result.length); // Check we found four corners as expected
+
+        // Test that points have expected values (mocked here as example)
+        // Depends on the contents of image matrix
+        assertEquals(new ResultPoint(45, 55), result[0]);
+        assertEquals(new ResultPoint(55, 55), result[1]);
+        assertEquals(new ResultPoint(55, 45), result[2]);
+        assertEquals(new ResultPoint(45, 45), result[3]);   
+    }
+
+    @Test
+    public void detectTestWithNotFoundException() {
+        // Given an entirely white image (no black points)
+        int width = 100;
+        int height = 100;
+        BitMatrix image = new BitMatrix(width, height);
+        WhiteRectangleDetector detector = new WhiteRectangleDetector(image, 10, width / 2, height / 2);
+
+        // When / Then
+        NotFoundException thrown = assertThrows(
+            NotFoundException.class,
+            detector::detect,
+            "NotFoundException was expected"
+        );
+
+        // Assert correct NotFoundException usage
+        assertEquals(NotFoundException.getNotFoundInstance(), thrown);
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.google.zxing.common.detector;
+
+import com.google.zxing.NotFoundException;
+import com.google.zxing.ResultPoint;
+import com.google.zxing.common.BitMatrix;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class WhiteRectangleDetectorTest {
+
+    private BitMatrix image;
+    private WhiteRectangleDetector detector;
+
+    @BeforeEach
+    public void setUp() {
+        // Assuming a 100x100 black image (no white rectangle region)
+        int width = 100;
+        int height = 100;
+        image = new BitMatrix(width, height);
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                image.set(i, j);
+            }
+        }
+        try {
+            detector = new WhiteRectangleDetector(image);
+        } catch (NotFoundException e) {
+            fail("Error initializing WhiteRectangleDetector.");
+        }
+    }
+
+    @Test
+    public void detectTestShouldThrowNotFoundException() {
+        assertThrows(NotFoundException.class, () -> {
+            ResultPoint[] points = detector.detect();
+            assertNull(points, "Expected detect() method to throw NotFoundException and return null.");
+        });
+    }
+
+    // Additional test cases to fully test the WhiteRectangleDetector should go here
+    // Examples include:
+    // - Verifying correct corner detection
+    // - Handling of images with different dimensions
+    // - Cases with a minimum number of black points to form a region
+}
+
+
+No.5 generated result --------------------------
+
+package com.google.zxing.common.detector;
+
+import com.google.zxing.NotFoundException;
+import com.google.zxing.ResultPoint;
+import com.google.zxing.common.BitMatrix;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class WhiteRectangleDetectorTest {
+
+    @Test
+    public void detectTest() throws NotFoundException {
+        // Create a mock BitMatrix with a white rectangle
+        int width = 100;
+        int height = 100;
+        BitMatrix mockImage = new BitMatrix(width, height);
+        for (int i = 30; i < 70; i++) {
+            for (int j = 30; j < 70; j++) {
+                if (i == 30 || i == 69 || j == 30 || j == 69) {
+                    mockImage.set(i, j);
+                }
+            }
+        }
+
+        WhiteRectangleDetector detector = new WhiteRectangleDetector(mockImage);
+
+        // Expected corner points of the detected white rectangle
+        ResultPoint expectedTopLeft = new ResultPoint(30, 30);
+        ResultPoint expectedTopRight = new ResultPoint(69, 30);
+        ResultPoint expectedBottomLeft = new ResultPoint(30, 69);
+        ResultPoint expectedBottomRight = new ResultPoint(69, 69);
+
+        // Perform detection
+        ResultPoint[] result = detector.detect();
+
+        // Assert all corners are as expected
+        assertNotNull(result);
+        assertEquals(4, result.length);
+        // The order of points is top, left, right, bottom
+        assertTrue(containsPoint(result, expectedTopLeft));
+        assertTrue(containsPoint(result, expectedTopRight));
+        assertTrue(containsPoint(result, expectedBottomLeft));
+        assertTrue(containsPoint(result, expectedBottomRight));
+    }
+
+    private static boolean containsPoint(ResultPoint[] points, ResultPoint point) {
+        for (ResultPoint resultPoint : points) {
+            if (Math.abs(resultPoint.getX() - point.getX()) < 1.0f &&
+                Math.abs(resultPoint.getY() - point.getY()) < 1.0f) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package com.google.zxing.common.detector;
+
+import com.google.zxing.NotFoundException;
+import com.google.zxing.ResultPoint;
+import com.google.zxing.common.BitMatrix;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class WhiteRectangleDetectorTest {
+
+    @Test
+    public void detectTest() throws NotFoundException {
+        // Hypothetical dimensions for a BitMatrix that represents an image
+        int width = 100;
+        int height = 100;
+        // Create a mock BitMatrix where black points represent the barcode pattern
+        BitMatrix mockImage = new BitMatrix(width, height);
+
+        // Populate the mockImage with hypothetical barcode-like pattern
+        // For example, marking a simple rectangle from (30,30) to (70,70)
+        for (int i = 30; i <= 70; i++) {
+            for (int j = 30; j <= 70; j++) {
+                if (i == 30 || i == 70 || j == 30 || j == 70) {
+                    mockImage.set(i, j);
+                }
+            }
+        }
+
+        // Now that we have a mock image with a clear rectangular pattern,
+        // create an instance of WhiteRectangleDetector
+        int initSize = 40;  // initial search area size
+        int xCenter = 50;   // x position of search center
+        int yCenter = 50;   // y position of search center
+        WhiteRectangleDetector detector = new WhiteRectangleDetector(mockImage, initSize, xCenter, yCenter);
+
+        // Actual test starts here
+        ResultPoint[] detectedPoints = detector.detect();
+
+        // Assertions - Check if we got the 4 corners of the rectangle back
+        assertAll("Should detect 4 corners of a rectangular region",
+                () -> assertNotNull(detectedPoints, "Detected points should not be null"),
+                () -> assertEquals(4, detectedPoints.length, "Should detect exactly four points"),
+
+                // Assuming that the centerEdges shifts the corners 1 unit towards the center
+                () -> assertEquals(new ResultPoint(29, 71), detectedPoints[0], "Topmost point should match expected top left corner"),
+                () -> assertEquals(new ResultPoint(71, 71), detectedPoints[1], "Rightmost point should match expected top right corner"),
+                () -> assertEquals(new ResultPoint(71, 29), detectedPoints[2], "Bottommost point should match expected bottom right corner"),
+                () -> assertEquals(new ResultPoint(29, 29), detectedPoints[3], "Leftmost point should match expected bottom left corner")
+        );
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.google.zxing.common.detector;
+
+// ... other import statements may be here ...
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.NotFoundException;
+import com.google.zxing.ResultPoint;
+
+public class WhiteRectangleDetectorTest {
+
+    @Test
+    public void detectTest() {
+        // Create a mock BitMatrix
+        int width = 100;
+        int height = 100;
+        BitMatrix mockMatrix = new BitMatrix(width, height);
+        
+        // Drawing a white "rectangle" in the middle
+        for (int i = 30; i < 70; i++) {
+            for (int j = 30; j < 70; j++) {
+                if (i == 30 || i == 69 || j == 30 || j == 69) {
+                    mockMatrix.set(i, j);
+                }
+            }
+        }
+        
+        // Initialize WhiteRectangleDetector with mock BitMatrix
+        WhiteRectangleDetector detector = null;
+        try {
+            detector = new WhiteRectangleDetector(mockMatrix, 10, width / 2, height / 2);
+        } catch (NotFoundException e) {
+            fail("NotFoundException should not be thrown here.");
+        }
+
+        try {
+            // Perform detection
+            ResultPoint[] resultPoints = detector.detect();
+
+            // Assuming the correct rectangle is found, it should return 4 points
+            assertEquals(4, resultPoints.length, "Should have found 4 corners.");
+
+            // Assert corners of the detected rectangle
+            // Note: The specific points depend on the correct implementation of the detect method
+            // and may vary; these checks are therefore placeholders and may need to be adjusted.
+            assertEquals(new ResultPoint(69, 31), resultPoints[0]);
+            assertEquals(new ResultPoint(31, 31), resultPoints[1]);
+            assertEquals(new ResultPoint(31, 69), resultPoints[2]);
+            assertEquals(new ResultPoint(69, 69), resultPoints[3]);
+        } catch (NotFoundException e) {
+            fail("Rectangle should be detected and NotFoundException should not be thrown.");
+        }
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package com.google.zxing.common.detector;
+
+import com.google.zxing.NotFoundException;
+import com.google.zxing.ResultPoint;
+import com.google.zxing.common.BitMatrix;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class WhiteRectangleDetectorTest {
+    
+    private BitMatrix createTestImage(int width, int height, int[] blackPointCoords) {
+        BitMatrix image = new BitMatrix(width, height);
+        for (int i = 0; i < blackPointCoords.length; i += 2) {
+            int x = blackPointCoords[i];
+            int y = blackPointCoords[i + 1];
+            image.set(x, y);
+        }
+        return image;
+    }
+    
+    @Test
+    public void detectTestWithFoundRectangle() {
+        int width = 100;
+        int height = 100;
+        int[] blackPointCoords = { // x, y coordinate pairs
+            20, 20,
+            20, 80,
+            80, 20,
+            80, 80
+        };
+        BitMatrix image = createTestImage(width, height, blackPointCoords);
+
+        try {
+            WhiteRectangleDetector detector = new WhiteRectangleDetector(image);
+            ResultPoint[] result = detector.detect();
+            assertNotNull(result, "Result should not be null");
+            assertEquals(4, result.length, "Result should have 4 points");
+            // Add assertions to verify if the returned points are correct.
+        } catch (NotFoundException e) {
+            fail("NotFoundException should not be thrown");
+        }
+    }
+
+    @Test
+    public void detectTestWithSizeExceeded() {
+        int width = 50;
+        int height = 50;
+        int[] blackPointCoords = { // x, y coordinate pairs
+            0, 0,
+            0, 49,
+            49, 0,
+            49, 49
+        };
+        BitMatrix image = createTestImage(width, height, blackPointCoords);
+
+        Exception thrown =
+            assertThrows(NotFoundException.class, () -> {
+                WhiteRectangleDetector detector = new WhiteRectangleDetector(image);
+                ResultPoint[] result = detector.detect(); // This should throw
+            });
+        
+        assertTrue(thrown instanceof NotFoundException, "Expected NotFoundException to be thrown");
+    }
+
+    @Test
+    public void detectTestWithNotFoundException() {
+        int width = 100;
+        int height = 100;
+        BitMatrix image = new BitMatrix(width, height); // All white image
+
+        Exception thrown =
+            assertThrows(NotFoundException.class, () -> {
+                WhiteRectangleDetector detector = new WhiteRectangleDetector(image);
+                ResultPoint[] result = detector.detect(); // This should throw
+            });
+        
+        assertTrue(thrown instanceof NotFoundException, "Expected NotFoundException to be thrown");
+    }
+    
+    // Additional tests can be written to check for specific edge cases and behavior.
+}
+
+
+No.9 generated result --------------------------
+
+package com.google.zxing.common.detector;
+
+import com.google.zxing.NotFoundException;
+import com.google.zxing.ResultPoint;
+import com.google.zxing.common.BitMatrix;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class WhiteRectangleDetectorTest {
+    
+    private static final int TEST_WIDTH = 100;
+    private static final int TEST_HEIGHT = 100;
+    
+    @Test
+    public void detectNotFoundsWhenImageTooSmall() {
+        BitMatrix matrix = new BitMatrix(5, 5);
+        WhiteRectangleDetector detector = new WhiteRectangleDetector(matrix, 10, TEST_WIDTH / 2, TEST_HEIGHT / 2);
+        assertThrows(NotFoundException.class, detector::detect);
+    }
+
+    @Test
+    public void detectFindsRectangle() throws NotFoundException {
+        BitMatrix matrix = new BitMatrix(TEST_WIDTH, TEST_HEIGHT);
+        // creating a black rectangle
+        for (int i = 10; i < 30; i++) {
+            for (int j = 10; j < 30; j++) {
+                matrix.set(i, j);
+            }
+        }
+        WhiteRectangleDetector detector = new WhiteRectangleDetector(matrix, 10, TEST_WIDTH / 2, TEST_HEIGHT / 2);
+        ResultPoint[] points = detector.detect();
+        assertNotNull(points, "Result points should not be null");
+        assertEquals(4, points.length, "Should detect exactly 4 corner points");
+        
+        // Should possibly adjust these exact expectations based upon the implementation of centerEdges
+        // This assumes top-left of the rectangle goes to the point (30,10) and is corrected by CORR.
+        assertEquals(new ResultPoint(29, 11), points[0], "Unexpected top-left point");
+        assertEquals(new ResultPoint(11, 11), points[1], "Unexpected bottom-left point");
+        assertEquals(new ResultPoint(29, 29), points[2], "Unexpected top-right point");
+        assertEquals(new ResultPoint(11, 29), points[3], "Unexpected bottom-right point");
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.google.zxing.common.detector;
+
+import com.google.zxing.NotFoundException;
+import com.google.zxing.ResultPoint;
+import com.google.zxing.common.BitMatrix;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class WhiteRectangleDetectorTest {
+
+    @Test
+    public void detectTestWhenRectangleIsFound() throws NotFoundException {
+        BitMatrix fakeImage = createFakeBitMatrixWithRectangle();
+        WhiteRectangleDetector whiteRectangleDetector = new WhiteRectangleDetector(fakeImage);
+
+        ResultPoint[] resultPoints = whiteRectangleDetector.detect();
+
+        assertNotNull(resultPoints);
+        assertEquals(4, resultPoints.length);
+        // For the purpose of this example, assume we know the rectangle corners
+        // Assert that the result points match the expected points
+        assertArrayEquals(new ResultPoint[] {
+            new ResultPoint(...), // Expected top-most point details
+            new ResultPoint(...), // Expected left-most point details
+            new ResultPoint(...), // Expected right-most point details
+            new ResultPoint(...), // Expected bottom-most point details
+        }, resultPoints);
+    }
+
+    @Test
+    public void detectTestWhenRectangleIsNotFound() {
+        BitMatrix fakeImage = createFakeBitMatrixWithoutRectangle();
+        WhiteRectangleDetector whiteRectangleDetector = new WhiteRectangleDetector(fakeImage);
+
+        NotFoundException thrown = assertThrows(
+            NotFoundException.class,
+            () -> whiteRectangleDetector.detect(),
+            "Expected detect() to throw NotFoundException, but it didn't"
+        );
+
+        assertTrue(thrown.getMessage().contains("cannot find"));
+    }
+
+    // Helper methods to create a fake BitMatrix for testing, one containing a rectangle,
+    // and one without it, could be implemented here.
+    private BitMatrix createFakeBitMatrixWithRectangle() {
+        // This method should create a BitMatrix representing an image with a rectangle.
+        // It would set the appropriate bits to black for the rectangle detection.
+        return new BitMatrix(100, 100); // Replace with the actual BitMatrix creation
+    }
+
+    private BitMatrix createFakeBitMatrixWithoutRectangle() {
+        // This method should create a BitMatrix representing an image without a rectangle.
+        // It would leave all bits white.
+        return new BitMatrix(100, 100); // Replace with the actual BitMatrix creation
+    }
+}
+
+

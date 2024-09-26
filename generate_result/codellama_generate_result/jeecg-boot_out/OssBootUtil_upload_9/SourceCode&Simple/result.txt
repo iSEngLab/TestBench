@@ -1,0 +1,514 @@
+Source code: 
+
+
+public static String upload(FileItemStream file, String fileDir) {
+    String filePath = null;
+    initOss(endPoint, accessKeyId, accessKeySecret);
+    StringBuilder fileUrl = new StringBuilder();
+    try {
+        String suffix = file.getName().substring(file.getName().lastIndexOf('.'));
+        String fileName = UUID.randomUUID().toString().replace("-", "") + suffix;
+        if (!fileDir.endsWith(SymbolConstant.SINGLE_SLASH)) {
+            fileDir = fileDir.concat(SymbolConstant.SINGLE_SLASH);
+        }
+        fileDir = StrAttackFilter.filter(fileDir);
+        fileUrl = fileUrl.append(fileDir + fileName);
+        if (oConvertUtils.isNotEmpty(staticDomain) && staticDomain.toLowerCase().startsWith(CommonConstant.STR_HTTP)) {
+            filePath = staticDomain + SymbolConstant.SINGLE_SLASH + fileUrl;
+        } else {
+            filePath = "https://" + bucketName + "." + endPoint + SymbolConstant.SINGLE_SLASH + fileUrl;
+        }
+        PutObjectResult result = ossClient.putObject(bucketName, fileUrl.toString(), file.openStream());
+        // 设置权限(公开读)
+        ossClient.setBucketAcl(bucketName, CannedAccessControlList.PublicRead);
+        if (result != null) {
+            log.info("------OSS文件上传成功------" + fileUrl);
+        }
+    } catch (IOException e) {
+        e.printStackTrace();
+        return null;
+    }
+    return filePath;
+}
+
+
+
+No.1 generated result --------------------------
+
+@Test
+public void uploadTest() {
+    String fileDir = "/test/";
+    FileItemStream file = new FileItemStream(); // create a mock file item stream object
+    String url = OssBootUtil.upload(file, fileDir);
+    assertNotNull(url);
+}
+
+
+No.2 generated result --------------------------
+
+package org.jeecg.common.util.oss;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class OssBootUtilTest {
+    @Test
+    public void uploadTest() {
+        // Arrange
+        FileItemStream file = Mockito.mock(FileItemStream.class);
+        String fileDir = "test-dir";
+        OssBootUtil ossBootUtil = new OssBootUtil();
+        
+        // Act
+        String result = ossBootUtil.upload(file, fileDir);
+        
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.matches("https://[a-z0-9]{16}\\.[a-z0-9]{8}\\.[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}"));
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jeecg.common.util.oss;
+
+import com.aliyun.oss.ClientConfiguration;
+import com.aliyun.oss.OSSClient;
+import com.aliyun.oss.model.CannedAccessControlList;
+import com.aliyun.oss.model.PutObjectResult;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.fileupload.FileItemStream;
+import org.jeecg.common.constant.CommonConstant;
+import org.jeecg.common.constant.SymbolConstant;
+import org.junit.jupiter.api.*;
+
+import java.io.IOException;
+import java.util.UUID;
+
+@Slf4j
+public class OssBootUtilTest {
+    private static String endPoint = "http://oss-cn-hangzhou.aliyuncs.com";
+    private static String accessKeyId = "your_access_key_id";
+    private static String accessKeySecret = "your_access_key_secret";
+    private static String bucketName = "your_bucket_name";
+    private static String staticDomain = "your_static_domain";
+
+    @Test
+    public void uploadTest() {
+        // Initialize OSS client
+        OssBootUtil.initOss(endPoint, accessKeyId, accessKeySecret);
+
+        // Create a file item stream with random content and a size of 1024 bytes
+        FileItemStream file = new FileItemStream();
+        file.setSize(1024);
+        file.setInputStream(new BufferedInputStream(CommonUtils.randomString(1024).getBytes()));
+
+        // Upload the file to OSS and retrieve the URL
+        String filePath = OssBootUtil.upload(file, "test/");
+        assertNotNull(filePath);
+        log.info("File path: {}", filePath);
+    }
+}
+
+
+No.4 generated result --------------------------
+
+@Test
+public void uploadTest() {
+    String filePath = null;
+    initOss(endPoint, accessKeyId, accessKeySecret);
+    StringBuilder fileUrl = new StringBuilder();
+    try {
+        String suffix = "test.txt";
+        String fileName = UUID.randomUUID().toString().replace("-", "") + suffix;
+        if (!fileDir.endsWith(SymbolConstant.SINGLE_SLASH)) {
+            fileDir = fileDir.concat(SymbolConstant.SINGLE_SLASH);
+        }
+        fileDir = StrAttackFilter.filter(fileDir);
+        fileUrl = fileUrl.append(fileDir + fileName);
+        if (oConvertUtils.isNotEmpty(staticDomain) && staticDomain.toLowerCase().startsWith(CommonConstant.STR_HTTP)) {
+            filePath = staticDomain + SymbolConstant.SINGLE_SLASH + fileUrl;
+        } else {
+            filePath = "https://" + bucketName + "." + endPoint + SymbolConstant.SINGLE_SLASH + fileUrl;
+        }
+        PutObjectResult result = ossClient.putObject(bucketName, fileUrl.toString(), new BufferedInputStream("test".getBytes()));
+        // 设置权限(公开读)
+        ossClient.setBucketAcl(bucketName, CannedAccessControlList.PublicRead);
+        if (result != null) {
+            log.info("------OSS文件上传成功------" + fileUrl);
+        }
+    } catch (IOException e) {
+        e.printStackTrace();
+        return null;
+    }
+    return filePath;
+}
+
+
+No.5 generated result --------------------------
+
+package org.jeecg.common.util.oss;
+
+import com.aliyun.oss.ClientConfiguration;
+import com.aliyun.oss.OSSClient;
+import com.aliyun.oss.model.CannedAccessControlList;
+import com.aliyun.oss.model.PutObjectResult;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.fileupload.FileItemStream;
+import org.jeecg.common.constant.CommonConstant;
+import org.jeecg.common.constant.SymbolConstant;
+import org.jeecg.common.util.CommonUtils;
+import org.jeecg.common.util.filter.SsrfFileTypeFilter;
+import org.jeecg.common.util.filter.StrAttackFilter;
+import org.jeecg.common.util.oConvertUtils;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.util.Date;
+import java.util.UUID;
+
+@Slf4j
+public class OssBootUtil {
+    private static String endPoint;
+    private static String accessKeyId;
+    private static String accessKeySecret;
+    private static String bucketName;
+    private static String staticDomain;
+
+    public static void setEndPoint(String endPoint) {
+        OssBootUtil.endPoint = endPoint;
+    }
+
+    public static void setAccessKeyId(String accessKeyId) {
+        OssBootUtil.accessKeyId = accessKeyId;
+    }
+
+    public static void setAccessKeySecret(String accessKeySecret) {
+        OssBootUtil.accessKeySecret = accessKeySecret;
+    }
+
+    public static void setBucketName(String bucketName) {
+        OssBootUtil.bucketName = bucketName;
+    }
+
+    public static void setStaticDomain(String staticDomain) {
+        OssBootUtil.staticDomain = staticDomain;
+    }
+
+    public static String getStaticDomain() {
+        return staticDomain;
+    }
+
+    public static String getEndPoint() {
+        return endPoint;
+    }
+
+    public static String getAccessKeyId() {
+        return accessKeyId;
+    }
+
+    public static String getAccessKeySecret() {
+        return accessKeySecret;
+    }
+
+    public static String getBucketName() {
+        return bucketName;
+    }
+
+    private static OSSClient ossClient;
+
+    public static String upload(MultipartFile file, String fileDir, String customBucket) throws Exception {
+        <FILL>
+    }
+
+    public static String getOriginalUrl(String url) {
+        return null;
+    }
+
+    public static String upload(MultipartFile file, String fileDir) throws Exception {
+        <FILL>
+    }
+
+    public static String upload(FileItemStream file, String fileDir) {
+        return null;
+    }
+
+    public static void deleteUrl(String url) {
+        log.error("OSS delete error: {}", url);
+    }
+
+    public static void deleteUrl(String url, String bucket) {
+        log.error("OSS delete error: {} in bucket: {}", url, bucket);
+    }
+
+    public static void delete(String fileName) {
+        log.error("OSS delete error: {}", fileName);
+    }
+
+    public static InputStream getOssFile(String objectName, String bucket) {
+        return null;
+    }
+
+    public static String getObjectUrl(String bucketName, String objectName, Date expires) {
+        return null;
+    }
+
+    private static OSSClient initOss(String endpoint, String accessKeyId, String accessKeySecret) {
+        if (ossClient == null) {
+            ossClient = new OSSClient(endpoint, accessKeyId, accessKeySecret);
+        }
+        return ossClient;
+    }
+
+    public static String upload(InputStream stream, String relativePath) {
+        return null;
+    }
+
+    private static String replacePrefix(String objectName, String customBucket) {
+        return null;
+    }
+}
+
+package org.jeecg.common.util.oss;
+
+import com.aliyun.oss.ClientConfiguration;
+import com.aliyun.oss.OSSClient;
+import com.aliyun.oss.model.CannedAccessControlList;
+import com.aliyun.oss.model.PutObjectResult;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.fileupload.FileItemStream;
+import org.jeecg.common.constant.CommonConstant;
+import org.jeecg.common.util.OSSClientUtil;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+@Slf4j
+public class OssBootUtil {
+    private static String endPoint;
+    private static String accessKeyId;
+    private static String accessKeySecret;
+    private static String bucketName;
+    private static String staticDomain;
+
+    public static void setEndPoint(String endPoint) {
+        OssBootUtil.endPoint = endPoint;
+    }
+
+    public static void setAccessKeyId(String accessKeyId) {
+        OssBootUtil.accessKeyId = accessKeyId;
+    }
+
+    public static void setAccessKeySecret(String accessKeySecret) {
+        OssBootUtil.accessKeySecret = accessKeySecret;
+    }
+
+    public static void setBucketName(String bucketName) {
+        OssBootUtil.bucketName = bucketName;
+    }
+
+    public static void setStaticDomain(String staticDomain) {
+        OssBootUtil.staticDomain = staticDomain;
+    }
+
+    public static String getEndPoint() {
+        return endPoint;
+    }
+
+    public static String getAccessKeyId() {
+        return accessKeyId;
+    }
+
+    public static String getAccessKeySecret() {
+        return accessKeySecret;
+    }
+
+    public static String getBucketName() {
+        return bucketName;
+    }
+
+    private static OSSClient ossClient;
+
+    public static String upload(MultipartFile file, String fileDir) throws Exception {
+        <FILL>
+    }
+
+    public static String upload(FileItemStream file, String fileDir) {
+        return null;
+    }
+
+    public static void deleteUrl(String url) {
+        log.error("OSS delete error: {}", url);
+    }
+
+    public static void deleteUrl(String url, String bucket) {
+        log.error("OSS delete error: {} in bucket: {}", url, bucket);
+    }
+
+    public static void delete(String fileName) {
+        log.error("OSS delete error: {}", fileName);
+    }
+
+    public static InputStream getOssFile(String objectName, String bucket) {
+        return null;
+    }
+
+    public static String getObjectUrl(String bucketName, String objectName, Date expires) {
+        return null;
+    }
+
+    private static OSSClient initOss(String endpoint, String accessKeyId, String accessKeySecret) {
+        if (ossClient == null) {
+            ossClient = new OSSClient(endpoint, accessKeyId, accessKeySecret);
+        }
+        return ossClient;
+    }
+
+    public static String upload(InputStream stream, String relativePath) {
+        return null;
+    }
+}
+
+
+No.6 generated result --------------------------
+
+@Test
+public void uploadTest() {
+    // Arrange
+    FileItemStream file = new MockFileItemStream();
+    String fileDir = "test-dir";
+    
+    // Act
+    String result = OssBootUtil.upload(file, fileDir);
+    
+    // Assert
+    assertNotNull(result);
+}
+
+
+No.7 generated result --------------------------
+
+
+package org.jeecg.common.util.oss;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+
+import com.aliyun.oss.model.PutObjectResult;
+
+import org.jeecg.common.util.oss.OssBootUtil;
+
+import org.junit.jupiter.api.Test;
+
+public class OssBootUtilTest {
+    @Test
+    public void uploadTest() throws IOException {
+        // Set up the OSS client configuration
+        String endPoint = "http://oss-cn-hangzhou.aliyuncs.com";
+        String accessKeyId = "your_access_key_id";
+        String accessKeySecret = "your_access_key_secret";
+        String bucketName = "your_bucket_name";
+        OssBootUtil.setEndPoint(endPoint);
+        OssBootUtil.setAccessKeyId(accessKeyId);
+        OssBootUtil.setAccessKeySecret(accessKeySecret);
+        OssBootUtil.setBucketName(bucketName);
+
+        // Create a mock FileItemStream object
+        File file = new File("path/to/file");
+        InputStream inputStream = new ByteArrayInputStream(file.getBytes());
+        PutObjectResult putObjectResult = new PutObjectResult();
+        putObjectResult.setBucketName(bucketName);
+        putObjectResult.setContentLength(file.length());
+        FileItemStream fileItemStream = new FileItemStream(inputStream, file.getName(), file.length(), null, putObjectResult);
+
+        // Call the upload method with the mock FileItemStream object and a file directory string
+        String fileDir = "folder/";
+        String result = OssBootUtil.upload(fileItemStream, fileDir);
+
+        // Verify that the returned URL is in the correct format
+        assertTrue(result.matches("https://" + bucketName + ".oss-cn-hangzhou.aliyuncs.com/folder/" + fileItemStream.getName()));
+    }
+}
+
+
+
+No.8 generated result --------------------------
+
+package org.jeecg.common.util.oss;
+
+import com.aliyun.oss.OSSClient;
+import com.aliyun.oss.model.CannedAccessControlList;
+import org.junit.jupiter.api.*;
+
+public class OssBootUtilTest {
+    private static final String ENDPOINT = "your-end-point";
+    private static final String ACCESS_KEY_ID = "your-access-key-id";
+    private static final String ACCESS_KEY_SECRET = "your-access-key-secret";
+    private static final String BUCKET_NAME = "your-bucket-name";
+    private static final String FILE_DIR = "your-file-directory";
+
+    @Test
+    public void uploadTest() {
+        OssBootUtil util = new OssBootUtil();
+        util.setEndPoint(ENDPOINT);
+        util.setAccessKeyId(ACCESS_KEY_ID);
+        util.setAccessKeySecret(ACCESS_KEY_SECRET);
+        util.setBucketName(BUCKET_NAME);
+
+        String url = util.upload(FileItemStream file, FILE_DIR);
+
+        assertNotNull(url);
+    }
+}
+
+
+No.9 generated result --------------------------
+
+The given code is for a static utility class that provides methods for working with the Aliyun Object Storage Service (OSS). It has several methods for uploading, deleting, and getting URLs for files stored in OSS.
+
+Here are some possible test cases that you could write for this class:
+
+1. Test case 1: Upload a file to OSS using the `upload` method and verify that it is successfully uploaded by retrieving the URL of the uploaded file using the `getObjectUrl` method.
+2. Test case 2: Delete a file from OSS using the `deleteUrl` method and verify that the file has been deleted by attempting to retrieve its URL using the `getObjectUrl` method.
+3. Test case 3: Upload a file to OSS using the `upload` method with a custom bucket name and verify that it is successfully uploaded by retrieving the URL of the uploaded file using the `getObjectUrl` method.
+4. Test case 4: Delete a file from OSS using the `delete` method and verify that the file has been deleted by attempting to retrieve its URL using the `getObjectUrl` method.
+5. Test case 5: Upload a file to OSS using the `upload` method with a custom bucket name and verify that it is successfully uploaded by retrieving the URL of the uploaded file using the `getObjectUrl` method.
+6. Test case 6: Delete a file from OSS using the `delete` method and verify that the file has been deleted by attempting to retrieve its URL using the `getObjectUrl` method.
+7. Test case 7: Upload a file to OSS using the `upload` method with a custom bucket name and verify that it is successfully uploaded by retrieving the URL of the uploaded file using the `getObjectUrl` method.
+8. Test case 8: Delete a file from OSS using the `deleteUrl` method and verify that the file has been deleted by attempting to retrieve its URL using the `getObjectUrl` method.
+9. Test case 9: Upload a file to OSS using the `upload` method with a custom bucket name and verify that it is successfully uploaded by retrieving the URL of the uploaded file using the `getObjectUrl` method.
+10. Test case 10: Delete a file from OSS using the `delete` method and verify that the file has been deleted by attempting to retrieve its URL using the `getObjectUrl` method.
+
+
+No.10 generated result --------------------------
+
+@Test
+public void uploadTest() {
+    // Create a file item stream object with the contents of the file to be uploaded
+    FileItemStream fileItemStream = new MockFileItemStream("file.txt", "text/plain", 1024);
+    
+    // Set up the OSS client and bucket name
+    String endPoint = "<Your Endpoint>";
+    String accessKeyId = "<Your Access Key ID>";
+    String accessKeySecret = "<Your Access Key Secret>";
+    String bucketName = "<Your Bucket Name>";
+    
+    // Call the upload method with the file item stream, file directory, and custom bucket name
+    String filePath = OssBootUtil.upload(fileItemStream, "/", bucketName);
+    
+    // Assert that the file path is not null
+    assertNotNull(filePath);
+}
+
+

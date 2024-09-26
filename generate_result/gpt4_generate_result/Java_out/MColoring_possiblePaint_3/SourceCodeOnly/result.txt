@@ -1,0 +1,645 @@
+Source code: 
+
+static int possiblePaint(ArrayList<Node> nodes, int n, int m) {
+
+    // Create a visited array of n nodes
+    ArrayList<Integer> visited = new ArrayList<Integer>();
+    for (int i = 0; i < n + 1; i++) {
+        visited.add(0);
+    }
+
+    // maxColors used till now are 1 as
+    // all nodes are painted color 1
+    int maxColors = 1;
+
+    for (int sv = 1; sv <= n; sv++) {
+        if (visited.get(sv) > 0) {
+            continue;
+        }
+
+        // If the starting point is unvisited,
+        // mark it visited and push it in queue
+        visited.set(sv, 1);
+        Queue<Integer> q = new LinkedList<>();
+        q.add(sv);
+
+        // BFS
+        while (q.size() != 0) {
+            int top = q.peek();
+            q.remove();
+
+            // Checking all adjacent nodes
+            // to "top" edge in our queue
+            for (int it : nodes.get(top).edges) {
+
+                // If the color of the
+                // adjacent node is same, increase it by
+                // 1
+                if (nodes.get(top).color == nodes.get(it).color) {
+                    nodes.get(it).color += 1;
+                }
+
+                // If number of colors used exceeds m,
+                // return 0
+                maxColors = Math.max(maxColors, Math.max(nodes.get(top).color, nodes.get(it).color));
+                if (maxColors > m) return 0;
+
+                // If the adjacent node is not visited,
+                // mark it visited and push it in queue
+                if (visited.get(it) == 0) {
+                    visited.set(it, 1);
+                    q.add(it);
+                }
+            }
+        }
+    }
+    return 1;
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.thealgorithms.backtracking;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+
+class Node {
+    int color;
+    ArrayList<Integer> edges;
+
+    Node(int color) {
+        this.color = color;
+        this.edges = new ArrayList<>();
+    }
+
+    void addEdge(int nodeIndex) {
+        edges.add(nodeIndex);
+    }
+}
+
+public class NodeTest {
+    @Test
+    public void possiblePaintTest() {
+        // Prepare test data with a mock graph structure
+        ArrayList<Node> nodes = new ArrayList<>();
+        nodes.add(null); // Add dummy node at 0 to align indices at 1
+
+        // Create 4 nodes for the graph; add a dummy index at 0 for ease of understanding
+        for (int i = 1; i <= 4; i++) {
+            nodes.add(new Node(1));
+        }
+
+        // Set the color connections (graph edges)
+        nodes.get(1).addEdge(2);
+        nodes.get(1).addEdge(3);
+        nodes.get(2).addEdge(1);
+        nodes.get(2).addEdge(4);
+        nodes.get(3).addEdge(1);
+        nodes.get(3).addEdge(4);
+        nodes.get(4).addEdge(2);
+        nodes.get(4).addEdge(3);
+
+        int n = 4; // The number of nodes
+        int m = 3; // The maximum colors available
+
+        // Assert the expected behavior
+        // Assuming our graph is a bipartite graph where m colors are sufficient.
+        int result = possiblePaint(nodes, n, m);
+        assertEquals(1, result, "The paint operation should be possible with given m colors.");
+
+        // Test with insufficient number of colors; expect failure (0 return)
+        m = 1; // Insufficient colors
+        result = possiblePaint(nodes, n, m);
+        assertEquals(0, result, "The paint operation should not be possible with insufficient m colors.");
+    }
+
+    // Include the source code method here, due to its static nature.
+    static int possiblePaint(ArrayList<Node> nodes, int n, int m) {
+        // ... (implementation from the JAVA source code provided)
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package com.thealgorithms.backtracking;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Queue;
+
+public class NodeTest {
+
+    static class Node {
+        public int color;
+        public ArrayList<Integer> edges;
+
+        public Node(int color) {
+            this.color = color;
+            this.edges = new ArrayList<>();
+        }
+
+        public void addEdge(int node) {
+            edges.add(node);
+        }
+    }
+
+    static int possiblePaint(ArrayList<Node> nodes, int n, int m) {
+        // ... [JAVA Source Code above] ...
+    }
+
+    @Test
+    public void possiblePaintTest() {
+        int n = 3; // Number of nodes
+        int m = 2; // Max number of colors
+
+        ArrayList<Node> nodes = new ArrayList<>();
+        nodes.add(new Node(1)); // adding an initial empty node to align index with 1-based
+
+        // Initialize nodes with their color number 1
+        for (int i = 1; i <= n; i++) {
+            nodes.add(new Node(1));
+        }
+
+        // Add some edges to the nodes
+        nodes.get(1).addEdge(2);
+        nodes.get(2).addEdge(1);
+        nodes.get(2).addEdge(3);
+        nodes.get(3).addEdge(2);
+
+        // Test to see if it's possible to paint with the given M colors
+        int result = possiblePaint(nodes, n, m);
+        assertEquals(1, result, "Should return 1 if painting is possible");
+
+        // Adding an edge that makes painting impossible within M colors
+        nodes.get(1).addEdge(3);
+        nodes.get(3).addEdge(1);
+
+        // Test painting again, expecting it to fail now
+        result = possiblePaint(nodes, n, m);
+        assertEquals(0, result, "Should return 0 if painting is not possible with M colors");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.thealgorithms.backtracking;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.ArrayList; // Import required for ArrayList
+import java.util.LinkedList; // Import required for LinkedList implementation of Queue
+import java.util.Queue; // Import required for Queue
+
+public class NodeTest {
+
+    // Assuming that we have a Node class with an 'edges' list and a 'color' property.
+    static class Node {
+        ArrayList<Integer> edges;
+        int color;
+
+        public Node() {
+            edges = new ArrayList<>();
+            color = 1; // Assuming default color is 1 for all nodes.
+        }
+    }
+
+    @Test
+    public void possiblePaintTest() {
+        // Let's create a simple test with 3 nodes, where node 1 connects to node 2
+        // and node 2 connects to node 3. Max allowed colors (m) will be 3.
+        int n = 3; // Number of nodes
+        int m = 3; // Max allowed colors
+        ArrayList<Node> nodes = new ArrayList<>();
+
+        // Note: nodes.get(0) will not be used because index starts from 1 based on the source code
+        nodes.add(new Node()); // Dummy node to fill index 0
+        for (int i = 1; i <= n; i++) {
+            nodes.add(new Node()); // Create node for each index
+        }
+
+        // Assume color for nodes are already 1 as specified in Node constructor
+
+        // Set up edges
+        nodes.get(1).edges.add(2); // Node 1 connects to Node 2
+        nodes.get(2).edges.add(3); // Node 2 connects to Node 3
+
+        // Now we are ready to test the possiblePaint method
+        int result = NodeTest.possiblePaint(nodes, n, m);
+
+        // Since the colors will only increment as needed and not exceed the maximum of 3,
+        // the result should be 1 indicating the painting is possible.
+        assertEquals(1, result, "The paint function should return 1 if painting is possible within the given color range.");
+    }
+
+    // We define the static possiblePaint method under the NodeTest class for simplicity
+    static int possiblePaint(ArrayList<Node> nodes, int n, int m) {
+        // ... (rest of the source code remains the same as in the original JAVA Source Code) ...
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.thealgorithms.backtracking;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.ArrayList;
+import java.util.Queue;
+import java.util.LinkedList;
+
+public class NodeTest {
+
+    static class Node {
+        int color;
+        ArrayList<Integer> edges;
+
+        public Node() {
+            color = 1;
+            edges = new ArrayList<Integer>();
+        }
+    }
+
+    @Test
+    public void possiblePaintTest() {
+        // Setup - create a graph with nodes and edges here
+        // This part would change according to how the Node class is expected to be used in your context.
+        ArrayList<Node> nodes = new ArrayList<Node>();
+        for (int i = 0; i <= 4; i++) {
+            nodes.add(new Node());
+        }
+
+        // connect the nodes - represent the graph
+        nodes.get(1).edges.add(2);
+        nodes.get(2).edges.add(1);
+        nodes.get(2).edges.add(3);
+        nodes.get(3).edges.add(2);
+        nodes.get(3).edges.add(4);
+        nodes.get(4).edges.add(3);
+
+        // Test with a case where it's possible to paint all nodes
+        // Here, we simulate a case for n nodes with m colors that should return 1 which means possible to paint
+        int result = NodeTest.possiblePaint(nodes, 4, 3);
+        assertEquals(1, result);
+
+        // Test with a case where it is not possible to paint all nodes due to color limit
+        // Here, we simulate a case for n nodes with m too few colors that should return 0 which means not possible to paint
+        result = NodeTest.possiblePaint(nodes, 4, 2);
+        assertEquals(0, result);
+    }
+
+    static int possiblePaint(ArrayList<Node> nodes, int n, int m) {
+        // The provided JAVA Source Code
+        // Create a visited array of n nodes
+        ArrayList<Integer> visited = new ArrayList<Integer>();
+        for (int i = 0; i < n + 1; i++) {
+            visited.add(0);
+        }
+
+        // maxColors used till now are 1 as
+        // all nodes are painted color 1
+        int maxColors = 1;
+
+        for (int sv = 1; sv <= n; sv++) {
+            if (visited.get(sv) > 0) {
+                continue;
+            }
+
+            // If the starting point is unvisited,
+            // mark it visited and push it in queue
+            visited.set(sv, 1);
+            Queue<Integer> q = new LinkedList<>();
+            q.add(sv);
+
+            // BFS
+            while (q.size() != 0) {
+                int top = q.peek();
+                q.remove();
+
+                // Checking all adjacent nodes
+                // to "top" edge in our queue
+                for (int it : nodes.get(top).edges) {
+
+                    // If the color of the
+                    // adjacent node is same, increase it by
+                    // 1
+                    if (nodes.get(top).color == nodes.get(it).color) {
+                        nodes.get(it).color += 1;
+                    }
+
+                    // If number of colors used exceeds m,
+                    // return 0
+                    maxColors = Math.max(maxColors, Math.max(nodes.get(top).color, nodes.get(it).color));
+                    if (maxColors > m) return 0;
+
+                    // If the adjacent node is not visited,
+                    // mark it visited and push it in queue
+                    if (visited.get(it) == 0) {
+                        visited.set(it, 1);
+                        q.add(it);
+                    }
+                }
+            }
+        }
+        return 1;
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.thealgorithms.backtracking;
+
+import org.junit.jupiter.api.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class Node {
+    int color;
+    List<Integer> edges;
+
+    public Node() {
+        color = 1; // Assuming default color is 1
+        edges = new ArrayList<>();
+    }
+
+    public void addEdge(int nodeIndex) {
+        edges.add(nodeIndex);
+    }
+}
+
+public class NodeTest {
+    static int possiblePaint(ArrayList<Node> nodes, int n, int m) {
+        // The source code provided here is the same as the one from the instruction.
+        // ...
+    }
+
+    @Test
+    public void possiblePaintTest() {
+        // Create nodes
+        ArrayList<Node> nodes = new ArrayList<>();
+        Node node1 = new Node();
+        Node node2 = new Node();
+        Node node3 = new Node();
+        Node node4 = new Node();
+
+        // Adding nodes to the list
+        nodes.add(new Node()); // Placeholder for 0-index which is not used.
+        nodes.add(node1);
+        nodes.add(node2);
+        nodes.add(node3);
+        nodes.add(node4);
+
+        // Adding edges to the nodes
+        node1.addEdge(2);
+        node2.addEdge(1);
+        node2.addEdge(3);
+        node3.addEdge(2);
+        node3.addEdge(4);
+        node4.addEdge(3);
+
+        int n = 4; // Number of nodes
+        int m = 3; // Maximum colors
+
+        // Call the method under test
+        int result = possiblePaint(nodes, n, m);
+
+        // Assert expected results
+        assertEquals(1, result, "Algorithm should return that painting is possible.");
+
+        // Add additional test cases as needed with varying n, m, and graph structures
+        // For example, an impossible case with m=2 could be here
+        // and you assert the result is 0.
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package com.thealgorithms.backtracking;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+
+public class NodeTest {
+
+    // Helper method to construct nodes with edges
+    private ArrayList<Node> prepareGraph(int[][] edges, int color, int n) {
+        ArrayList<Node> nodes = new ArrayList<>();
+        for (int i = 0; i <= n; i++) { // assuming node numbering starts at 1
+            nodes.add(new Node(color)); // All nodes initially with the same color
+        }
+        for (int[] edge: edges) {
+            nodes.get(edge[0]).edges.add(edge[1]);
+            nodes.get(edge[1]).edges.add(edge[0]); // Assuming undirected graph
+        }
+        return nodes;
+    }
+
+    @Test
+    public void possiblePaintTest() {
+        // Assuming that the method and the Node class is static and exists in the Main class
+        // Graph: 1 -- 2 -- 3 -- 4
+        int[][] edges = {
+            {1, 2}, {2, 3}, {3, 4}
+        };
+
+        ArrayList<Node> nodes = prepareGraph(edges, 1, 4);
+        int result = Main.possiblePaint(nodes, 4, 3);
+        // Should return 1 as it is possible to paint with 3 colors
+        assertEquals(1, result, "Test failed for possible painting scenario.");
+
+        // Change color of a node to make impossible to paint with 3 colors.
+        // Setting an edge case where during BFS, increasing color would lead to requiring more than m colors
+        nodes.get(3).edges.add(4); // self loop on node 3, making it impossible with 3 color limit
+        result = Main.possiblePaint(nodes, 4, 3);
+        // Should return 0 as it is not possible to paint with 3 colors because of the self loop
+        assertEquals(0, result, "Test failed for impossible painting scenario.");
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.thealgorithms.backtracking;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+
+public class NodeTest {
+
+    static class Node {
+        int color;
+        ArrayList<Integer> edges;
+
+        public Node() {
+            this.color = 1; // assuming default color is 1
+            this.edges = new ArrayList<>();
+        }
+
+        public void connect(Node other) {
+            this.edges.add(other.color); // or other identifier if not color
+        }
+    }
+
+    @Test
+    public void possiblePaintTest() {
+        // Create nodes
+        Node node1 = new Node();
+        Node node2 = new Node();
+        Node node3 = new Node();
+        Node node4 = new Node();
+        
+        // Set edges (assuming a 0-indexed ArrayList)
+        node1.edges.addAll(Arrays.asList(2, 3)); // node1 connected to node2 and node3
+        node2.edges.addAll(Arrays.asList(1, 4)); // node2 connected to node1 and node4
+        node3.edges.addAll(Arrays.asList(1));    // node3 connected to node1
+        node4.edges.addAll(Arrays.asList(2));    // node4 connected to node2
+
+        // Set list of nodes
+        ArrayList<Node> nodes = new ArrayList<>(Arrays.asList(new Node(), node1, node2, node3, node4)); //adding a dummy node at index 0
+        
+        // Test 1: Verify that with 3 colors, the painting is possible
+        assertEquals(1, NodeTest.possiblePaint(nodes, 4, 3), "Painting with 3 colors should be possible");
+
+        // Test 2: Verify that with only 2 colors, the painting is not possible
+        assertEquals(0, NodeTest.possiblePaint(nodes, 4, 2), "Painting with 2 colors should not be possible");
+
+        // Assuming additional tests here for different graph configurations and color limitations...
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package com.thealgorithms.backtracking;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.ArrayList;
+import java.util.List;
+
+class Node {
+    int color;
+    List<Integer> edges;
+    
+    Node() {
+        color = 1;
+        edges = new ArrayList<Integer>();
+    }
+}
+
+public class NodeTest {
+
+    @Test
+    public void possiblePaintTest() {
+        // Setup
+        int n = 4; // number of nodes
+        int m = 3; // number of colors available
+        ArrayList<Node> nodes = new ArrayList<>();
+        for(int i = 0; i <= n; i++) {
+            nodes.add(new Node()); // Initialize nodes with a color of 1
+        }
+
+        // Building the graph
+        // Define edges
+        // Let's assume a simple graph where node 1 is connected to node 2 and node 3,
+        // and node 3 is connected to node 4
+        nodes.get(1).edges.add(2);
+        nodes.get(1).edges.add(3);
+        nodes.get(2).edges.add(1);
+        nodes.get(3).edges.add(1);
+        nodes.get(3).edges.add(4);
+        nodes.get(4).edges.add(3);
+
+        // Act
+        int result = BacktrackingAlgorithms.possiblePaint(nodes, n, m);
+
+        // Assert
+        // Assuming the particular graph and the number of colors available are sufficient,
+        // The result should be 1 (possible to paint)
+        assertEquals(1, result, "The graph should be possible to paint with m colors.");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package com.thealgorithms.backtracking;
+
+import org.junit.jupiter.api.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NodeTest {
+  
+    static class Node {
+        int color;
+        ArrayList<Integer> edges;
+        
+        public Node(int color) {
+            this.color = color;
+            this.edges = new ArrayList<>();
+        }
+        
+        public void addEdge(int nodeIndex) {
+            edges.add(nodeIndex);
+        }
+    }
+
+    @Test
+    public void possiblePaintTest() {
+        ArrayList<Node> nodes = new ArrayList<>();
+        nodes.add(null);  // Adding null to align node indices with 1-based index
+        nodes.add(new Node(1)); // Node 1
+        nodes.add(new Node(1)); // Node 2
+        
+        nodes.get(1).addEdge(2); // Assuming a bidirectional edge between nodes 1 and 2
+        nodes.get(2).addEdge(1);
+                
+        assertEquals(1, NodeTest.possiblePaint(nodes, 2, 2), "Expected to be able to paint with 2 colors");
+        nodes.get(2).color = 2; // Change color to simulate different setup
+        assertEquals(0, NodeTest.possiblePaint(nodes, 2, 1), "Expected to fail to paint with only 1 color");
+    }
+    
+    static int possiblePaint(ArrayList<Node> nodes, int n, int m) {
+        //... original method implementation
+    }
+}
+
+
+No.10 generated result --------------------------
+
+public class Node {
+    ArrayList<Integer> edges;
+    int color;
+
+    public Node() {
+        edges = new ArrayList<>();
+        color = 1; // Assuming default color is 1 for all nodes.
+    }
+
+    public void addEdge(int vertex) {
+        edges.add(vertex);
+    }
+}
+
+

@@ -1,0 +1,263 @@
+Source code: 
+
+
+public boolean compareAndSetFeatures(double[] expect,
+                                     double[] update) {
+    if (update.length != size) {
+        throw new NeuralNetException(NeuralNetException.SIZE_MISMATCH,
+                                     update.length, size);
+    }
+
+    // Get the internal reference. Note that this must not be a copy;
+    // otherwise the "compareAndSet" below will always fail.
+    final double[] current = features.get();
+    if (!containSameValues(current, expect)) {
+        // Some other thread already modified the state.
+        return false;
+    }
+
+    // Increment attempt counter.
+    numberOfAttemptedUpdates.incrementAndGet();
+
+    if (features.compareAndSet(current, update.clone())) {
+        // The current thread could atomically update the state (attempt succeeded).
+        numberOfSuccessfulUpdates.incrementAndGet();
+        return true;
+    } else {
+        // Some other thread came first (attempt failed).
+        return false;
+    }
+}
+
+
+
+No.1 generated result --------------------------
+
+
+@Test
+public void compareAndSetFeaturesTest() {
+    // Create a new Neuron object with the specified identifier and features.
+    Neuron neuron = new Neuron(1, new double[] {1.0, 2.0});
+
+    // Set up the expected update values.
+    double[] expect = new double[] {3.0, 4.0};
+    double[] update = new double[] {5.0, 6.0};
+
+    // Test that the compareAndSetFeatures method returns true when the features are updated successfully.
+    assertTrue(neuron.compareAndSetFeatures(expect, update));
+
+    // Verify that the features were updated correctly.
+    assertArrayEquals(update, neuron.getFeatures());
+}
+
+
+No.2 generated result --------------------------
+
+
+package org.apache.commons.math4.neuralnet;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NeuronTest {
+    @Test
+    public void compareAndSetFeaturesTest() {
+        // Create a new neuron instance with the given features
+        Neuron neuron = new Neuron(123, new double[] {0.5, 0.6});
+        
+        // Check that the initial feature values are correct
+        assertArrayEquals(new double[] {0.5, 0.6}, neuron.getFeatures(), 1e-9);
+        
+        // Create a new update array with different values
+        double[] update = new double[] {0.3, 0.4};
+        
+        // Check that the update feature values are correct
+        assertArrayEquals(update, neuron.compareAndSetFeatures(new double[] {0.5, 0.6}, update), 1e-9);
+    }
+}
+
+
+No.3 generated result --------------------------
+
+
+@Test
+public void compareAndSetFeaturesTest() {
+    // Create a new neuron with the given identifier and features.
+    Neuron neuron = new Neuron(1234, new double[] {0.5, 1.0, -0.5});
+
+    // Get the current state of the neuron.
+    double[] currentFeatures = neuron.getFeatures();
+
+    // Create a new set of features to compare with the current ones.
+    double[] expectedFeatures = new double[] {1.0, 2.0, -1.5};
+
+    // Set the number of attempted updates to zero.
+    neuron.numberOfAttemptedUpdates.set(0);
+
+    // Attempt to update the features of the neuron with the given expected values.
+    boolean result = neuron.compareAndSetFeatures(expectedFeatures, currentFeatures);
+
+    // Assert that the attempt was successful and that the number of attempted updates is now 1.
+    assertTrue(result);
+    assertEquals(neuron.numberOfAttemptedUpdates.get(), 1);
+
+    // Verify that the features of the neuron have been updated correctly.
+    double[] newFeatures = neuron.getFeatures();
+    assertArrayEquals(newFeatures, expectedFeatures);
+}
+
+
+No.4 generated result --------------------------
+
+
+package org.apache.commons.math4.neuralnet;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NeuronTest {
+    @Test
+    public void compareAndSetFeaturesTest() {
+        double[] expect = new double[3];
+        double[] update = new double[3];
+        Neuron neuron = new Neuron(1, expect);
+
+        assertTrue(neuron.compareAndSetFeatures(expect, update));
+    }
+}
+
+
+No.5 generated result --------------------------
+
+
+package org.apache.commons.math4.neuralnet;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NeuronTest {
+    @Test
+    public void compareAndSetFeaturesTest() {
+        // Create a new instance of the Neuron class with the specified parameters.
+        Neuron neuron = new Neuron(12345, new double[] { 0.5, -0.5 });
+        
+        // Call the compareAndSetFeatures method and check that it returns true when the expected array is updated correctly.
+        assertTrue(neuron.compareAndSetFeatures(new double[] { 0.5, -0.5 }, new double[] { 1.0, -2.0 }));
+        
+        // Call the compareAndSetFeatures method and check that it returns false when the expected array is not updated correctly.
+        assertFalse(neuron.compareAndSetFeatures(new double[] { 1.0, -2.0 }, new double[] { 2.0, -3.0 }));
+    }
+}
+
+
+No.6 generated result --------------------------
+
+@Test
+public void compareAndSetFeaturesTest() {
+    Neuron neuron = new Neuron(1, new double[] { 0.5, 0.25 });
+    assertEquals(neuron.getFeatures().length, 2);
+    assertTrue(neuron.compareAndSetFeatures(new double[] { 0.5, 0.25 }, new double[] { 1.0, 0.75 }));
+    assertArrayEquals(neuron.getFeatures(), new double[] { 1.0, 0.75 });
+}
+
+
+No.7 generated result --------------------------
+
+
+@Test
+public void compareAndSetFeaturesTest() {
+    // Arrange
+    double[] expect = new double[] {1.0, 2.0};
+    double[] update = new double[] {3.0, 4.0};
+    Neuron neuron = new Neuron(1L, expect);
+
+    // Act
+    boolean result = neuron.compareAndSetFeatures(expect, update);
+
+    // Assert
+    assertTrue(result);
+    assertArrayEquals(update, neuron.getFeatures());
+}
+
+
+No.8 generated result --------------------------
+
+
+package org.apache.commons.math4.neuralnet;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NeuronTest {
+    @Test
+    public void compareAndSetFeaturesTest() {
+        // Create two neurons with different sizes
+        Neuron neuron1 = new Neuron(0, 5);
+        Neuron neuron2 = new Neuron(1, 6);
+
+        // Test that the size is correctly set for both neurons
+        assertEquals(5, neuron1.getSize());
+        assertEquals(6, neuron2.getSize());
+
+        // Test that the identifier is correctly set for both neurons
+        assertEquals(0, neuron1.getIdentifier());
+        assertEquals(1, neuron2.getIdentifier());
+
+        // Create two arrays of doubles with different sizes
+        double[] array1 = new double[5];
+        double[] array2 = new double[6];
+
+        // Test that the size is correctly set for both arrays
+        assertEquals(5, array1.length);
+        assertEquals(6, array2.length);
+
+        // Test that the neurons can correctly compare and set features
+        assertTrue(neuron1.compareAndSetFeatures(array1, array2));
+        assertFalse(neuron2.compareAndSetFeatures(array1, array2));
+    }
+}
+
+
+No.9 generated result --------------------------
+
+@Test
+public void compareAndSetFeaturesTest() {
+    // Arrange
+    Neuron neuron = new Neuron(123L, new double[] { 0.1, 0.2 });
+    double[] expect = new double[] { 0.1, 0.2 };
+    double[] update = new double[] { 0.3, 0.4 };
+
+    // Act
+    boolean result = neuron.compareAndSetFeatures(expect, update);
+
+    // Assert
+    assertTrue(result);
+}
+
+
+No.10 generated result --------------------------
+
+package org.apache.commons.math4.neuralnet;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NeuronTest {
+    @Test
+    public void compareAndSetFeaturesTest() {
+        // Create a neuron with 2 features
+        Neuron neuron = new Neuron(1L, new double[] {0.5, -1.0});
+        
+        // Define expected values and update values
+        double[] expect = {0.5, -1.0};
+        double[] update = {-1.0, 0.5};
+        
+        // Compare features with expected values
+        assertTrue(neuron.compareAndSetFeatures(expect, update));
+        
+        // Check that the features were updated correctly
+        assertArrayEquals(update, neuron.getFeatures());
+    }
+}
+
+

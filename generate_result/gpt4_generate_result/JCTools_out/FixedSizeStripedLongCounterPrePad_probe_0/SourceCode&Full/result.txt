@@ -1,0 +1,555 @@
+Source code: 
+
+
+private int probe() {
+    // Fast path for reliable well-distributed probe, available from JDK 7+.
+    // As long as PROBE is final static this branch will be constant folded
+    // (i.e removed).
+    if (PROBE != -1) {
+        int probe;
+        if ((probe = UNSAFE.getInt(Thread.currentThread(), PROBE)) == 0) {
+            ThreadLocalRandom.current(); // force initialization
+            probe = UNSAFE.getInt(Thread.currentThread(), PROBE);
+        }
+        return probe;
+    }
+
+    /*
+     * Else use much worse (for values distribution) method:
+     * Mix thread id with golden ratio and then xorshift it
+     * to spread consecutive ids (see Knuth multiplicative method as reference).
+     */
+    int probe = (int) ((Thread.currentThread().getId() * 0x9e3779b9) & Integer.MAX_VALUE);
+    // xorshift
+    probe ^= probe << 13;
+    probe ^= probe >>> 17;
+    probe ^= probe << 5;
+    return probe;
+}
+
+
+
+
+No.1 generated result --------------------------
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.jctools.util.UnsafeAccess.UNSAFE;
+import org.jctools.util.PortableJvmInfo;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+
+    // Helper method to get the private probe method using reflection
+    private static int getProbeValue(FixedSizeStripedLongCounter counter) throws Exception {
+        java.lang.reflect.Method method = FixedSizeStripedLongCounter.class.getDeclaredMethod("probe");
+        method.setAccessible(true);
+        return (Integer) method.invoke(counter);
+    }
+
+    @Test
+    public void probeTest() {
+        FixedSizeStripedLongCounter counter = new FixedSizeStripedLongCounter(2) {
+            @Override
+            protected void inc(long[] cells, long offset, long value) {
+                throw new UnsupportedOperationException("Not implemented in test");
+            }
+
+            @Override
+            protected long getAndReset(long[] cells, long offset) {
+                throw new UnsupportedOperationException("Not implemented in test");
+            }
+        };
+
+        try {
+            int probeValue = getProbeValue(counter);
+            assertTrue(probeValue != -1, "The probe value should not be -1");
+            assertTrue((probeValue & (PortableJvmInfo.CACHE_LINE_SIZE - 1)) == 0,
+             "The probe value should be aligned to the cache line size");
+        } catch (Exception e) {
+            fail("Exception should not have occurred", e);
+        }
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.jctools.util.UnsafeAccess;
+import java.lang.reflect.Field;
+import java.util.concurrent.ThreadLocalRandom;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+
+    private FixedSizeStripedLongCounter counterInstance;
+
+    private static long getThreadLocalRandomProbeFieldOffset() throws NoSuchFieldException {
+        return UnsafeAccess.UNSAFE.objectFieldOffset(Thread.class.getDeclaredField("threadLocalRandomProbe"));
+    }
+
+    @BeforeEach
+    public void setUp() {
+        // Assuming the existence of a constructor that accepts an integer (stripesCount)
+        counterInstance = new FixedSizeStripedLongCounter(16) {
+            @Override
+            protected void inc(long[] cells, long offset, long value) {
+                // Implementation details are not given, provide a simple implementation
+                UnsafeAccess.UNSAFE.putLongVolatile(cells, offset, UnsafeAccess.UNSAFE.getLongVolatile(cells, offset) + value);
+            }
+
+            @Override
+            protected long getAndReset(long[] cells, long offset) {
+                // Implementation details are not given, provide a simple implementation
+                long current = UnsafeAccess.UNSAFE.getLongVolatile(cells, offset);
+                UnsafeAccess.UNSAFE.putLongVolatile(cells, offset, 0L);
+                return current;
+            }
+        };
+    }
+
+    @Test
+    public void probeTest() throws NoSuchFieldException {
+        // Use reflection to access the private `probe` method within the counter instance
+        try {
+            Field probeField = FixedSizeStripedLongCounter.class.getDeclaredField("PROBE");
+            probeField.setAccessible(true);
+            long probeOffset = probeField.getLong(counterInstance);
+            
+            Field indexField = FixedSizeStripedLongCounter.class.getDeclaredMethod("index");
+            indexField.setAccessible(true);
+
+            // Test when PROBE is not -1 (i.e., ThreadLocalRandom probe is available)
+            if (probeOffset != -1L) {
+                for (int i = 0; i < 10; i++) { // Simulate multiple invocations
+                    // Simulate calling ThreadLocalRandom.current() which internally sets the threadLocalRandomProbe
+                    ThreadLocalRandom.current();
+                    int index = (int) indexField.invoke(counterInstance);
+                    assertTrue(index >= 0 && index <= counterInstance.mask, "Index should be within bounds");
+                }
+            } else {
+                // If PROBE is -1 (ThreadLocalRandom probe is not available), use the thread id method
+                for (int i = 0; i < 10; i++) { // Simulate multiple invocations
+                    long threadId = Thread.currentThread().getId();
+                    int expectedProbe = (int) ((threadId * 0x9e3779b9) & Integer.MAX_VALUE);
+                    expectedProbe ^= expectedProbe << 13;
+                    expectedProbe ^= expectedProbe >>> 17;
+                    expectedProbe ^= expectedProbe << 5;
+
+                    int index = (int) indexField.invoke(counterInstance);
+                    assertEquals(expectedProbe & counterInstance.mask, index, "Index should match expected index based on Thread ID");
+                }
+            }
+        } catch (Exception e) {
+            fail("Reflection error accessing the probe method", e);
+        }
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.Assume.*;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+    private FixedSizeStripedLongCounter counter;
+
+    @BeforeEach
+    public void setUp() {
+        counter = new FixedSizeStripedLongCounter(8) {
+            @Override
+            protected void inc(long[] cells, long offset, long value) {
+                // Stub method for test purposes
+            }
+
+            @Override
+            protected long getAndReset(long[] cells, long offset) {
+                // Stub method for test purposes
+                return 0;
+            }
+        };
+    }
+
+    @Test
+    public void probeTest() {
+        // Test that probe is in the valid integer range
+        int probeValue = counter.probe();
+        assertTrue(probeValue >= 0, "Probe should be non-negative");
+
+        // Assumption: ThreadLocalRandom is initialized for current thread
+        // and should result in a non-zero value for probe if JDK version is 7 or higher
+        assumeTrue(FixedSizeStripedLongCounter.getProbeOffset() != -1,
+            "This test runs only when ThreadLocalRandom is in use (JDK 7+)");
+
+        int initializedProbeValue = counter.probe();
+        assertTrue(initializedProbeValue != 0,
+            "When ThreadLocalRandom is initialized, probe should not be zero");
+
+        // Test that the probe value is within bounds of the mask
+        int mask = counter.mask;
+        assertTrue((probeValue & mask) >= 0 && (probeValue & mask) <= mask,
+            "The probe masked with the counter's mask should be within mask bounds");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.jctools.util.UnsafeAccess.UNSAFE;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+
+    private static class TestFixedSizeStripedLongCounter extends FixedSizeStripedLongCounter {
+        public TestFixedSizeStripedLongCounter(int stripesCount) {
+            super(stripesCount);
+        }
+
+        @Override
+        protected void inc(long[] cells, long offset, long value) {
+            UNSAFE.putLongVolatile(cells, offset, UNSAFE.getLongVolatile(cells, offset) + value);
+        }
+
+        @Override
+        protected long getAndReset(long[] cells, long offset) {
+            long current = UNSAFE.getLongVolatile(cells, offset);
+            UNSAFE.putLong(cells, offset, 0L);
+            return current;
+        }
+    }
+
+    @Test
+    public void probeTest() {
+        TestFixedSizeStripedLongCounter counter = new TestFixedSizeStripedLongCounter(16);
+        int probe = counter.index(); // Using index() since probe() is private
+        assertTrue(probe >= 0 && probe < 16, "Probe must be within bounds of the stripes.");
+        
+        // Assuming that the probe function involves bitwise operations on the thread ID,
+        // the same thread should get the same probe value each time.
+        int probeAgain = counter.index();
+        assertEquals(probe, probeAgain, "Probe should be consistent across multiple calls in the same thread.");
+
+        // We could further check for "worse" case scenario if PROBE is -1, if we are able to modify the PROBE field.
+        // However, since this involves using reflection to change the value of a static final field, which is generally
+        // not recommended, this part of the unit test is left as a comment for reference.
+        /*
+        UNSAFE.putLong(FixedSizeStripedLongCounter.class, UNSAFE.staticFieldOffset(FixedSizeStripedLongCounter.class.getDeclaredField("PROBE")), -1L);
+        counter = new TestFixedSizeStripedLongCounter(16);
+        probe = counter.index();
+        assertTrue(probe >= 0 && probe < 16, "Probe should still be within bounds in the worse case scenario.");
+        */
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+    
+    private FixedSizeStripedLongCounter counterObj;
+
+    @BeforeEach
+    public void setup() {
+        // Assuming we have a concrete implementation of FixedSizeStripedLongCounter named MyCounterImpl
+        // If no concrete class exists, you would need to create a mock or an anonymous subclass for testing
+        counterObj = new MyCounterImpl(2); // Using 2 stripes for the purpose of the test
+    }
+
+    @Test
+    public void probeTest() {
+        // Test that the probe value is a non-zero integer
+        int probeValue = counterObj.probe();
+        assertTrue(probeValue != 0, "Probe value should be non-zero");
+
+        // Additionally, you might want to test that the probe value is within a specific range
+        // or that it behaves correctly according to known thread IDs or calling conditions.
+        // Additional mocking or setup may be required to fully control and test these behaviors.
+    }
+    
+    // Assuming there is a method to access the private probe method via reflection or it must be temporarily made package-private for testing
+    private static class MyCounterImpl extends FixedSizeStripedLongCounter {
+        public MyCounterImpl(int stripesCount) {
+            super(stripesCount);
+        }
+
+        public int probe() {
+            return super.probe();
+        }
+        
+        // Implement abstract methods (leaving empty for brevity)
+        @Override
+        protected void inc(long[] cells, long offset, long value) {}
+
+        @Override
+        protected long getAndReset(long[] cells, long offset) {
+            return 0;
+        }
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import static org.jctools.util.UnsafeAccess.UNSAFE;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FixedSizeStripedLongCounterTest {
+
+    static class FixedSizeStripedLongCounterTestable extends FixedSizeStripedLongCounter {
+
+        public FixedSizeStripedLongCounterTestable(int stripesCount) {
+            super(stripesCount);
+        }
+
+        @Override
+        protected void inc(long[] cells, long offset, long value) {
+            UNSAFE.getAndAddLong(cells, offset, value);
+        }
+
+        @Override
+        protected long getAndReset(long[] cells, long offset) {
+            return UNSAFE.getAndSetLong(cells, offset, 0L);
+        }
+    }
+
+    @Test
+    public void probeTest() {
+        FixedSizeStripedLongCounterTestable counter = new FixedSizeStripedLongCounterTestable(2);
+        // Let's assume that the private method 'probe' is made accessible or the logic is tested indirectly
+        // For example, the probe() method can be tested through the behavior of inc() method because it relies on index().
+        // Since we cannot directly access the private method 'probe', the test is assumed to validate its effects.
+        
+        long threadId = Thread.currentThread().getId();
+        int expectedProbe = (int) ((threadId * 0x9e3779b9) & Integer.MAX_VALUE);
+        expectedProbe ^= expectedProbe << 13;
+        expectedProbe ^= expectedProbe >>> 17;
+        expectedProbe ^= expectedProbe << 5;
+        
+        // This check is to verify that the index calculated matches the expected probe value for JDK < 7 path.
+        assertTrue(expectedProbe == (expectedProbe & counter.mask));
+        
+        // If there were logic in the class that used the probe value, we would continue testing to ensure the value
+        // had the expected effects on that logic.
+
+        // Note that this test might fail if the running environment actually supports ThreadLocalRandom.current()
+        // because that would use the fast path (JDK 7+ branch).
+        // However, since we cannot directly test the private method 'probe', this example shows the idea of testing
+        // the effects of the probes value.
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+    
+    @Test
+    public void probeTest() {
+        FixedSizeStripedLongCounter counter = new FixedSizeStripedLongCounter(8) {
+            @Override
+            protected void inc(long[] cells, long offset, long value) {
+                // Method stub for the abstract inc() method
+            }
+
+            @Override
+            protected long getAndReset(long[] cells, long offset) {
+                // Method stub for the abstract getAndReset() method
+                return 0;
+            }
+        };
+
+        // Test the probe method when PROBE is not -1 and ThreadLocalRandom.current() is called to initialize probe
+        int probeValue = counter.probe();
+        assertTrue(probeValue != 0, "Probe value should be initialized and not be zero.");
+        
+        // Test if the probe value is within a certain range 
+        // Note: This is just an arbitrary test to make sure the probe value is calculated.
+        // It doesn't guarantee the randomness or the distribution of values.
+        assertTrue(probeValue >= 0, "Probe value should be non-negative.");
+
+        // The actual probe value depends on the runtime state, so we cannot assert for a specific value.
+        
+        // Since the `probe` method operates differently when PROBE is -1,
+        // it is important to mock or set the `PROBE` to -1 and test the alternate code path.
+        // This typically requires a testing framework that supports mocking static fields or methods.
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+    FixedSizeStripedLongCounter counter;
+
+    @BeforeEach
+    public void setUp() {
+        // Assuming FixedSizeStripedLongCounter is not really abstract as no concrete methods were defined.
+        // Instantiating an anonymous subclass for the purpose of the test.
+        counter = new FixedSizeStripedLongCounter(4) {
+            @Override
+            protected void inc(long[] cells, long offset, long value) {
+                // Implement a simple increment for the test
+                cells[(int)offset] += value;
+            }
+
+            @Override
+            protected long getAndReset(long[] cells, long offset) {
+                // Implement a simple get and reset for the test
+                long currentValue = cells[(int)offset];
+                cells[(int)offset] = 0;
+                return currentValue;
+            }
+        };
+    }
+
+    @Test
+    public void probeTest() {
+        // Performing a basic non-zero probe test first.
+        assertTrue(counter.probe() != 0, "Probe value should not be zero after ThreadLocalRandom initialization.");
+
+        // Verify the probe value is non-negative.
+        assertTrue(counter.probe() >= 0, "Probe value should be non-negative.");
+
+        // Finally, verify the probe value falls within the expected integer range.
+        assertTrue(counter.probe() <= Integer.MAX_VALUE, "Probe value should be less than or equal to Integer.MAX_VALUE.");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+
+    private static final class TestCounter extends FixedSizeStripedLongCounter {
+        public TestCounter(int stripesCount) {
+            super(stripesCount);
+        }
+
+        @Override
+        protected void inc(long[] cells, long offset, long value) {
+            // Implementation for abstract method if necessary for tests
+        }
+
+        @Override
+        protected long getAndReset(long[] cells, long offset) {
+            // Implementation for abstract method if necessary for tests
+            return 0;
+        }
+        // Expose the probe method for testing
+        public int testProbe() {
+            return super.probe();
+        }
+    }
+
+    @Test
+    public void probeTest() {
+        TestCounter counter = new TestCounter(2); // The number of stripes doesn't matter here
+        // The actual probe value should be non-negative and less than the array size
+        assertAll(
+            () -> assertTrue(counter.testProbe() >= 0, "Probe value should be non-negative"),
+            () -> assertTrue(counter.testProbe() < Integer.MAX_VALUE, "Probe value should be within integer range")
+        );
+
+        // Start a new thread to verify that the probe gives a different value
+        Thread testThread = new Thread(() -> {
+            TestCounter otherCounter = new TestCounter(2); // Use a new instance to avoid shared state
+            assertNotEquals(counter.testProbe(), otherCounter.testProbe(), "Probe values should differ across threads");
+        });
+        testThread.start();
+        try {
+            testThread.join();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            fail("Test thread was interrupted");
+        }
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.jctools.util.UnsafeAccess.UNSAFE;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+
+    @Test
+    public void probeTest() {
+        // Since the actual functionality of probe() depends on the internal state of a Thread
+        // and some of its operations require package-private access, direct testing is complex.
+        // The existence of a proper value for PROBE determines which code path is taken.
+        // We make sure that PROBE is not -1, which indicates the field is present.
+        assertTrue(FixedSizeStripedLongCounter.getProbeOffset() != -1,
+                "PROBE should be detected and not equal to -1");
+        
+        // We could also test the non ThreadLocalRandom path if PROBE was not found,
+        // but we should be aware that setting PROBE to -1 for testing purposes might not be
+        // feasible due to its private static final nature and dependency on the Thread class field detection.
+        
+        // Since we can't directly call probe() method as it's private, we would need to test it
+        // indirectly by utilizing public methods that rely on probe(), such as inc() and get().
+        // However, without concrete implementations of inc() and getAndReset(), we can only create
+        // a conceptual example of how such a test might look like.
+
+        FixedSizeStripedLongCounter counter = new FixedSizeStripedLongCounter(4) {
+            @Override
+            protected void inc(long[] cells, long offset, long value) {
+                // Dummy implementation for testing purposes
+                UNSAFE.putLongVolatile(cells, offset, UNSAFE.getLongVolatile(cells, offset) + value);
+            }
+
+            @Override
+            protected long getAndReset(long[] cells, long offset) {
+                // Dummy implementation for testing purposes
+                long value = UNSAFE.getLongVolatile(cells, offset);
+                UNSAFE.putLongVolatile(cells, offset, 0L);
+                return value;
+            }
+        };
+
+        // Increment the counter, which will internally call probe() method
+        counter.inc();
+        // Check some assertions on the counter to see if it has incremented.
+        // Depending on how the probe method distributes values, we'd check conditions based on its distribution.
+        assertTrue(counter.get() > 0, "Counter should be increased");
+    }
+}
+
+

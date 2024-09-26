@@ -1,0 +1,618 @@
+Source code: 
+
+
+protected ModelAndView exportXlsSheet(HttpServletRequest request, T object, Class<T> clazz, String title,String exportFields,Integer pageNum) {
+    // Step.1 组装查询条件
+    QueryWrapper<T> queryWrapper = QueryGenerator.initQueryWrapper(object, request.getParameterMap());
+    LoginUser sysUser = (LoginUser) SecurityUtils.getSubject().getPrincipal();
+    // Step.2 计算分页sheet数据
+    double total = service.count();
+    int count = (int)Math.ceil(total/pageNum);
+    //update-begin-author:liusq---date:20220629--for: 多sheet导出根据选择导出写法调整 ---
+    // Step.3  过滤选中数据
+    String selections = request.getParameter("selections");
+    if (oConvertUtils.isNotEmpty(selections)) {
+        List<String> selectionList = Arrays.asList(selections.split(","));
+        queryWrapper.in("id",selectionList);
+    }
+    //update-end-author:liusq---date:20220629--for: 多sheet导出根据选择导出写法调整 ---
+    // Step.4 多sheet处理
+    List<Map<String, Object>> listMap = new ArrayList<Map<String, Object>>();
+    for (int i = 1; i <=count ; i++) {
+        Page<T> page = new Page<T>(i, pageNum);
+        IPage<T> pageList = service.page(page, queryWrapper);
+        List<T> exportList = pageList.getRecords();
+        Map<String, Object> map = new HashMap<>(5);
+        ExportParams exportParams=new ExportParams(title + "报表", "导出人:" + sysUser.getRealname(), title+i,jeecgBaseConfig.getPath().getUpload());
+        exportParams.setType(ExcelType.XSSF);
+        //map.put("title",exportParams);
+        //表格Title
+        map.put(NormalExcelConstants.PARAMS,exportParams);
+        //表格对应实体
+        map.put(NormalExcelConstants.CLASS,clazz);
+        //数据集合
+        map.put(NormalExcelConstants.DATA_LIST, exportList);
+        listMap.add(map);
+    }
+    // Step.4 AutoPoi 导出Excel
+    ModelAndView mv = new ModelAndView(new JeecgEntityExcelView());
+    //此处设置的filename无效 ,前端会重更新设置一下
+    mv.addObject(NormalExcelConstants.FILE_NAME, title);
+    mv.addObject(NormalExcelConstants.MAP_LIST, listMap);
+    return mv;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jeecg.common.system.base.controller;
+
+import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.jeecg.common.aspect.annotation.Dict;
+import org.jeecg.common.system.base.entity.JeecgEntity;
+import org.springframework.web.servlet.ModelAndView;
+import java.io.OutputStream;
+
+/**
+ * 通用Excel导出方法，根据传入的实体对象和字段名数组，构造一个excel文件并返回下载
+ * @param title excel标题
+ * @param pojoClass excel对应的实体类类型
+ * @param queryParams 查询参数
+ */
+@Slf4j
+public class JeecgEntityExcelView extends HSSFWorkbook {
+    private String[] fields; //字段名数组
+    private String title; // excel标题
+    private Class<?> pojoClass;//excel对应的实体类类型
+    public void setAttr(String title, Class<?> pojoClass, String... fields) {
+        this.title = title;
+        this.pojoClass = pojoClass;
+        this.fields = fields;
+    }
+    public void renderMergedOutputStream( JeecgEntity entity, OutputStream out, HttpServletRequest request ) throws Exception {
+        // 这里调用实现类的renderMergedOutputStream方法，可以重写该方法实现其他渲染方式
+        this.renderMergedOutputStream(entity, out, request);
+    }
+}
+    
+
+### JUnit Test:
+
+
+No.2 generated result --------------------------
+
+### [TEST_TITLE]
+- [TEST1]
+
+[TEST_CASES]
+
+### Tests:
+    @Test
+    public void testXXX() {
+        <FILL>
+    }
+### [/TEST_TITLE]
+
+### Response:
+
+
+No.3 generated result --------------------------
+
+### BaseController Test case:
+package org.jeecg.common.system.base.controller;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JeecgControllerTest {
+    @Test
+    public void exportXlsSheetTest() {
+        <FILL>
+    }
+}
+    
+
+### Response:
+
+
+No.4 generated result --------------------------
+
+
+    //封装返回类型,主要是针对AJAX请求
+    public static class Result<T> implements Serializable{
+    
+        private String code = SUCCESS_CODE;//操作码
+        private String msg; 		//提示信息
+        private T data;  			//数据
+        private String ok;			//成功标识
+        private static final long serialVersionUID = 1L;
+    
+        public Result() {}
+        
+        public Result(String code,String msg){
+            this.code=code;
+            this.msg=msg;
+        }
+        
+        public String getCode() {
+		return code;
+	}
+	public void setCode(String code) {
+		this.code = code;
+	}
+	public String getMsg() {
+		return msg;
+	}
+	public void setMsg(String msg) {
+		this.msg = msg;
+	}
+        public T getData() {
+            return data;
+        }
+    
+        public void setData(T data) {
+            this.data = data;
+        }
+        
+        public String getOk() {
+		return ok;
+	}
+	public void setOk(String ok) {
+		this.ok = ok;
+	}
+    
+    }
+    
+    //操作码常量，用于标识操作结果
+    public static class ResultCode implements Serializable{
+        public final static String SUCCESS_CODE="0"; 	//成功
+        public final static String FAILURE_CODE="1"; 	//失败
+    
+        public ResultCode(){}
+    }
+    
+
+### JAXB:
+
+
+No.5 generated result --------------------------
+
+package org.jeecg.common.system.base.controller;
+
+import java.io.IOException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import io.swagger.annotations.*;
+import org.springframework.web.bind.annotation.*;
+import org.jeecg.common.system.base.entity.JeecgEntity;
+import org.jeecg.common.system.base.service.IJeecgService;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+
+/**
+ * 通用控制器
+ */
+@RestController
+@RequestMapping("/")
+@Api(tags = "平台通用接口")
+public class JeecgController<T extends JeecgEntity> {
+    @Autowired
+    protected IJeecgService<T> service;
+    
+    /**
+     * 根据唯一键查询单条数据
+     * 
+     * @param id 主键ID
+     * @return 单条数据
+     */
+    @AutoLog(value = "通用接口")
+    @ApiOperation("根据id查询")
+    @GetMapping(value = "/{id}")
+    public Result<?> queryById(@PathVariable String id) {
+        T entity = service.getById(id);
+        if (entity == null) {
+            return Result.error("未找到对应数据");
+        }
+        return Result.ok(entity);
+    }
+    
+    /**
+     * 根据实体中的属性查询单条数据
+     * 
+     * @param entity 条件值
+     * @return 单条数据
+     */
+    @AutoLog(value = "通用接口")
+    @ApiOperation("根据实体中属性查询单条数据")
+    @PostMapping(value = "/queryOneByEntity")
+    public Result<?> queryOneByEntity(@RequestBody T entity) {
+        if (entity == null) {
+            return Result.error("参数错误");
+        }
+        T oneByEntity = service.getOneByEntity(entity);
+        if (oneByEntity == null) {
+            return Result.error("未找到对应数据");
+        }
+        return Result.ok(oneByEntity);
+    }
+    
+    /**
+     * 根据实体中的属性查询符合条件的所有数据列表
+     * 
+     * @param entity 实体对象
+     * @return 所有数据列表
+     */
+    @AutoLog(value = "通用接口")
+    @ApiOperation("根据属性查询所有数据列表")
+    @PostMapping(value = "/queryListByEntity")
+    public Result<?> queryListByEntity(@RequestBody T entity) {
+        if (entity == null) {
+            return Result.error("参数错误");
+        }
+        return Result.ok(service.listByEntity(entity));
+    }
+    
+    /**
+     * 根据实体中的属性查询符合条件的所有数据列表，并进行分页
+     * 
+     * @param pageIndex 起始索引
+     * @param pageSize 每页展示数量
+     * @param entity 实体对象
+     * @return 所有数据列表
+     */
+    @AutoLog(value = "通用接口")
+    @ApiOperation("根据属性查询所有数据列表，并进行分页")
+    @PostMapping(value = "/queryListByEntity/{pageIndex}/{pageSize}")
+    public Result<?> queryListByEntity(@PathVariable Integer pageIndex, @PathVariable Integer pageSize, @RequestBody T entity) {
+        if (entity == null) {
+            return Result.error("参数错误");
+        }
+        Page<T> page = new Page<>(pageIndex, pageSize);
+        IPage<T> pageListByEntity = service.pageListByEntity(page, entity);
+        if (pageListByEntity == null) {
+            return Result.error("未找到对应数据");
+        }
+        return Result.ok(pageListByEntity);
+    }
+    
+    /**
+     * 根据ID集合来查询所有数据列表
+     * 
+     * @param ids ID集合
+     * @return 所有数据列表
+     */
+    @AutoLog(value = "通用接口")
+    @ApiOperation("根据ID集合来查询所有数据列表")
+    @GetMapping(value = "/queryListByIds/{ids}")
+    public Result<?> queryListByIds(@PathVariable String ids) {
+        if (ids == null || ids.trim().length() == 0) {
+            return Result.error("参数错误");
+        }
+        List<T> entityList = service.listByIds(Arrays.asList(ids.split(",")));
+        if (entityList == null || entityList.size() == 0) {
+            return Result.error("未找到对应数据");
+        }
+        return Result.ok(entityList);
+    }
+    
+    /**
+     * 根据ID来查询单条数据
+     * 
+     * @param id ID
+     * @return 单条数据
+     */
+    @AutoLog(value = "通用接口")
+    @ApiOperation("根据ID来查询单条数据")
+    @GetMapping(value = "/queryOneById/{id}")
+    public Result<?> queryOneById(@PathVariable String id) {
+        if (id == null || id.trim().length() == 0) {
+            return Result.error("参数错误");
+        }
+        T entity = service.getById(id);
+        if (entity == null) {
+            return Result.error("未找到对应数据");
+        }
+        return Result.ok(entity);
+    }
+    
+    /**
+     * 添加一条数据
+     * 
+     * @param entity 实体对象
+     * @return 操作结果
+     */
+    @AutoLog(value = "通用接口")
+    @ApiOperation("添加一条数据")
+    @PostMapping(value = "/addOneEntity")
+    public Result<?> addOneEntity(@RequestBody T entity) {
+        if (entity == null) {
+            return Result.error("参数错误");
+        }
+        boolean rlt = service.save(entity);
+        if (rlt) {
+            return Result.ok();
+        } else {
+            return Result.error("操作失败");
+        }
+    }
+    
+    /**
+     * 添加一条或多条数据
+     * 
+     * @param entityList 实体对象集合
+     * @return 操作结果
+     */
+    @AutoLog(value = "通用接口")
+    @ApiOperation("添加一条或多条数据")
+    @PostMapping(value = "/addBatchEntity")
+    public Result<?> addBatchEntity(@RequestBody List<T> entityList) {
+        if (entityList == null || entityList.size() == 0) {
+            return Result.error("参数错误");
+        }
+        boolean rlt = service.saveBatch(entityList);
+        if (rlt) {
+            return Result.ok();
+        } else {
+            return Result.error("操作失败");
+        }
+    }
+    
+    /**
+     * 根据ID来修改一条数据
+     * 
+     * @param id ID
+     * @return 操作结果
+     */
+    @AutoLog(value = "通用接口")
+    @ApiOperation("根据ID来修改一条数据")
+    @PutMapping(value = "/updateOneById/{id}")
+    public Result<?> updateOneById(@PathVariable String id) {
+        if (id == null || id.trim().length() == 0) {
+            return Result.error("参数错误");
+        }
+        T entity = service.getById(id);
+        if (entity == null) {
+            return Result.error("未找到对应数据");
+        }
+        boolean rlt = service.updateById(entity);
+        if (rlt) {
+            return Result.ok();
+        } else {
+            return Result.error("操作失败");
+        }
+    }
+    
+    /**
+     * 根据实体中的属性来修改一条数据
+     * 
+     * @param entity 实体对象
+     * @return 操作结果
+     */
+    @AutoLog(value = "通用接口")
+    @ApiOperation("根据实体中的属性来修改一条数据")
+    @PutMapping(value = "/updateOneByEntity")
+    public Result<?> updateOneByEntity(@RequestBody T entity) {
+        if (entity == null) {
+            return Result.error("参数错误");
+        }
+        boolean rlt = service.update(entity, Wrappers.<T>query().eq("id", entity.getId()));
+        if (rlt) {
+            return Result.ok();
+        } else {
+            return Result.error("操作失败");
+        }
+    }
+    
+    /**
+     * 根据ID来修改一条或多条数据
+     * 
+     * @param entityList 实体对象集合
+     * @return 操作结果
+     */
+    @AutoLog(value = "通用接口")
+    @ApiOperation("根据ID来修改一条或多条数据")
+    @PutMapping(value = "/updateBatchById")
+    public Result<?> updateBatchById(@RequestBody List<T> entityList) {
+        if (entityList == null || entityList.size() == 0) {
+            return Result.error("参数错误");
+        }
+        boolean rlt = service.updateBatchById(entityList);
+        if (rlt) {
+            return Result.ok();
+        } else {
+            return Result.error("操作失败");
+        }
+    }
+    
+    /**
+     * 根据ID来删除一条数据
+     * 
+     * @param id ID
+     * @return 操作结果
+     */
+    @AutoLog(value = "通用接口")
+    @ApiOperation("根据ID来删除一条数据")
+    @DeleteMapping(value = "/deleteOneById/{id}")
+    public Result<?> deleteOneById(@PathVariable String id) {
+        if (id == null || id.trim().length() == 0) {
+            return Result.error("参数错误");
+        }
+        T entity = service.getById(id);
+        if (entity == null) {
+            return Result.error("未找到对应数据");
+        }
+        boolean rlt = service.removeById(id);
+        if (rlt) {
+            return Result.ok();
+        } else {
+            return Result.error("操作失败");
+        }
+    }
+    
+    /**
+     * 根据ID集合来删除多条数据
+     * 
+     * @param idList ID集合
+     * @return 操作结果
+     */
+    @AutoLog(value = "通用接口")
+    @ApiOperation("根据ID集合来删除多条数据")
+    @DeleteMapping(value = "/deleteBatchByIds/{idList}")
+    public Result<?> deleteBatchByIds(@PathVariable String idList) {
+        if (StringUtils.isBlank(idList)) {
+            return Result.error("参数错误");
+        }
+        List<T> entityList = service.listByIds(Arrays.asList(idList.split(",")));
+        if (entityList == null || entityList.size() == 0) {
+            return Result.error("未找到对应数据");
+        }
+        boolean rlt = service.removeByIds(Arrays.asList(idList.split(",")));
+        if (rlt) {
+            return Result.ok();
+        } else {
+            return Result.error("操作失败");
+        }
+    }
+    
+    /**
+     * 根据ID来删除一条数据并判断是否可以删除成功
+     * 
+     * @param id ID
+     * @return 操作结果
+     */
+    @AutoLog(value = "通用接口")
+    @ApiOperation("根据ID来删除一条数据并判断是否可以删除成功")
+    @DeleteMapping(value = "/deleteOneByIdAndValid/{id}")
+    public Result<?> deleteOneByIdAndValid(@PathVariable String id) {
+        if (id == null || id.trim().length() == 0) {
+            return Result.error("参数错误");
+        }
+        T entity = service.getById(id);
+        if (entity == null) {
+            return Result.error("未找到对应数据");
+        }
+        boolean rlt = service.removeById(id);
+        if (rlt) {
+            return Result.ok();
+        } else {
+            return Result.error("操作失败,该数据下面还有子级");
+        }
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package ${basePackageName}.${subPackage};
+
+import org.apache.poi.ss.usermodel.*;
+import org.jeecgframework.poi.excel.ExcelExportUtil;
+import org.jeecgframework.poi.excel.def.NormalExcelConstants;
+import org.springframework.web.servlet.ModelAndView;
+
+public class JeecgEntityExcelView extends AbstractExcelView {
+    public void buildExcelDocument(Map<String, Object> model, HSSFWorkbook workbook, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        // Step.1 获取数据
+        List<Map<String, Object>> list = (List<Map<String, Object>>)model.get(NormalExcelConstants.MAP_LIST);
+        // Step.2 解析模板
+        Map<String, Object> params = new HashMap<>();
+        params.put("list",list);
+        ModelAndView mv=new ModelAndView();
+        //update-begin--Author:scott  Date:20191023 for：excel导出，导出列表头的问题------
+        String title = request.getParameter(NormalExcelConstants.FILE_NAME);//文件名称
+        if (title != null && !title.equals("")) {
+            mv.addObject(NormalExcelConstants.TITLE, title);
+        }
+        //update-end--Author:scott  Date:20191023 for：excel导出，导出列表头的问题------
+        // Step.3 生成文件
+        ExcelExportUtil.exportExcel(mv, workbook, request, response);
+    }
+}
+    
+
+### Service:
+
+
+No.7 generated result --------------------------
+
+
+package org.jeecg.common.system.base.controller;
+
+import com.alibaba.fastjson.JSONObject;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.formula.functions.T;
+import org.jeecg.common.api.vo.Result;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+@Api(tags="jeecg-controller")
+@RestController
+@Slf4j
+public class JeecgController {
+    @Autowired
+    private T service;
+    /**
+     * 获取数据列表
+     */
+    @GetMapping("/getList")
+    public Result<?> query(HttpServletRequest request, HttpServletResponse response, T t) throws IOException{
+        return null;
+    }
+}
+
+
+
+No.8 generated result --------------------------
+
+package org.jeecg.modules.demo.vo;
+
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
+import java.io.Serializable;
+
+/**
+ * 部门模块-Vo对象
+ * @author scott
+ * @date 2019-08-13
+ */
+@Data
+public class DepartmentVO implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    /** 主键ID */
+    @ApiModelProperty(value = "主键ID")
+    private java.lang.String id;
+
+    /** 上级部门id */
+    @ApiModelProperty(value = "上级部门id")
+    private java.lang.String parentId;
+
+    /** 部门名称 */
+    @ApiModelProperty(value = "部门名称")
+    private java.lang.String name;
+}
+
+
+No.9 generated result --------------------------
+
+
+
+
+### Test:
+
+
+No.10 generated result --------------------------
+
+Timeout
+
+

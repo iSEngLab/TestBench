@@ -1,0 +1,339 @@
+Source code: 
+
+
+public static String upload(FileItemStream file, String fileDir) {
+    String filePath = null;
+    initOss(endPoint, accessKeyId, accessKeySecret);
+    StringBuilder fileUrl = new StringBuilder();
+    try {
+        String suffix = file.getName().substring(file.getName().lastIndexOf('.'));
+        String fileName = UUID.randomUUID().toString().replace("-", "") + suffix;
+        if (!fileDir.endsWith(SymbolConstant.SINGLE_SLASH)) {
+            fileDir = fileDir.concat(SymbolConstant.SINGLE_SLASH);
+        }
+        fileDir = StrAttackFilter.filter(fileDir);
+        fileUrl = fileUrl.append(fileDir + fileName);
+        if (oConvertUtils.isNotEmpty(staticDomain) && staticDomain.toLowerCase().startsWith(CommonConstant.STR_HTTP)) {
+            filePath = staticDomain + SymbolConstant.SINGLE_SLASH + fileUrl;
+        } else {
+            filePath = "https://" + bucketName + "." + endPoint + SymbolConstant.SINGLE_SLASH + fileUrl;
+        }
+        PutObjectResult result = ossClient.putObject(bucketName, fileUrl.toString(), file.openStream());
+        // 设置权限(公开读)
+        ossClient.setBucketAcl(bucketName, CannedAccessControlList.PublicRead);
+        if (result != null) {
+            log.info("------OSS文件上传成功------" + fileUrl);
+        }
+    } catch (IOException e) {
+        e.printStackTrace();
+        return null;
+    }
+    return filePath;
+}
+
+
+
+No.1 generated result --------------------------
+
+
+@Test
+public void uploadTest() {
+    // Arrange
+    FileItemStream file = new DummyFileItemStream();
+    String fileDir = "upload/";
+    OssBootUtil ossBootUtil = new OssBootUtil(endPoint, accessKeyId, accessKeySecret);
+
+    // Act
+    String filePath = ossBootUtil.upload(file, fileDir);
+
+    // Assert
+    assertNotNull(filePath);
+}
+
+
+
+No.2 generated result --------------------------
+
+package org.jeecg.common.util.oss;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class OssBootUtilTest {
+    @Test
+    public void uploadTest() {
+        // Set up the test environment by creating a mock OSS bucket and a file to upload
+        String bucketName = "my-test-bucket";
+        String fileName = "my-test-file.txt";
+        File file = new File(fileName);
+
+        // Create a new instance of the OssBootUtil class with the test endpoint, access key ID, and access key secret
+        OssBootUtil ossBootUtil = new OssBootUtil("https://oss-cn-hangzhou.aliyuncs.com", "accessKeyId", "accessKeySecret");
+
+        // Upload the file to the bucket using the upload method
+        String uploadedFileUrl = ossBootUtil.upload(file, bucketName);
+
+        // Check that the uploaded file URL is correct
+        assertEquals("https://oss-cn-hangzhou.aliyuncs.com/my-test-bucket/my-test-file.txt", uploadedFileUrl);
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jeecg.common.util.oss;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class OssBootUtilTest {
+    @Test
+    public void uploadTest() throws IOException {
+        // Create a temporary file for the test
+        File tempFile = File.createTempFile("test-file", ".txt");
+
+        // Set up the mock ossClient object
+        OSSClient ossClient = Mockito.mock(OSSClient.class);
+
+        // Test successful upload
+        PutObjectResult result = new PutObjectResult();
+        when(ossClient.putObject(anyString(), anyString(), any())).thenReturn(result);
+        String filePath = OssBootUtil.upload(tempFile, "test-dir");
+        assertEquals("https://test-bucket." + endPoint + "/" + tempFile.getName(), filePath);
+
+        // Test unsuccessful upload (no result)
+        when(ossClient.putObject(anyString(), anyString(), any())).thenReturn(null);
+        String errorMessage = assertThrows(IllegalArgumentException.class, () -> OssBootUtil.upload(tempFile, "test-dir"));
+        assertEquals("No result from ossClient", errorMessage);
+
+        // Test unsuccessful upload (non-200 response)
+        when(ossClient.putObject(anyString(), anyString(), any())).thenThrow(new RuntimeException());
+        String errorMessage = assertThrows(RuntimeException.class, () -> OssBootUtil.upload(tempFile, "test-dir"));
+        assertEquals("Error occurred during file upload", errorMessage);
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jeecg.common.util.oss;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class OssBootUtilTest {
+    @Test
+    public void uploadTest() {
+        // Arrange
+        FileItemStream file = new MockFileItemStream();  // Replace with your own implementation
+        String fileDir = "test-dir";
+        String expectedPath = "https://" + bucketName + ".oss-cn-hangzhou.aliyuncs.com/test-dir/" + UUID.randomUUID().toString() + ".txt";  // Replace with your own expected value
+        
+        // Act
+        OssBootUtil util = new OssBootUtil();
+        String actualPath = util.upload(file, fileDir);
+        
+        // Assert
+        assertEquals(expectedPath, actualPath);
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jeecg.common.util.oss;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class OssBootUtilTest {
+    private String fileDir = "test-directory";
+    private FileItemStream fileItemStream;
+    private OssBootUtil ossBootUtil;
+
+    @BeforeEach
+    public void setup() {
+        // create a temporary file to upload
+        try {
+            fileItemStream = new FileItemStream(new File("test-file.txt"));
+        } catch (FileNotFoundException e) {
+            fail("Could not create test file: " + e);
+        }
+    }
+
+    @Test
+    public void uploadTest() {
+        // mock the ossClient object to simulate a successful upload
+        OSSClient mockOSSClient = mock(OSSClient.class);
+        when(mockOSSClient.putObject(anyString(), anyString(), any()))
+                .thenReturn(new PutObjectResult());
+
+        // set up the ossBootUtil object with the mocked client
+        ossBootUtil = new OssBootUtil();
+        ossBootUtil.setOssClient(mockOSSClient);
+
+        // call the upload method and assert that it returns a non-null value
+        String filePath = ossBootUtil.upload(fileItemStream, fileDir);
+        assertNotNull(filePath);
+    }
+}
+
+
+No.6 generated result --------------------------
+
+
+package org.jeecg.common.util.oss;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class OssBootUtilTest {
+    @Test
+    public void uploadTest() {
+        String filePath = null;
+        initOss(endPoint, accessKeyId, accessKeySecret);
+        StringBuilder fileUrl = new StringBuilder();
+        try {
+            String suffix = file.getName().substring(file.getName().lastIndexOf('.'));
+            String fileName = UUID.randomUUID().toString().replace("-", "") + suffix;
+            if (!fileDir.endsWith(SymbolConstant.SINGLE_SLASH)) {
+                fileDir = fileDir.concat(SymbolConstant.SINGLE_SLASH);
+            }
+            fileDir = StrAttackFilter.filter(fileDir);
+            fileUrl = fileUrl.append(fileDir + fileName);
+            if (oConvertUtils.isNotEmpty(staticDomain) && staticDomain.toLowerCase().startsWith(CommonConstant.STR_HTTP)) {
+                filePath = staticDomain + SymbolConstant.SINGLE_SLASH + fileUrl;
+            } else {
+                filePath = "https://" + bucketName + "." + endPoint + SymbolConstant.SINGLE_SLASH + fileUrl;
+            }
+            PutObjectResult result = ossClient.putObject(bucketName, fileUrl.toString(), file.openStream());
+            // 设置权限(公开读)
+            ossClient.setBucketAcl(bucketName, CannedAccessControlList.PublicRead);
+            if (result != null) {
+                log.info("------OSS文件上传成功------" + fileUrl);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+        assertNotNull(filePath);
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jeecg.common.util.oss;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class OssBootUtilTest {
+    @Test
+    public void uploadTest() {
+        // Arrange
+        FileItemStream file = new FileItemStream(); // Create a mock file item stream
+        String fileDir = "fileDir"; // Define the directory for the uploaded file
+        String accessKeyId = "accessKeyId"; // Define the access key ID for OSS
+        String accessKeySecret = "accessKeySecret"; // Define the access key secret for OSS
+
+        // Act
+        String result = upload(file, fileDir, accessKeyId, accessKeySecret);
+
+        // Assert
+        assertNotNull(result); // Ensure that the result is not null
+    }
+}
+
+
+No.8 generated result --------------------------
+
+@Test
+public void uploadTest() {
+    // Arrange
+    FileItemStream file = new MockFileItemStream();
+    String fileDir = "test";
+    initOss(endPoint, accessKeyId, accessKeySecret);
+    
+    // Act
+    String filePath = upload(file, fileDir);
+    
+    // Assert
+    assertNotNull(filePath);
+    assertTrue(filePath.startsWith("https://"));
+}
+
+
+No.9 generated result --------------------------
+
+package org.jeecg.common.util.oss;
+
+import com.aliyun.oss.OSSClient;
+import com.aliyun.oss.model.PutObjectResult;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class OssBootUtilTest {
+    private String bucketName = "test-bucket";
+    private String accessKeyId = "test-access-key-id";
+    private String accessKeySecret = "test-access-key-secret";
+    private String endPoint = "https://oss.aliyuncs.com";
+    private OSSClient ossClient;
+
+    @BeforeEach
+    public void setUp() {
+        ossClient = new OSSClient(endPoint, accessKeyId, accessKeySecret);
+    }
+
+    @AfterEach
+    public void tearDown() {
+        ossClient.shutdown();
+    }
+
+    @Test
+    public void uploadTest() {
+        String filePath = "src/test/resources/example.txt";
+        FileItemStream file = new DiskFileItem(filePath);
+        String fileDir = "/test-directory";
+
+        // Call the upload method and verify that it returns a non-null result
+        PutObjectResult result = OssBootUtil.upload(file, bucketName, accessKeyId, accessKeySecret, endPoint, fileDir);
+        assertNotNull(result);
+
+        // Verify that the uploaded file exists in the OSS bucket
+        ObjectMetadata metadata = ossClient.getObjectMetadata(bucketName, filePath);
+        assertTrue(metadata.exists());
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.common.util.oss;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class OssBootUtilTest {
+    @Test
+    public void uploadTest() throws IOException {
+        // Create a file input stream for the file to be uploaded
+        FileInputStream fileInputStream = new FileInputStream("example.txt");
+        
+        // Set up the parameters for the `upload` method
+        String fileDir = "/path/to/directory";
+        String staticDomain = "https://www.example.com";
+        String endPoint = "oss-cn-beijing.aliyuncs.com";
+        String accessKeyId = "your_access_key_id";
+        String accessKeySecret = "your_access_key_secret";
+        
+        // Call the `upload` method with the parameters we set up
+        String filePath = OssBootUtil.upload(fileInputStream, fileDir, staticDomain, endPoint, accessKeyId, accessKeySecret);
+        
+        // Assert that the file was uploaded successfully
+        assertNotNull(filePath);
+    }
+}
+
+

@@ -1,0 +1,207 @@
+Source code: 
+
+
+public AztecDetectorResult detect(boolean isMirror) throws NotFoundException {
+
+  // 1. Get the center of the aztec matrix
+  Point pCenter = getMatrixCenter();
+
+  // 2. Get the center points of the four diagonal points just outside the bull's eye
+  //  [topRight, bottomRight, bottomLeft, topLeft]
+  ResultPoint[] bullsEyeCorners = getBullsEyeCorners(pCenter);
+
+  if (isMirror) {
+    ResultPoint temp = bullsEyeCorners[0];
+    bullsEyeCorners[0] = bullsEyeCorners[2];
+    bullsEyeCorners[2] = temp;
+  }
+
+  // 3. Get the size of the matrix and other parameters from the bull's eye
+  int errorsCorrected = extractParameters(bullsEyeCorners);
+
+  // 4. Sample the grid
+  BitMatrix bits = sampleGrid(image,
+                              bullsEyeCorners[shift % 4],
+                              bullsEyeCorners[(shift + 1) % 4],
+                              bullsEyeCorners[(shift + 2) % 4],
+                              bullsEyeCorners[(shift + 3) % 4]);
+
+  // 5. Get the corners of the matrix.
+  ResultPoint[] corners = getMatrixCornerPoints(bullsEyeCorners);
+
+  return new AztecDetectorResult(bits, corners, compact, nbDataBlocks, nbLayers, errorsCorrected);
+}
+
+
+
+No.1 generated result --------------------------
+
+AztecDetectorResult result = new AztecDetectorResult();
+boolean isMirror = true;
+try {
+    result = detect(isMirror);
+} catch (NotFoundException e) {
+    e.printStackTrace();
+}
+BitMatrix bits = result.getBits();
+ResultPoint[] corners = result.getPoints();
+boolean actualCompact = result.isCompact();
+int actualNbDataBlocks = result.getNbDataBlocks();
+int actualNbLayers = result.getNbLayers();
+int actualErrorsCorrected = result.getErrorsCorrected();
+assertNotNull(result);
+assertNotNull(bits);
+assertNotNull(corners);
+assertNotNull(actualCompact);
+assertNotNull(actualNbDataBlocks);
+assertNotNull(actualNbLayers);
+assertNotNull(actualErrorsCorrected);
+
+
+No.2 generated result --------------------------
+
+
+@Test
+public void detectTest() {
+  // Create a new instance of the Detector class
+  Detector detector = new Detector(new BitMatrix(image));
+
+  try {
+    // Call the detect method with isMirror set to false
+    AztecDetectorResult result = detector.detect(false);
+    
+    // Assert that the result is not null
+    assertNotNull(result);
+    
+    // Add more assertions based on the expected output of the detect method
+    // For example:
+    // assertEquals(expectedBits, result.getBits());
+    // assertEquals(expectedCorners, result.getCorners());
+    // assertEquals(expectedCompact, result.isCompact());
+    // assertEquals(expectedNbDataBlocks, result.getNbDataBlocks());
+    // assertEquals(expectedNbLayers, result.getNbLayers());
+    // assertEquals(expectedErrorsCorrected, result.getErrorsCorrected());
+  } catch (NotFoundException e) {
+    // Handle any exceptions thrown by the detect method
+    fail("Exception thrown: " + e.getMessage());
+  }
+}
+
+
+No.3 generated result --------------------------
+
+@Test
+public void detectTest() {
+    // Arrange
+    boolean isMirror = false;
+    // Act
+    AztecDetectorResult result = new Detector(new BitMatrix(image)).detect(isMirror);
+    // Assert
+    assertNotNull(result);
+    // Add more assertions as needed
+}
+
+
+No.4 generated result --------------------------
+
+@Test
+public void detectTest() {
+    try {
+        Detector detector = new Detector(new BitMatrix(1, 1)); // create a new detector object with a sample BitMatrix
+        AztecDetectorResult result = detector.detect(true); // call the detect method with the isMirror parameter set to true
+        // assert statements to verify the result
+        assertNotNull(result); // check if the result is not null
+        assertEquals(1, result.getNbDataBlocks()); // verify the number of data blocks in the result
+        assertTrue(result.isCompact()); // check if the result is compact
+        // add more assert statements as needed based on the expected output
+    } catch (NotFoundException e) {
+        fail("Exception should not be thrown");
+        e.printStackTrace();
+    }
+}
+
+
+
+No.5 generated result --------------------------
+
+public void detectTest() {
+    BitMatrix image = new BitMatrix(5, 5);
+    Detector detector = new Detector(image);
+    boolean isMirror = true;
+    try {
+      AztecDetectorResult result = detector.detect(isMirror);
+      assertNotNull(result);
+    } catch (NotFoundException e) {
+      fail("Exception should not be thrown");
+    }
+}
+
+
+No.6 generated result --------------------------
+
+@Test
+public void detectTest() throws NotFoundException {
+  // Arrange
+  Detector detector = new Detector(image);
+  boolean isMirror = false;
+
+  // Act
+  AztecDetectorResult result = detector.detect(isMirror);
+
+  // Assert
+  assertNotNull(result);
+}
+
+
+No.7 generated result --------------------------
+
+@Test
+public void detectTest() {
+    // Create an instance of Detector class
+    Detector detector = new Detector(bitMatrixInstance);
+
+    // Define the input parameters for the detect() method
+    boolean isMirror = false;
+
+    // Call the detect() method and verify the output AztecDetectorResult
+    AztecDetectorResult result = detector.detect(isMirror);
+    assertNotNull(result);
+}
+
+
+No.8 generated result --------------------------
+
+@Test
+public void detectTest() {
+    Detector detector = new Detector(new BitMatrix());
+    AztecDetectorResult result = detector.detect(false);
+    assertNotNull(result);
+}
+
+
+No.9 generated result --------------------------
+
+@Test
+public void detectTest() {
+  // Create an instance of the Detector class
+  Detector detector = new Detector(new BitMatrix());
+
+  // Call the detect method with the isMirror parameter set to false
+  AztecDetectorResult result = detector.detect(false);
+
+  // Assert that the result is not null
+  assertNotNull(result);
+}
+
+
+No.10 generated result --------------------------
+
+AztecDetectorResult result;
+Detector detector = new Detector(image);
+try {
+    result = detector.detect(false);
+} catch (NotFoundException e) {
+    fail("Failed to detect Aztec code: " + e.getMessage());
+}
+
+

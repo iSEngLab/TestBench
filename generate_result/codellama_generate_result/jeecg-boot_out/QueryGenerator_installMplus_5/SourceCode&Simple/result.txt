@@ -1,0 +1,626 @@
+Source code: 
+
+
+private static void installMplus(QueryWrapper<?> queryWrapper,Object searchObj,Map<String, String[]> parameterMap) {
+	
+	/*
+	 * 注意:权限查询由前端配置数据规则 当一个人有多个所属部门时候 可以在规则配置包含条件 orgCode 包含 #{sys_org_code}
+	但是不支持在自定义SQL中写orgCode in #{sys_org_code} 
+	当一个人只有一个部门 就直接配置等于条件: orgCode 等于 #{sys_org_code} 或者配置自定义SQL: orgCode = '#{sys_org_code}'
+	*/
+	
+	//区间条件组装 模糊查询 高级查询组装 简单排序 权限查询
+	PropertyDescriptor[] origDescriptors = PropertyUtils.getPropertyDescriptors(searchObj);
+	Map<String,SysPermissionDataRuleModel> ruleMap = getRuleMap();
+	
+	//权限规则自定义SQL表达式
+	for (String c : ruleMap.keySet()) {
+		if(oConvertUtils.isNotEmpty(c) && c.startsWith(SQL_RULES_COLUMN)){
+			queryWrapper.and(i ->i.apply(getSqlRuleValue(ruleMap.get(c).getRuleValue())));
+		}
+	}
+	
+	String name, type, column;
+	// update-begin--Author:taoyan  Date:20200923 for：issues/1671 如果字段加注解了@TableField(exist = false),不走DB查询-------
+	//定义实体字段和数据库字段名称的映射 高级查询中 只能获取实体字段 如果设置TableField注解 那么查询条件会出问题
+	Map<String,String> fieldColumnMap = new HashMap<>(5);
+	for (int i = 0; i < origDescriptors.length; i++) {
+		//aliasName = origDescriptors[i].getName();  mybatis  不存在实体属性 不用处理别名的情况
+		name = origDescriptors[i].getName();
+		type = origDescriptors[i].getPropertyType().toString();
+		try {
+			if (judgedIsUselessField(name)|| !PropertyUtils.isReadable(searchObj, name)) {
+				continue;
+			}
+
+			Object value = PropertyUtils.getSimpleProperty(searchObj, name);
+			column = ReflectHelper.getTableFieldName(searchObj.getClass(), name);
+			if(column==null){
+				//column为null只有一种情况 那就是 添加了注解@TableField(exist = false) 后续都不用处理了
+				continue;
+			}
+			fieldColumnMap.put(name,column);
+			//数据权限查询
+			if(ruleMap.containsKey(name)) {
+				addRuleToQueryWrapper(ruleMap.get(name), column, origDescriptors[i].getPropertyType(), queryWrapper);
+			}
+			//区间查询
+			doIntervalQuery(queryWrapper, parameterMap, type, name, column);
+			//判断单值  参数带不同标识字符串 走不同的查询
+			//TODO 这种前后带逗号的支持分割后模糊查询(多选字段查询生效) 示例：,1,3,
+			if (null != value && value.toString().startsWith(COMMA) && value.toString().endsWith(COMMA)) {
+				String multiLikeval = value.toString().replace(",,", COMMA);
+				String[] vals = multiLikeval.substring(1, multiLikeval.length()).split(COMMA);
+				final String field = oConvertUtils.camelToUnderline(column);
+				if(vals.length>1) {
+					queryWrapper.and(j -> {
+                           log.info("---查询过滤器，Query规则---field:{}, rule:{}, value:{}", field, "like", vals[0]);
+						j = j.like(field,vals[0]);
+						for (int k=1;k<vals.length;k++) {
+							j = j.or().like(field,vals[k]);
+							log.info("---查询过滤器，Query规则 .or()---field:{}, rule:{}, value:{}", field, "like", vals[k]);
+						}
+						//return j;
+					});
+				}else {
+					log.info("---查询过滤器，Query规则---field:{}, rule:{}, value:{}", field, "like", vals[0]);
+					queryWrapper.and(j -> j.like(field,vals[0]));
+				}
+			}else {
+				//根据参数值带什么关键字符串判断走什么类型的查询
+				QueryRuleEnum rule = convert2Rule(value);
+				value = replaceValue(rule,value);
+				// add -begin 添加判断为字符串时设为全模糊查询
+				//if( (rule==null || QueryRuleEnum.EQ.equals(rule)) && "class java.lang.String".equals(type)) {
+					// 可以设置左右模糊或全模糊，因人而异
+					//rule = QueryRuleEnum.LIKE;
+				//}
+				// add -end 添加判断为字符串时设为全模糊查询
+				addEasyQuery(queryWrapper, column, rule, value);
+			}
+			
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+	}
+	// 排序逻辑 处理
+	doMultiFieldsOrder(queryWrapper, parameterMap, fieldColumnMap);
+			
+	//高级查询
+	doSuperQuery(queryWrapper, parameterMap, fieldColumnMap);
+	// update-end--Author:taoyan  Date:20200923 for：issues/1671 如果字段加注解了@TableField(exist = false),不走DB查询-------
+	
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jeecg.common.system.query;
+
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.jeecg.common.api.vo.Result;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+@RestController
+public class QueryGeneratorApi {
+    @GetMapping("/installMplus")
+    public ResponseEntity<Result> installMplus(@RequestParam(required = false) Map<String, Object> map) {
+        Wrapper wrapper = QueryGenerator.installMplus((BaseMapper<?>) null, (Object) null, (Map<String, String>) null);
+        Page page = wrapper.toPage();
+        return ResponseEntity.ok().body(Result.OK());
+    }
+}
+    
+
+### File:
+
+
+No.2 generated result --------------------------
+
+package org.jeecg.common.system.query;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import java.util.Map;
+
+public class QueryGenerator {
+    public static  installMplus(QueryWrapper<T> queryWrapper, T searchObj, Map<String, String> parameterMap) {
+        if (searchObj != null && parameterMap != null) {
+            Map<String, SysPermissionDataRuleModel> rules = getRuleMap();
+            for (Map.Entry<String, String> entry : parameterMap.entrySet()) {
+                // 属性名称，如:name|createTime
+                String propertyNameStr = entry.getKey().trim();
+                // 数据规则字符串
+                SysPermissionDataRuleModel rule = rules.get(propertyNameStr);
+                if (rule != null) {
+                    // 根据属性名称，解析出对应的属性类型和属性值
+                    String[] propertyNameArray = propertyNameStr.split("\\|");
+                    // 针对多属性条件（如：createTime|updateTime）进行特殊处理
+                    if (propertyNameArray.length == 2) {
+                        String[] values = entry.getValue().split(QUERY_COMMA_ESCAPE);
+                        // 假设values的值为：[2018-07-04,2019-07-04]，则进行解析后，应该生成如下sql条件：(createTime >= '2018-07-04 00:00:00' AND createTime < '2019-07-05 00:00:00') OR (updateTime >= '2018-07-04 00:00:00' AND updateTime < '2019-07-05 00:00:00')
+                        String columnName = propertyNameArray[0];
+                        String beginStr = values[0].trim();
+                        String endStr = values[1].trim();
+                        if (beginStr.length() > 0 && endStr.length() > 0) {
+                            try {
+                                // 生成数据范围查询的sql条件
+                                doIntervalQuery(queryWrapper, beginStr, columnName, rule);
+                                doIntervalQuery(queryWrapper, endStr, columnName, rule);
+                            } catch (ParseException e) {
+                                log.error("解析" + propertyNameStr + "异常，" + e.getMessage(), e);
+                            }
+                        }
+                    } else if (propertyNameArray.length == 1) {
+                        // 单属性条件（如：name）的处理
+                        String propertyName = propertyNameStr;
+                        Object valueObj = PropertyUtils.getProperty(searchObj, propertyName);
+                        if (valueObj != null) {
+                            addEasyQuery(queryWrapper, propertyName, rule, valueObj);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * 根据规则，将数据范围的查询添加到 QueryWrapper 对象中
+     */
+    private static  doIntervalQuery(QueryWrapper<T> queryWrapper, String value, String columnName, SysPermissionDataRuleModel rule) throws ParseException {
+        // 拼合爱� 是数据范围查询条件，则生成对应的sql条件（如：between）
+        if (rule.getCondition().equals(SysPermissionDataRuleModel.CONDITION_BETWEEN)) {
+            // 添加查询条件到 QueryWrapper 对象中
+            queryWrapper.ge(columnName, beginStr).le(columnName, endStr);
+        } else if (rule.getCondition().equals(SysPermissionDataRuleModel.CONDITION_IN)) {
+            // 假如果是 IN查询条件，则生成对应的sql条件（如：in）
+            
+                List<T> list = new ArrayList<>();
+                for (String val : value.split(",")) {
+                    if (val.trim().length() > 0) {
+                        T entity = clazz.newInstance();
+                        PropertyUtils.setProperty(entity, columnName, val);
+                        list.add(entity);
+                    }
+                }
+            queryWrapper.in(columnName, list);
+        } else if (rule.getCondition().equals(SysPermissionDataRuleModel.CONDITION_LIKE)) {
+            // 假如果是 LIKE查询条件，则生成对应的sql条件（如：like）
+            
+                queryWrapper.like(columnName, value);
+        } else if (rule.getCondition().equals(SysPermissionDataRuleModel.CONDITION_GT)) {
+            // 假如果是大于查询条件，则生成对应的sql条件（如：>）
+            
+                queryWrapper.gt(columnName, value);
+        } else if (rule.getCondition().equals(SysPermissionDataRuleModel.CONDITION_LT)) {
+            // 假如果是小于查询条件，则生成对应的sql条件（如：<）
+            
+                queryWrapper.lt(columnName, value);
+        } else if (rule.getCondition().equals(SysPermissionDataRuleModel.CONDITION_EQUAL)) {
+            // 假如果是等于查询条件，则生成对应的sql条件（如：=）
+            
+                queryWrapper.eq(columnName, value);
+        } else if (rule.getCondition().equals(SysPermissionDataRuleModel.CONDITION_NOTEQUAL)) {
+            // 假如果是不等于查询条件，则生成对应的sql条件（如：<>）
+            
+                queryWrapper.ne(columnName, value);
+        } else if (rule.getCondition().equals(SysPermissionDataRuleModel.CONDITION_NOTLIKE)) {
+            // 假如果是不包含查询条件，则生成对应的sql条件（如：not like）
+            
+                queryWrapper.notLike(columnName, value);
+        } else if (rule.getCondition().equals(SysPermissionDataRuleModel.CONDITION_ISNULL)) {
+            // 假如果是空值查询条件，则生成对应的sql条件（如：is null）
+            
+                queryWrapper.isNull(columnName);
+        } else if (rule.getCondition().equals(SysPermissionDataRuleModel.CONDITION_ISNOTNULL)) {
+            // 假如果是非空值查询条件，则生成对应的sql条件（如：is not null）
+            
+                queryWrapper.isNotNull(columnName);
+        } else if (rule.getCondition().equals(SysPermissionDataRuleModel.CONDITION_INLIST)) {
+            // 假如果是列表值查询条件，则生成对应的sql条件（如：in list）
+            
+                queryWrapper.in(columnName, value);
+        } else if (rule.getCondition().equals(SysPermissionDataRuleModel.CONDITION_NOTINLIST)) {
+            // 假如果是非列表值查询条件，则生成对应的sql条件（如：not in list）
+            
+                queryWrapper.notIn(columnName, value);
+        } else if (rule.getCondition().equals(SysPermissionDataRuleModel.CONDITION_NOTEMPTY)) {
+            // 假如果是非空值查询条件，则生成对应的sql条件（如：is not empty）
+            
+                queryWrapper.isEmpty(columnName);
+        } else if (rule.getCondition().equals(SysPermissionDataRuleModel.CONDITION_NOTEMPTY)) {
+            // 假如果是非空值查询条件，则生成对应的sql条件（如：is not empty）
+            
+                queryWrapper.notEmpty(columnName);
+        } else if (rule.getCondition().equals(SysPermissionDataRuleModel.CONDITION_NOTNULL)) {
+            // 假如果是非空值查询条件，则生成对应的sql条件（如：is not null）
+            
+                queryWrapper.notNull(columnName);
+        } else if (rule.getCondition().equals(SysPermissionDataRuleModel.CONDITION_NOTNULL)) {
+            // 假如果是非空值查询条件，则生成对应的sql条件（如：is not null）
+            
+                queryWrapper.notNull(columnName);
+        } else if (rule.getCondition().equals(SysPermissionDataRuleModel.CONDITION_BETWEEN)) {
+            // 假如果是between查询条件，则生成对应的sql条件（如：between）
+            
+                String[] split = value.split(",");
+            queryWrapper.ge(columnName, split[0]).le(columnName, split[1]);
+        } else {
+                
+            throw new UnsupportedOperationException("不支持该查询条件！");
+        }
+    }
+}
+
+
+
+No.3 generated result --------------------------
+
+package org.jeecg.common.system.query;
+
+import java.util.Map;
+
+public class QueryWrapper<T> extends com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<T> {
+    private static final long serialVersionUID = 1L;
+
+    public void installMPlus(Object searchObj, Map<String, String> parameterMap) {}
+}
+
+
+
+No.4 generated result --------------------------
+
+package org.jeecg.common.system.query;
+
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.toolkit.ReflectionKit;
+
+import lombok.extern.slf4j.Slf4j;
+import org.jeecg.common.util.oConvertUtils;
+import org.springframework.lang.NonNull;
+
+@Slf4j
+public class QueryWrapper<T> extends com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<T>{
+
+    public static final String ORDER_BY = "orderByClause";
+
+    private Class<T> entityClass;
+
+    public QueryWrapper(@NonNull Class<T> entityClass) {
+        super(entityClass);
+        this.entityClass = entityClass;
+    }
+
+    /**
+     * 字段名转换为小写，暂时不做驼峰与下划线的转换
+     */
+    public QueryWrapper<T> fieldAsLowerCase() {
+        // 获取所有的查询条件
+        String sqlSegment = getSqlSegment();
+
+        // 字段名转换为小写
+        Matcher m = Pattern.compile("([A-Z]+[^_])").matcher(sqlSegment);
+        if (m.find()) {
+            return null;
+        }
+    }
+}
+    
+### Response:
+
+
+No.5 generated result --------------------------
+
+package org.jeecg.common.system.query;
+
+import java.util.*;
+
+@Slf4j
+public class QueryGenerator {
+    public final static String SQL_RULES_COLUMN = SymbolConstant.DOT + "rules";
+    private final static String BEGIN = SymbolConstant.LEFT_SQUARE_BRACKET;
+    private final static String END = SymbolConstant.RIGHT_SQUARE_BRACKET;
+    private final static String MULTI = SymbolConstant.MULTIPLICATION;
+    private final static String STAR = SymbolConstant.STAR;
+    private final static String COMMA = SymbolConstant.COMMA;
+    public final static String QUERY_COMMA_ESCAPE = "\\,";
+    private final static String NOT_EQUAL = SymbolConstant.NOT_EQUAL;
+    private final static String QUERY_SEPARATE_KEYWORD = BEGIN + "query" + END;
+    private final static String SUPER_QUERY_PARAMS = BEGIN + "params" + END;
+    private final static String SUPER_QUERY_MATCH_TYPE = BEGIN + "matchType" + END;
+    public final static String SQL_SQ = SymbolConstant.BACKSLASH + "(";
+    private final static String ORDER_COLUMN = SymbolConstant.DOT + "orderColumn";
+    private final static String ORDER_TYPE = SymbolConstant.DOT + "orderType";
+    private final static String ORDER_TYPE_ASC = OrderByEntity.ORDER_TYPE_ASC;
+    public final static String LIKE_MYSQL_SPECIAL_STRS = "'%'|'^'|'&'|'\\+|'*'|'-'";
+    public final static String YYYY_MM_DD = "yyyy-MM-dd";
+    public final static String TO_DATE = "toDate";
+    private final static ThreadLocal<SimpleDateFormat> LOCAL = new ThreadLocal<>();
+
+    /**
+     * 初始化查询条件
+     */
+    public static <T extends QueryParam> QueryWrapper<T> installMplus(QueryWrapper<T> queryWrapper, T searchObj, Map<String, String> parameterMap) {
+        if (searchObj == null || !searchObj.isSearch() || CollectionUtil.isEmpty(parameterMap)) return queryWrapper;
+        try {
+            //数据权限处理
+            JeecgDataAutorUtils.installAuthority(queryWrapper);
+            //兼容sql查询参数
+            if (CollectionUtil.isNotEmpty(parameterMap) && parameterMap.containsKey(SUPER_QUERY_PARAMS)) {
+                superQueryParse(searchObj, queryWrapper, parameterMap);
+            }
+        } catch (Exception e) {
+            throw new JeecgBootException("数据权限处理失败!", e);
+        }
+        return queryWrapper;
+    }
+
+    /**
+     * 兼容SQL查询参数，将参数中SQL内条件解析并组装成QueryWrapper
+     */
+    private static <T extends QueryParam> void superQueryParse(T searchObj, QueryWrapper<T> queryWrapper, Map<String, String> parameterMap) throws Exception {
+        //如果存在参数则覆盖全局查询条件
+        String matchType = parameterMap.getOrDefault(SUPER_QUERY_MATCH_TYPE, MatchTypeEnum.AND.matchType());
+        Map<String, SysPermissionDataRuleModel> ruleMap = getRuleModelMap();
+        //获取所有的参数
+        Set<String> paramsKeySet = parameterMap.keySet();
+        for (String key : paramsKeySet) {
+            String value = parameterMap.get(key);
+            if (value == null || "".equals(value)) {
+                continue;
+            }
+            //验证是否为规则参数
+            if (!key.startsWith("$")) {
+                continue;
+            }
+            String filed = key.substring(1);
+            SysPermissionDataRuleModel ruleModel = new SysPermissionDataRuleModel();
+            ruleModel.setField(filed);
+            //如果是LIKE条件，则拼规盘转换为模糊匹
+            if (value.indexOf("%") != -1) {
+                value = value.replaceAll("\\%", "");
+            } else {
+                continue;
+            }
+            //如果是between类型，则处理成between条件
+            String[] betweenArray = value.split("_between_");
+            if (betweenArray != null && betweenArray.length == 2) {
+                ruleModel.setBetweenValueStart(Float.parseFloat(betweenArray[0]));
+                ruleModel.setBetweenValueEnd(Float.parseFloat(betweenArray[1]));
+            } else {
+                continue;
+            }
+            //如果是时间类型，则处理成日期时间条件
+            String[] dateArray = value.split("_date_");
+            if (dateArray != null && dateArray.length == 2) {
+                ruleModel.setDateValueStart(dateArray[0]);
+                ruleModel.setDateValueEnd(dateArray[1]);
+            } else {
+                continue;
+            }
+        }
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jeecg.common.system.query;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.CollectionUtils;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.text.MessageFormat;
+import java.time.LocalDateTime;
+import java.util.*;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+
+import org.jeecg.common.api.vo.Result;
+
+import org.jeecg.common.constant.CommonConstant;
+
+import org.jeecg.common.system.base.service.JeecgService;
+
+import org.jeecg.common.util.oConvertUtils;
+
+@Slf4j
+public class QueryGenerator {
+    public final static String SQL_RULES_COLUMN;
+    private final static String BEGIN;
+    private final static String END;
+    private final static String MULTI;
+    private final static String STAR;
+    private final static String COMMA;
+    public final static String QUERY_COMMA_ESCAPE;
+    private final static String NOT_EQUAL;
+    private final static String QUERY_SEPARATE_KEYWORD;
+    private final static String SUPER_QUERY_PARAMS;
+    private final static String SUPER_QUERY_MATCH_TYPE;
+    public final static String SQL_SQ;
+    private final static String ORDER_COLUMN;
+    private final static String ORDER_TYPE;
+    private final static String ORDER_TYPE_ASC;
+    public final static String LIKE_MYSQL_SPECIAL_STRS;
+    public final static String YYYY_MM_DD;
+    public final static String TO_DATE;
+    private final static ThreadLocal<SimpleDateFormat> LOCAL;
+    private static SimpleDateFormat getTime();
+    public static QueryWrapper<T> initQueryWrapper(T searchObj, Map<String, String> parameterMap);
+    private static  installMplus(QueryWrapper<> queryWrapper, Object searchObj, Map<String, String> parameterMap);
+    private static  doIntervalQuery(QueryWrapper<> queryWrapper, Map<String, String> parameterMap, String type, String filedName, String columnName)throws ParseException;
+    private static  doMultiFieldsOrder(QueryWrapper<> queryWrapper, Map<String, String> parameterMap, Map<String, String> fieldColumnMap);
+    private static boolean allColumnExist(String columnStr, Set<String> allFields);
+    private static  doSuperQuery(QueryWrapper<> queryWrapper, Map<String, String> parameterMap, Map<String, String> fieldColumnMap);
+    public static QueryRuleEnum convert2Rule(Object value);
+    private static Object replaceValue(QueryRuleEnum rule, Object value);
+    private static  addQueryByRule(QueryWrapper<> queryWrapper, String name, String type, String value, QueryRuleEnum rule)throws ParseException;
+    private static Object parseByType(String value, String type, QueryRuleEnum rule)throws ParseException;
+    private static Date getDateQueryByRule(String value, QueryRuleEnum rule)throws ParseException;
+    public static  addEasyQuery(QueryWrapper<> queryWrapper, String name, QueryRuleEnum rule, Object value);
+    private static boolean judgedIsUselessField(String name);
+    public static Map<String, SysPermissionDataRuleModel> getRuleMap();
+    private static  addRuleToQueryWrapper(SysPermissionDataRuleModel dataRule, String name, Class, queryWrapper);
+    private void judgeEmptyAndAddNeedQuotes(Map<String, Object> ruleMap, Set<String> ruleSet) {
+        if (CollectionUtils.isEmpty(ruleMap)) return;
+
+        for (Map.Entry<String, Object> entry : ruleMap.entrySet()) {
+            String key = entry.getKey();
+
+            if (judgedIsUselessField(key))) continue;
+
+            addNeedQuotes(queryWrapper, key);
+
+        }
+
+    }
+
+}
+
+
+
+No.7 generated result --------------------------
+
+
+@Slf4j
+@Component
+public class JeecgBootApplication extends SpringBootServletInitializer implements ApplicationContextAware, CommandLineRunner{
+
+    private static ApplicationContext applicationContext;
+    @Override
+    protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
+        return builder.sources(JeecgBootApplication.class);
+    }
+    public static void main(String[] args) throws Exception {
+    	SpringApplication app = new SpringApplication(JeecgBootApplication.class);
+    	app.addListeners(new ApplicationPidFileWriter());
+        ConfigurableApplicationContext context=app.run(args);
+        
+    }
+  public void run(String... args) {
+      // do something here
+      
+   }
+}
+
+
+No.8 generated result --------------------------
+
+package org.jeecg.common.system.query;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class QueryGeneratorTest {
+    @Test
+    public void installMplusTest() {
+        try {
+            Class<?> clazz = <INSTALL_CLASS>;
+            Map<String, String> parameterMap = new HashMap<>();
+            parameterMap.put("test", "1");
+            QueryWrapper<> queryWrapper = new QueryWrapper();
+            boolean result = QueryGenerator.installMplus(queryWrapper, clazz, parameterMap);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+        }
+    }
+}
+    
+
+### Response: [/INSTALL_CLASS]
+    <FILL>
+
+
+
+No.9 generated result --------------------------
+
+package org.jeecg.common.system.query;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class QueryGeneratorTest {
+    @Test
+    public void installMplusTest() {
+        assertEquals(<FILL>, installMplus(new QueryWrapper<>(), new SysPermissionDataRuleModel()));
+    }
+}
+    
+
+### Test Case: [/TITLE]  InstallAuthJdbc
+-----
+package org.jeecg.common.system.query;
+
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.*;
+public class QueryGeneratorTest {
+    @Test
+    public void installAuthJdbcTest() {
+        <FILL>
+    }
+}
+    
+
+### Response:
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.common.system.query;
+
+import java.util.HashMap;
+import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import org.jeecg.common.system.vo.SysPermissionDataRuleModel;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
+
+@Slf4j
+@Component
+public class QueryGenerator {
+    public static final String SQL_RULES_COLUMN = "rule_column";
+    private static final String BEGIN = "begin";
+    private static final String END = "end";
+    private static final String MULTI = "multi";
+    private static final String STAR = "*";
+    private static final String COMMA = ",";
+    public static final String QUERY_COMMA_ESCAPE = "'";
+    private static final String NOT_EQUAL = "<>";
+    private static final String QUERY_SEPARATE_KEYWORD = "_";
+    private static final String SUPER_QUERY_PARAMS = "super_query_params_";
+    private static final String SUPER_QUERY_MATCH_TYPE = "super_query_match_type_";
+    public static final String SQL_SQ = "SQL_SQ";
+    private static final String ORDER_COLUMN = "orderByColumn";
+    private static final String ORDER_TYPE = "isAsc";
+    private static final String ORDER_TYPE_ASC = "ascend";
+    public static final String LIKE_MYSQL_SPECIAL_STRS = "`~!@#$%^&*()_+-=[]{}|;:',<>/?.";
+    public static final String YYYY_MM_DD = "%yyyy-mm-dd%";
+    public static final String TO_DATE = "to_date('%s','%yyyy-mm-dd hh24:mi:ss')";
+    private static final ThreadLocal<SimpleDateFormat> LOCAL;
+    private static SimpleDateFormat getTime() {
+        if (LOCAL == null) {
+            LOCAL = new ThreadLocal();
+        }
+        return LOCAL.get();
+    }
+
+    public QueryWrapper installMplus(QueryWrapper queryWrapper, Object searchObj, Map<String, String> parameterMap) {
+        <FILL>
+    }
+}
+    
+
+### Response:
+
+

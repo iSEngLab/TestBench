@@ -1,0 +1,483 @@
+Source code: 
+
+
+private static String getEncodedData(boolean[] correctedBits) throws FormatException {
+  int endIndex = correctedBits.length;
+  Table latchTable = Table.UPPER; // table most recently latched to
+  Table shiftTable = Table.UPPER; // table to use for the next read
+
+  // Final decoded string result
+  // (correctedBits-5) / 4 is an upper bound on the size (all-digit result)
+  StringBuilder result = new StringBuilder((correctedBits.length - 5) / 4);
+
+  // Intermediary buffer of decoded bytes, which is decoded into a string and flushed
+  // when character encoding changes (ECI) or input ends.
+  ByteArrayOutputStream decodedBytes = new ByteArrayOutputStream();
+  Charset encoding = DEFAULT_ENCODING;
+
+  int index = 0;
+  while (index < endIndex) {
+    if (shiftTable == Table.BINARY) {
+      if (endIndex - index < 5) {
+        break;
+      }
+      int length = readCode(correctedBits, index, 5);
+      index += 5;
+      if (length == 0) {
+        if (endIndex - index < 11) {
+          break;
+        }
+        length = readCode(correctedBits, index, 11) + 31;
+        index += 11;
+      }
+      for (int charCount = 0; charCount < length; charCount++) {
+        if (endIndex - index < 8) {
+          index = endIndex;  // Force outer loop to exit
+          break;
+        }
+        int code = readCode(correctedBits, index, 8);
+        decodedBytes.write((byte) code);
+        index += 8;
+      }
+      // Go back to whatever mode we had been in
+      shiftTable = latchTable;
+    } else {
+      int size = shiftTable == Table.DIGIT ? 4 : 5;
+      if (endIndex - index < size) {
+        break;
+      }
+      int code = readCode(correctedBits, index, size);
+      index += size;
+      String str = getCharacter(shiftTable, code);
+      if ("FLG(n)".equals(str)) {
+        if (endIndex - index < 3) {
+          break;
+        }
+        int n = readCode(correctedBits, index, 3);
+        index += 3;
+        //  flush bytes, FLG changes state
+        try {
+          result.append(decodedBytes.toString(encoding.name()));
+        } catch (UnsupportedEncodingException uee) {
+          throw new IllegalStateException(uee);
+        }
+        decodedBytes.reset();
+        switch (n) {
+          case 0:
+            result.append((char) 29);  // translate FNC1 as ASCII 29
+            break;
+          case 7:
+            throw FormatException.getFormatInstance(); // FLG(7) is reserved and illegal
+          default:
+            // ECI is decimal integer encoded as 1-6 codes in DIGIT mode
+            int eci = 0;
+            if (endIndex - index < 4 * n) {
+              break;
+            }
+            while (n-- > 0) {
+              int nextDigit = readCode(correctedBits, index, 4);
+              index += 4;
+              if (nextDigit < 2 || nextDigit > 11) {
+                throw FormatException.getFormatInstance(); // Not a decimal digit
+              }
+              eci = eci * 10 + (nextDigit - 2);
+            }
+            CharacterSetECI charsetECI = CharacterSetECI.getCharacterSetECIByValue(eci);
+            if (charsetECI == null) {
+              throw FormatException.getFormatInstance();
+            }
+            encoding = charsetECI.getCharset();
+        }
+        // Go back to whatever mode we had been in
+        shiftTable = latchTable;
+      } else if (str.startsWith("CTRL_")) {
+        // Table changes
+        // ISO/IEC 24778:2008 prescribes ending a shift sequence in the mode from which it was invoked.
+        // That's including when that mode is a shift.
+        // Our test case dlusbs.png for issue #642 exercises that.
+        latchTable = shiftTable;  // Latch the current mode, so as to return to Upper after U/S B/S
+        shiftTable = getTable(str.charAt(5));
+        if (str.charAt(6) == 'L') {
+          latchTable = shiftTable;
+        }
+      } else {
+        // Though stored as a table of strings for convenience, codes actually represent 1 or 2 *bytes*.
+        byte[] b = str.getBytes(StandardCharsets.US_ASCII);
+        decodedBytes.write(b, 0, b.length);
+        // Go back to whatever mode we had been in
+        shiftTable = latchTable;
+      }
+    }
+  }
+  try {
+    result.append(decodedBytes.toString(encoding.name()));
+  } catch (UnsupportedEncodingException uee) {
+    // can't happen
+    throw new IllegalStateException(uee);
+  }
+  return result.toString();
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.google.zxing.aztec.decoder;
+
+import com.google.zxing.FormatException;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DecoderTest {
+
+    // Assuming that Table and other dependencies such as readCode, getCharacter, etc.,
+    // are static methods and can be accessed directly. If not, mock or helper methods are needed.
+    // Additional setup or teardown code may be required depending on the test context.
+    @Test
+    public void getEncodedDataTest() throws FormatException {
+        // Test an arbitrary case where correctedBits should correspond to the encoded data.
+        // This example involves a simplified boolean array for the sake of the example.
+        // In a real-world scenario, the array would need to match real encoded data and its length
+        // should match the data plus padding of the Aztec code.
+        boolean[] correctedBitsExample = {false, true, false, true}; // Simplified placeholder data
+        
+        // Mock behavior of readCode or getCharacter if needed
+        String expectedResult = "Mocked Result"; // Expected result (Placeholder)
+        
+        // Below is an example call to the static method, this would be replaced
+        // with the proper test assertions and validations.
+        String decodedData = Decoder.getEncodedData(correctedBitsExample);
+
+        // Validate the expected result, this may include testing for exceptions,
+        // different formats, corner cases, etc.
+        assertEquals(expectedResult, decodedData, "The decoded data should match the expected result.");
+        
+        // More test cases here...
+    }
+    
+    // Additional tests could be written to cover negative cases, for example:
+    // testGetEncodedDataWithInsufficientLength, testGetEncodedDataWithIllegalCharacters, etc.
+}
+
+
+No.2 generated result --------------------------
+
+package com.google.zxing.aztec.decoder;
+
+import com.google.zxing.FormatException;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DecoderTest {
+    @Test
+    public void getEncodedDataTest() throws FormatException {
+        // Assuming a set of boolean inputs simulating the corrected bits
+        // for a known encoded data string "Hello, World!". In practice, you'd want
+        // to provide a real example here that corresponds to the Aztec code being tested.
+        // This is a simplified example for demonstration purposes only.
+        boolean[] correctedBits = new boolean[]{
+                // This should correspond to the bit representation of "Hello, World!"
+                // which we cannot actually provide without the real encoding logic
+                /* ... */
+        };
+
+        // Execute the method to test
+        String decodedResult = Decoder.getEncodedData(correctedBits);
+
+        // The expected value would be the string we intend to decode
+        // so we will assert that the actual result matches "Hello, World!"
+        String expected = "Hello, World!";
+        assertEquals(expected, decodedResult);
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.google.zxing.aztec.decoder;
+
+import com.google.zxing.FormatException;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DecoderTest {
+    @Test
+    public void getEncodedDataTest() throws FormatException {
+        // Simulate a known sequence of corrected bits for the UPPER table
+        boolean[] correctedBits = {
+            // Encoding for 'A' in UPPER_TABLE (binary 2)
+            false, true, false, false, false,
+            // Encoding for 'B' in UPPER_TABLE (binary 3)
+            false, true, false, false, true
+        };
+
+        // Expected output based on the correctedBits for 'AB'
+        String expected = "AB";
+
+        // Since getEncodedData is a private static method, we can't call it directly.
+        // For this test case, we assume it should be made package-private or public for testing purposes.
+        String result = Decoder.getEncodedData(correctedBits);
+
+        assertEquals(expected, result, "The encoded data should match the expected output");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.google.zxing.aztec.decoder;
+
+import com.google.zxing.FormatException;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DecoderTest {
+    
+    @Test
+    public void getEncodedDataTest() {
+        boolean[] correctedBits = {
+            true, false, true, false, // example data pattern for the test
+            true, true, true, true,
+            ... // extend this pattern with valid test data
+        };
+        
+        String expectedEncodedData = "YOUR_EXPECTED_RESULT_HERE"; // replace with the expected string
+        
+        try {
+            String actualEncodedData = Decoder.highLevelDecode(correctedBits);
+            assertEquals(expectedEncodedData, actualEncodedData);
+        } catch (FormatException e) {
+            fail("FormatException should not be thrown for valid data");
+        }
+    }
+    
+    // Additional tests can be written to cover different cases, such as handling special characters,
+    // testing with invalid input patterns that should throw FormatException, etc.
+}
+
+
+No.5 generated result --------------------------
+
+package com.google.zxing.aztec.decoder;
+
+import com.google.zxing.FormatException;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DecoderTest {
+
+    @Test
+    public void getEncodedDataTest() throws FormatException {
+        // Assuming that the Decoder class has a visible method for testing
+        // Called `getEncodedData(boolean[] correctedBits)` which is made public for the test
+
+        // Create a sample input for the test, assuming correctedBits simulates some binary encoding
+        boolean[] sampleCorrectedBits = { /* Example test data here */ };
+
+        // Call the method under test
+        String result = Decoder.getEncodedData(sampleCorrectedBits);
+
+        // Verify the result, where the expected result is known for the given test data
+        String expected = "Expected Decoded String"; // Replace with the expected string for the test data
+        assertEquals(expected, result);
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package com.google.zxing.aztec.decoder;
+
+import com.google.zxing.FormatException;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DecoderTest {
+  
+    @Test
+    public void getEncodedDataTest() {
+        // Example test case. You will need real boolean arrays and expected Strings
+        // for actual testing.
+        
+        // Test with a hypothetical correctedBits array that is supposed to decode 
+        // to a known string without throwing any FormatExceptions.
+        boolean[] exampleCorrectedBits = {true, false, ...}; // Should represent the encoded data
+        String expectedDecodedData = "DecodedString"; // The expected result. An actual example needs to be provided.
+        
+        try {
+            String result = Decoder.getEncodedData(exampleCorrectedBits);
+            assertEquals(expectedDecodedData, result);
+        } catch (FormatException fe) {
+            fail("FormatException should not be thrown");
+        }
+
+        // Test the behavior when the correctedBits array would cause a FormatException
+        boolean[] incorrectCorrectedBits = {true, true, ...}; // Should represent invalid encoded data that triggers a FormatException
+        
+        assertThrows(FormatException.class, () -> {
+            Decoder.getEncodedData(incorrectCorrectedBits);
+        });
+
+        // Further tests should be added here to cover more scenarios of the getEncodedData method,
+        // including various modes and transitions between them.
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.google.zxing.aztec.decoder;
+
+import com.google.zxing.FormatException;
+import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DecoderTest {
+
+  private final Decoder decoder = new Decoder();
+
+  @Test
+  public void getEncodedDataTest() {
+    // Example usage, assumes related methods such as `extractBits` and `correctBits` are available and working correctly
+    boolean[] correctedBitsExample = new boolean[]{ /* Provide a valid bit sequence here */ };
+    String expectedOutput = "Expected string result"; // The expected string result for the given input bits
+
+    // Test with some valid `correctedBits` data
+    try {
+      String result = Decoder.highLevelDecode(correctedBitsExample);
+      assertNotNull(result, "Decoded string should not be null");
+      assertEquals(expectedOutput, result, "Decoded string does not match the expected output.");
+    } catch (FormatException e) {
+      fail("FormatException should not be thrown for valid input data.");
+    }
+
+    // Test with invalid `correctedBits` data where a FormatException is expected
+    boolean[] incorrectBitsExample = new boolean[]{ /* Provide an invalid bit sequence here */ };
+    assertThrows(FormatException.class, () -> {
+      Decoder.highLevelDecode(incorrectBitsExample);
+    }, "FormatException should be thrown for invalid input data.");
+  }
+  
+  // Add more test methods as needed...
+}
+
+
+No.8 generated result --------------------------
+
+package com.google.zxing.aztec.decoder;
+
+import com.google.zxing.FormatException;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DecoderTest {
+
+    // Helper method to create a boolean array from a binary string for testing purposes
+    private static boolean[] createBoolArrayFromBinaryString(String binaryString) {
+        boolean[] boolArray = new boolean[binaryString.length()];
+        for (int i = 0; i < binaryString.length(); i++) {
+            boolArray[i] = binaryString.charAt(i) == '1';
+        }
+        return boolArray;
+    }
+
+    @Test
+    public void getEncodedDataTest() {
+        // Define a test case with a known binary string input and expected output
+        // This binary string should be an appropriate representation of an Aztec code data
+        String binaryStringInput = "101010101010"; // Replace with actual binary string for a meaningful test
+        String expectedOutput = "TestData"; // Replace with the expected output for the given binary input
+
+        // Convert the binary string to a boolean array
+        boolean[] correctedBits = createBoolArrayFromBinaryString(binaryStringInput);
+
+        // Call the static method getEncodedData and assert the result
+        try {
+            String result = Decoder.getEncodedData(correctedBits);
+            assertEquals(expectedOutput, result, "Encoded data does not match the expected output.");
+        } catch (FormatException fe) {
+            fail("FormatException should not be thrown for valid input.");
+        }
+    }
+
+    // More test methods could be added here to cover different cases such as errors, larger inputs, special characters, etc.
+}
+
+
+No.9 generated result --------------------------
+
+package com.google.zxing.aztec.decoder;
+
+import com.google.zxing.FormatException;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DecoderTest {
+    
+    @Test
+    public void getEncodedDataTest() {
+        // Given a boolean array representing corrected bits which, when decoded, should result in a specific string.
+        // In this test scenario, we are using a simple example that should decode to the string "TEST".
+        // Note: The setup of this test is hypothetical and may not correspond to real encoded data.
+        // You would replace the `correctedBits` and `expectedResult` with actual data relevant to your test case.
+        
+        boolean[] correctedBits = {
+            // Assume this is a valid sequence of corrected bits that decode to "TEST".
+        };
+        String expectedResult = "TEST";
+        try {
+            // When
+            String result = Decoder.highLevelDecode(correctedBits);
+            
+            // Then
+            assertEquals(expectedResult, result, "The encoded data is not as expected.");
+        } catch (FormatException e) {
+            fail("FormatException should not be thrown.");
+        }
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.google.zxing.aztec.decoder;
+
+import com.google.zxing.FormatException;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DecoderTest {
+
+    @Test
+    public void getEncodedDataTest() {
+        // Define corrected bits for a sample encoding.
+        // This is a hypothetical array of bits for the purpose of illustration.
+        boolean[] correctedBits = {
+            // This is an arbitrary sequence of bits to test the getEncodedData function
+            // They should correspond to a valid sequence in the encoding table of the Aztec code
+            // For example, let's say these bits correspond to "HELLO"
+            true, false, true, false, true, false, true, false, // H
+            false, true, false, true, false, true, false, true,  // E
+            true, true, false, false, true, false, true, false,  // L
+            true, true, false, false, true, false, true, false,  // L
+            true, false, false, true, false, true, false, false  // O
+        };
+
+        // Expected result string corresponding to the encoded bits.
+        // This should be the expected decoded string of the provided bits
+        String expectedString = "HELLO";
+
+        // Call getEncodedData and verify the result.
+        try {
+            String result = Decoder.highLevelDecode(correctedBits);
+            assertEquals(expectedString, result, "The decoded string does not match the expected output.");
+        } catch (FormatException e) {
+            fail("FormatException should not occur for valid corrected bits.");
+        }
+    }
+}
+
+

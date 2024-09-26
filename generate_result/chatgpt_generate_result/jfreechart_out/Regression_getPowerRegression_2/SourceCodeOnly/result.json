@@ -1,0 +1,26 @@
+{
+    "project_name": "jfreechart",
+    "file_name": "Regression.java",
+    "relative_path": "jfreechart/src/main/java/org/jfree/data/statistics/Regression.java",
+    "execute_path": "jfreechart",
+    "package": "org.jfree.data.statistics",
+    "docstring": "/**\n     * Returns the parameters 'a' and 'b' for an equation y = ax^b, fitted to\n     * the data using a power regression equation.  The result is returned as\n     * an array, where double[0] --&gt; a, and double[1] --&gt; b.\n     *\n     * @param data  the data.\n     *\n     * @return The parameters.\n     */",
+    "source_code": "\npublic static double[] getPowerRegression(double[][] data) {\n\n    int n = data.length;\n    if (n < 2) {\n        throw new IllegalArgumentException(\"Not enough data.\");\n    }\n\n    double sumX = 0;\n    double sumY = 0;\n    double sumXX = 0;\n    double sumXY = 0;\n    for (int i = 0; i < n; i++) {\n        double x = Math.log(data[i][0]);\n        double y = Math.log(data[i][1]);\n        sumX += x;\n        sumY += y;\n        double xx = x * x;\n        sumXX += xx;\n        double xy = x * y;\n        sumXY += xy;\n    }\n    double sxx = sumXX - (sumX * sumX) / n;\n    double sxy = sumXY - (sumX * sumY) / n;\n    double xbar = sumX / n;\n    double ybar = sumY / n;\n\n    double[] result = new double[2];\n    result[1] = sxy / sxx;\n    result[0] = Math.pow(Math.exp(1.0), ybar - result[1] * xbar);\n\n    return result;\n\n}\n",
+    "class_name": "Regression",
+    "method_name": "getPowerRegression",
+    "arguments": [
+        "double[][] data"
+    ],
+    "generate_test": [
+        "@Test\npublic void getPowerRegressionTest() {\n    double[][] data = {{1, 2}, {3, 4}, {5, 6}};\n    double[] expected = {1.476312443681145, 0.5899265358979045};\n    double[] result = Regression.getPowerRegression(data);\n    assertArrayEquals(expected, result, 0.0001);\n}",
+        "public void getPowerRegressionTest() {\n    double[][] data = {{1, 2}, {3, 4}, {5, 6}};\n    double[] expected = {2.0, 1.0};\n    double[] result = Regression.getPowerRegression(data);\n    assertArrayEquals(expected, result, 0.0001);\n}",
+        "public void getPowerRegressionTest() {\n    double[][] data = {{10, 20}, {15, 25}, {20, 30}};\n    double[] expectedResult = {3, 2};\n    \n    double[] result = Regression.getPowerRegression(data);\n    assertArrayEquals(expectedResult, result, 0.0001);\n}",
+        "double[][] testData = {{2, 4}, {3, 9}, {4, 16}};\ndouble[] expected = {4.0, 1.0986122886681098};\n\ndouble[] result = Regression.getPowerRegression(testData);\n\nassertArrayEquals(expected, result, 0.0001);",
+        "@Test\npublic void getPowerRegressionTest() {\n    double[][] testData = {{1, 10}, {2, 20}, {3, 30}, {4, 40}, {5, 50}};\n    double[] expected = {10.0, 1.0};\n    assertArrayEquals(expected, Regression.getPowerRegression(testData));\n}",
+        "@Test\npublic void getPowerRegressionTest() {\n    double[][] data = {{1, 5}, {2, 8}, {3, 11}};\n    double[] expectedResult = {3, 2};\n    assertArrayEquals(expectedResult, Statistics.getPowerRegression(data));\n}",
+        "double[][] testData = {{2, 4}, {3, 9}, {4, 16}, {5, 25}};\ndouble[] expected = {2.0, 2.0};\nassertArrayEquals(expected, Regression.getPowerRegression(testData), 0.0001);",
+        "@Test\npublic void getPowerRegressionTest() {\n    double[][] data = {{1, 1}, {2, 4}, {3, 9}, {4, 16}};\n    double[] expected = {1, 2};\n    double[] result = Regression.getPowerRegression(data);\n    assertArrayEquals(expected, result, 0.0001);\n}",
+        "@Test\npublic void getPowerRegressionTest() {\n    double[][] data = {{1, 2}, {3, 4}, {5, 6}}; // sample data\n    double[] expected = {1.0000000000000002, 1.4426950408889634}; // expected result\n    assertArrayEquals(expected, Regression.getPowerRegression(data), 0.0001); // complete the test case and output the whole test case\n}",
+        "double[][] data = {{2, 4}, {3, 9}, {4, 16}, {5, 25}};\ndouble[] expected = {1.000, 2.000};\ndouble[] result = Regression.getPowerRegression(data);\nassertArrayEquals(expected, result, 0.001);"
+    ]
+}

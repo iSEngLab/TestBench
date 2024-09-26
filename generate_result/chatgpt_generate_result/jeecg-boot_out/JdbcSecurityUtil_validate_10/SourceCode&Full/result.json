@@ -1,0 +1,26 @@
+{
+    "project_name": "jeecg-boot",
+    "file_name": "JdbcSecurityUtil.java",
+    "relative_path": "jeecg-boot/jeecg-boot-base-core/src/main/java/org/jeecg/common/util/security/JdbcSecurityUtil.java",
+    "execute_path": "jeecg-boot",
+    "package": "org.jeecg.common.util.security",
+    "docstring": "/**\n     * \u6821\u9a8csql\u662f\u5426\u6709\u7279\u5b9a\u7684key\n     * @param jdbcUrl\n     * @return\n     */",
+    "source_code": "\npublic static void validate(String jdbcUrl){\n    if(oConvertUtils.isEmpty(jdbcUrl)){\n        return;\n    }\n    String urlConcatChar = \"?\";\n    if(jdbcUrl.indexOf(urlConcatChar)<0){\n        return;\n    }\n    String argString = jdbcUrl.substring(jdbcUrl.indexOf(urlConcatChar)+1);\n    String[] keyAndValues = argString.split(\"&\");\n    for(String temp: keyAndValues){\n        String key = temp.split(\"=\")[0];\n        for(String prop: notAllowedProps){\n            if(prop.equalsIgnoreCase(key)){\n                throw new JeecgBootException(\"\u8fde\u63a5\u5730\u5740\u6709\u5b89\u5168\u98ce\u9669\uff0c\u3010\"+key+\"\u3011\");\n            }\n        }\n    }\n}\n",
+    "class_name": "JdbcSecurityUtil",
+    "method_name": "validate",
+    "arguments": [
+        "String jdbcUrl"
+    ],
+    "generate_test": [
+        "@Test\npublic void validateTest() {\n    assertThrows(JeecgBootException.class, () -> {\n        JdbcSecurityUtil.validate(\"jdbc:postgresql://localhost/test?authenticationPluginClassName=123\");\n    });\n}",
+        "@Test\npublic void validateTest() {\n    assertThrows(JeecgBootException.class, () -> {\n        JdbcSecurityUtil.validate(\"jdbc:mysql://localhost:3306/test?authenticationPluginClassName=aaa\");\n    });\n}",
+        "@Test\npublic void validateTest() {\n    assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate(\"jdbc:postgresql://localhost:5432/test?sslhostnameverifier=true\"));\n    assertDoesNotThrow(() -> JdbcSecurityUtil.validate(\"jdbc:postgresql://localhost:5432/test?user=test&password=test\"));\n}",
+        "assertDoesNotThrow(() -> JdbcSecurityUtil.validate(\"jdbcUrl\"));",
+        "@Test\n    public void validateTest() {\n        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(\"jdbc:postgresql://localhost/test?user=fakeUser&password=fakePassword\"));\n    }",
+        "@Test\npublic void validateTest() {\n    String jdbcUrl = \"jdbc:mysql://localhost:3306/test?sslhostnameverifier=xxx\";\n    assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate(jdbcUrl));\n}",
+        "@Test\npublic void validateTest() {\n    String jdbcUrl = \"jdbc:mysql://localhost:3306/mydb?authenticationPluginClassName=example\";\n    assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate(jdbcUrl));\n    jdbcUrl = \"jdbc:postgresql://localhost:3306/mydb?otherParam=value&sslhostnameverifier=someValue\";\n    assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate(jdbcUrl));\n}",
+        "@Test\npublic void validateTest() {\n    try {\n        JdbcSecurityUtil.validate(\"jdbc:postgresql://localhost/test?authenticationPluginClassName=test&username=test&password=test\");\n        fail(\"Expected JeecgBootException, but it didn't occur\");\n    } catch (JeecgBootException e) {\n        assertEquals(\"\u8fde\u63a5\u5730\u5740\u6709\u5b89\u5168\u98ce\u9669, [authenticationPluginClassName]\", e.getMessage());\n    }\n}",
+        "@Test\npublic void validateTest() {\n    try {\n        JdbcSecurityUtil.validate(\"jdbc:postgresql://localhost/test?authenticationPluginClassName=xyz\");\n        fail(\"Expected an JeecgBootException to be thrown\");\n    } catch (JeecgBootException e) {\n        assertEquals(\"\u8fde\u63a5\u5730\u5740\u6709\u5b89\u5168\u98ce\u9669\uff0c\u3010authenticationPluginClassName\u3011\", e.getMessage());\n    }\n}",
+        "@Test\npublic void validateTest() {\n    assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate(\"jdbc:mysql://localhost:3306/test?sslhostnameverifier=true\"));\n}"
+    ]
+}

@@ -1,0 +1,548 @@
+Source code: 
+
+
+private int probe() {
+    // Fast path for reliable well-distributed probe, available from JDK 7+.
+    // As long as PROBE is final static this branch will be constant folded
+    // (i.e removed).
+    if (PROBE != -1) {
+        int probe;
+        if ((probe = UNSAFE.getInt(Thread.currentThread(), PROBE)) == 0) {
+            ThreadLocalRandom.current(); // force initialization
+            probe = UNSAFE.getInt(Thread.currentThread(), PROBE);
+        }
+        return probe;
+    }
+
+    /*
+     * Else use much worse (for values distribution) method:
+     * Mix thread id with golden ratio and then xorshift it
+     * to spread consecutive ids (see Knuth multiplicative method as reference).
+     */
+    int probe = (int) ((Thread.currentThread().getId() * 0x9e3779b9) & Integer.MAX_VALUE);
+    // xorshift
+    probe ^= probe << 13;
+    probe ^= probe >>> 17;
+    probe ^= probe << 5;
+    return probe;
+}
+
+
+
+
+No.1 generated result --------------------------
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+
+import static org.jctools.util.UnsafeAccess.UNSAFE;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+@ExtendWith(MockitoExtension.class)
+public class FixedSizeStripedLongCounterPrePadTest {
+
+    @Test
+    public void probeTest() throws Exception {
+        // mock a FixedSizeStripedLongCounter instance to test the private 'probe' method
+        FixedSizeStripedLongCounter counter = mock(FixedSizeStripedLongCounter.class, CALLS_REAL_METHODS);
+
+        // Access the probe method using reflection as it is private
+        Method probeMethod = FixedSizeStripedLongCounter.class.getDeclaredMethod("probe");
+        probeMethod.setAccessible(true);
+
+        // Test with a probe value that is set to '0' 
+        long PROBE_OFFSET = (long) UNSEFE.getStatic(new Field[]{asList(FixedSizeStripedLongCounter.class.getDeclaredFields()).stream().filter(f -> f.getName().equals("PROBE")).findFirst().get()});
+        UNSAFE.putInt(Thread.currentThread(), PROBE_OFFSET, 0);
+        
+        // The probe value should not be 0 after calling probe, because of the ThreadLocalRandom initialization
+        int result = (int) probeMethod.invoke(counter);
+        assertNotEquals(0, result, "Probe value should not be zero after initialization");
+
+        // Now set the probe to a non-zero value and verify it doesn't change
+        int expectedProbeValue = 123456;
+        UNSAFE.putInt(Thread.currentThread(), PROBE_OFFSET, expectedProbeValue);
+        result = (int) probeMethod.invoke(counter);
+        assertEquals(expectedProbeValue, result, "Probe value should remain unchanged if already initialized");
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.jctools.util.UnsafeAccess.*;
+import java.lang.reflect.Field;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+
+    // Reflection is needed to access the private static final field 'PROBE'
+    static {
+        try {
+            Field probeField = FixedSizeStripedLongCounter.class.getDeclaredField("PROBE");
+            probeField.setAccessible(true);
+            UNSAFE.putLong(probeField, UNSAFE.staticFieldOffset(probeField), -1L);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    // Helper method to call the private probe() method using reflection
+    private int callProbeMethod(FixedSizeStripedLongCounter counter) {
+        try {
+            Method probeMethod = FixedSizeStripedLongCounter.class.getDeclaredMethod("probe");
+            probeMethod.setAccessible(true);
+            return (int) probeMethod.invoke(counter);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    public void probeTest() {
+        FixedSizeStripedLongCounter counter = new FixedSizeStripedLongCounter(2);
+        int probeValue = callProbeMethod(counter);
+
+        // Tests to validate probe values are derived appropriately
+        // Confirm the value follows the expected bit manipulations for the worse path
+        // The worse path is used when PROBE is set to -1. Here we confirm the xorshift logic.
+        long threadId = Thread.currentThread().getId();
+        int expectedProbe = (int) ((threadId * 0x9e3779b9) & Integer.MAX_VALUE);
+        expectedProbe ^= expectedProbe << 13;
+        expectedProbe ^= expectedProbe >>> 17;
+        expectedProbe ^= expectedProbe << 5;
+
+        assertEquals(expectedProbe, probeValue, "The probe value does not match the expected outcome.");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.jctools.util.UnsafeAccess.UNSAFE;
+
+import java.util.concurrent.ThreadLocalRandom;
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS) // Ensures that we use the same instance across tests if needed.
+public class FixedSizeStripedLongCounterPrePadTest {
+
+    private FixedSizeStripedLongCounterPrePad instance;
+
+    // Since the PROBE field and the probe() method are private, we have to use reflection to access them
+    @BeforeAll
+    void setUp() throws Exception {
+        instance = new FixedSizeStripedLongCounterPrePad() {
+            // implement abstract methods if any are present in FixedSizeStripedLongCounterPrePad
+        };
+        // Initialize ThreadLocalRandom current to make sure PROBE gets a non-zero value
+        ThreadLocalRandom.current();
+    }
+
+    @Test
+    public void probeTest() throws Exception {
+        // Reflectively obtain the method to be tested
+        java.lang.reflect.Method probeMethod = FixedSizeStripedLongCounterPrePad.class.getDeclaredMethod("probe");
+        probeMethod.setAccessible(true);
+
+        // Execute the method on the test instance.
+        int probeValue = (int) probeMethod.invoke(instance);
+
+        // The returned probe value should not be -1, which is the value of uninitialized PROBE.
+        assertNotEquals(-1, probeValue, "The probe value should not be -1");
+
+        // Since the implementation of `probe` involves native threading behavior and bitwise operations,
+        // it is non-deterministic and we cannot assert for a specific value. However, we can run the probe
+        // method multiple times to ensure it does not return a constant value such as -1. Additionally,
+        // we can check that the returned value is positive due to the `& Integer.MAX_VALUE` operation.
+
+        // Additional checks can include:
+        assertTrue(probeValue >= 0, "The probe value should be non-negative due to masking with Integer.MAX_VALUE");
+        // More in-depth checks could involve inspecting behavior when threads change or if probe value alters as expected.
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+import java.lang.reflect.Field;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+
+    @Test
+    public void probeTest() throws Exception {
+        // Arrange: Create a spy instance of FixedSizeStripedLongCounter to access probe method
+        FixedSizeStripedLongCounter counterSpy = spy(FixedSizeStripedLongCounter.class);
+
+        // Mock the static fields in FixedSizeStripedLongCounterFields using reflection
+        Field probeField = FixedSizeStripedLongCounter.class.getDeclaredField("PROBE");
+        probeField.setAccessible(true);
+        Field modifiersField = Field.class.getDeclaredField("modifiers");
+        modifiersField.setAccessible(true);
+        modifiersField.setInt(probeField, probeField.getModifiers() & ~java.lang.reflect.Modifier.FINAL);
+        
+        // Set PROBE to a non-default value to test the fast path
+        long originalProbeValue = probeField.getLong(null);
+        probeField.setLong(null, 42L); // you may set this to a value that suits your test case
+
+        // Act: Call probe method to get result
+        int resultFastPath = counterSpy.probe();
+
+        // Assert: Verify if the result is non-zero (value would depend on the internal state of Unsafe)
+        assertNotEquals(0, resultFastPath, "probe should return a non-zero value in the fast path");
+
+        // Set PROBE back to default value to test the slow path
+        probeField.setLong(null, originalProbeValue);
+        
+        // Act: Call probe method to get result
+        int resultSlowPath = counterSpy.probe();
+        
+        // Assert: Verify if the slow path result is correctly calculated
+        int expectedSlowPath = (int) ((Thread.currentThread().getId() * 0x9e3779b9) & Integer.MAX_VALUE);
+        expectedSlowPath ^= expectedSlowPath << 13;
+        expectedSlowPath ^= expectedSlowPath >>> 17;
+        expectedSlowPath ^= expectedSlowPath << 5;
+
+        assertEquals(expectedSlowPath, resultSlowPath, "probe should return correct value for the slow path calculation");
+
+        // Reset the PROBE field to its original state for other tests
+        probeField.setLong(null, originalProbeValue);
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.jctools.util.UnsafeAccess.UNSAFE;
+import java.lang.reflect.Field;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+
+    static final long PROBE_OFFSET;
+
+    static {
+        try {
+            Field f = Thread.class.getDeclaredField("threadLocalRandomProbe");
+            f.setAccessible(true);
+            PROBE_OFFSET = UNSAFE.objectFieldOffset(f);
+        } catch (Exception ex) {
+            throw new Error(ex);
+        }
+    }
+
+    private int forceSetProbe(Thread thread, int value) throws Exception {
+        UNSAFE.putInt(thread, PROBE_OFFSET, value);
+        return value;
+    }
+
+    @Test
+    public void probeTest() throws Exception {
+        FixedSizeStripedLongCounterPrePad counterPrePad = new FixedSizeStripedLongCounterPrePad() {
+            // Override probe to make it accessible for testing
+            @Override
+            public int probe() {
+                return super.probe();
+            }
+        };
+        
+        Thread current = Thread.currentThread();
+        
+        // Clear the probe first
+        forceSetProbe(current, 0);
+        
+        // First call should initialize the probe with a nonzero value
+        int initialProbe = counterPrePad.probe();
+        assertNotEquals(0, initialProbe, "probe should not return zero after initialization");
+        
+        // Subsequent calls should return the same probe value
+        assertEquals(initialProbe, counterPrePad.probe(), "probe should return the same value on subsequent calls");
+
+        // Set the probe to a known non-zero value and test
+        int testVal = 12345;
+        forceSetProbe(current, testVal);
+        assertEquals(testVal, counterPrePad.probe(), "probe should return the test value set manually");
+        
+        // Test the branch where PROBE is not available
+        // Assuming PROBE is a static final field, it might be impractical to simulate its unavailability
+        // in realistic scenarios since it would be a constant in the compiled code.
+        // Thus, testing the else branch might require changes in the source code to simulate,
+        // such as introducing a package-private setter for testing or refactoring the condition.
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import java.lang.reflect.Method;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+    private Method probeMethod;
+    private FixedSizeStripedLongCounter counter;
+
+    @BeforeEach
+    public void setUp() throws Exception {
+        // Prepare reflection to access the private method `probe`
+        counter = new FixedSizeStripedLongCounter(16) {  // Assuming there's a valid constructor
+            @Override
+            protected void inc(long[] cells, long offset, long value) {
+                // Mock method for testing purposes
+            }
+
+            @Override
+            protected long getAndReset(long[] cells, long offset) {
+                // Mock method for testing purposes
+                return 0;
+            }
+        };
+        probeMethod = FixedSizeStripedLongCounter.class.getDeclaredMethod("probe");
+        probeMethod.setAccessible(true);
+    }
+
+    @Test
+    public void probeTest() throws Exception {
+        // Call the private `probe` method
+        int result = (int) probeMethod.invoke(counter);
+
+        // Assertions
+        assertTrue(result >= 0, "Probe should always return a non-negative value");
+        // Optionally test if probe values differ for multiple threads, but this can be non-deterministic
+        // For example, create a few threads and check their probe values
+        
+        Thread.currentThread().setName("TestThread-1");
+        int resultInFirstThread = (int) probeMethod.invoke(counter);
+        
+        Thread newThread = new Thread(() -> {
+            try {
+                // Changing the thread name as probe might factor in thread-specific properties
+                Thread.currentThread().setName("TestThread-2");
+                int resultInNewThread = (int) probeMethod.invoke(counter);
+                
+                // Assertions that would suit multi-threading can be placed here, if necessary
+                // Bear in mind that due to the internal implementation, this assertion can be flaky.
+                assertNotEquals(resultInFirstThread, resultInNewThread, "Probe values should differ across threads");
+                
+            } catch (Exception e) {
+                fail("Failed to invoke probe method in a new thread");
+            }
+        });
+        
+        newThread.start();
+        newThread.join(); // Make sure to join the thread so the test waits for its completion
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+
+    private FixedSizeStripedLongCounter counter;
+
+    @BeforeEach
+    public void setUp() {
+        // Assuming 16 stripes as an arbitrary choice for the test.
+        counter = new FixedSizeStripedLongCounter(16);
+    }
+
+    @Test
+    public void probeTest() {
+        long threadId = Thread.currentThread().getId();
+        int probeValue = counter.probe();
+
+        // The probe value should be non-negative
+        assertTrue(probeValue >= 0);
+
+        // To test against the golden ratio method, this test assumes that 
+        // PROBE is not available and the threadId is used to compute the
+        // probe value.
+        if (FixedSizeStripedLongCounter.PROBE == -1) {
+            int computedProbe = (int) ((threadId * 0x9e3779b9) & Integer.MAX_VALUE);
+            computedProbe ^= computedProbe << 13;
+            computedProbe ^= computedProbe >>> 17;
+            computedProbe ^= computedProbe << 5;
+            
+            // The computed probe value should be the same as the method's return value
+            assertEquals(computedProbe, probeValue);
+        }
+
+        // It's difficult to test the behavior when PROBE is available and UNSAFE is used to
+        // fetch the value because UNSAFE.getInt involves native calls and peculiarities of 
+        // underlying JVM implementations that aren't easy to mock or expect a deterministic 
+        // behavior from. Moreover, UNSAFE is intended for JVM internal use and not part of 
+        // public API, so it may not be correct to assume or mimic its behavior here.
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+
+    @Test
+    public void probeTest() {
+        try (MockedStatic<ThreadLocalRandom> mockThreadLocalRandom = Mockito.mockStatic(ThreadLocalRandom.class);
+             MockedStatic<UnsafeAccess> mockUnsafeAccess = Mockito.mockStatic(UnsafeAccess.class)) {
+             
+            Thread currentThread = Thread.currentThread();
+            Unsafe mockUnsafe = mock(Unsafe.class);
+            
+            // Assuming PROBE static field is accessible for tests
+            final long PROBE = -1; // Simulate constant not being defined
+            final long PROBE_OFFSET = 0L; // Fake offset for the test
+            when(UnsafeAccess.UNSAFE).thenReturn(mockUnsafe);
+            when(mockUnsafe.getInt(currentThread, PROBE_OFFSET))
+                .thenReturn(0) // First time, probe is not available, triggers initialization
+                .thenReturn(123); // Second call returns a probe value
+            
+            // Simulating ThreadLocalRandom.current() to initialize probe value
+            mockThreadLocalRandom.when(ThreadLocalRandom::current).thenReturn(null);
+
+            // Mocking instance to call the actual probe() method
+            FixedSizeStripedLongCounter counter = Mockito.mock(FixedSizeStripedLongCounter.class, Mockito.CALLS_REAL_METHODS);
+            
+            int probe = counter.probe();
+            
+            assertEquals(123, probe);
+
+        }
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.lang.reflect.*;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+
+    private static class TestCounter extends FixedSizeStripedLongCounter {
+        public TestCounter(int stripesCount) {
+            super(stripesCount);
+        }
+
+        public int callProbe() {
+            return probe();
+        }
+    }
+
+    @Test
+    public void probeTest() throws Exception {
+        TestCounter counter = new TestCounter(16);
+
+        Field probeField = FixedSizeStripedLongCounter.class.getDeclaredField("PROBE");
+        probeField.setAccessible(true);
+
+        // Normally, we wouldn't change private final fields, but for the sake of testing, we're assuming we want to simulate the case where PROBE is -1.
+        // This is NOT advisable in regular testing scenarios as it can lead to unpredictable behavior and breaks encapsulation.
+        probeField.setLong(null, -1L);
+
+        int result = counter.callProbe();
+
+        // Assuming the Thread ID can be 1 (for simplification) and the 'worse' calculation method is used.
+        long expected = 1L * 0x9e3779b9;
+        expected &= Integer.MAX_VALUE;
+        expected ^= expected << 13;
+        expected ^= expected >>> 17;
+        expected ^= expected << 5;
+
+        assertEquals((int) expected, result);
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+    // As a mock test, we would need to simulate UNSAFE since it is not accessible.
+    // Additionally, the `probe` method is private, it should be tested through public methods which use it.
+    // However, for the purpose of the exercise, let's assume we can make the probe method package-private or use reflection.
+
+    @Test
+    public void probeTest() {
+        FixedSizeStripedLongCounter counter = new FixedSizeStripedLongCounter(16);
+
+        // We will use multiple threads, since the method relies on ThreadLocalRandom and Thread ID.
+        Thread[] threads = new Thread[10];
+        int[] probes = new int[threads.length];
+
+        for (int i = 0; i < threads.length; i++) {
+            final int threadIndex = i;
+            threads[i] = new Thread(() -> {
+                // Setting up a unique place for each thread to store their probe value.
+                probes[threadIndex] = counter.probe();
+            });
+        }
+
+        for (Thread thread : threads) {
+            thread.start();
+        }
+
+        for (Thread thread : threads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                fail("Thread interrupted: " + e.getMessage());
+            }
+        }
+
+        // Check if each thread's probe is unique (collision is possible but unlikely).
+        for (int i = 0; i < probes.length; i++) {
+            for (int j = i + 1; j < probes.length; j++) {
+                assertNotEquals(probes[i], probes[j], "Probes should be unique across threads.");
+            }
+        }
+
+        // Further checks can be performed to ensure that the values are within the expected range, but
+        // there need to be proper public methods for accessing probe values if `probe` is private.
+    }
+}
+
+

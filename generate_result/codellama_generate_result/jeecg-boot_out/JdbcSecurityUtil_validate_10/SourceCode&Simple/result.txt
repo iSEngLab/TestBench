@@ -1,0 +1,320 @@
+Source code: 
+
+
+public static void validate(String jdbcUrl){
+    if(oConvertUtils.isEmpty(jdbcUrl)){
+        return;
+    }
+    String urlConcatChar = "?";
+    if(jdbcUrl.indexOf(urlConcatChar)<0){
+        return;
+    }
+    String argString = jdbcUrl.substring(jdbcUrl.indexOf(urlConcatChar)+1);
+    String[] keyAndValues = argString.split("&");
+    for(String temp: keyAndValues){
+        String key = temp.split("=")[0];
+        for(String prop: notAllowedProps){
+            if(prop.equalsIgnoreCase(key)){
+                throw new JeecgBootException("连接地址有安全风险，【"+key+"】");
+            }
+        }
+    }
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jeecg.common.util.security;
+
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+
+public class JdbcSecurityUtilTest {
+    @Test
+    public void validateTest() {
+        String jdbcUrl = "jdbc:mysql://localhost/mydatabase?user=root&password=mypassword";
+        JdbcSecurityUtil.validate(jdbcUrl);
+        assertTrue(JdbcSecurityUtil.notAllowedProps.isEmpty());
+    }
+}
+
+
+No.2 generated result --------------------------
+
+
+@Test
+public void validateTest() {
+    // Given
+    String jdbcUrl = "jdbc:mysql://localhost:3306/test?user=root&password=123456";
+    String[] notAllowedProps = {"user", "password"};
+    
+    // When
+    JdbcSecurityUtil.validate(jdbcUrl);
+    
+    // Then
+    assertThrows(JeecgBootException.class, () -> {
+        for (String temp : keyAndValues) {
+            String key = temp.split("=")[0];
+            for (String prop : notAllowedProps) {
+                if (prop.equalsIgnoreCase(key)) {
+                    throw new JeecgBootException("连接地址有安全风险，【" + key + "】");
+                }
+            }
+        }
+    });
+}
+
+
+No.3 generated result --------------------------
+
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JdbcSecurityUtilTest {
+    @Test
+    public void validateTest() {
+        String jdbcUrl = "jdbc://localhost/mydatabase";
+        String notAllowedProps = "property1, property2";
+
+        // Test that the method throws an exception when a not allowed property is present in the URL
+        assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate(jdbcUrl + "?property1=value1"));
+
+        // Test that the method does not throw an exception when a not allowed property is not present in the URL
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(jdbcUrl));
+    }
+}
+
+
+
+No.4 generated result --------------------------
+
+import org.jeecg.common.util.security.JdbcSecurityUtil;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JdbcSecurityUtilTest {
+    @Test
+    public void validateTest() {
+        // Test case 1: Valid URL without unsafe properties
+        String jdbcUrl = "jdbc://localhost/mydatabase?user=root&password=mypassword";
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(jdbcUrl));
+        
+        // Test case 2: Valid URL with unsafe property (not allowed)
+        jdbcUrl = "jdbc://localhost/mydatabase?user=root&password=mypassword&driver=com.mysql.cj.jdbc.Driver";
+        assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate(jdbcUrl));
+        
+        // Test case 3: Valid URL with unsafe property (not allowed) and additional parameters
+        jdbcUrl = "jdbc://localhost/mydatabase?user=root&password=mypassword&driver=com.mysql.cj.jdbc.Driver&someotherparam=somevalue";
+        assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate(jdbcUrl));
+        
+        // Test case 4: Invalid URL (null)
+        jdbcUrl = null;
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(jdbcUrl));
+        
+        // Test case 5: Invalid URL (empty string)
+        jdbcUrl = "";
+        assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate(jdbcUrl));
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jeecg.common.util.security;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JdbcSecurityUtilTest {
+    private JdbcSecurityUtil util;
+    
+    @BeforeEach
+    public void setUp() {
+        util = new JdbcSecurityUtil();
+    }
+    
+    @Test
+    public void validate_jdbcUrlIsNull_expectReturnImmediately() {
+        String jdbcUrl = null;
+        
+        assertNull(util.validate(jdbcUrl));
+    }
+    
+    @Test
+    public void validate_jdbcUrlHasNoQueryString_expectReturnImmediately() {
+        String jdbcUrl = "jdbc:oracle://localhost";
+        
+        assertNull(util.validate(jdbcUrl));
+    }
+    
+    @Test
+    public void validate_queryStringContainsNotAllowedProps_expectThrowJeecgBootException() {
+        String jdbcUrl = "jdbc:oracle://localhost?user=jeecg&password=123456";
+        
+        assertThrows(JeecgBootException.class, () -> util.validate(jdbcUrl));
+    }
+    
+    @Test
+    public void validate_queryStringContainsAllowedProps_expectReturnNull() {
+        String jdbcUrl = "jdbc:oracle://localhost?user=jeecg&password=123456&allowedProp=true";
+        
+        assertNull(util.validate(jdbcUrl));
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jeecg.common.util.security;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JdbcSecurityUtilTest {
+    @Test
+    public void validateTest() {
+        // Given
+        String jdbcUrl = "jdbc:mysql://localhost:3306/test?user=root&password=123456";
+
+        // When
+        String result = JdbcSecurityUtil.validate(jdbcUrl);
+
+        // Then
+        assertEquals("连接地址有安全风险，【用户名】", result);
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jeecg.common.util.security;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JdbcSecurityUtilTest {
+    @Test
+    public void validateTest() {
+        // Test null jdbcUrl input
+        String jdbcUrl = null;
+        try {
+            JdbcSecurityUtil.validate(jdbcUrl);
+            fail("Expected JeecgBootException to be thrown");
+        } catch (JeecgBootException e) {
+            assertEquals("JDBC URL is null or empty", e.getMessage());
+        }
+
+        // Test invalid jdbcUrl input
+        jdbcUrl = "invalid";
+        try {
+            JdbcSecurityUtil.validate(jdbcUrl);
+            fail("Expected JeecgBootException to be thrown");
+        } catch (JeecgBootException e) {
+            assertEquals("JDBC URL is invalid", e.getMessage());
+        }
+
+        // Test jdbcUrl with no allowed props
+        jdbcUrl = "jdbc:mysql://localhost/mydb";
+        try {
+            JdbcSecurityUtil.validate(jdbcUrl);
+            fail("Expected JeecgBootException to be thrown");
+        } catch (JeecgBootException e) {
+            assertEquals("JDBC URL has no allowed props", e.getMessage());
+        }
+
+        // Test jdbcUrl with one allowed prop
+        jdbcUrl = "jdbc:mysql://localhost/mydb?key1=value1";
+        try {
+            JdbcSecurityUtil.validate(jdbcUrl);
+            fail("Expected JeecgBootException to be thrown");
+        } catch (JeecgBootException e) {
+            assertEquals("JDBC URL has allowed prop key1", e.getMessage());
+        }
+
+        // Test jdbcUrl with multiple allowed props
+        jdbcUrl = "jdbc:mysql://localhost/mydb?key1=value1&key2=value2";
+        try {
+            JdbcSecurityUtil.validate(jdbcUrl);
+            fail("Expected JeecgBootException to be thrown");
+        } catch (JeecgBootException e) {
+            assertEquals("JDBC URL has allowed props key1 and key2", e.getMessage());
+        }
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.jeecg.common.util.security;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JdbcSecurityUtilTest {
+    @Test
+    public void validateTest() {
+        String jdbcUrl = "jdbc:mysql://localhost/test?user=root&password=123456";
+        JdbcSecurityUtil.validate(jdbcUrl);
+        
+        assertTrue(true); // replace with a meaningful assertion
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jeecg.common.util.security;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+import org.jeecg.common.exception.JeecgBootException;
+
+public class JdbcSecurityUtilTest {
+    @Test
+    public void validateTest() {
+        // Test case 1: Valid jdbcUrl with allowed properties
+        String jdbcUrl = "jdbc:mysql://localhost/mydatabase?user=jeecgboot&password=jeecgboot";
+        JdbcSecurityUtil.validate(jdbcUrl);
+        
+        // Test case 2: Valid jdbcUrl with disallowed property
+        jdbcUrl = "jdbc:mysql://localhost/mydatabase?user=jeecgboot&password=jeecgboot&foo=bar";
+        try {
+            JdbcSecurityUtil.validate(jdbcUrl);
+            fail("Expected JeecgBootException not thrown");
+        } catch (JeecgBootException e) {
+            assertEquals("连接地址有安全风险，【foo】", e.getMessage());
+        }
+        
+        // Test case 3: Invalid jdbcUrl with missing required property
+        jdbcUrl = "jdbc:mysql://localhost/mydatabase?user=jeecgboot";
+        try {
+            JdbcSecurityUtil.validate(jdbcUrl);
+            fail("Expected JeecgBootException not thrown");
+        } catch (JeecgBootException e) {
+            assertEquals("连接地址有安全风险，【password】", e.getMessage());
+        }
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.common.util.security;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JdbcSecurityUtilTest {
+    @Test
+    public void validateTest() {
+        String validJdbcUrl = "jdbc:mysql://localhost/mydb";
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(validJdbcUrl));
+
+        String invalidJdbcUrl = "jdbc:mysql://localhost/mydb?param=value";
+        assertThrowsExactly(JeecgBootException.class, () -> JdbcSecurityUtil.validate(invalidJdbcUrl));
+    }
+}
+
+

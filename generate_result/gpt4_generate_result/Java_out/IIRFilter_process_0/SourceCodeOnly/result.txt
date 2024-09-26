@@ -1,0 +1,517 @@
+Source code: 
+
+
+public double process(double sample) {
+    double result = 0.0;
+
+    // Process
+    for (int i = 1; i <= order; i++) {
+        result += (coeffsB[i] * historyX[i - 1] - coeffsA[i] * historyY[i - 1]);
+    }
+    result = (result + coeffsB[0] * sample) / coeffsA[0];
+
+    // Feedback
+    for (int i = order - 1; i > 0; i--) {
+        historyX[i] = historyX[i - 1];
+        historyY[i] = historyY[i - 1];
+    }
+
+    historyX[0] = sample;
+    historyY[0] = result;
+
+    return result;
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.thealgorithms.audiofilters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class IIRFilterTest {
+
+    private IIRFilter filter;
+    private double delta = 0.0001; // for assertEquals for doubles
+
+    @BeforeEach
+    public void setUp() throws Exception {
+        // Assuming IIRFilter has a constructor that takes `order`, `coeffsB`, and `coeffsA` arrays
+        double[] coeffsB = {0.1, 0.2, 0.3};
+        double[] coeffsA = {1.0, 0.4, 0.5};
+        int order = coeffsB.length - 1;
+        filter = new IIRFilter(order, coeffsB, coeffsA);
+    }
+
+    @Test
+    public void processTest() {
+        // Assuming that the IIRFilter has historyX and historyY initialized to zeros
+        double sample = 0.5;
+        double expectedResult = ((coeffsB[0] * sample) + (coeffsB[1] * filter.historyX[0]) - (coeffsA[1] * filter.historyY[0])
+                             + (coeffsB[2] * filter.historyX[1]) - (coeffsA[2] * filter.historyY[1])) / coeffsA[0];
+        double result = filter.process(sample);
+        assertEquals(expectedResult, result, delta);
+
+        // Test new history values
+        assertEquals(sample, filter.historyX[0], delta);
+        assertEquals(result, filter.historyY[0], delta);
+    }
+    
+    // Add more test cases if needed
+
+    // Assuming that the IIRFilter class is something like this:
+
+    public class IIRFilter {
+        private int order;
+        private double[] coeffsB;
+        private double[] coeffsA;
+        public double[] historyX;
+        public double[] historyY;
+
+        public IIRFilter(int order, double[] coeffsB, double[] coeffsA) {
+            this.order = order;
+            this.coeffsB = coeffsB;
+            this.coeffsA = coeffsA;
+            historyX = new double[order];
+            historyY = new double[order];
+        }
+        
+        // process() method as provided in the task
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package com.thealgorithms.audiofilters;
+
+import org.junit.jupiter.api.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class IIRFilterTest {
+
+    private IIRFilter filter;
+    private double delta = 0.0001; // Tolerance for comparing double values
+
+    @BeforeEach
+    void setUp() {
+        // Assuming order is 2 for this test
+        double[] coeffsA = {1.0, -0.3, 0.12};
+        double[] coeffsB = {0.5, 0.25, 0.125};
+        filter = new IIRFilter(coeffsA, coeffsB);
+    }
+
+    @Test
+    public void processTest() {
+        // Given a sample input for the filter
+        double sample = 1.0;
+
+        // When processing the sample through the filter
+        double result = filter.process(sample);
+
+        // Then assert result is as expected
+        // Assuming the expected result after processing with the given coefficients and initial conditions
+        // We're using an initial condition of 0 for simplicity if no previous state is defined
+        double expected = (0.5 * sample) / 1.0; // which is 0.5 for this case
+        assertEquals(expected, result, delta, "The result of process() did not match the expected value");
+
+        // Further tests could include testing the function with previous state (historyX, historyY)
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.thealgorithms.audiofilters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class IIRFilterTest {
+
+    private IIRFilter filter;
+    private double[] coeffsB;
+    private double[] coeffsA;
+    private double[] historyX;
+    private double[] historyY;
+    private int order;
+
+    @BeforeEach
+    public void setup() {
+        // Given a specific filter of order 2 for the sake of example
+        order = 2;
+        coeffsB = new double[]{0.1, 0.2, 0.3}; // Example coefficients B
+        coeffsA = new double[]{1.0, -0.7, 0.5}; // Example coefficients A
+        historyX = new double[order];
+        historyY = new double[order];
+        filter = new IIRFilter(coeffsB, coeffsA, historyX, historyY, order);
+    }
+
+    @Test
+    public void processTest() {
+        // Setup initial conditions and expected result
+        double sample = 1.0;
+        double expected = (coeffsB[0] * sample + coeffsB[1] * historyX[0] - coeffsA[1] * historyY[0]) / coeffsA[0];
+
+        // Perform the processing
+        double actual = filter.process(sample);
+
+        // Assert that the expected result matches the actual result
+        assertEquals(expected, actual, "The output of the process method did not match the expected result.");
+        
+        // Test feedback loop (check history arrays)
+        assertEquals(sample, historyX[0], "The most recent sample was not correctly set in the historyX array.");
+        assertEquals(expected, historyY[0], "The most recent output was not correctly set in the historyY array.");
+
+        // Test subsequent calls to process to ensure history is maintained correctly
+        double nextSample = 2.0;
+        double nextExpected = (coeffsB[0] * nextSample + coeffsB[1] * sample - coeffsA[1] * expected) / coeffsA[0];
+        double nextActual = filter.process(nextSample);
+
+        assertEquals(nextExpected, nextActual, "The output of the process method did not match the expected result for the subsequent call.");
+    }
+}
+
+class IIRFilter {
+    private double[] coeffsB;
+    private double[] coeffsA;
+    private double[] historyX;
+    private double[] historyY;
+    private int order;
+    
+    public IIRFilter(double[] coeffsB, double[] coeffsA, double[] historyX, double[] historyY, int order) {
+        this.coeffsB = coeffsB;
+        this.coeffsA = coeffsA;
+        this.historyX = historyX;
+        this.historyY = historyY;
+        this.order = order;
+    }
+
+    public double process(double sample) {
+        double result = 0.0;
+
+        // Process
+        for (int i = 1; i <= order; i++) {
+            result += (coeffsB[i] * historyX[i - 1] - coeffsA[i] * historyY[i - 1]);
+        }
+        result = (result + coeffsB[0] * sample) / coeffsA[0];
+
+        // Feedback
+        for (int i = order - 1; i > 0; i--) {
+            historyX[i] = historyX[i - 1];
+            historyY[i] = historyY[i - 1];
+        }
+
+        historyX[0] = sample;
+        historyY[0] = result;
+
+        return result;
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.thealgorithms.audiofilters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class IIRFilterTest {
+    
+    // Assume this is a nested class or external class that we are testing.
+    public static class IIRFilter {
+        private final int order = 3; // This should match the real 'order' of your filter.
+        private final double[] coeffsA = {1.0, 0.5, 0.25, 0.125};
+        private final double[] coeffsB = {0.1, 0.2, 0.3, 0.4};
+        private final double[] historyX = new double[order];
+        private final double[] historyY = new double[order];
+        
+        public double process(double sample) {
+            // Original method code ...
+        }
+    }
+    
+    @Test
+    public void processTest() {
+        // Instantiate the IIRFilter object
+        IIRFilter filter = new IIRFilter();
+
+        // Define a sample input and expected output based on known coefficients
+        double sampleInput = 1.0;
+        double expectedOutput = (0.1 * sampleInput) / 1.0; // Simplified expression based on our stub
+        
+        // Call the method under test
+        double actualOutput = filter.process(sampleInput);
+        
+        // Assert that the output is as expected
+        assertEquals(expectedOutput, actualOutput, "The output is not as expected.");
+
+        // Further tests can be performed by changing sample inputs
+        // and expected outputs, and even mocking historyX and historyY
+        // arrays to simulate various scenarios and assert corresponding results.
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.thealgorithms.audiofilters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class IIRFilterTest {
+    private IIRFilter filter;
+
+    // Assuming you have a constructor like this:
+    // public IIRFilter(double[] coeffsA, double[] coeffsB, int order)
+
+    @BeforeEach
+    public void setUp() {
+        // Provide coefficients and order for the filter setup
+        double[] coeffsA = {1.0, -0.5};
+        double[] coeffsB = {0.5, 0.5};
+        int order = 1; // For simplicity, using a first-order filter
+        filter = new IIRFilter(coeffsA, coeffsB, order);
+    }
+
+    @Test
+    public void processTest() {
+        // Given a sample value of 1.0
+        double sample = 1.0;
+        
+        // When processed by the filter
+        double result = filter.process(sample);
+        
+        // Then we expect a particular result (added a delta for floating-point comparison)
+        // This is an example and expects an actual output result for the given inputs
+        // If you have an expected equation or a result for this input, replace it here
+        double expectedResult = 0.5; // This value is hypothetical and should be determined accordingly
+
+        assertEquals(expectedResult, result, 0.01,
+            "The output should match the expected result for the provided sample.");
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package com.thealgorithms.audiofilters;
+
+import org.junit.jupiter.api.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class IIRFilterTest {
+
+    IIRFilter filter;
+
+    @BeforeEach
+    public void setUp() {
+        filter = new IIRFilter();
+        // Setting up a fictitious order of 2 for the IIRFilter here.
+        filter.order = 2;
+        // Initializing coeffsB and coeffsA with dummy values
+        filter.coeffsB = new double[]{0.5, 0.3, -0.2};
+        filter.coeffsA = new double[]{1.0, -0.8, 0.2};
+        // Initializing histories.
+        filter.historyX = new double[]{0.0, 0.0};
+        filter.historyY = new double[]{0.0, 0.0};
+    }
+
+    @Test
+    public void processTest() {
+        // Test the process method with a sample input
+        double sample = 1.0;
+        double expected = (filter.coeffsB[0] * sample) / filter.coeffsA[0];
+        double result = filter.process(sample);
+        assertEquals(expected, result, "Result should match expected value for first sample.");
+
+        // Test with a subsequent input sample.
+        sample = 0.5;
+        // Expected result calculation must mirror the logic in the `process` method.
+        expected = (filter.coeffsB[1] * filter.historyX[0] - filter.coeffsA[1] * filter.historyY[0]
+                   + filter.coeffsB[2] * filter.historyX[1] - filter.coeffsA[2] * filter.historyY[1]
+                   + filter.coeffsB[0] * sample) / filter.coeffsA[0];
+        result = filter.process(sample);
+        assertEquals(expected, result, "Result should match expected value for second sample.");
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.thealgorithms.audiofilters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class IIRFilterTest {
+
+    // Assuming the following supposed signature of initializing the filter
+    // public IIRFilter(int order, double[] coeffsB, double[] coeffsA)
+
+    private IIRFilter filter;
+    private final int order = 3;
+    private final double[] coeffsB = {0.5, 0.2, -0.1, 0.05};
+    private final double[] coeffsA = {1.0, 0.7, -0.3, 0.1};
+
+    @BeforeEach
+    public void setUp() {
+        // Initialize the filter with test coefficients and order
+        filter = new IIRFilter(order, coeffsB, coeffsA);
+    }
+
+    @Test
+    public void processTest() {
+        double sample = 1.0;
+        // Expected result calculated based on the given coefficients and the sample value
+        double expectedResult = <EXPECTED_RESULT>; // Replace with the actual expected result
+
+        double result = filter.process(sample);
+        
+        // Assert that the result of the process method is as expected
+        assertEquals(expectedResult, result, "The output of the 'process' method is not as expected.");
+        
+        // Optionally, perform additional assertions here if needed to check the state of historyX/Y
+        // For example:
+        // assertEquals(expectedHistoryX0, filter.historyX[0], "The first element of historyX is incorrect.");
+        // assertEquals(expectedHistoryY0, filter.historyY[0], "The first element of historyY is incorrect.");
+    }
+    
+    // Add additional test cases here if needed
+}
+
+
+No.8 generated result --------------------------
+
+package com.thealgorithms.audiofilters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class IIRFilterTest {
+
+    private IIRFilter filter; // Assume the class name is IIRFilter
+    private final int order = 2; // Order of filter
+    private final double[] coeffsB = {0.5, 0.25, 0.25}; // Example coefficients for B
+    private final double[] coeffsA = {1.0, -0.3, 0.1}; // Example coefficients for A
+    private double[] historyX; // History for inputs
+    private double[] historyY; // History for outputs
+
+    @BeforeEach
+    public void setUp() {
+        // Initialize the filter, historyX, and historyY arrays depending on how instancing works in the actual class
+        historyX = new double[order];
+        historyY = new double[order];
+        filter = new IIRFilter(order, coeffsB, coeffsA, historyX, historyY); // Assuming constructor exists
+    }
+
+    @Test
+    public void processTest() {
+        // Given a sample input to process
+        double sample = 1.0;
+        // When we process the sample
+        double result = filter.process(sample);
+        // Then the result should be as expected
+        // Expectation is based on known behavior of the method for a given set of coefficients, order, and history
+        // The following is an example expected value - this would need to be computed based on actual filter behavior
+        double expected = 0.5; // This is a hypothetical expected value
+        assertEquals(expected, result, "The processed result should match the expected value.");
+
+        // Further checks could be done if needed, such as examining historyX and historyY values
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package com.thealgorithms.audiofilters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class IIRFilterTest {
+
+    // Assuming that the process method is part of the IIRFilter class
+    // and that the necessary fields such as order, coeffsB, coeffsA, 
+    // historyX, and historyY are accessible within the class.
+    private IIRFilter filter;
+    private final int order = 3; // example order
+    private final double[] coeffsB = {0.1, 0.2, 0.3, 0.4}; // example coefficients B
+    private final double[] coeffsA = {1.0, 0.1, 0.1, 0.1}; // example coefficients A
+    private final double[] historyX = new double[order]; // history for X values
+    private final double[] historyY = new double[order]; // history for Y values
+
+    @BeforeEach
+    public void setUp() {
+        filter = new IIRFilter(); // Assume the class is named IIRFilter
+        filter.order = order;
+        filter.coeffsB = coeffsB;
+        filter.coeffsA = coeffsA;
+        filter.historyX = historyX;
+        filter.historyY = historyY;
+    }
+
+    @Test
+    public void processTest() {
+        // Given a sample value
+        double sample = 1.0; // Test input
+
+        // When process is called
+        double result = filter.process(sample);
+
+        // Then result should match the expected outcome
+        double expected = (coeffsB[0] * sample + coeffsB[1] * historyX[0] - coeffsA[1] * historyY[0] 
+                        + coeffsB[2] * historyX[1] - coeffsA[2] * historyY[1] 
+                        + coeffsB[3] * historyX[2] - coeffsA[3] * historyY[2]) / coeffsA[0];
+        
+        assertEquals(expected, result, "The processed result did not match the expected value.");
+
+        // Additionally, to test if the history arrays were updated
+        assertEquals(sample, filter.historyX[0], "The historyX[0] should be updated with the sample value.");
+        assertEquals(result, filter.historyY[0], "The historyY[0] should be updated with the result value.");
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.thealgorithms.audiofilters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+// Assuming the class is named IIRFilter
+public class IIRFilterTest {
+
+    private IIRFilter filter;
+    private final double sample = 1.0; // An example input sample
+    private final double expected = 2.0; // The expected output result after processing
+
+    @BeforeEach
+    public void setUp() {
+        filter = new IIRFilter();
+        // These initializations are hypothetical and may not reflect the actual implementations
+        filter.order = 3;
+        filter.coeffsB = new double[]{1.0, 0.5, 0.25, 0.125};
+        filter.coeffsA = new double[]{1.0, 0.8, 0.4, 0.2};
+        filter.historyX = new double[filter.order];
+        filter.historyY = new double[filter.order];
+    }
+
+    @Test
+    public void processTest() {
+        // Run the process method with a sample input
+        double result = filter.process(sample);
+        
+        // Assert that the processed result matches the expected value
+        assertEquals(expected, result, "The output from process method did not match the expected result.");
+    }
+}
+
+

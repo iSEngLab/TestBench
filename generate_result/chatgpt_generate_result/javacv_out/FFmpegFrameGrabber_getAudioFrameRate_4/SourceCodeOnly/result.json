@@ -1,0 +1,24 @@
+{
+    "project_name": "javacv",
+    "file_name": "FFmpegFrameGrabber.java",
+    "relative_path": "javacv/src/main/java/org/bytedeco/javacv/FFmpegFrameGrabber.java",
+    "execute_path": "javacv",
+    "package": "org.bytedeco.javacv",
+    "docstring": "/**Estimation of audio frames per second.\n     *\n     * Care must be taken as this method may require unnecessary call of\n     * grabFrame(true, false, false, false, false) with frameGrabbed set to true.\n     *\n     * @return (double) getSampleRate()) / samples_frame.nb_samples()\n     * if samples_frame.nb_samples() is not zero, otherwise return 0\n     */",
+    "source_code": "\npublic double getAudioFrameRate() {\n    if (audio_st == null) {\n        return 0.0;\n    } else {\n        if (samples_frame == null || samples_frame.nb_samples() == 0) {\n            try {\n                grabFrame(true, false, false, false, false);\n                frameGrabbed = true;\n            } catch (Exception e) {\n                return 0.0;\n            }\n        }\n        if (samples_frame != null && samples_frame.nb_samples() != 0)\n            return ((double) getSampleRate()) / samples_frame.nb_samples();\n        else return 0.0;\n\n    }\n}\n",
+    "class_name": "FFmpegFrameGrabber",
+    "method_name": "getAudioFrameRate",
+    "arguments": [],
+    "generate_test": [
+        "@Test\npublic void getAudioFrameRateTest() {\n    FFmpegFrameGrabber grabber = new FFmpegFrameGrabber();\n    grabber.samples_frame = new Frame();\n    grabber.samples_frame.setNb_samples(10);\n    grabber.setSampleRate(44100);\n    double result = grabber.getAudioFrameRate();\n    assertEquals(4410.0, result);\n}",
+        "@Test\npublic void getAudioFrameRateTest() {\n    FFmpegFrameGrabber grabber = new FFmpegFrameGrabber();\n    grabber.getAudioFrameRate();\n    // Add assertions to verify the output\n    // For example:\n    // assertEquals(expectedOutput, actualOutput);\n}",
+        "@Test\npublic void getAudioFrameRateTest() {\n   FFmpegFrameGrabber grabber = new FFmpegFrameGrabber();\n   grabber.setSamplesFrame(new Frame());\n   grabber.setAudioSt(new AVStream());\n   grabber.setFrameGrabbed(true);\n   assertEquals(0, grabber.getAudioFrameRate());\n}",
+        "@Test\npublic void getAudioFrameRateTest() {\n    FFmpegFrameGrabber grabber = new FFmpegFrameGrabber();\n    grabber.start();\n    assertEquals(0.0, grabber.getAudioFrameRate());\n    grabber.stop();\n}",
+        "@Test\npublic void getAudioFrameRateTest() {\n    FFmpegFrameGrabber frameGrabber = new FFmpegFrameGrabber();\n    double result = frameGrabber.getAudioFrameRate();\n    assertEquals(0.0, result);\n}",
+        "@Test\npublic void getAudioFrameRateTest() {\n    FFmpegFrameGrabber frameGrabber = new FFmpegFrameGrabber(\"video.mp4\");\n    double result = frameGrabber.getAudioFrameRate();\n    assertEquals(expectedResult, result);\n}",
+        "@Test\npublic void getAudioFrameRateTest() {\n    FFmpegFrameGrabber grabber = new FFmpegFrameGrabber();\n    grabber.setAudioSampleRate(44100);\n    grabber.getAudioFrameRate();\n    assertEquals(44100, grabber.getAudioFrameRate());\n}",
+        "public void getAudioFrameRateTest() {\n    FFmpegFrameGrabber grabber = new FFmpegFrameGrabber();\n    grabber.setAudioSamples(new AudioSamples());\n    grabber.setSampleRate(44100);\n    \n    assertEquals(0.0, grabber.getAudioFrameRate());\n}",
+        "@Test\npublic void getAudioFrameRateTest() {\n    FFmpegFrameGrabberTest grabber = new FFmpegFrameGrabberTest();\n    double result = grabber.getAudioFrameRate();\n    assertEquals(0.0, result);\n}",
+        "@Test\npublic void getAudioFrameRateTest() {\n    FFmpegFrameGrabber frameGrabber = new FFmpegFrameGrabber();\n    frameGrabber.setSampleRate(44100); //set a sample rate for testing purposes\n    double expected = 44100 / 100; //expected result, using 100 as the value for samples_frame.nb_samples()\n\n    // Call the getAudioFrameRate method and compare the output with the expected result\n    double actual = frameGrabber.getAudioFrameRate();\n    assertEquals(expected, actual);\n}"
+    ]
+}

@@ -1,0 +1,640 @@
+Source code: 
+
+
+public CompareToBuilder append(final byte[] lhs, final byte[] rhs) {
+    if (comparison != 0) {
+        return this;
+    }
+    if (lhs == rhs) {
+        return this;
+    }
+    if (lhs == null) {
+        comparison = -1;
+        return this;
+    }
+    if (rhs == null) {
+        comparison = 1;
+        return this;
+    }
+    if (lhs.length != rhs.length) {
+        comparison = lhs.length < rhs.length ? -1 : 1;
+        return this;
+    }
+    for (int i = 0; i < lhs.length && comparison == 0; i++) {
+        append(lhs[i], rhs[i]);
+    }
+    return this;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.apache.commons.lang3.builder;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class CompareToBuilderTest {
+
+    @Test
+    void appendTest() {
+        CompareToBuilder builder = new CompareToBuilder();
+
+        // Test equal arrays
+        byte[] array1 = {1, 2, 3};
+        byte[] array2 = {1, 2, 3};
+        builder.append(array1, array2);
+        assertEquals(0, builder.toComparison());
+
+        // Test left array lesser than right array (by length)
+        byte[] lesserArray = {1, 2};
+        builder = new CompareToBuilder(); // reset builder
+        builder.append(lesserArray, array2);
+        assertTrue(builder.toComparison() < 0);
+
+        // Test left array greater than right array (by length)
+        byte[] greaterArray = {1, 2, 3, 4};
+        builder = new CompareToBuilder(); // reset builder
+        builder.append(greaterArray, array2);
+        assertTrue(builder.toComparison() > 0);
+
+        // Test left array lesser than right array (by value)
+        byte[] lesserValueArray = {1, 2, 0};
+        builder = new CompareToBuilder(); // reset builder
+        builder.append(lesserValueArray, array2);
+        assertTrue(builder.toComparison() < 0);
+
+        // Test left array greater than right array (by value)
+        byte[] greaterValueArray = {1, 2, 4};
+        builder = new CompareToBuilder(); // reset builder
+        builder.append(greaterValueArray, array2);
+        assertTrue(builder.toComparison() > 0);
+
+        // Test lhs null array
+        builder = new CompareToBuilder(); // reset builder
+        builder.append(null, array2);
+        assertTrue(builder.toComparison() < 0);
+
+        // Test rhs null array
+        builder = new CompareToBuilder(); // reset builder
+        builder.append(array1, null);
+        assertTrue(builder.toComparison() > 0);
+
+        // Both lhs and rhs null should be considered equal
+        builder = new CompareToBuilder(); // reset builder
+        builder.append(null, null);
+        assertEquals(0, builder.toComparison());
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.apache.commons.lang3.builder;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class CompareToBuilderTest {
+    @Test
+    public void appendTest() {
+        CompareToBuilder builder = new CompareToBuilder();
+
+        // Test comparison with byte arrays.
+        byte[] lhs = new byte[] {1, 2, 3};
+        byte[] rhs = new byte[] {1, 2, 3};
+        builder.append(lhs, rhs);
+        assertEquals(0, builder.toComparison(), "Arrays with the same elements should compare equal");
+
+        lhs = new byte[] {1, 2, 3};
+        rhs = new byte[] {3, 2, 1};
+        builder = new CompareToBuilder(); // reset builder for new comparison
+        builder.append(lhs, rhs);
+        assertEquals(-1, builder.toComparison(), "Array [1, 2, 3] should be less than [3, 2, 1]");
+
+        lhs = new byte[] {1, 2, 3};
+        rhs = new byte[] {1, 2, 3, 4};
+        builder = new CompareToBuilder(); // reset builder for new comparison
+        builder.append(lhs, rhs);
+        assertEquals(-1, builder.toComparison(), "Array with fewer elements should be less than longer array");
+
+        lhs = new byte[] {1, 2, 3, 4};
+        rhs = new byte[] {1, 2, 3};
+        builder = new CompareToBuilder(); // reset builder for new comparison
+        builder.append(lhs, rhs);
+        assertEquals(1, builder.toComparison(), "Longer array should be greater than array with fewer elements");
+
+        lhs = null;
+        rhs = new byte[] {1, 2, 3};
+        builder = new CompareToBuilder(); // reset builder for new comparison
+        builder.append(lhs, rhs);
+        assertEquals(-1, builder.toComparison(), "Null array should be less than non-null array");
+
+        lhs = new byte[] {1, 2, 3};
+        rhs = null;
+        builder = new CompareToBuilder(); // reset builder for new comparison
+        builder.append(lhs, rhs);
+        assertEquals(1, builder.toComparison(), "Non-null array should be greater than null array");
+
+        lhs = null;
+        rhs = null;
+        builder = new CompareToBuilder(); // reset builder for new comparison
+        builder.append(lhs, rhs);
+        assertEquals(0, builder.toComparison(), "Two null arrays should be equal");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.apache.commons.lang3.builder;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class CompareToBuilderTest {
+    @Test
+    public void appendByteArraysTest() {
+        CompareToBuilder builder = new CompareToBuilder();
+        
+        // Test when both byte arrays are equal
+        byte[] lhs = {1, 2, 3};
+        byte[] rhs = {1, 2, 3};
+        builder.append(lhs, rhs);
+        assertEquals(0, builder.toComparison());
+        
+        // Test when left-hand byte array is less than right-hand byte array (shorter length)
+        byte[] lhsShorter = {1, 2};
+        byte[] rhsLonger = {1, 2, 3};
+        builder = new CompareToBuilder(); // reset builder for a new comparison
+        builder.append(lhsShorter, rhsLonger);
+        assertTrue(builder.toComparison() < 0);
+        
+        // Test when left-hand byte array is greater than right-hand byte array (longer length)
+        byte[] lhsLonger = {1, 2, 3, 4};
+        byte[] rhsShorter = {1, 2, 3};
+        builder = new CompareToBuilder(); // reset builder for a new comparison
+        builder.append(lhsLonger, rhsShorter);
+        assertTrue(builder.toComparison() > 0);
+        
+        // Test when arrays have same length but elements are different
+        byte[] lhsDifferent = {1, 4, 3};
+        builder = new CompareToBuilder(); // reset builder for a new comparison
+        builder.append(lhsDifferent, rhs);
+        assertTrue(builder.toComparison() > 0);
+        
+        // Test when left-hand byte array is null and right-hand byte array is not
+        builder = new CompareToBuilder(); // reset builder for a new comparison
+        builder.append(null, rhs);
+        assertTrue(builder.toComparison() < 0);
+
+        // Test when right-hand byte array is null and the left-hand byte array is not
+        builder = new CompareToBuilder(); // reset builder for a new comparison
+        builder.append(lhs, null);
+        assertTrue(builder.toComparison() > 0);
+
+        // Test when both byte arrays are null
+        builder = new CompareToBuilder(); // reset builder for a new comparison
+        builder.append(null, null);
+        assertEquals(0, builder.toComparison());
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.apache.commons.lang3.builder;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+public class CompareToBuilderTest {
+
+    @Test
+    public void appendTest() {
+        // Create dummy byte arrays for testing
+        byte[] lhsEmpty = {};
+        byte[] rhsEmpty = {};
+        byte[] lhs = {1, 2, 3};
+        byte[] rhs = {1, 2, 3};
+        byte[] rhsLarger = {1, 2, 3, 4};
+        byte[] rhsSmaller = {1, 2};
+        byte[] lhsLess = {1, 2, 0};
+        byte[] rhsGreater = {1, 2, 4};
+
+        // Test for same arrays
+        CompareToBuilder compareToBuilderSame = new CompareToBuilder();
+        assertEquals(0, compareToBuilderSame.append(lhs, lhs).toComparison());
+
+        // Test for equal arrays
+        CompareToBuilder compareToBuilderEqual = new CompareToBuilder();
+        assertEquals(0, compareToBuilderEqual.append(lhs, rhs).toComparison());
+
+        // Test for empty arrays
+        CompareToBuilder compareToBuilderEmpty = new CompareToBuilder();
+        assertEquals(0, compareToBuilderEmpty.append(lhsEmpty, rhsEmpty).toComparison());
+
+        // Test for lhs null, rhs not null
+        CompareToBuilder compareToBuilderLhsNull = new CompareToBuilder();
+        assertEquals(-1, compareToBuilderLhsNull.append(null, rhs).toComparison());
+
+        // Test for rhs null, lhs not null
+        CompareToBuilder compareToBuilderRhsNull = new CompareToBuilder();
+        assertEquals(1, compareToBuilderRhsNull.append(lhs, null).toComparison());
+
+        // Test for arrays of different lengths
+        CompareToBuilder compareToBuilderLength = new CompareToBuilder();
+        assertEquals(-1, compareToBuilderLength.append(lhs, rhsLarger).toComparison());
+        assertEquals(1, compareToBuilderLength.append(lhs, rhsSmaller).toComparison());
+
+        // Test for arrays with same lengths but different contents
+        CompareToBuilder compareToBuilderContent = new CompareToBuilder();
+        assertEquals(-1, compareToBuilderContent.append(lhsLess, rhs).toComparison());
+        assertEquals(1, compareToBuilderContent.append(lhs, rhsGreater).toComparison());
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.apache.commons.lang3.builder;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class CompareToBuilderTest {
+
+    private CompareToBuilder compareToBuilder;
+
+    @BeforeEach
+    public void setUp() {
+        compareToBuilder = new CompareToBuilder();
+    }
+
+    @Test
+    public void appendTestSameArray() {
+        byte[] array1 = {1, 2, 3};
+        byte[] array1Copy = {1, 2, 3};
+        CompareToBuilder resultBuilder = compareToBuilder.append(array1, array1Copy);
+        assertEquals(0, resultBuilder.toComparison());
+    }
+
+    @Test
+    public void appendTestDifferentArraysSameLength() {
+        byte[] array1 = {1, 2, 3};
+        byte[] array2 = {1, 2, 4};
+        CompareToBuilder resultBuilder = compareToBuilder.append(array1, array2);
+        assertTrue(resultBuilder.toComparison() < 0);
+    }
+
+    @Test
+    public void appendTestDifferentArraysDifferentLengths() {
+        byte[] array1 = {1, 2, 3};
+        byte[] array2 = {1, 2, 3, 4};
+        CompareToBuilder resultBuilder = compareToBuilder.append(array1, array2);
+        assertTrue(resultBuilder.toComparison() < 0);
+    }
+
+    @Test
+    public void appendTestWithNullArrayOnLeft() {
+        byte[] array1 = null;
+        byte[] array2 = {1, 2, 3};
+        CompareToBuilder resultBuilder = compareToBuilder.append(array1, array2);
+        assertTrue(resultBuilder.toComparison() < 0);
+    }
+
+    @Test
+    public void appendTestWithNullArrayOnRight() {
+        byte[] array1 = {1, 2, 3};
+        byte[] array2 = null;
+        CompareToBuilder resultBuilder = compareToBuilder.append(array1, array2);
+        assertTrue(resultBuilder.toComparison() > 0);
+    }
+
+    @Test
+    public void appendTestWithBothNullArrays() {
+        byte[] array1 = null;
+        byte[] array2 = null;
+        CompareToBuilder resultBuilder = compareToBuilder.append(array1, array2);
+        assertEquals(0, resultBuilder.toComparison());
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.apache.commons.lang3.builder;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class CompareToBuilderTest {
+
+    @Test
+    public void appendTest() {
+        CompareToBuilder builder = new CompareToBuilder();
+
+        byte[] lhs = {1, 2, 3};
+        byte[] rhs = {1, 2, 3};
+        builder.append(lhs, rhs);
+        assertEquals(0, builder.toComparison());
+
+        lhs = new byte[]{1, 2, 3};
+        rhs = new byte[]{4, 5, 6};
+        builder = new CompareToBuilder();
+        builder.append(lhs, rhs);
+        assertTrue(builder.toComparison() < 0);
+
+        lhs = new byte[]{4, 5, 6};
+        rhs = new byte[]{1, 2, 3};
+        builder = new CompareToBuilder();
+        builder.append(lhs, rhs);
+        assertTrue(builder.toComparison() > 0);
+
+        lhs = new byte[]{1, 2, 3};
+        rhs = new byte[]{1, 2, 3, 4};
+        builder = new CompareToBuilder();
+        builder.append(lhs, rhs);
+        assertTrue(builder.toComparison() < 0);
+
+        lhs = new byte[]{1, 2, 3, 4};
+        rhs = new byte[]{1, 2, 3};
+        builder = new CompareToBuilder();
+        builder.append(lhs, rhs);
+        assertTrue(builder.toComparison() > 0);
+
+        lhs = new byte[]{1, 2, 3};
+        rhs = null;
+        builder = new CompareToBuilder();
+        builder.append(lhs, rhs);
+        assertTrue(builder.toComparison() > 0);
+
+        lhs = null;
+        rhs = new byte[]{1, 2, 3};
+        builder = new CompareToBuilder();
+        builder.append(lhs, rhs);
+        assertTrue(builder.toComparison() < 0);
+
+        lhs = null;
+        rhs = null;
+        builder = new CompareToBuilder();
+        builder.append(lhs, rhs);
+        assertEquals(0, builder.toComparison());
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.apache.commons.lang3.builder;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class CompareToBuilderTest {
+    @Test
+    public void appendTest() {
+        CompareToBuilder builder = new CompareToBuilder();
+
+        // Equal arrays
+        byte[] byteArray1 = {1, 2, 3};
+        byte[] byteArray2 = {1, 2, 3};
+        builder.append(byteArray1, byteArray2);
+        assertEquals(0, builder.toComparison(), "Arrays with the same contents should be equal.");
+
+        // Different length arrays where first is shorter
+        byteArray1 = new byte[]{1, 2};
+        byteArray2 = new byte[]{1, 2, 3};
+        builder = new CompareToBuilder(); // Reset builder for new comparison
+        builder.append(byteArray1, byteArray2);
+        assertEquals(-1, builder.toComparison(), "A shorter array should be less than a longer array.");
+
+        // Different length arrays where first is longer
+        byteArray1 = new byte[]{1, 2, 3};
+        byteArray2 = new byte[]{1, 2};
+        builder = new CompareToBuilder(); // Reset builder for new comparison
+        builder.append(byteArray1, byteArray2);
+        assertEquals(1, builder.toComparison(), "A longer array should be greater than a shorter array.");
+
+        // Non-null first array and null second array
+        byteArray1 = new byte[]{1, 2, 3};
+        byteArray2 = null;
+        builder = new CompareToBuilder(); // Reset builder for new comparison
+        builder.append(byteArray1, byteArray2);
+        assertEquals(1, builder.toComparison(), "Non-null array should be greater than null.");
+
+        // Null first array and non-null second array
+        byteArray1 = null;
+        byteArray2 = new byte[]{1, 2, 3};
+        builder = new CompareToBuilder(); // Reset builder for new comparison
+        builder.append(byteArray1, byteArray2);
+        assertEquals(-1, builder.toComparison(), "Null should be less than non-null array.");
+
+        // Arrays with same length but different contents
+        byteArray1 = new byte[]{1, 2, 3};
+        byteArray2 = new byte[]{1, 2, 4};
+        builder = new CompareToBuilder(); // Reset builder for new comparison
+        builder.append(byteArray1, byteArray2);
+        assertEquals(-1, builder.toComparison(), "Array with smaller value in last element should be less than other array.");
+
+        // Both arrays are null
+        byteArray1 = null;
+        byteArray2 = null;
+        builder = new CompareToBuilder(); // Reset builder for new comparison
+        builder.append(byteArray1, byteArray2);
+        assertEquals(0, builder.toComparison(), "Both null arrays should be equal.");
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.apache.commons.lang3.builder;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class CompareToBuilderTest {
+    private CompareToBuilder builder;
+
+    @BeforeEach
+    public void setUp() {
+        builder = new CompareToBuilder();
+    }
+
+    @Test
+    public void appendTestWithEqualArrays() {
+        byte[] lhs = {1, 2, 3};
+        byte[] rhs = {1, 2, 3};
+        builder.append(lhs, rhs);
+        assertEquals(0, builder.toComparison(), "Arrays with equal values should compare as equal");
+    }
+
+    @Test
+    public void appendTestWithUnequalArrays() {
+        byte[] lhs = {1, 2, 3};
+        byte[] rhs = {1, 3, 2};
+        builder.append(lhs, rhs);
+        assertTrue(builder.toComparison() != 0, "Arrays with different values should not compare as equal");
+    }
+
+    @Test
+    public void appendTestWithNullAndNonNullArrays() {
+        byte[] lhs = null;
+        byte[] rhs = {1, 2, 3};
+        builder.append(lhs, rhs);
+        assertTrue(builder.toComparison() < 0, "Null array should be considered less than a non-null array");
+    }
+
+    @Test
+    public void appendTestWithNonNullAndNullArrays() {
+        byte[] lhs = {1, 2, 3};
+        byte[] rhs = null;
+        builder.append(lhs, rhs);
+        assertTrue(builder.toComparison() > 0, "Non-null array should be considered greater than a null array");
+    }
+
+    @Test
+    public void appendTestWithEmptyArrays() {
+        byte[] lhs = {};
+        byte[] rhs = {};
+        builder.append(lhs, rhs);
+        assertEquals(0, builder.toComparison(), "Two empty arrays should compare as equal");
+    }
+
+    @Test
+    public void appendTestWithDifferentLengthArrays() {
+        byte[] lhs = {1, 2};
+        byte[] rhs = {1, 2, 3};
+        builder.append(lhs, rhs);
+        assertTrue(builder.toComparison() < 0, "Shorter array should be considered less than a longer array");
+    }
+
+    @Test
+    public void appendTestWithSameArrays() {
+        byte[] array = {1, 2, 3};
+        builder.append(array, array);
+        assertEquals(0, builder.toComparison(), "Same array reference should compare as equal");
+    }
+
+    // Additional tests can be added to cover the various types of appendable data (char[], int[], Object[], etc.).
+}
+
+
+No.9 generated result --------------------------
+
+package org.apache.commons.lang3.builder;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class CompareToBuilderTest {
+    @Test
+    public void appendTest() {
+        CompareToBuilder compareToBuilder = new CompareToBuilder();
+
+        // Test for equal arrays
+        byte[] array1 = new byte[] {1, 2, 3};
+        byte[] array2 = new byte[] {1, 2, 3};
+        assertEquals(0, compareToBuilder.append(array1, array2).toComparison());
+
+        // Test for left array < right array
+        compareToBuilder = new CompareToBuilder(); // reset builder
+        byte[] array3 = new byte[] {1, 2};
+        byte[] array4 = new byte[] {1, 2, 3};
+        assertEquals(-1, compareToBuilder.append(array3, array4).toComparison());
+
+        // Test for left array > right array
+        compareToBuilder = new CompareToBuilder(); // reset builder
+        byte[] array5 = new byte[] {1, 2, 3, 4};
+        assertEquals(1, compareToBuilder.append(array5, array4).toComparison());
+
+        // Test when left array is null and right array is not
+        compareToBuilder = new CompareToBuilder(); // reset builder
+        assertEquals(-1, compareToBuilder.append(null, array2).toComparison());
+
+        // Test when right array is null and left array is not
+        compareToBuilder = new CompareToBuilder(); // reset builder
+        assertEquals(1, compareToBuilder.append(array1, null).toComparison());
+
+        // Test when both arrays are null
+        compareToBuilder = new CompareToBuilder(); // reset builder
+        assertEquals(0, compareToBuilder.append(null, null).toComparison());
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.apache.commons.lang3.builder;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class CompareToBuilderTest {
+
+    @Test
+    public void testArrayEquality() {
+        byte[] array1 = {1, 2, 3};
+        byte[] array2 = {1, 2, 3};
+        CompareToBuilder builder = new CompareToBuilder();
+        
+        int comparison = builder.append(array1, array1).toComparison(); // same object
+        assertEquals(0, comparison);
+
+        builder = new CompareToBuilder();
+        comparison = builder.append(array1, array2).toComparison(); // same contents
+        assertEquals(0, comparison);
+    }
+
+    @Test
+    public void testNullArrays() {
+        byte[] array1 = null;
+        byte[] array2 = null;
+        byte[] array3 = {1, 2, 3};
+        
+        CompareToBuilder builder = new CompareToBuilder();
+        int comparison = builder.append(array1, array2).toComparison(); // both null
+        assertEquals(0, comparison);
+
+        builder = new CompareToBuilder();
+        comparison = builder.append(array1, array3).toComparison(); // lhs is null
+        assertEquals(-1, comparison);
+        
+        builder = new CompareToBuilder();
+        comparison = builder.append(array3, array1).toComparison(); // rhs is null
+        assertEquals(1, comparison);
+    }
+
+    @Test
+    public void testDifferentLengthArrays() {
+        byte[] array1 = {1, 2};
+        byte[] array2 = {1, 2, 3};
+        CompareToBuilder builder = new CompareToBuilder();
+
+        int comparison = builder.append(array1, array2).toComparison(); // lhs shorter
+        assertEquals(-1, comparison);
+
+        builder = new CompareToBuilder();
+        comparison = builder.append(array2, array1).toComparison(); // rhs shorter
+        assertEquals(1, comparison);
+    }
+
+    @Test
+    public void testArraysWithDifferentContents() {
+        byte[] array1 = {1, 2, 3};
+        byte[] array2 = {1, 2, 4};
+        CompareToBuilder builder = new CompareToBuilder();
+
+        int comparison = builder.append(array1, array2).toComparison(); // lhs < rhs
+        assertTrue(comparison < 0);
+
+        builder = new CompareToBuilder();
+        comparison = builder.append(array2, array1).toComparison(); // lhs > rhs
+        assertTrue(comparison > 0);
+    }
+}
+
+

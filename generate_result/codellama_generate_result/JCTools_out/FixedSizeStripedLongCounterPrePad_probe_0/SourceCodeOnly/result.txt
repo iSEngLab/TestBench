@@ -1,0 +1,237 @@
+Source code: 
+
+
+private int probe() {
+    // Fast path for reliable well-distributed probe, available from JDK 7+.
+    // As long as PROBE is final static this branch will be constant folded
+    // (i.e removed).
+    if (PROBE != -1) {
+        int probe;
+        if ((probe = UNSAFE.getInt(Thread.currentThread(), PROBE)) == 0) {
+            ThreadLocalRandom.current(); // force initialization
+            probe = UNSAFE.getInt(Thread.currentThread(), PROBE);
+        }
+        return probe;
+    }
+
+    /*
+     * Else use much worse (for values distribution) method:
+     * Mix thread id with golden ratio and then xorshift it
+     * to spread consecutive ids (see Knuth multiplicative method as reference).
+     */
+    int probe = (int) ((Thread.currentThread().getId() * 0x9e3779b9) & Integer.MAX_VALUE);
+    // xorshift
+    probe ^= probe << 13;
+    probe ^= probe >>> 17;
+    probe ^= probe << 5;
+    return probe;
+}
+
+
+
+
+No.1 generated result --------------------------
+
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+    @Test
+    public void probeTest() {
+        int probe = FixedSizeStripedLongCounter.probe();
+        assertTrue(probe >= 0); // ensure the probe value is non-negative
+        assertEquals((int) (Thread.currentThread().getId() * 0x9e3779b9) & Integer.MAX_VALUE, probe); // check that the probe value matches the expected distribution pattern
+    }
+}
+
+
+
+No.2 generated result --------------------------
+
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+    @Test
+    public void probeTest() {
+        assertEquals(probe(1), 3); // Expected result: 3
+        assertEquals(probe(2), 5); // Expected result: 5
+        assertEquals(probe(3), 7); // Expected result: 7
+    }
+}
+
+
+
+No.3 generated result --------------------------
+
+package org.jctools.counters;
+
+import java.util.HashSet;
+import java.util.Random;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+    @Test
+    public void probeTest() {
+        // Generate a set of random thread IDs
+        HashSet<Integer> ids = new HashSet<>();
+        for (int i = 0; i < 100; i++) {
+            ids.add(new Random().nextInt());
+        }
+
+        // Verify that the hash value is unique for each thread ID
+        for (Integer id : ids) {
+            int probe = FixedSizeStripedLongCounterPrePadTest.probe(id);
+            assertFalse(ids.contains(probe));
+        }
+    }
+}
+
+
+No.4 generated result --------------------------
+
+
+public class FixedSizeStripedLongCounterPrePadTest {
+    @Test
+    public void probeTest() {
+        // Test the fast path for reliable well-distributed probe, available from JDK 7+.
+        int probe = UNSAFE.getInt(Thread.currentThread(), PROBE);
+        assertEquals((int) ((Thread.currentThread().getId() * 0x9e3779b9) & Integer.MAX_VALUE), probe);
+    }
+}
+
+
+No.5 generated result --------------------------
+
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+    @Test
+    public void probeTest() {
+        int expectedProbe = 1; // Replace with the expected value of the probe
+        assertEquals(expectedProbe, FixedSizeStripedLongCounter.probe());
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jctools.counters;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+    @Test
+    public void probeTest() {
+        List<Thread> threads = new ArrayList<>();
+        for (int i = 0; i < 10; i++) { // create 10 threads
+            Thread thread = new Thread(() -> System.out.println(probe()));
+            threads.add(thread);
+            thread.start();
+        }
+        
+        int[] probes = new int[threads.size()];
+        for (int i = 0; i < threads.size(); i++) { // wait for each thread to finish and store its probe value in an array
+            try {
+                threads.get(i).join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            probes[i] = Integer.parseInt(threads.get(i).getProbe());
+        }
+        
+        for (int i = 0; i < probes.length - 1; i++) { // check that each probe value is different from the others
+            assertNotEquals(probes[i], probes[i + 1]);
+        }
+    }
+}
+
+
+No.7 generated result --------------------------
+
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+    @Test
+    public void probeTest() {
+        int[] probes = new int[5];
+        for (int i = 0; i < probes.length; i++) {
+            assertNotEquals(probes[i], -1);
+            assertTrue((Thread.currentThread().getId() * 0x9e3779b9) & Integer.MAX_VALUE >= 0);
+        }
+    }
+}
+
+
+No.8 generated result --------------------------
+
+@Test
+public void probeTest() {
+    // Create a list of thread IDs to use in the test
+    List<Long> threadIds = new ArrayList<>();
+    for (int i = 0; i < 100; i++) {
+        threadIds.add(Thread.currentThread().getId());
+    }
+    
+    // Call probe() once for each thread ID and store the returned values in a set
+    Set<Integer> uniqueValues = new HashSet<>();
+    for (long id : threadIds) {
+        uniqueValues.add(probe(id));
+    }
+    
+    // Verify that all returned values are unique
+    assertEquals(uniqueValues.size(), 100);
+}
+
+
+No.9 generated result --------------------------
+
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+    @Test
+    public void probeTest() {
+        int probe = 1; // initialize with a value other than 0
+        
+        assertEquals(probe, UNSAFE.getInt(Thread.currentThread(), PROBE));
+        
+        ThreadLocalRandom.current(); // force initialization
+        
+        assertEquals((int) ((Thread.currentThread().getId() * 0x9e3779b9) & Integer.MAX_VALUE), UNSAFE.getInt(Thread.currentThread(), PROBE));
+    }
+}
+
+
+No.10 generated result --------------------------
+
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+    @Test
+    public void probeTest() {
+        int probe = 1234; // Replace with the actual value of probe in the test case
+        assertEquals(probe, probe());
+    }
+}
+
+

@@ -1,0 +1,442 @@
+Source code: 
+
+
+static void splitReciprocal(final double[] in, final double[] result) {
+    final double b = 1.0 / 4194304.0;
+    final double a = 1.0 - b;
+
+    if (in[0] == 0.0) {
+        in[0] = in[1];
+        in[1] = 0.0;
+    }
+
+    result[0] = a / in[0];
+    result[1] = (b * in[0] - a * in[1]) / (in[0] * in[0] + in[0] * in[1]);
+
+    if (result[1] != result[1]) { // can happen if result[1] is NAN
+        result[1] = 0.0;
+    }
+
+    /* Resplit */
+    resplit(result);
+
+    for (int i = 0; i < 2; i++) {
+        /* this may be overkill, probably once is enough */
+        double err = 1.0 - result[0] * in[0] - result[0] * in[1] -
+            result[1] * in[0] - result[1] * in[1];
+        /*err = 1.0 - err; */
+        err *= result[0] + result[1];
+        /*printf("err = %16e\n", err); */
+        result[1] += err;
+    }
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+
+    @Test
+    public void splitReciprocalTest() {
+        double[] input = new double[]{3.0, 4.0};
+        double[] expectedResult = new double[]{1.0 / 3.0, 0.0};
+        double[] actualResult = new double[2];
+        
+        // Execute the method to be tested
+        AccurateMathCalc.splitReciprocal(input, actualResult);
+        
+        // Re-define variables a and b as used in splitReciprocal to compare expectedResult with actualResult
+        final double b = 1.0 / 4194304.0;
+        final double a = 1.0 - b;
+        
+        // Assume that resplit has the correct behavior and does not alter the final result
+        // Since resplit and the subsequent error correction in the source method can alter the result,
+        // we need to account for a margin of error for floating-point calculations.
+        double delta = 1.0e-15;
+        
+        // Evaluate the first part of the result before resplit - 1/a should be reciprocal of input[0]
+        assertEquals(a / input[0], actualResult[0], delta, "The first part of the result should be a reciprocal of input[0]");
+        
+        // Evaluate the second part of the result before resplit - (b*input[0] - a*input[1])/(input[0]*input[0] + input[0]*input[1])
+        assertEquals((b * input[0] - a * input[1]) / (input[0] * input[0] + input[0] * input[1]), actualResult[1], delta, "The computation of the second part of the result does not match expected formula");
+        
+        // Check that the correction loop to adjust result[1] does not significantly alter the result.
+        assertEquals(expectedResult[1], actualResult[1], delta, "The computation of the second part of the result after error correction does not match the expected value");
+        
+        // To fully test the function, especially since it contains a loop over i and calls to other functions (resplit),
+        // it would be prudent to include additional tests covering various expected and unexpected input cases.
+        // This includes testing with inputs equal to zero, negative values, very large values, and cases where
+        // numeric instability or edge cases trigger NAN or INF facts.
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    @Test
+    public void splitReciprocalTest() {
+        double[] input = new double[] { 1.0, 0.5 };
+        double[] result = new double[2];
+        AccurateMathCalc.splitReciprocal(input, result);
+        
+        final double a = 1.0 - (1.0 / 4194304.0);
+        double expectedFirstPart = a / 1.0;
+        double expectedSecondPart = ((1.0 / 4194304.0) * 1.0 - a * 0.5) / (1.0 * 1.0 + 1.0 * 0.5);
+
+        assertArrayEquals(new double[] { expectedFirstPart, expectedSecondPart }, result, "splitReciprocal did not produce the expected results");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    
+    private static final double DELTA = 1e-15;
+
+    @Test
+    public void splitReciprocalTest() {
+        double[] input = {2.0, 3.0};
+        double[] result = new double[2];
+        
+        // Call the method to test
+        AccurateMathCalc.splitReciprocal(input, result);
+        
+        // Calculate expected results for the provided input
+        final double recip = 1.0 / input[0];
+        final double b = 1.0 / 4194304.0;
+        final double a = 1.0 - b;
+        double expected0 = a / input[0];
+        double expected1 = (b * input[0] - a * input[1]) / (input[0] * input[0] + input[0] * input[1]);
+        
+        // Since we do not have the implementation of 'resplit', assume it corrects any 
+        // representational inaccuracy and expect resplit not to affect the first component
+        double err = 1.0 - expected0 * input[0] - expected0 * input[1] - 
+                      expected1 * input[0] - expected1 * input[1];
+        err *= expected0 + expected1;
+        expected1 += err;
+
+        // Assert the results are as expected
+        assertEquals(expected0, result[0], DELTA, "The first element of the result is incorrect");
+        assertEquals(expected1, result[1], DELTA, "The second element of the result is incorrect");
+        
+        // Test for a zero input that should rearrange values
+        input[0] = 0.0;
+        input[1] = 5.0;
+        AccurateMathCalc.splitReciprocal(input, result);
+        expected0 = a / input[1];
+        expected1 = (b * input[1] - a * 0.0) / (input[1] * input[1] + input[1] * 0.0);
+        // Again, assuming resplit corrects the representational accuracy
+        err = 1.0 - expected0 * input[1] - expected0 * 0.0 - 
+              expected1 * input[1] - expected1 * 0.0;
+        err *= expected0 + expected1;
+        expected1 += err;
+        
+        // Assert that the zero condition is properly handled
+        assertEquals(expected0, result[0], DELTA, "The first element of the result for a zero input is incorrect");
+        assertEquals(expected1, result[1], DELTA, "The second element of the result for a zero input is incorrect");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+
+    @Test
+    public void splitReciprocalTest() {
+        // Initialize the input and result arrays
+        double[] input = new double[]{2.0, 3.0};
+        double[] result = new double[2];
+
+        // Call the method under test
+        AccurateMathCalc.splitReciprocal(input, result);
+
+        // Assertions for the expected behavior of splitReciprocal
+        // Since we're dealing with floating-point calculations, use an epsilon
+        // for comparing equality up to a small numerical error
+        double epsilon = 1e-12;
+
+        // Check the first element is the reciprocal of input[0]
+        assertEquals(1.0 / input[0], result[0], epsilon, "The first element of result should be the reciprocal of input[0]");
+        
+        // Check the second element follows the splitReciprocal logic,
+        // involving the combination of both input elements
+        double expectedSecondElement = (1.0 / 4194304.0 * input[0] - (1.0 - 1.0 / 4194304.0) * input[1]) / 
+                                       (input[0] * input[0] + input[0] * input[1]);
+        assertEquals(expectedSecondElement, result[1], epsilon, "The second element of result does not match the expected calculation");
+
+        // If the expected code paths are taken, result[1] should not be NaN,
+        // but adding an explicit check could be a part of a more thorough test
+        assertFalse(Double.isNaN(result[1]), "Result[1] should not be NaN");
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    @Test
+    public void splitReciprocalTest() {
+        double[] input = new double[]{3.0, 4.0};
+        double[] result = new double[2];
+        double[] expected = new double[2];
+        
+        // Calculate the expected value manually or by using a reliable reference
+        final double b = 1.0 / 4194304.0;
+        final double a = 1.0 - b;
+        expected[0] = a / input[0];
+        expected[1] = (b * input[0] - a * input[1]) / (input[0] * input[0] + input[0] * input[1]);
+
+        // Since the method resplit is private, we cannot replicate the
+        // exact adjustment it does in the test and it's not specified in the task.
+        // We assume that result[1] will not be NaN after the first adjustment for simplicity.
+
+        AccurateMathCalc.splitReciprocal(input, result);
+
+        // There may be tiny precision differences in floating-point computations, so we assert with a small delta
+        double delta = 1e-15;
+        
+        // Check the first item in the array
+        assertEquals(expected[0], result[0], delta, "The first element of the result should match the expected value.");
+        
+        // Check the second item in the array
+        // Since the exact behavior of resplit is not provided, and there is an adjustment loop in the method,
+        // we verify that the second element is close to an expected range rather than a fixed value.
+        assertNotNull(result[1], "The second element of the result should not be null.");
+        assertTrue(Math.abs(result[1]) < 1.0, "The second element of the result should be less than 1 in magnitude.");
+        
+        // Optionally, if the exact outputs from resplit are known, we could further assert the expected values.
+        // However, we would need the expected results precomputed.
+        
+        // Check for non-NaN in the results as NaN check is a part of the method
+        assertFalse(Double.isNaN(result[0]));
+        assertFalse(Double.isNaN(result[1]));
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+
+    @Test
+    public void splitReciprocalTest() {
+        // Setup the input and result arrays
+        double[] input = {2.0, 3.0};
+        double[] result = new double[2];
+
+        // Expected values are calculated manually or by another independent means
+        // For the sake of this example, let's assume the expected values are precomputed
+        double expectedFirst = 0.5; // This is just a placeholder value
+        double expectedSecond = -0.25; // This too is a placeholder value
+
+        // Call the method under test
+        AccurateMathCalc.splitReciprocal(input, result);
+
+        // Assert that the result matches expected values
+        assertEquals(expectedFirst, result[0], "The first value of the result should be correct.");
+        assertEquals(expectedSecond, result[1], "The second value of the result should be correct.");
+
+        // Verify that the resplit function was correctly performed
+        // Since the details of resplit are not provided,
+        // assume there is a condition or property that can be tested,
+        // such as checking if the result is within a small delta of expected values
+        double delta = 1e-15;
+        assertTrue(Math.abs(expectedFirst - result[0]) < delta, "The first value should be within the acceptable delta.");
+        assertTrue(Math.abs(expectedSecond - result[1]) < delta, "The second value should be within the acceptable delta.");
+
+        // Additionally, we can check for special cases like division by zero
+        double[] zeroInput = {0.0, 3.0};
+        assertDoesNotThrow(() -> AccurateMathCalc.splitReciprocal(zeroInput, result));
+        // Now result should contain adjusted values after handling zero
+
+        // Finally, check for NaN handling: if result[1] becomes NaN, it should be reset to 0.0
+        double[] nanInput = {1.0, Double.NaN};
+        assertDoesNotThrow(() -> AccurateMathCalc.splitReciprocal(nanInput, result));
+        assertEquals(0.0, result[1], "NaN should be handled by resetting to 0.0.");
+
+        // If necessary, additional assertions can be added for more thorough testing
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    
+    @Test
+    public void splitReciprocalTest() {
+        double[] input = {2.0, 1.0};
+        double[] expectedResult = new double[2];
+        double[] actualResult = new double[2];
+        
+        AccurateMathCalc.splitReciprocal(input, actualResult);
+
+        // Since the exact expected result is not provided, here we manually compute
+        // the reciprocal of the input using high precision arithmetic libraries or
+        // calculate separately and input the values here.
+        // Assuming the expected values after the splitReciprocal operation on the input are:
+        expectedResult[0] = 0.49999988079071045; // this would be the value of a / in[0]
+        expectedResult[1] = -0.12499994039535522; // this would be the value of (b * in[0] - a * in[1]) / (in[0] * in[0] + in[0] * in[1])
+        
+        // Check each element of the result arrays separately to diagnose which one might be incorrect
+        assertEquals(expectedResult[0], actualResult[0], "The first element of the result is not as expected");
+        assertEquals(expectedResult[1], actualResult[1], "The second element of the result is not as expected");
+        
+        // It's also a good idea to add some tests for edge cases, such as the input value being zero
+        double[] zeroInput = {0.0, 1.0};
+        double[] zeroExpectedResult = new double[2];
+        double[] zeroActualResult = new double[2];
+
+        AccurateMathCalc.splitReciprocal(zeroInput, zeroActualResult);
+        
+        // We would need to compute the expected value for zeroInput case as well
+        zeroExpectedResult[0] = 1.0; // This would be a / zeroInput[1], after zeroInput[0] gets replaced by zeroInput[1]
+        zeroExpectedResult[1] = 0.0; // This should be 0.0 since (b * 0.0 - a * zeroInput[1]) would result in -1.0
+        
+        assertEquals(zeroExpectedResult[0], zeroActualResult[0], "The first element of the result for zeroInput is not as expected");
+        assertEquals(zeroExpectedResult[1], zeroActualResult[1], "The second element of the result for zeroInput is not as expected");
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    
+    @Test
+    public void splitReciprocalTest() {
+        final double[] input = {2.0, 3.0};
+        final double[] result = new double[2];
+        AccurateMathCalc.splitReciprocal(input, result);
+
+        final double a = 1.0 - (1.0 / 4194304.0);
+        
+        assertEquals(a / input[0], result[0], "The first element of the result should be a / input[0]");
+        assertEquals((1.0 / 4194304.0 * input[0] - a * input[1]) / (input[0] * input[0] + input[0] * input[1]), 
+                     result[1], 
+                     "The second element of the result should be (1/4194304 * input[0] - a * input[1]) / (input[0]^2 + input[0] * input[1])");
+
+        // Test the NaN handling
+        final double[] inputNaN = {1.0, Double.NaN};
+        final double[] resultNaN = new double[2];
+        AccurateMathCalc.splitReciprocal(inputNaN, resultNaN);
+
+        // Since the second element of result would be NaN, but the method sets NaNs to 0.0,
+        // the assertion should expect 0.0
+        assertEquals(0.0, resultNaN[1], "The second element of the result should be 0.0 if it is NaN");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    @Test
+    public void splitReciprocalTest() {
+        // Given input values
+        double[] in = {2.0, 3.0};
+        double[] expected = new double[2];
+        double[] actual = new double[2];
+
+        // Calculate the expected result with the splitReciprocal method
+        AccurateMathCalc.splitReciprocal(in, expected);
+
+        // Call the method under test
+        AccurateMathCalc.splitReciprocal(in, actual);
+
+        // Expected values for the reciprocal split
+        double a = 1.0 - 1.0 / 4194304.0;
+        
+        assertEquals(a / in[0], actual[0], "The first element of the result should match the expected value for a/in[0]");
+        assertEquals((1.0 / 4194304.0 * in[0] - a * in[1]) / (in[0] * in[0] + in[0] * in[1]), actual[1], "The second element of the result should match the expected value for reciprocal calculation.");
+
+        // You may want to test edge cases such as when input[0] is 0 or when values could lead to NaN
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    
+    @Test
+    public void splitReciprocalTest() {
+        // Define the input and expected results
+        double[] input = {1.0, 2.0};
+        double[] result = new double[2];
+        
+        // Expected result calculated based on the splitReciprocal algorithm
+        final double b = 1.0 / 4194304.0;
+        final double a = 1.0 - b;
+        double expected0 = a / input[0];
+        double expected1 = (b * input[0] - a * input[1]) / (input[0] * input[0] + input[0] * input[1]);
+        
+        // Apply corrections similar to those in the splitReciprocal method
+        double correction = 1.0 - expected0 * input[0] - expected0 * input[1] - expected1 * input[0] - expected1 * input[1];
+        correction *= (expected0 + expected1);
+        expected1 += correction;
+
+        // Call the method under test
+        AccurateMathCalc.splitReciprocal(input, result);
+        
+        // Assert the results are as expected
+        // We use assertArrayEquals with a delta for floating point comparison
+        assertArrayEquals(new double[]{expected0, expected1}, result, 1e-12, "The splitReciprocal did not produce the expected result.");
+    }
+}
+
+

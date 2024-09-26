@@ -1,0 +1,601 @@
+Source code: 
+
+// Determine the prior (lower number) region that meets the desired conditions
+public static int PriorRegion(int Parent, int Color, double MinArea, double MaxArea, int Label)
+{
+    double DParent = (double) Parent; 
+    double DColor = (double) Color; if(DColor > 0) DColor = 1;
+    
+    int i;
+    for(i = Label; i >= 0; i--)
+    {
+        double [] Region = RegionData[i];
+        double ThisParent = Region[BLOBPARENT];
+        double ThisColor = Region[BLOBCOLOR];
+        if(DParent >= 0 && DParent != ThisParent) continue;
+        if(DColor >= 0 && DColor != ThisColor) continue;
+        if(Region[BLOBAREA] < MinArea || Region[BLOBAREA] > MaxArea) continue;  
+        break;      // We have a match!
+    }
+    if(i < 0) i = -1;   // Use -1 to flag that there was no match
+    return i;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+
+    @BeforeEach
+    public void setup() {
+        // Initialize the static members of the Blobs class that are used in the PriorRegion method.
+        Blobs.BLOBPARENT = 1;
+        Blobs.BLOBCOLOR = 2;
+        Blobs.BLOBAREA = 3;
+        
+        // Assuming that RegionData contains meaningful test data.
+        // Below is a dummy initialization for testing purposes.
+        // In a real scenario, the RegionData should be set up appropriately considering the logic of the PriorRegion method.
+        Blobs.RegionData = new double[][] {
+                {0, 1, 2, 100}, // Region 0
+                {1, 1, 2, 150}, // Region 1
+                {2, 1, 1, 200}, // Region 2
+                {1, 1, 2, 250}, // Region 3
+                {3, 1, 0, 300}  // Region 4
+        };
+    }
+
+    @Test
+    public void PriorRegionTest() {
+        // Assume a case where a parent is provided and matches region index 1,
+        // the color matches region index 1 and 3,
+        // and the area falls within the range of regions 1 and 3.
+        // Here, we expect to match with region 3 since it's the prior region with a lower index that meets all conditions.
+        int result = Blobs.PriorRegion(1, 1, 100, 300, 4);
+        assertEquals(3, result, "The prior region matching criteria should be region index 3.");
+
+        // Test another case where no region satisfies the criteria (for example, the area is out of range).
+        result = Blobs.PriorRegion(1, 1, 400, 500, 4);
+        assertEquals(-1, result, "No regions should match, hence result should be -1.");
+        
+        // Test a case with negative criterion, which should not match any parent (e.g., the parent is set to -1).
+        result = Blobs.PriorRegion(-1, 1, 100, 300, 4);
+        assertEquals(3, result, "Result should match the region index 3, without considering the parent.");
+
+        // Test a case where the color criterion is set to 0, which according to the source should be treated as 1 (`DColor = 1`).
+        // Only region index 2 should be filtered out by the color as it has `ThisColor = 1` (after DColor becomes 1).
+        result = Blobs.PriorRegion(1, 0, 100, 300, 4);
+        assertEquals(3, result, "The prior region matching criteria should be region index 3.");
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+
+    @BeforeEach
+    public void setUp() {
+        // Initialize Blobs class static variables for testing purposes
+        Blobs.BLOBPARENT = 0;
+        Blobs.BLOBCOLOR = 1;
+        Blobs.BLOBAREA = 2;
+        Blobs.RegionData = new double[][]{
+                {0, 0, 100}, // Region 0
+                {0, 1, 200}, // Region 1
+                {1, 0, 300}, // Region 2
+                {1, 1, 400}, // Region 3
+        };
+    }
+
+    @Test
+    public void PriorRegionTest() {
+        // Test when there is a matching region
+        assertEquals(1, Blobs.PriorRegion(0, 1, 150, 250, 3),
+                "PriorRegion should return the index of the last region that matches the conditions before the specified label.");
+        
+        // Test when there is no matching region due to Parent
+        assertEquals(-1, Blobs.PriorRegion(2, 1, 150, 250, 3),
+                "PriorRegion should return -1 when no matching region due to parent mismatch.");
+        
+        // Test when there is no matching region due to Color
+        assertEquals(-1, Blobs.PriorRegion(0, 2, 150, 250, 3),
+                "PriorRegion should return -1 when no matching region due to color mismatch.");
+        
+        // Test when there is no matching region due to Area
+        assertEquals(-1, Blobs.PriorRegion(0, 1, 500, 600, 3),
+                "PriorRegion should return -1 when no matching region due to area mismatch.");
+        
+        // Test when the starting Label is less than 0
+        assertEquals(-1, Blobs.PriorRegion(0, 1, 100, 300, -1),
+                "PriorRegion should return -1 when starting label is less than 0.");
+
+        // Test boundary conditions for MinArea and MaxArea
+        assertEquals(1, Blobs.PriorRegion(0, 1, 200, 200, 3),
+                "PriorRegion should include regions with an area equal to MinArea or MaxArea.");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+
+    @BeforeEach
+    public void setUp() {
+        // Define constants and initialize RegionData for the purpose of testing
+        Blobs.BLOBPARENT = 0;
+        Blobs.BLOBCOLOR = 1;
+        Blobs.BLOBAREA = 2;
+        // Define mock data for RegionData
+        Blobs.RegionData = new double[][]{
+                {0, 1, 50.0}, // Mock region data at index 0
+                {1, 1, 75.0}, // Mock region data at index 1
+                {0, 0, 100.0} // Mock region data at index 2
+                // ... and so on for however many mock Regions you want to create
+        };
+    }
+
+    @Test
+    public void PriorRegionTest() {
+        // Case 1: Match found
+        int parentSearch = 0; // Parent we are looking for
+        int colorSearch = 1;  // Non-zero means we are only looking for a color value of 1
+        double minArea = 30.0;
+        double maxArea = 80.0;
+        int label = 2;        // Start searching from this label/index
+        int expectedIndex = 0; // Expected matching region index
+        int actualIndex = Blobs.PriorRegion(parentSearch, colorSearch, minArea, maxArea, label);
+        assertEquals(expectedIndex, actualIndex, "The matching region should be at index 0");
+
+        // Case 2: No match found (all regions are out of the area range)
+        parentSearch = 0;
+        colorSearch = 1;
+        minArea = 200.0; // Min area set too high for any region to match
+        maxArea = 300.0;
+        label = 2;
+        expectedIndex = -1; // Should return -1 if no match found
+        actualIndex = Blobs.PriorRegion(parentSearch, colorSearch, minArea, maxArea, label);
+        assertEquals(expectedIndex, actualIndex, "No region should match the search criteria");
+
+        // Additional test cases can be added as needed to cover different scenarios
+    }
+}
+
+
+No.4 generated result --------------------------
+
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+
+    @BeforeEach
+    public void setUp() {
+        Blobs.BLOBPARENT = 0;
+        Blobs.BLOBCOLOR = 1;
+        Blobs.BLOBAREA = 2;
+        Blobs.RegionData = new double[][]{
+            {0, 0, 100.0}, // Region 0 - Parent, Color, Area
+            {0, 1, 150.0}, // Region 1
+            {1, 0, 120.0}, // Region 2
+            {1, 1, 110.0}, // Region 3
+        };
+    }
+
+    @Test
+    public void PriorRegionTest() {
+        // Test with matching color and area range
+        int result = Blobs.PriorRegion(-1, 1, 100.0, 200.0, 3);
+        assertEquals(1, result, "Incorrect prior region with matching color and area range");
+
+        // Test with non-matching parent
+        result = Blobs.PriorRegion(2, -1, 0, Double.MAX_VALUE, 3);
+        assertEquals(-1, result, "Should return -1 since no regions match the parent criteria");
+
+        // Test with exact area and ignoring parent/color
+        result = Blobs.PriorRegion(-1, -1, 110.0, 110.0, 3);
+        assertEquals(3, result, "Should return the last region with an exact area match");
+
+        // Test when no regions are within the area range
+        result = Blobs.PriorRegion(-1, -1, 200.0, 300.0, 3);
+        assertEquals(-1, result, "Should return -1 since no regions are within the area range");
+
+        // Test with the first label and valid conditions expecting no prior region
+        result = Blobs.PriorRegion(-1, -1, 50.0, 150.0, 0);
+        assertEquals(-1, result, "Should return -1 as there's no prior region to the first one");
+    }
+}
+
+
+
+No.5 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.bytedeco.javacv.Blobs.*;
+
+public class BlobsTest {
+    private static final double DELTA = 1e-15;
+
+    @BeforeAll
+    static void setUp() {
+        // Set up Blobs class with region data for testing
+        BLOBPARENT = 0;
+        BLOBCOLOR = 1;
+        BLOBAREA = 2;
+        // Other field indices would be initialized here if necessary
+
+        // Set up some sample region data
+        RegionData = new double[][] {
+            {1, 0, 100}, // Parent, Color, Area
+            {2, 1, 200},
+            {3, 0, 300},
+            {4, 1, 400},
+            {5, 0, 450}
+        };
+        // Set MaxLabel to the highest index in the RegionData array
+        MaxLabel = RegionData.length - 1;
+    }
+
+    @Test
+    public void PriorRegionTest() {
+        // Assume these are the Parent and Color that we are interested in
+        int parent = 2;
+        int color = 1;
+
+        // Minimum and maximum area for the search criteria
+        double minArea = 150;
+        double maxArea = 350;
+
+        // Starting label index for the search, working backwards
+        int label = MaxLabel;
+
+        // This test assumes that we are looking for the nearest region before label index 
+        // that has a parent of 2, a color of 1, and an area between 150 and 350.
+        // According to the sample RegionData defined in setUp(), the correct index should be 1.
+        int expectedIndex = 1;
+
+        // The actual test call
+        int resultIndex = Blobs.PriorRegion(parent, color, minArea, maxArea, label);
+
+        // Assert that we get the expected index as the result
+        assertEquals(expectedIndex, resultIndex);
+    }
+
+    @Test
+    public void PriorRegionNoMatchTest() {
+        // Test case where no region matches
+        int parent = 2;
+        int color = 1;
+        double minArea = 1000;
+        double maxArea = 1500;
+        int label = MaxLabel;
+
+        // Expect -1 as return since no region should match the criteria
+        int expectedIndex = -1;
+
+        // The actual test call
+        int resultIndex = Blobs.PriorRegion(parent, color, minArea, maxArea, label);
+
+        // Assert that the expected index is returned indicating no match found
+        assertEquals(expectedIndex, resultIndex);
+    }
+
+    // Additional cases could be added to fully test all code paths and edge cases
+}
+
+
+No.6 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+
+    @BeforeEach
+    public void setup() {
+        // Initialize static variables before each test, mock data as necessary
+        Blobs.BLOBPARENT = 0;
+        Blobs.BLOBCOLOR = 1;
+        Blobs.BLOBAREA = 2;
+        Blobs.RegionData = new double[][]{
+            {0.0, 0.0, 10.0},   // Label 0
+            {0.0, 0.0, 20.0},   // Label 1
+            {0.0, 1.0, 30.0},   // Label 2
+            {1.0, 0.0, 40.0},   // Label 3
+            {1.0, 1.0, 50.0}    // Label 4
+        };
+    }
+
+    @Test
+    public void PriorRegionTest() {
+        int result;
+
+        // Case 1: Find the prior region without any color/parent restriction, within area range
+        result = Blobs.PriorRegion(-1, -1, 15.0, 45.0, 4);
+        assertEquals(3, result, "The prior region label should be 3.");
+
+        // Case 2: Find the prior region with specific parent, ignoring color, within area range
+        result = Blobs.PriorRegion(0, -1, 10.0, 30.0, 4);
+        assertEquals(2, result, "The prior region label should be 2.");
+
+        // Case 3: Find the prior region with specific color and parent, within area range
+        result = Blobs.PriorRegion(1, 1, 10.0, 55.0, 4);
+        assertEquals(4, result, "The prior region label should be 4.");
+
+        // Case 4: Find the prior region with area NOT in the specified range
+        result = Blobs.PriorRegion(-1, -1, 60.0, 70.0, 4);
+        assertEquals(-1, result, "There should be no prior region in the specified range. Result should be -1.");
+
+        // Case 5: Find the prior region when starting label is the first one (there is no "prior")
+        result = Blobs.PriorRegion(-1, -1, 0.0, 100.0, 0);
+        assertEquals(-1, result, "There should be no prior region when starting from label 0. Result should be -1.");
+
+        // Additional checks can be added to validate other scenarios and edge cases
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+
+    private final int testParent = 0;
+    private final int testColor = 255;
+    private final double testMinArea = 5.0;
+    private final double testMaxArea = 10.0;
+    private final int testLabel = 3;
+
+    @BeforeEach
+    public void setUp() {
+        Blobs.BLOBPARENT = 0;
+        Blobs.BLOBCOLOR = 1;
+        Blobs.BLOBAREA = 2;
+        Blobs.RegionData = new double[][] {
+                {0, 1, 6.0},
+                {0, 1, 7.0},
+                {0, 0, 5.5},
+                {0, 1, 4.0},
+                {0, 1, 11.0}
+        };
+    }
+
+    @AfterEach
+    public void tearDown() {
+        Blobs.RegionData = null;
+    }
+
+    @Test
+    public void PriorRegionTest() {
+        // region with the label just low enough to meet the conditions
+        int resultWithMatchingConditions = Blobs.PriorRegion(testParent, testColor, testMinArea, testMaxArea, testLabel);
+        assertEquals(1, resultWithMatchingConditions, "The method should return the correct label prior to the starting label that meets all conditions.");
+
+        // when there is no matching region
+        int resultWithNoMatchingRegion = Blobs.PriorRegion(testParent, testColor, testMinArea, testMaxArea, 0);
+        assertEquals(-1, resultWithNoMatchingRegion, "The method should return -1 when there is no matching region.");
+        
+        // test that changing the parent to a non-existent one causes non-match
+        int resultWithNonExistentParent = Blobs.PriorRegion(999, testColor, testMinArea, testMaxArea, testLabel);
+        assertEquals(-1, resultWithNonExistentParent, "The method should return -1 when the specified parent doesn't exist.");
+
+        // test that changing the color to a non-matching one causes non-match
+        int resultWithNonMatchingColor = Blobs.PriorRegion(testParent, 0, testMinArea, testMaxArea, testLabel);
+        assertEquals(-1, resultWithNonMatchingColor, "The method should return -1 when there is no region with the specified color.");
+
+        // test that changing min and max areas to non-matching values causes non-match
+        int resultWithNonMatchingArea = Blobs.PriorRegion(testParent, testColor, 0.0, 4.0, testLabel);
+        assertEquals(-1, resultWithNonMatchingArea, "The method should return -1 when the areas do not match the specified range.");
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+    
+    @BeforeEach
+    public void setUp() {
+        // Assuming that we need some mock data for the test case.
+        // Set values for Blob constants
+        Blobs.BLOBPARENT = 0; // For demonstration purposes
+        Blobs.BLOBCOLOR = 1;
+        Blobs.BLOBAREA = 2;
+        Blobs.BLOBDATACOUNT = 3; // Assuming there are three fields in the RegionData array
+        
+        // Assuming the size for RegionData, and creating test data
+        Blobs.RegionData = new double[][]{
+                {1, 1, 100}, // Parent, Color, Area
+                {1, 0, 50},
+                {2, 1, 200},
+                {2, 0, 75}
+        };
+        Blobs.MaxLabel = Blobs.RegionData.length - 1;
+    }
+    
+    @Test
+    public void PriorRegionTest() {
+        int parent = 1;
+        int color = 1;
+        double minArea = 45;
+        double maxArea = 150;
+        int label = Blobs.MaxLabel; // Starting from the last available label
+
+        // Expected outcome is that the matching region index for given conditions is found
+        int expectedResult = 2; // Based on test data, RegionData[2] has Color == 1 and Area is in correct range, but RegionData[3] doesn't have the same parent
+        int result = Blobs.PriorRegion(parent, color, minArea, maxArea, label);
+
+        assertEquals(expectedResult, result);
+        
+        // Test case with no matching region
+        parent = 1;
+        color = 1;
+        label = 1; // Start from second last label
+        expectedResult = -1; // No match found within constraints, should return -1
+        result = Blobs.PriorRegion(parent, color, minArea, maxArea, label);
+        
+        assertEquals(expectedResult, result);
+    }
+
+    @AfterEach
+    public void tearDown() {
+        // Cleanup routine if necessary
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+    @BeforeAll
+    public static void setUpClass() {
+        // Initialize the static variables of Blobs class with some arbitrary values
+        Blobs.BLOBPARENT = 0;
+        Blobs.BLOBCOLOR = 1;
+        Blobs.BLOBAREA = 2;
+        // Assume BLOBDATACOUNT is 5 for this example (i.e., there are 5 fields in RegionData)
+        Blobs.BLOBDATACOUNT = 5;
+        
+        // Dummy data for testing
+        Blobs.RegionData = new double[][]{
+            {0, 0, 10.0},  // Region 0
+            {0, 1, 20.0},  // Region 1
+            {1, 0, 30.0},  // Region 2
+            {1, 1, 40.0},  // Region 3
+            {2, 0, 50.0},  // Region 4
+        };
+    }
+
+    @Test
+    public void PriorRegionTest() {
+        // Test when expected to find a matching region
+        int result = Blobs.PriorRegion(1, 1, 25.0, 45.0, 4);
+        assertEquals(3, result, "Should return the right prior region index");
+
+        // Test when 'Color' condition is different (no match should be found)
+        result = Blobs.PriorRegion(1, 0, 25.0, 45.0, 4);
+        assertEquals(-1, result, "Should not find a matching region due to color mismatch");
+
+        // Test when 'Parent' condition is different (no match should be found)
+        result = Blobs.PriorRegion(2, 1, 25.0, 45.0, 4);
+        assertEquals(-1, result, "Should not find a matching region due to parent mismatch");
+
+        // Test with 'Parent' set to -1 (should ignore parent condition)
+        result = Blobs.PriorRegion(-1, 1, 25.0, 45.0, 4);
+        assertEquals(3, result, "Should find a matching region ignoring parent");
+
+        // Test boundary cases for 'MinArea' and 'MaxArea'
+        result = Blobs.PriorRegion(1, 1, 40.0, 40.0, 4);
+        assertEquals(3, result, "Should match the exact area");
+
+        // Test case when MinArea is more than any region's area (no match should be found)
+        result = Blobs.PriorRegion(1, 1, 60.0, 100.0, 4);
+        assertEquals(-1, result, "Should not find a region with area in the specified range");
+
+        // Test case when MaxArea is less than any region's area (no match should be found)
+        result = Blobs.PriorRegion(1, 1, 0.0, 5.0, 4);
+        assertEquals(-1, result, "Should not find a region with area in the specified range");
+
+        // Test case for Label boundary
+        result = Blobs.PriorRegion(1, 1, 25.0, 45.0, 0);
+        assertEquals(-1, result, "Should not find a prior region since the starting label is the first one");
+
+        // Test with 'Color' set to a negative number (should ignore color condition)
+        result = Blobs.PriorRegion(-1, -1, 25.0, 45.0, 4);
+        assertEquals(4, result, "Should find a matching region ignoring color");
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+
+    private Blobs blobs;
+
+    @BeforeEach
+    public void setUp() {
+        blobs = new Blobs();
+        Blobs.BLOBPARENT = 0;
+        Blobs.BLOBCOLOR = 1;
+        Blobs.BLOBAREA = 2;
+        // Assuming RegionData is in format {[Parent, Color, Area],...}
+        Blobs.RegionData = new double[][]{
+                {0.0, 1.0, 100.0}, // Label 0
+                {0.0, 0.0, 200.0}, // Label 1
+                {1.0, 1.0, 300.0}  // Label 2
+        };
+        // Set other static variables and arrays as required for the test
+    }
+
+    @Test
+    public void PriorRegionTest() {
+        // Test with specific Parent, Color, MinArea, MaxArea, and Label
+        int result = Blobs.PriorRegion(0, 1, 50.0, 250.0, 2);
+        assertEquals(0, result, "Should return the first region that matches the criteria from the end");
+
+        // Test with no restrictions on Parent (-1) and specific Color, MinArea, MaxArea, and Label
+        result = Blobs.PriorRegion(-1, 0, 50.0, 250.0, 2);
+        assertEquals(1, result, "Should return the first region with specific Color that matches the criteria from the end");
+
+        // Test with no matches
+        result = Blobs.PriorRegion(1, 2, 50.0, 250.0, 2);
+        assertEquals(-1, result, "Should return -1 if no region matches the criteria");
+
+        // Test when Label is less than 0
+        result = Blobs.PriorRegion(0, 1, 50.0, 250.0, -5);
+        assertEquals(-1, result, "Should return -1 if Label is less than 0");
+
+        // Test with the border values of area
+        result = Blobs.PriorRegion(0, 0, 200.0, 200.0, 2);
+        assertEquals(1, result, "Should return the region that exactly matches the border area values");
+    }
+}
+
+

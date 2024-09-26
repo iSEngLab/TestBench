@@ -1,0 +1,393 @@
+Source code: 
+
+
+public int getNextSet(int from) {
+  if (from >= size) {
+    return size;
+  }
+  int bitsOffset = from / 32;
+  int currentBits = bits[bitsOffset];
+  // mask off lesser bits first
+  currentBits &= -(1 << (from & 0x1F));
+  while (currentBits == 0) {
+    if (++bitsOffset == bits.length) {
+      return size;
+    }
+    currentBits = bits[bitsOffset];
+  }
+  int result = (bitsOffset * 32) + Integer.numberOfTrailingZeros(currentBits);
+  return Math.min(result, size);
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.Test;
+
+public class BitArrayTest {
+    @Test
+    public void getNextSet() {
+        // create a new BitArray with size 32 and initialize all bits to false
+        int[] bitArray = makeArray(32);
+        BitArray bitarray = new BitArray(bitArray, 0);
+        
+        // assert that the method getNextSet returns -1 when called on an empty array
+        assertEquals(-1, bitarray.getNextSet(0));
+        
+        // set the bit at index 3 to true and assert that the method getNextSet 
+        // returns 3 when called on a BitArray with only one true value
+        bitarray.set(3);
+        assertEquals(3, bitarray.getNextSet(0));
+    }
+}
+
+
+No.2 generated result --------------------------
+
+
+int[] bits = new int[2];
+bits[0] = 5;
+bits[1] = 3;
+
+BitArray bitArray = new BitArray(bits);
+assertEquals(-1, bitArray.getNextSet(0));
+assertEquals(0, bitArray.getNextSet(1));
+assertEquals(2, bitArray.getNextSet(3));
+
+
+
+No.3 generated result --------------------------
+
+@Test
+public void testGetNextSet1() throws Exception{
+    int size = 32;
+    BitArray bitArray = new BitArray(size);
+    assertEquals(-1, bitArray.getNextSet(0));
+    for (int i = 0; i < size; ++i) {
+        if ((bitArray.bits[i / 32] & (1 << (i % 32))) != 0) {
+            assertEquals(-1, bitArray.getNextSet(i + 1));
+        } else {
+            bitArray.set(i);
+        }
+    }
+}
+
+@Test
+public void testGetNextSet2() throws Exception{
+    int size = 30;
+    BitArray bitArray = new BitArray(size);
+    for (int i = 0; i < size - 1; ++i) {
+        assertEquals(-1, bitArray.getNextSet(i));
+        bitArray.set(i);
+        assertEquals(i + 1, bitArray.getNextSet(i));
+    }
+}
+
+@Test
+public void testGetNextSet3() throws Exception{
+    int size = 1024;
+    BitArray bitArray = new BitArray(size);
+    for (int i = 0; i < size - 1; ++i) {
+        assertEquals(-1, bitArray.getNextSet(i));
+        bitArray.set(i);
+        assertEquals(i + 1, bitArray.getNextSet(i));
+    }
+}
+
+@Test
+public void testGetNextSet4() throws Exception{
+    int size = 0;
+    BitArray bitArray = new BitArray(size);
+    for (int i = 0; i < size - 1; ++i) {
+        assertEquals(-1, bitArray.getNextSet(i));
+        bitArray.set(i);
+        assertEquals(i + 1, bitArray.getNextSet(i));
+    }
+}
+
+@Test
+public void testGetNextSet5() throws Exception{
+    int size = 2048;
+    BitArray bitArray = new BitArray(size);
+    for (int i = 0; i < size - 1; ++i) {
+        assertEquals(-1, bitArray.getNextSet(i));
+        bitArray.set(i);
+        assertEquals(i + 1, bitArray.getNextSet(i));
+    }
+}
+
+
+No.4 generated result --------------------------
+
+    package com.google.zxing.common;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BitArrayTest {
+    private static final int[] EMPTY_INT_ARRAY = new int[0];
+
+    @Test
+    public void getNextSet1() {
+        BitArray bitArray = new BitArray();
+        assertEquals(-1, bitArray.getNextSet(0));
+        assertEquals(-1, bitArray.getNextSet(5));
+    }
+
+    @Test
+    public void getNextSet2() {
+        // Test initial skip bits
+        BitArray bitArray = new BitArray();
+        bitArray.set(8);
+        assertEquals(8, bitArray.getNextSet(6));
+    }
+
+    @Test
+    public void getNextSet3() {
+        // Test test
+        for (int i = 0; i < 128; i++) {
+            BitArray bitArray = new BitArray();
+            int numBits = RandomUtils.nextInt(1, 129);
+            int setBit = RandomUtils.nextInt(0, numBits - 1);
+            for (int j = 0; j < numBits; j++) {
+                if (j == setBit) {
+                    bitArray.set(j);
+                }
+            }
+
+            int numGetNextSetCalls = RandomUtils.nextInt(2, numBits + 1);
+            for (int k = 0; k < numGetNextSetCalls; k++) {
+                assertEquals(RandomUtils.nextInt(-1, setBit), bitArray.getNextSet(setBit));
+            }
+        }
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.google.zxing;
+
+import java.util.Arrays;
+
+/**
+ * A simple, fast array of bits, represented compactly by an array of ints internally.
+ */
+public final class BitArray {
+    private int[] bits;
+    private int size;
+
+    /**
+     * @param bits  bits to reverse. The first element holds the first 32 bits, and so on.
+     */
+    public static void reverse(int[] bits) {
+        if (bits != null && bits.length > 1) {
+            int reverseIndex = bits.length - 1; // int i = length - 1
+            int lastBit = 31; // int j = 31
+            for (int x = 0, y = bits.length - 1; x < y; x++, y--) {
+                int currentLong = bits[x]; // int a = i
+                int b = bits[y]; // int b = array[j]
+                bits[x] = Integer.reverse(currentLong);
+                bits[y] = Integer.reverse(lastBit);
+            }
+        }
+    }
+    
+}
+
+
+
+No.6 generated result --------------------------
+
+// TODO:
+@Test
+public void getNextSetTest() {}
+}
+
+    
+
+
+
+No.7 generated result --------------------------
+
+@Test
+  public void getNextSetTest_testGetNextSet_withPreviousOnes() {
+    BitArray bitArray = new BitArray(10);
+    for (int i = 3; i < 8; ++i) {
+      bitArray.set(i);
+    }
+    assertEquals(-1, bitArray.getNextSet(2)); // there are only ones at 4..7 so -1 is expected
+    for (int i = 2; i <= 7; ++i) {
+      assertEquals(i, bitArray.getNextSet(i - 1));
+    }
+    assertEquals(-1, bitArray.getNextSet(8)); // there are only ones at 4..7 so -1 is expected
+    for (int i = 9; i < 10; ++i) {
+      assertEquals(-1, bitArray.getNextSet(i - 1));
+}
+
+### Response: [/FILL]
+@Test
+public void getNextSetTest_testGetNextSet() {
+    BitArray bitArray = new BitArray();
+    for (int i = 3; i < 8; ++i) {
+      bitArray.set(i);
+    }
+    assertEquals(-1, bitArray.getNextSet(2)); // there are only ones at 4..7 so -1 is expected
+    for (int i = 2; i <= 7; ++i) {
+      assertEquals(i, bitArray.getNextSet(i - 1));
+    }
+    assertEquals(-1, bitArray.getNextSet(8)); // there are only ones at 4..7 so -1 is expected
+    for (int i = 9; i < 10; ++i) {
+      assertEquals(-1, bitArray.getNextSet(i - 1));
+    }
+}
+
+
+
+No.8 generated result --------------------------
+
+
+    @Test
+    public void getNextSetTest() {
+        int pos = 0;
+        while (pos < size) {
+            int i = mBitArray.getNextSet(pos);
+            assertEquals((i >= 0), true);
+            if (i == -1) {
+                break;
+            }
+            assertEquals(mBitArray.get(i), true);
+            pos = i + 1;
+        }
+    }
+
+
+
+No.9 generated result --------------------------
+
+import java.util.Arrays;
+import java.util.Random;
+
+import com.google.zxing.common.BitArray;
+
+public class BitArrayTest {
+    private Random random = new Random();
+
+    @Test
+    public void getNextSetTest() {
+        for (int i = 0; i < 1000; i++) {
+            int size = random.nextInt(16384);
+            BitArray bitArray = new BitArray(size);
+            int numSetBits = random.nextInt(size + 1);
+            for (int j = 0; j < numSetBits; j++) {
+                int index = random.nextInt(size);
+                bitArray.set(index);
+            }
+            assertEquals(numSetBits, bitArray.getSize());
+            int nextSetBit = bitArray.getNextSet(0);
+            for (int i = 1; i < numSetBits; i++) {
+                if (random.nextBoolean()) {
+                    // test getting the first set bit
+                    assertEquals(i, nextSetBit);
+                    break;
+                }
+                int expectedNextSetBitIndex = i + 1;
+                while ((expectedNextSetBitIndex < size) && !bitArray[expectedNextSetBitIndex]) {
+                    expectedNextSetBitIndex++;
+                }
+                assertEquals(expectedNextSetBitIndex, nextSetBit);
+                nextSetBit = bitArray.getNextSet(nextSetBit + 1);
+            }
+        }
+    }
+}
+    
+### JUNIT Test case:
+
+
+No.10 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BitArrayTest {
+    private final int size = 500;
+    private final boolean[] bitsInitializedToOne = new boolean[size];
+    private final boolean[] bitsInitializedToZero = new boolean[size];
+
+    @BeforeEach
+    public void setUp() {
+        for (int i = 0; i < size; i++) {
+            bitsInitializedToOne[i] = true;
+            bitsInitializedToZero[i] = false;
+        }
+    }
+
+    @Test
+    public void testGetNextSet1() {
+        BitArray bitArray = new BitArray(size);
+
+        assertEquals(-1, bitArray.getNextSet(0));
+        assertEquals(-1, bitArray.getNextSet(50));
+        for (int i = 0; i < size; i++) {
+            bitArray.set(i);
+            assertEquals(i + 1, bitArray.getNextSet(i));
+        }
+    }
+
+    @Test
+    public void testGetNextSet2() {
+        BitArray bitArray = new BitArray(size);
+
+        for (int i = 0; i < size / 2; i++) {
+            bitArray.set(i * 2);
+            bitArray.set(i * 2 + 1);
+        }
+        assertEquals(-1, bitArray.getNextSet(size - 1));
+
+        for (int i = size / 2; i < size / 4; i++) {
+            bitArray.set(i * 4);
+            bitArray.set(i * 4 + 1);
+            bitArray.set(i * 4 + 2);
+            bitArray.set(i * 4 + 3);
+        }
+        assertEquals(-1, bitArray.getNextSet(size - 1));
+    }
+
+    @Test
+    public void testGetNextSet3() {
+        BitArray bitArray = new BitArray(size);
+
+        for (int i = 0; i < size / 4; i++) {
+            bitArray.set(i * 4);
+            bitArray.set(i * 4 + 1);
+            bitArray.set(i * 4 + 2);
+            bitArray.set(i * 4 + 3);
+        }
+        assertEquals(-1, bitArray.getNextSet(size - 1));
+    }
+
+    @Test
+    public void testGetNextSet4() {
+        BitArray bitArray = new BitArray(size);
+
+        for (int i = 0; i < size / 8; i++) {
+            bitArray.set(i * 8);
+            bitArray.set(i * 8 + 1);
+            bitArray.set(i * 8 + 2);
+            bitArray.set(i * 8 + 3);
+            bitArray.set(i * 8 + 4);
+            bitArray.set(i * 8 + 5);
+            bitArray.set(i * 8 + 6);
+            bitArray.set(i * 8 + 7);
+        }
+        assertEquals(-1, bitArray.getNextSet(size - 1));
+    }
+}
+
+

@@ -1,0 +1,625 @@
+Source code: 
+
+
+double[] locatePlanarObject(KeyPointVector objectKeypoints, Mat objectDescriptors,
+        KeyPointVector imageKeypoints, Mat imageDescriptors, double[] srcCorners) {
+    ptpairs.clear();
+    if (settings.useFLANN) {
+        flannFindPairs(objectDescriptors, imageDescriptors);
+    } else {
+        findPairs(objectDescriptors, imageDescriptors);
+    }
+    int n = ptpairs.size()/2;
+    logger.info(n + " matching pairs found");
+    if (n < settings.matchesMin) {
+        return null;
+    }
+
+    pt1 .resize(n);
+    pt2 .resize(n);
+    mask.resize(n);
+    FloatBuffer pt1Idx = pt1.createBuffer();
+    FloatBuffer pt2Idx = pt2.createBuffer();
+    for (int i = 0; i < n; i++) {
+        Point2f p1 = objectKeypoints.get(ptpairs.get(2*i)).pt();
+        pt1Idx.put(2*i, p1.x()); pt1Idx.put(2*i+1, p1.y());
+        Point2f p2 = imageKeypoints.get(ptpairs.get(2*i+1)).pt();
+        pt2Idx.put(2*i, p2.x()); pt2Idx.put(2*i+1, p2.y());
+    }
+
+    H = findHomography(pt1, pt2, CV_RANSAC, settings.ransacReprojThreshold, mask, 2000, 0.995);
+    if (H.empty() || countNonZero(mask) < settings.matchesMin) {
+        return null;
+    }
+
+    double[] h = (double[])H.createIndexer(false).array();
+    double[] dstCorners = new double[srcCorners.length];
+    for(int i = 0; i < srcCorners.length/2; i++) {
+        double x = srcCorners[2*i], y = srcCorners[2*i + 1];
+        double Z = 1/(h[6]*x + h[7]*y + h[8]);
+        double X = (h[0]*x + h[1]*y + h[2])*Z;
+        double Y = (h[3]*x + h[4]*y + h[5])*Z;
+        dstCorners[2*i    ] = X;
+        dstCorners[2*i + 1] = Y;
+    }
+    return dstCorners;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class ObjectFinderTest {
+    private ObjectFinder objectFinder;
+    private ObjectFinder.Settings settings;
+    private IplImage objectImage;
+    private KeyPointVector objectKeypoints;
+    private Mat objectDescriptors;
+    private KeyPointVector imageKeypoints;
+    private Mat imageDescriptors;
+    private double[] srcCorners;
+    private double[] expectedDstCorners;
+
+    @BeforeEach
+    void setUp() {
+        // You might need to mock the dependencies like KeyPointVector, Mat ...
+        objectImage = mock(IplImage.class);
+        objectKeypoints = mock(KeyPointVector.class);
+        objectDescriptors = mock(Mat.class);
+        imageKeypoints = mock(KeyPointVector.class);
+        imageDescriptors = mock(Mat.class);
+        
+        // Instantiate your settings and objectFinder with mocks as necessary
+        settings = new ObjectFinder.Settings();
+        settings.setObjectImage(objectImage);
+        settings.setUseFLANN(false); // To avoid using flannFindPairs in this test
+        // Set other necessary settings as required for your test scenario
+        objectFinder = new ObjectFinder(settings);
+       
+        srcCorners = new double[]{0.0, 0.0, 100.0, 0.0, 100.0, 100.0, 0.0, 100.0};
+        expectedDstCorners = new double[]{10.0, 20.0, 110.0, 20.0, 110.0, 120.0, 10.0, 120.0};
+        
+        // Mocking the behavior of the locatePlanarObject or its dependencies might be complex and is omitted here.
+        // Proper mocking setup would be required to actually test the locatePlanarObject logic.
+    }
+
+    @AfterEach
+    void tearDown() {
+        // Clean up resources if necessary
+    }
+
+    @Test
+    public void locatePlanarObjectTest() {
+        // Assume that all required methods are properly mocked to return expected behavior...
+        
+        // when(objectFinder.findPairs(objectDescriptors, imageDescriptors)).then( ... );
+        // when(objectFinder.findHomography(...)).thenReturn( ... );
+        
+        double[] dstCorners = objectFinder.locatePlanarObject(
+            objectKeypoints, objectDescriptors, imageKeypoints, imageDescriptors, srcCorners);
+        
+        // Verify behavior and interactions with mocks...
+        
+        assertArrayEquals(expectedDstCorners, dstCorners, "The destination corners should match the expected values.");
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.bytedeco.opencv.opencv_core.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.bytedeco.opencv.global.opencv_core.*;
+
+public class ObjectFinderTest {
+
+    @Test
+    public void locatePlanarObjectTest() {
+        // Create settings and ObjectFinder instance.
+        ObjectFinder.Settings settings = new ObjectFinder.Settings();
+        settings.objectImage = IplImage.create(100, 100, IPL_DEPTH_8U, 1);
+        settings.useFLANN = false; // To skip using FLANN in the unit test.
+        settings.matchesMin = 4; // The minimum number of matches required.
+        ObjectFinder finder = new ObjectFinder(settings);
+
+        // Prepare test data: keypoints, descriptors, and source corners.
+        KeyPointVector objectKeypoints = new KeyPointVector(4);
+        KeyPointVector imageKeypoints = new KeyPointVector(4);
+        for (int i = 0; i < 4; i++) {
+            objectKeypoints.put(i, new KeyPoint(i * 10.0f, i * 10.0f, 1.0f));
+            imageKeypoints.put(i, new KeyPoint((i + 1) * 10.0f, (i + 1) * 10.0f, 1.0f));
+        }
+
+        // Create dummy descriptors.
+        Mat objectDescriptors = new Mat(4, 64, CV_32FC1);
+        Mat imageDescriptors = new Mat(4, 64, CV_32FC1);
+
+        // Fill the pairs manually as we don't test pair finding here.
+        finder.ptpairs.add(0);
+        finder.ptpairs.add(0);
+        finder.ptpairs.add(1);
+        finder.ptpairs.add(1);
+        finder.ptpairs.add(2);
+        finder.ptpairs.add(2);
+        finder.ptpairs.add(3);
+        finder.ptpairs.add(3);
+
+        double[] srcCorners = {0, 0, 100, 0, 100, 100, 0, 100};
+        double[] result = finder.locatePlanarObject(objectKeypoints, objectDescriptors,
+                imageKeypoints, imageDescriptors, srcCorners);
+
+        // Validate that the result is not null, which means the method succeeded.
+        assertNotNull(result, "locatePlanarObject should return not null when there are sufficient matches.");
+
+        // Since this is a contrived test case, we're not comparing the values in 'result' array
+        // with an expected value. In a real test, we'd need well defined input data and calculate
+        // the expected result to compare against.
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.bytedeco.opencv.opencv_core.IplImage;
+import org.bytedeco.opencv.opencv_core.KeyPointVector;
+import org.bytedeco.opencv.opencv_core.Mat;
+import org.junit.jupiter.api.*;
+import static org.bytedeco.opencv.global.opencv_imgcodecs.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ObjectFinderTest {
+    @Test
+    public void locatePlanarObjectTest() {
+        // Create a dummy IplImage for object and scene
+        IplImage testObjectImage = cvCreateImage(cvSize(100, 100), IPL_DEPTH_8U, 1);
+        cvSet(testObjectImage, cvScalarAll(255), null); // White square "object"
+        IplImage testSceneImage = cvCreateImage(cvSize(200, 200), IPL_DEPTH_8U, 1);
+        cvSet(testSceneImage, cvScalarAll(0), null); // Black "scene"
+
+        // Set the corners of the "object" in the object image
+        double[] srcCorners = new double[]{0, 0, 100, 0, 100, 100, 0, 100};
+        
+        // Initialize keyPoint vectors, they can be empty for testing purposes
+        KeyPointVector objectKeypoints = new KeyPointVector();
+        KeyPointVector sceneKeypoints = new KeyPointVector();
+        
+        // Initialize Mat descriptors, they can be empty for testing purposes
+        Mat objectDescriptors = new Mat();
+        Mat sceneDescriptors = new Mat();
+
+        // ObjectFinder settings (with default values)
+        ObjectFinder.Settings settings = new ObjectFinder.Settings();
+        settings.setObjectImage(testObjectImage);
+        
+        // Create ObjectFinder instance
+        ObjectFinder finder = new ObjectFinder(settings);
+
+        // Mock the behavior of locatePlanarObject to just return the srcCorners for test
+        double[] locatedCorners = finder.locatePlanarObject(objectKeypoints, objectDescriptors, sceneKeypoints, sceneDescriptors, srcCorners);
+
+        // Assert that the located corners are the same as the original source corners (as this is a mocked behavior)
+        assertArrayEquals(srcCorners, locatedCorners, "The located corners should match the source corners.");
+        
+        // Clean up resources to avoid memory leaks in tests
+        cvReleaseImage(testObjectImage);
+        cvReleaseImage(testSceneImage);
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.bytedeco.opencv.opencv_core.IplImage;
+import org.bytedeco.opencv.opencv_core.KeyPointVector;
+import org.bytedeco.opencv.opencv_core.Mat;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.bytedeco.opencv.global.opencv_imgcodecs.IMREAD_GRAYSCALE;
+import static org.bytedeco.opencv.global.opencv_imgcodecs.cvLoadImage;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
+public class ObjectFinderTest {
+    private ObjectFinder objectFinder;
+    private ObjectFinder.Settings settings;
+    private IplImage objectImage, image;
+    
+    @BeforeEach
+    public void setUp() {
+        objectImage = cvLoadImage("path/to/test/object.png", IMREAD_GRAYSCALE);
+        image = cvLoadImage("path/to/test/scene.png", IMREAD_GRAYSCALE);
+        settings = new ObjectFinder.Settings();
+        settings.objectImage = objectImage;
+        settings.useFLANN = false; // For simplicity of the test, FLANN usage can be disabled
+        settings.matchesMin = 4;
+        objectFinder = new ObjectFinder(settings);
+    }
+    
+    @Test
+    public void locatePlanarObjectTest() {
+        // Instantiate test keypoints and descriptors (normally would be generated by detectAndCompute)
+        KeyPointVector objectKeypoints = new KeyPointVector();
+        Mat objectDescriptors = new Mat();
+        KeyPointVector imageKeypoints = new KeyPointVector();
+        Mat imageDescriptors = new Mat();
+        
+        // Define expected corners (this would normally be the output of the locatePlanarObject method)
+        double[] srcCorners = {0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0};
+        double[] expectedCorners = {0.1, 0.1, 0.9, 0.1, 0.9, 0.9, 0.1, 0.9};  // Example expected result
+        
+        // Use the test keypoints and descriptors and the method we're testing
+        double[] foundCorners = objectFinder.locatePlanarObject(
+                objectKeypoints, objectDescriptors, imageKeypoints, imageDescriptors, srcCorners);
+        
+        // Adding dummy data for ptpairs because it has to have some data for the method to work
+        objectFinder.ptpairs.add(0);
+        objectFinder.ptpairs.add(1);
+        
+        // Use the test keypoints and descriptors and the method we're testing
+        foundCorners = objectFinder.locatePlanarObject(
+                objectKeypoints, objectDescriptors, imageKeypoints, imageDescriptors, srcCorners);
+        
+        // If there's insufficient matching pairs found, the result will be null
+        if (objectFinder.ptpairs.size() >= objectFinder.getSettings().getMatchesMin() * 2) {
+            // Assert that the expected and actual results are equal (to within a delta)
+            assertArrayEquals(expectedCorners, foundCorners, 0.001);
+        } else {
+            assertNull(foundCorners);
+        }
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import org.bytedeco.opencv.opencv_core.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class ObjectFinderTest {
+    private ObjectFinder objectFinder;
+    private ObjectFinder.Settings settings;
+    
+    @BeforeEach
+    public void setUp() {
+        settings = new ObjectFinder.Settings();
+        IplImage objectImage = mock(IplImage.class);
+        settings.setObjectImage(objectImage);
+        objectFinder = new ObjectFinder(settings);
+    }
+    
+    @Test
+    public void locatePlanarObjectTest() {
+        // Mocking necessary components for the test
+        KeyPointVector objectKeypoints = new KeyPointVector();
+        Mat objectDescriptors = new Mat();
+        KeyPointVector imageKeypoints = new KeyPointVector();
+        Mat imageDescriptors = new Mat();
+        double[] srcCorners = {0.0, 0.0, 10.0, 0.0, 10.0, 10.0, 0.0, 10.0};
+        
+        // Test valid conditions (example values)
+        objectFinder.objectKeypoints = objectKeypoints;
+        objectFinder.objectDescriptors = objectDescriptors;
+        
+        // You should fill objectKeypoints, imageKeypoints, objectDescriptors, and imageDescriptors with valid test data
+        
+        // Example assertions assuming 'locatePlanarObject' transforms a unit square onto another arbitrary quad
+        double[] expectedDstCorners = {0.0, 0.0, 20.0, 0.0, 20.0, 20.0, 0.0, 20.0};
+        double[] actualDstCorners = objectFinder.locatePlanarObject(objectKeypoints, objectDescriptors, imageKeypoints, imageDescriptors, srcCorners);
+        
+        assertNotNull(actualDstCorners, "The destination corners should not be null");
+        assertArrayEquals(expectedDstCorners, actualDstCorners, "The expected and actual destination corners should match");
+        
+        // Test conditions when no matches are found
+        // Clear the keypoint vectors and check that null is returned
+        objectKeypoints.clear();
+        imageKeypoints.clear();
+        
+        double[] noMatchesDstCorners = objectFinder.locatePlanarObject(objectKeypoints, objectDescriptors, imageKeypoints, imageDescriptors, srcCorners);
+        
+        assertNull(noMatchesDstCorners, "Should return null when no matching pairs are found");
+    }
+    
+    // Optionally, create more tests such as when settings.matchesMin is not met or when H is empty
+}
+
+
+No.6 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.bytedeco.opencv.opencv_core.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ObjectFinderTest {
+
+    @Test
+    public void locatePlanarObjectTest() {
+        IplImage fakeObjectImage = IplImage.create(100, 100, IPL_DEPTH_8U, 1);
+        KeyPointVector fakeObjectKeypoints = new KeyPointVector();
+        Mat fakeObjectDescriptors = new Mat();
+
+        // Add dummy keypoints and descriptors for the object
+        fakeObjectKeypoints.push_back(new KeyPoint(0, 0, 1));
+        fakeObjectDescriptors.push_back(Mat.ones(new Size(1, 1)).asMat());
+
+        KeyPointVector fakeImageKeypoints = new KeyPointVector();
+        Mat fakeImageDescriptors = new Mat();
+
+        // Add dummy keypoints and descriptors for the image
+        fakeImageKeypoints.push_back(new KeyPoint(0, 0, 1));
+        fakeImageDescriptors.push_back(Mat.ones(new Size(1, 1)).asMat());
+
+        double[] srcCorners = new double[]{0.0, 0.0, 10.0, 0.0, 10.0, 10.0, 0.0, 10.0};
+
+        ObjectFinder.Settings settings = new ObjectFinder.Settings();
+        settings.objectImage = fakeObjectImage;
+        settings.matchesMin = 1;
+
+        ObjectFinder finder = new ObjectFinder(settings);
+        double[] dstCorners = finder.locatePlanarObject(fakeObjectKeypoints, fakeObjectDescriptors,
+                fakeImageKeypoints, fakeImageDescriptors, srcCorners);
+
+        assertNotNull(dstCorners, "The result from locatePlanarObject should not be null for valid input.");
+        assertEquals(8, dstCorners.length, "The result should be an array with 8 elements representing four corners.");
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.bytedeco.opencv.opencv_core.*;
+import org.bytedeco.opencv.opencv_features2d.*;
+
+public class ObjectFinderTest {
+    @Test
+    public void locatePlanarObjectTest() {
+        // Given a set of predefined object and image keypoints and descriptors
+        KeyPointVector objectKeypoints = new KeyPointVector();
+        Mat objectDescriptors = new Mat();
+        KeyPointVector imageKeypoints = new KeyPointVector();
+        Mat imageDescriptors = new Mat();
+        double[] srcCorners = {0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0};
+
+        // Let's create a simulated object of ObjectFinder and configure it
+        ObjectFinder.Settings settings = new ObjectFinder.Settings();
+        settings.objectImage = new IplImage();
+        settings.useFLANN = false; // Use the straightforward match approach in this test
+        settings.matchesMin = 4; // Minimum number of matches required to find the object
+        settings.ransacReprojThreshold = 1.0; // RANSAC reprojection threshold
+
+        ObjectFinder finder = new ObjectFinder(settings);
+
+        // We need to override the actual functionality to return expected keypoints and descriptors
+        // For this test, let's assume the findPairs method would be successful
+        //// Normally, you would use a mocking framework like Mockito to mock the behavior
+        finder.ptpairs.add(0);
+        finder.ptpairs.add(1);
+        finder.ptpairs.add(2);
+        finder.ptpairs.add(3);
+        finder.ptpairs.add(4);
+        finder.ptpairs.add(5);
+        finder.ptpairs.add(6);
+        finder.ptpairs.add(7);
+
+        // Simulation of the homography matrix. This is a dummy homography matrix
+        // For an actual test case, this should represent a realistic transformation
+        finder.H.put(0, 0, 1.0);
+        finder.H.put(0, 1, 0.0);
+        finder.H.put(0, 2, 0.0);
+        finder.H.put(1, 0, 0.0);
+        finder.H.put(1, 1, 1.0);
+        finder.H.put(1, 2, 0.0);
+        finder.H.put(2, 0, 0.0);
+        finder.H.put(2, 1, 0.0);
+        finder.H.put(2, 2, 1.0);
+
+        // When running the locatePlanarObject method
+        double[] dstCorners = finder.locatePlanarObject(objectKeypoints, objectDescriptors,
+                imageKeypoints, imageDescriptors, srcCorners);
+
+        // Then the returned corners should match the source corners (as per the dummy homography)
+        assertArrayEquals(srcCorners, dstCorners, "The source and destination corners should match.");
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.bytedeco.opencv.opencv_core.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ObjectFinderTest {
+
+    @Test
+    public void locatePlanarObjectTest() {
+        IplImage objectImage = IplImage.create(100, 100, IPL_DEPTH_8U, 1);
+        KeyPointVector objectKeypoints = new KeyPointVector();
+        Mat objectDescriptors = new Mat();
+
+        KeyPointVector imageKeypoints = new KeyPointVector();
+        Mat imageDescriptors = new Mat();
+
+        // These corners represent a hypothetical rectangle in the object image.
+        double[] srcCorners = {0.0, 0.0, 100.0, 0.0, 100.0, 100.0, 0.0, 100.0};
+
+        // Initialize an instance of ObjectFinder with settings.
+        ObjectFinder.Settings settings = new ObjectFinder.Settings();
+        settings.setObjectImage(objectImage);
+        settings.setUseFLANN(false); // For simplicity, we avoid FLANN in this unit test.
+        ObjectFinder finder = new ObjectFinder(settings);
+
+        // Assume 'locatePlanarObject' is the method we want to test. 
+        // Provide mocked data or suitable data as needed for the test, 
+        // here we provide just basic instances and the srcCorners.
+        double[] dstCorners = finder.locatePlanarObject(objectKeypoints, objectDescriptors, imageKeypoints,
+                imageDescriptors, srcCorners);
+
+        // Write assertions here based on expected behavior.
+        // Since we haven't added real data, we can't expect valid transformation, thus expecting null.
+        assertNull(dstCorners, "Expected null since there are no keypoints/descriptors provided.");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import org.bytedeco.opencv.opencv_core.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.bytedeco.opencv.global.opencv_core.*;
+
+public class ObjectFinderTest {
+    private ObjectFinder objectFinder;
+    private KeyPointVector objectKeypoints, imageKeypoints;
+    private Mat objectDescriptors, imageDescriptors;
+    
+    @BeforeEach
+    public void setUp() {
+        // Mock data setup: depending on your actual data, you might need to set these up differently. Adjust the test setup accordingly.
+        objectKeypoints = new KeyPointVector();
+        imageKeypoints = new KeyPointVector();
+        objectDescriptors = new Mat();
+        imageDescriptors = new Mat();
+        
+        objectFinder = new ObjectFinder(new ObjectFinder.Settings());
+    }
+    
+    @Test
+    public void locatePlanarObjectTest_whenMatchesTooFew_shouldReturnNull() {
+        // Configure the settings to mimic a low number of matches
+        objectFinder.getSettings().matchesMin = 4;
+        double[] srcCorners = {0, 0, 1, 0, 1, 1, 0, 1};
+        // Simulate detect and compute by setting keypoints and descriptors to the expected size
+        for(int i = 0; i < 3; i++) {
+            objectKeypoints.push_back(new KeyPoint());
+            imageKeypoints.push_back(new KeyPoint());
+        }
+        
+        // Given settings, this should return null due to not enough matching pairs being found
+        double[] dstCorners = objectFinder.locatePlanarObject(objectKeypoints, objectDescriptors,
+                imageKeypoints, imageDescriptors, srcCorners);
+        
+        assertNull(dstCorners);
+    }
+
+    @Test
+    public void locatePlanarObjectTest_whenHomographyEmptyOrInvalid_shouldReturnNull() {
+        // Given settings that should pass the matches check
+        objectFinder.getSettings().matchesMin = 0;
+        double[] srcCorners = {0, 0, 1, 0, 1, 1, 0, 1};
+        // Assume a successful findPairs call with enough matching pairs
+        objectFinder.ptpairs.add(0);
+        objectFinder.ptpairs.add(1);
+        // Now we set up conditions to return an empty and invalid homography matrix
+        Mat emptyHomography = new Mat();
+        objectFinder.H = emptyHomography; // mock H as empty
+        // This should return null due to the empty homography matrix (H)
+        double[] dstCorners = objectFinder.locatePlanarObject(objectKeypoints, objectDescriptors,
+                imageKeypoints, imageDescriptors, srcCorners);
+
+        assertNull(dstCorners);
+    }
+    
+    // Additional tests can be created to cover more cases like valid homography computation and actual result validation
+    
+    @AfterEach
+    public void tearDown() {
+        // Release resources if necessary
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.bytedeco.opencv.opencv_core.*;
+
+// Mocking framework might be necessary for a proper test
+import static org.mockito.Mockito.*;
+
+public class ObjectFinderTest {
+    private ObjectFinder.Settings settings;
+    private ObjectFinder objectFinder;
+    private KeyPointVector objectKeypoints, imageKeypoints;
+    private Mat objectDescriptors, imageDescriptors, homography;
+    private double[] srcCorners;
+
+    @BeforeEach
+    public void setUp() {
+        settings = mock(ObjectFinder.Settings.class);
+        objectFinder = new ObjectFinder(settings);
+
+        objectKeypoints = mock(KeyPointVector.class);
+        imageKeypoints = mock(KeyPointVector.class);
+        
+        objectDescriptors = mock(Mat.class);
+        when(objectDescriptors.rows()).thenReturn(8); // Assuming there are 8 descriptors for testing.
+
+        imageDescriptors = mock(Mat.class);
+        when(imageDescriptors.rows()).thenReturn(8); // Assuming there are 8 descriptors for testing.
+        
+        homography = new Mat(); // Stubbing actual creation of Mat for homography.
+        srcCorners = new double[]{0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0}; // An example square in image plane.
+    }
+
+    @Test
+    public void locatePlanarObjectTest() {
+        when(settings.matchesMin).thenReturn(4); // Must have at least 4 matches to find a homography.
+        when(settings.ransacReprojThreshold).thenReturn(3.0);
+        when(settings.useFLANN).thenReturn(false); // Use the simple findPairs method in this test for simplicity.
+
+        objectFinder.locatePlanarObject(
+                objectKeypoints, objectDescriptors, imageKeypoints, imageDescriptors, srcCorners);
+
+        // Here we should put the assertions to check if the `locatePlanarObject`
+        // is working properly. Since we do not have a real-world example and actual data,
+        //  we would mock behaviors and test the method's logic instead.
+
+        // This would typically involve verifying that certain methods were called
+        // and with specific parameters, and that the output matches expected behavior
+
+        // Example: we expect a non-null result if enough matches are found
+        double[] locatedCorners = objectFinder.locatePlanarObject(
+                objectKeypoints, objectDescriptors, imageKeypoints, imageDescriptors, srcCorners);
+        assertNotNull(locatedCorners);
+
+        // Other checks could include verifying the correctness of the corner point transformation,
+        // but that would require an actual homography matrix and match pairs.
+    }
+
+    // Additional tests can be created to cover cases where not enough matches are found,
+    // where the homography cannot be computed, or other edge cases.
+}
+
+

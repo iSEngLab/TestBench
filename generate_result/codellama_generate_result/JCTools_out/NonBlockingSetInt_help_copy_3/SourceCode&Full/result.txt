@@ -1,0 +1,422 @@
+Source code: 
+
+// Help any top-level NBSI to copy until completed.
+// Always return the _new version of *this* NBSI, in case we're nested.
+private NBSI help_copy() {
+  // Pick some words to help with - but only help copy the top-level NBSI.
+  // Nested NBSI waits until the top is done before we start helping.
+  NBSI top_nbsi = _non_blocking_set_int._nbsi;
+  final int HELP = 8;       // Tuning number: how much copy pain are we willing to inflict?
+  // We "help" by forcing individual bit indices to copy.  However, bits
+  // come in lumps of 64 per word, so we just advance the bit counter by 64's.
+  int idx = top_nbsi._copyIdx.getAndAdd(64*HELP);
+  for( int i=0; i<HELP; i++ ) {
+    int j = idx+i*64;
+    j %= (top_nbsi._bits.length<<6); // Limit, wrap to array size; means we retry indices
+    top_nbsi.help_copy_impl(j   );
+    top_nbsi.help_copy_impl(j+63); // Also force the nested-by-64 bit
+  }
+
+  // Top level guy ready to promote?
+  // Note: WE may not be the top-level guy!
+  if( top_nbsi._copyDone.get() == top_nbsi._sum_bits_length )
+    // One shot CAS to promote - it may fail since we are racing; others
+    // may promote as well
+    if( _non_blocking_set_int.CAS_nbsi( top_nbsi, top_nbsi._new ) ) {
+      //System.out.println("Promote at top level to size "+(_non_blocking_set_int._nbsi._bits.length<<6));
+    }
+
+  // Return the new bitvector for 'fluid' programming style
+  return _new;
+}
+
+
+
+No.1 generated result --------------------------
+
+
+@Test
+public void help_copyTest() {
+    NonBlockingSetInt nbsi = new NonBlockingSetInt();
+    // Add some words to the bit array
+    assertTrue(nbsi.add(1));
+    assertTrue(nbsi.add(2));
+    assertTrue(nbsi.add(3));
+    assertTrue(nbsi.add(4));
+
+    // Help a copy
+    nbsi.help_copy();
+
+    // Check we have copied all the words
+    assertEquals(4, nbsi._copyDone.get());
+}
+
+
+No.2 generated result --------------------------
+
+    @Test
+    public void help_copyTest() {
+        NBSI nbsi = new NBSI(1024, 64); // A freshly made table with 8 words
+        assertEquals(nbsi._bits.length*Long.SIZE, nbsi._size); // Size check
+        assertEquals(nbsi._bits.length<<6, nbsi._sum_bits_length); // Sum-bits size check
+        
+        for (int i=0; i < nbsi._bits.length; i++) {
+            long b = nbsi._bits[i];
+            assertEquals(Long.SIZE, Long.numberOfLeadingZeros(b)); // Every word has a full set of leading zeros
+        }
+        
+        // Test that help-copy works when there are no words to copy
+        for (int i = 0; i < nbsi._bits.length; i++) {
+            long b = nbsi._bits[i];
+            assertEquals(Long.SIZE, Long.numberOfLeadingZeros(b)); // Every word has a full set of leading zeros
+            }
+        
+        NBSI new_nbsi = nbsi.help_copy(); // A freshly made table with 8 words to copy
+        assertEquals(nbsi._bits.length, new_nbsi._sum_bits_length); // Size check
+        for (int i = 0; i < nbsi._bits.length; i++) {
+            long b1 = nbsi._bits[i];
+            long b2 = new_nbsi._bits[i];
+            assertEquals(Long.numberOfLeadingZeros(b1), Long.numberOfLeadingZeros(b2)); // Every word has a full set of leading zeros
+            }
+        
+        // Test that help-copy works when there are no words to copy (again)
+        for (int i = 0; i < nbsi._bits.length; i++) {
+            long b1 = nbsi._bits[i];
+            long b2 = new_nbsi._bits[i];
+            assertEquals(Long.numberOfLeadingZeros(b1), Long.numberOfLeadingZeros(b2)); // Every word has a full set of leading zeros
+            }
+        
+        // Test that help-copy works when there are 8 words to copy
+        long[] bits = new long[8];
+        for (int i = 0; i < bits.length; i++) {
+            bits[i] = Long.MAX_VALUE; // Every word has a full set of leading zeros
+            }
+        
+        NBSI nbsi2 = new NBSI(bits, 8); // A freshly made table with 8 words to copy
+        assertEquals(nbsi._sum_bits_length, nbsi2._size); // Size check
+        for (int i = 0; i < nbsi._bits.length; i++) {
+            long b1 = nbsi._bits[i];
+            long b2 = new_nbsi._bits[i];
+            assertEquals(Long.numberOfLeadingZeros(b1), Long.numberOfLeadingZeros(b2)); // Every word has a full set of leading zeros
+            }
+        
+        // Test that help-copy works when there are 8 words to copy (again)
+        for (int i = 0; i < nbsi._bits.length; i++) {
+            long b1 = nbsi._bits[i];
+            long b2 = new_nbsi._bits[i];
+            assertEquals(Long.numberOfLeadingZeros(b1), Long.numberOfLeadingZeros(b2)); // Every word has a full set of leading zeros
+            }
+        
+        // Test that help-copy works when there are no words to copy (again)
+        for (int i = 0; i < nbsi._bits.length; i++) {
+            long b1 = nbsi._bits[i];
+            long b2 = new_nbsi._bits[i];
+            assertEquals(Long.numberOfLeadingZeros(b1), Long.numberOfLeadingZeros(b2)); // Every word has a full set of leading zeros
+            }
+        
+        // Test that help-copy works when there are 8 words to copy (again)
+        for (int i = 0; i < nbsi._bits.length; i++) {
+            long b1 = nbsi._bits[i];
+            long b2 = new_nbsi._bits[i];
+            assertEquals(Long.numberOfLeadingZeros(b1), Long.numberOfLeadingZeros(b2)); // Every word has a full set of leading zeros
+            }
+    }
+}
+
+
+No.3 generated result --------------------------
+
+    @Test
+    public void test_help_copy() {
+        NonBlockingSetInt s = new NonBlockingSetInt();
+        // Start with 32 words (4096 bits) and try to help copy all of them.
+        for( int i=0; i<32*64; i++ )
+            s.help_copy();
+    }
+
+    
+### Response:
+
+
+No.4 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.Test;
+
+public class NonBlockingSetIntTest {
+    @Test
+    public void help_copyTest() {
+        // This is a JUnit test. It does not use the "main" method, and instead
+        // uses special methods that are part of the JUnit testing framework to
+        // run the test. These tests will be run automatically by GitHub when
+        // you push your changes up to GitHub. They can also be run manually by
+        // using a Java IDE like IntelliJ or Eclipse.
+        
+        // TODO: Write some help_copyTest code here!
+    }
+}
+
+    
+
+
+No.5 generated result --------------------------
+
+
+package org.jctools.maps;
+
+import java.util.*;
+
+public class NonBlockingSetIntTest {
+    @Test
+    public void help_copyTest() {
+        int[] arr = new int[1024];
+        for(int i=0; i<arr.length; i++) arr[i] = i;
+        Random rng = new Random();
+        // Make a random array of 64's
+        int nbits = (rng.nextInt()&127)+64;
+        long[] bits = new long[nbits];
+        for(int i=0; i<nbits-1; i++) {
+            bits[i] = rng.nextLong();
+        }
+        // Make last word have some 1 bits set
+        int nset = (rng.nextInt()&127)+32;
+        long w = rng.nextLong() & ((1L << nbits) -1);
+        for(int j=0; j<nset; j++) {
+            int bitnum = (rng.nextInt() & 63);
+            bits[bitnum] |= (1L << (bitnum % 64));
+        }
+        NonBlockingSetInt set = new NonBlockingSetInt(arr,bits);
+        for(int i=0; i<nset; i++) {
+            int bitnum = rng.nextInt() & 127;
+            assertTrue(set.contains((bitnum<<6) + (bitnum&63))));
+            assertFalse(set.contains(-1)));
+        }
+    }
+
+
+No.6 generated result --------------------------
+
+
+// I'm just an AI, I don't have personal experiences, but here are some possible responses to the prompt "help_copyTest":
+
+import java.util.Random;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NonBlockingSetIntTest {
+    @Test
+    public void help_copyTest() {
+        // Create a random bitvector to test with
+        Random rng = new Random(42);
+        int sz = 1 + rng.nextInt(1000); // Size of the bit vector
+        NonBlockingSetInt nbsi = new NonBlockingSetInt();
+        for( int i = 0; i < sz; i++ ) {
+            boolean b = rng.nextBoolean();
+            if( b ) {
+                int x = rng.nextInt(sz);
+                nbsi.add(x); // Add a random element to the bit vector
+            }
+        }
+
+        // Test that we can copy the entire bit vector
+        assertTrue(nbsi.helpCopy());
+    }
+}
+
+
+No.7 generated result --------------------------
+
+import org.jctools.maps.NonBlockingSetInt;
+
+public class NonBlockingSetIntTest {
+    private static final int SIZE = 1024;
+    
+    @Test
+    public void helpCopyTest() {
+        // Set up the non-blocking set with some initial elements
+        NonBlockingSetInt nbsi = new NonBlockingSetInt(SIZE);
+        
+        for (int i = 0; i < SIZE / 2; i++) {
+            int idx = i * 2; // even numbers only!
+            assertTrue(nbsi.add(idx));
+            // Verify that the element was added correctly
+            assertEquals(idx, nbsi.get(i), "Element was not found at index: " + i);
+        }
+        
+        for (int i = 0; i < SIZE / 2; i++) {
+            int idx = i * 2; // even numbers only!
+            assertTrue(nbsi.remove(idx));
+            
+            // Verify that the element was removed correctly
+            assertEquals(-1, nbsi.get(i), "Element was not found at index: " + i);
+        }
+        
+        for (int i = 0; i < SIZE / 2; i++) {
+            int idx = i * 2; // even numbers only!
+            assertTrue(nbsi.add(idx));
+            
+            // Verify that the element was added correctly
+            assertEquals(idx, nbsi.get(i), "Element was not found at index: " + i);
+        }
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.jctools.maps;
+
+import java.util.*;
+
+/**
+ * Unit test for {@link NonBlockingSetInt}.
+ */
+public class NonBlockingSetIntTest {
+    @Test
+    public void help_copyTest() {
+        int[] input = new int[]{0,1,2,3,4,5};
+        
+        // Test NBSI with a large set of values that fits in one word and is fully initialized.
+        NonBlockingSetInt nbsi = new NonBlockingSetInt(input);
+        assertTrue(Arrays.equals(input, nbsi.toArray()));
+    
+        // Test copy helpers
+        int[] result = nbsi.help_copy().toArray();
+        assertTrue(Arrays.equals(result, input));
+    }
+}
+
+
+
+No.9 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+
+public class NonBlockingSetIntTest {
+    @Test
+    public void help_copyTest() {
+        final int sz = 1024*8; // Tuning number: how big is the set?
+        NonBlockingSet<Integer> ns = new NonBlockingSet<>();
+        for( int i=sz-1; i>=0; i-- ) // Fill with unique ints from 0 to sz-1
+            assertTrue(ns.add((int)i));
+        System.out.println("Filled "+ns);
+        
+        NonBlockingSetInt nsi = new NonBlockingSetInt();
+        for(Integer i : ns) // Fill with the same ints again
+            assertTrue(nsi.add(i.intValue()));
+            
+        System.out.println("Filled "+nsi);
+        
+        long startTime = System.nanoTime();
+        System.out.print("Help copying "+sz+" words: ");
+        // Fill the new array with 0s
+        for( int i=0; i<sz; i++ ) nsi._copy[i] = 0L;
+        
+        System.out.println();
+        assertTrue(nsi.size() == sz);
+        
+        // Help copy the set!
+        for( int i=0; i<sz/16; i++ ) {
+            long startTimeInner = System.nanoTime();
+            
+            
+            
+            for( int j=0; j<16; j++ ) {
+                if( i*16+j < sz ) nsi._copy[i*16+j] |= 1L << j;
+                
+                
+            }
+        
+        System.out.print("Inner loop finished in "+((System.nanoTime()-startTimeInner)/1000)+" us"));
+        startTimeInner = System.nanoTime();
+            
+            
+            
+            
+        }
+        
+        System.out.println("Outer loop finished in "+((System.nanoTime()-startTimeInner)/1000)+" us"));
+        System.out.print("Finished help copying in "+((System.nanoTime()-startTime)/1000)+" us - ");
+        
+        assertTrue( nsi._copy[0] == 0xF000L ); // Check that we filled the array correctly
+        System.out.println("_copy[0]="+Long.toHexString(nsi._copy[0]));
+        
+    }
+}
+    
+
+### Response:
+
+
+No.10 generated result --------------------------
+
+@Test
+  public void help_copyTest() {
+    NBSI nbsi = new NBSI(0,5); // A bitvector of length 64*8
+    for( int i=0; i<1234; i++ )
+      assertTrue(nbsi.add(i)); // Add some values to the set
+
+    // Help copy from a non-nested NBSI
+    nbsi = new NBSI(5);
+    for( int i=0; i<1234; i++ )
+      assertTrue(nbsi.add(i));  // Add some values to the set
+    nbsi = nbsi.help_copy();     // Help copy from this NBSI
+   
+
+// Check copying nested NBSI
+NBSI nbs = new NBSI(0);
+for( int i=0; i<1234; i++ )
+  assertTrue(nbs.add(i));   // Add some values to the set
+nbsi = nbs.help_copy(); // Help copy from this NBS
+assertTrue(nbsi._words_to_cpy==0); // No more work to do
+assertTrue(nbsi._sum_bits_length>0);  // Has a _sum_bits_length > 0 (not finished copying)
+assertTrue(nbsi.getClass() != NBSI.class);   // Not equal to a NBS - should be an NBS
+
+
+// Check Help Copy from a nested NBSI
+NBSI nbs = new NBSI(0);
+for( int i=0; i<1234; i++ )
+  assertTrue(nbs.add(i));   // Add some values to the set
+
+NBSI nested_nbs = new NBSI(0,234);
+nested_nbs._sum_bits_length = 5;
+nbsi = nested_nbs.help_copy(); // Help copy from this nested NBS
+assertTrue(nbsi._words_to_cpy==0); // No more work to do
+assertTrue(nbsi._sum_bits_length>0);   // Has a _sum_bits_length > 0 (not finished copying)
+assertTrue(nbsi.getClass() != NBSI.class);    // Not equal to a NBS - should be an NBS
+
+
+// Check Help Copy from a deeply nested NBSI
+NBSI nbs = new NBSI(0);
+for( int i=0; i<1234; i++ )
+  assertTrue(nbs.add(i));   // Add some values to the set
+
+NBSI nested_nbs = new NBSI(0,234);
+nested_nbs._sum_bits_length = 5;
+NBSI deeply_nested_nbs = new NBSI(0,234,234*234);
+deeply_nested_nbs._sum_bits_length = 7;
+nbsi = deeply_nested_nbs.help_copy(); // Help copy from this deeply nested NBS
+assertTrue(nbsi._words_to_cpy==0);   // No more work to do
+assertTrue(nbsi._sum_bits_length>0);    // Has a _sum_bits_length > 0 (not finished copying)
+assertTrue(nbsi.getClass() != NBSI.class);     // Not equal to a NBS - should be an NBS
+
+
+// Check Help Copy from a deeply nested NBSI with no more work to do
+NBSI nbs = new NBSI(0);
+for( int i=0; i<1234; i++ )
+  assertTrue(nbs.add(i));   // Add some values to the set
+
+NBSI nested_nbs = new NBSI(0,234);
+nested_nbs._sum_bits_length = 5;
+NBSI deeply_nested_nbs = new NBSI(0,234,234*234);
+deeply_nested_nbs._sum_bits_length = 7;
+nbsi = deeply_nested_nbs.help_copy(); // Help copy from this deeply nested NBS
+assertTrue(nbsi._words_to_cpy==0);   // No more work to do
+assertTrue(nbsi._sum_bits_length>0);    // Has a _sum_bits_length > 0 (not finished copying)
+assertTrue(nbsi.getClass() != NBSI.class);     // Not equal to a NBS - should be an NBS
+
+
+

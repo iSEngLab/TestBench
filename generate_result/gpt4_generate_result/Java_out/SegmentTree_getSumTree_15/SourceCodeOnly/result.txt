@@ -1,0 +1,508 @@
+Source code: 
+
+/* A function to get the sum of the elements from index l to index r. This will be called
+ * internally*/
+private int getSumTree(int start, int end, int q_start, int q_end, int seg_index) {
+    if (q_start <= start && q_end >= end) {
+        return this.seg_t[seg_index];
+    }
+
+    if (q_start > end || q_end < start) {
+        return 0;
+    }
+
+    int mid = start + (end - start) / 2;
+    return (getSumTree(start, mid, q_start, q_end, seg_index * 2 + 1) + getSumTree(mid + 1, end, q_start, q_end, seg_index * 2 + 2));
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SegmentTreeTest {
+
+    private SegmentTree segmentTree;
+
+    @BeforeEach
+    public void setUp() {
+        int[] inputArray = {1, 3, 5, 7, 9, 11};
+        segmentTree = new SegmentTree(inputArray);   // assuming a constructor that builds the segment tree from the array
+    }
+
+    @Test
+    public void getSumTreeTest() {
+        // Since getSumTree is private, it likely means we shouldn't test it directly
+        // This test assumes that getSumTree is accessible for testing and that seg_t and initial values are properly set
+
+        // Test case for a valid range query within array bounds
+        int sum1 = segmentTree.getSumTree(0, 5, 0, 5, 0); // Testing sum of entire array
+        assertEquals(36, sum1);
+
+        // Test case for a valid range query that does not include the entire array
+        int sum2 = segmentTree.getSumTree(0, 5, 1, 3, 0); // Testing sum of a subarray
+        assertEquals(15, sum2);
+
+        // Test case for an out-of-bounds range query where query range is completely outside
+        int sum3 = segmentTree.getSumTree(0, 5, 6, 8, 0); // Testing out-of-bounds
+        assertEquals(0, sum3);
+
+        // Test case for a range query with the query range partially overlapping the array range
+        int sum4 = segmentTree.getSumTree(0, 5, 4, 10, 0); // Testing partial overlap
+        assertEquals(20, sum4);
+
+        // Here are more assertions depending on what exactly you need to test
+        // Assertions can include edge cases, negative scenarios, etc.
+    }
+}
+
+class SegmentTree {
+    // Hypothetical implementation details
+    int[] seg_t;
+    int[] array;
+
+    public SegmentTree(int[] array) {
+        this.array = array;
+        // Initialization and building of the segment tree here
+    }
+
+    int getSumTree(int start, int end, int q_start, int q_end, int seg_index) {
+        // Method implementation
+        // Assuming this is now package-private or public for testing purposes
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SegmentTreeTest {
+
+    private SegmentTree segmentTree;
+
+    @BeforeEach
+    public void setUp() {
+        // Assuming some array and its segment tree representation are created
+        int[] values = {1, 3, 5, 7, 9, 11};
+        // The following is a hypothetical method to initialize the segment tree based on the 'values' array.
+        // Replace it with the actual implementation of segment tree initialization in the SegmentTree class.
+        segmentTree = new SegmentTree(values); 
+    }
+
+    @Test
+    public void getSumTreeTest() {
+        // Assuming a range from index 1 to 3 (3 and 7 are the elements at these indexes, so sum should be 15)
+        int sum = segmentTree.getSumTree(0, values.length - 1, 1, 3, 0);
+        assertEquals(15, sum, "The sum from index 1 to 3 should be 15");
+
+        // Testing edge case: querying the entire range
+        sum = segmentTree.getSumTree(0, values.length - 1, 0, values.length - 1, 0);
+        assertEquals(36, sum, "The sum of the entire range should be 36");
+
+        // Testing non-overlapping query (should return 0 as per implementation)
+        sum = segmentTree.getSumTree(0, values.length - 1, 6, 7, 0);
+        assertEquals(0, sum, "The sum of a non-overlapping range should be 0");
+
+        // Testing single element query
+        sum = segmentTree.getSumTree(0, values.length - 1, 2, 2, 0);
+        assertEquals(5, sum, "The sum of a single element at index 2 should be 5");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class SegmentTree {
+    private int[] seg_t; // the segment tree representation
+
+    // Constructor and other necessary methods to build the tree
+    // Assume some method like "buildTree" is available to construct the segment tree
+
+    // The getSumTree method remains as provided
+    private int getSumTree(int start, int end, int q_start, int q_end, int seg_index) {
+        // Implementation as provided
+    }
+
+    // Mock-up public interface to retrieve sum for testing purposes
+    public int getSum(int q_start, int q_end) {
+        return getSumTree(0, this.seg_t.length / 2 - 1, q_start, q_end, 0);
+    }
+}
+
+public class SegmentTreeTest {
+    private SegmentTree segmentTree; // Instance of SegmentTree to test
+
+    @BeforeEach
+    public void setUp() {
+        // Initialize segmentTree with some preset values or mock the buildTree process
+        // For simplicity, let's say we are initializing with a size 4 segment tree.
+        
+        segmentTree = new SegmentTree();
+        // Assuming we have such a method to initialize the segment tree
+        // segmentTree.buildTree(new int[]{1, 3, 5, 7});
+    }
+
+    @Test
+    public void getSumTreeTest() {
+        // Assuming the segment tree [1, 3, 5, 7] has been constructed, and the segment
+        // sum tree is properly initialized, getTotal would query the sum across the range
+        assertEquals(4, segmentTree.getSum(0, 1), "The sum from index 0 to 1 should be 4");
+        assertEquals(5, segmentTree.getSum(2, 2), "The sum of a single element at index 2 should be 5");
+        assertEquals(15, segmentTree.getSum(0, 3), "The sum from index 0 to 3 should be 15");
+        assertEquals(0, segmentTree.getSum(4, 5), "The sum for an out-of-range query should be 0");
+        assertEquals(7, segmentTree.getSum(3, 3), "The sum of a single element at index 3 should be 7");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SegmentTreeTest {
+    private SegmentTree tree; // Our imaginary SegmentTree class
+    private int[] inputArray; // Array to test
+    
+    @BeforeEach
+    public void setUp() {
+        // We will assume the inputArray is {1, 3, 5, 7, 9, 11}
+        inputArray = new int[]{1, 3, 5, 7, 9, 11};
+        tree = new SegmentTree(inputArray);
+    }
+
+    @Test
+    public void getSumTreeTest() {
+        // Test for the sum of the first three elements
+        assertEquals(9, tree.getSumTree(0, inputArray.length - 1, 0, 2, 0),
+                "Sum of elements from index 0 to 2 should be 9.");
+        
+        // Test for the sum of all elements
+        assertEquals(36, tree.getSumTree(0, inputArray.length - 1, 0, inputArray.length - 1, 0),
+                "Sum of all elements should be 36.");
+        
+        // Test for the sum of the last four elements
+        assertEquals(32, tree.getSumTree(0, inputArray.length - 1, 2, 5, 0),
+                "Sum of elements from index 2 to 5 should be 32.");
+        
+        // Test for no intersection
+        assertEquals(0, tree.getSumTree(0, inputArray.length - 1, 6, 7, 0),
+                "Sum of elements for non-intersecting range should be 0.");
+    }
+}
+
+// Placeholder for the actual SegmentTree implementation
+class SegmentTree {
+    int[] seg_t;
+    
+    SegmentTree(int[] input) {
+        // Here the segment tree should be initialized based on the input array
+        // This function is outside the scope of the request
+        // but is necessary for the test to be meaningful
+    }
+
+    // This is a faux implementation to allow us to complete the test case. 
+    // Actual implementation would differ.
+    public int getSumTree(int start, int end, int q_start, int q_end, int seg_index) {
+        // Implementation as provided would be here. 
+        // But since it's private, we would not be able to call it in our test case as is, 
+        // so either make it public for testing or simulate the behavior in a similar public method.
+        return 0;
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SegmentTreeTest {
+    private SegmentTree segmentTree;
+
+    @BeforeEach
+    public void setUp() {
+        // Assuming the SegmentTree can be initialized with an array
+        int[] values = {1, 3, 5, 7, 9, 11};
+        segmentTree = new SegmentTree(values); // Imaginary constructor
+    }
+
+    @Test
+    public void getSumTreeTest() {
+        // Assuming the getSumTree method signature is changed to package-private
+        // (To strictly adhere to testing private methods, one could use reflection 
+        //  but for simplicity, we assume accessibility change)
+
+        // Test for sum within range
+        int sumWithinRange = segmentTree.getSumTree(0, 5, 1, 3, 0);
+        assertEquals(15, sumWithinRange, "Sum within the range should be calculated correctly");
+        
+        // Test for sum for the entire range (which should be equal to the sum of the whole array)
+        int sumFullRange = segmentTree.getSumTree(0, 5, 0, 5, 0);
+        assertEquals(36, sumFullRange, "Sum for the full range should match the sum of the entire array");
+        
+        // Test for sum outside the range (should return 0)
+        int sumOutOfRange = segmentTree.getSumTree(0, 5, 6, 10, 0);
+        assertEquals(0, sumOutOfRange, "Sum outside the range should be 0");
+    }
+}
+
+
+
+No.6 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SegmentTreeTest {
+    
+    private SegmentTree segmentTree;
+
+    @BeforeEach
+    void setUp() {
+        // Initialize a segment tree with some data.
+        int[] values = {1, 2, 3, 4, 5};
+        // Assuming the SegmentTree class uses an array named 'seg_t' to store segment tree values
+        // And has a method to build the segment tree using the array 'values'
+        this.segmentTree = new SegmentTree(values);
+        this.segmentTree.buildSegmentTree(values, 0, values.length - 1, 0);
+    }
+
+    @Test
+    public void getSumTreeTest() {
+        // Test cases for the getSumTree method
+
+        // Test within range sum
+        assertEquals(3, segmentTree.getSumTree(0, 4, 1, 1, 0),
+                    "The sum of the range [1, 1] should be 2.");
+
+        // Test sum spanning multiple ranges
+        assertEquals(12, segmentTree.getSumTree(0, 4, 1, 3, 0),
+                    "The sum of the range [1, 3] should be 9.");
+
+        // Test query out of range
+        assertEquals(0, segmentTree.getSumTree(0, 4, 10, 15, 0),
+                    "The sum of the range [10, 15] should be 0 as it is out of segment range.");
+
+        // Test partial overlap with the range
+        assertEquals(6, segmentTree.getSumTree(0, 4, 2, 4, 0),
+                    "The sum of the range [2, 4] should be 12.");
+    }
+}
+
+class SegmentTree {
+    int[] seg_t;
+
+    // Placeholder constructor for SegmentTree
+    SegmentTree(int[] values) {
+        // Segment tree would typically be sized depending on 'values' length,
+        // assuming a placeholder size here.
+        seg_t = new int[values.length * 4];
+    }
+
+    // Placeholder build method
+    void buildSegmentTree(int[] values, int start, int end, int segIndex) {
+        // Implement actual segment tree build logic here
+    }
+
+    // Original method from the task's source code
+    int getSumTree(int start, int end, int q_start, int q_end, int seg_index) {
+        // Method logic as provided in the task's source code
+        if (q_start <= start && q_end >= end) {
+            return this.seg_t[seg_index];
+        }
+
+        if (q_start > end || q_end < start) {
+            return 0;
+        }
+
+        int mid = start + (end - start) / 2;
+        return (getSumTree(start, mid, q_start, q_end, seg_index * 2 + 1) +
+                getSumTree(mid + 1, end, q_start, q_end, seg_index * 2 + 2));
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SegmentTreeTest {
+
+    private SegmentTree segmentTree; // Assuming there is a `SegmentTree` class that needs to be tested.
+    private int[] inputArray;        // Input array for the segment tree.
+
+    @BeforeEach
+    public void setUp() {
+        // Set up the Segment Tree instance and input array before each test
+        inputArray = new int[]{1, 3, 5, 7, 9, 11};
+        segmentTree = new SegmentTree(inputArray); // Assuming SegmentTree has a constructor that accepts an array.
+        // Typically, the segment tree would be built here, but since getSumTree is private, we assume it's part of the implementation.
+    }
+
+    @Test
+    public void getSumTreeTest() {
+        // In a real scenario, the method getSumTree(...) will be private, so we would not test it directly.
+        // Instead, we would test the public methods that call getSumTree(...) internally.
+        // However, for the sake of this exercise, let's assume we can call getSumTree(...) method.    
+
+        // Test case 1: Query the sum from index 1 to 3 (3, 5, 7)
+        int start = 1, end = 3;
+        int expectedResult = 3 + 5 + 7;
+        // As getSumTree is considered a private method in this context, it would not be directly accessible
+        // Thus, a reflection or a workaround to test a private method might be necessary.
+        // However, we'll assume here we can directly access getSumTree for simplicity.
+        int sum = segmentTree.getSumTree(0, inputArray.length - 1, start, end, 0);
+        assertEquals(expectedResult, sum, "The sum from index 1 to 3 should be 15.");
+
+        // Additional test cases can be provided here.
+    }
+
+    // Additional teardown or utility methods could be included here.
+    
+    // We can also add tests for other public methods that would internally call `getSumTree`.
+}
+
+
+No.8 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SegmentTreeTest {
+
+    private SegmentTree segTree;
+
+    @BeforeEach
+    public void setup() {
+        int[] inputArray = {1, 3, 5, 7, 9, 11};
+        segTree = new SegmentTree(inputArray);
+        // Assuming SegmentTree has a constructor that takes an input array to build the tree
+    }
+
+    @Test
+    public void getSumTreeTest() {
+        // Assuming we are testing a private method, hence using reflection to access it
+        Method method;
+        try {
+            method = SegmentTree.class.getDeclaredMethod("getSumTree", int.class, int.class, int.class, int.class, int.class);
+            method.setAccessible(true);
+
+            // Test cases
+            // Assuming calling the method through reflection assuming seg_start and seg_end are typically 0 and length-1 respectively
+            assertEquals(1, method.invoke(segTree, 0, 5, 0, 0, 0), "The sum from index 0 to 0 should be 1");
+            assertEquals(22, method.invoke(segTree, 0, 5, 0, 4, 0), "The sum from index 0 to 4 should be 22");
+            assertEquals(9, method.invoke(segTree, 0, 5, 4, 4, 0), "The sum at index 4 should be 9");
+            assertEquals(0, method.invoke(segTree, 0, 5, 6, 10, 0), "The sum for out of range query should be 0");
+            assertEquals(15, method.invoke(segTree, 0, 5, 2, 3, 0), "The sum from index 2 to 3 should be 15");
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            fail("Exception should not be thrown during the test: " + e.getMessage());
+        }
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SegmentTreeTest {
+
+    private SegmentTree segmentTree; // Theoretical segment tree class for illustration.
+    
+    @BeforeEach
+    public void setUp() {
+        int[] inputArray = {1, 3, 5, 7, 9, 11}; // Example input array.
+        // Initialize the segment tree with the input array.
+        // Assuming SegmentTree class has a constructor that takes an array.
+        segmentTree = new SegmentTree(inputArray);
+    }
+
+    @Test
+    public void getSumTreeTest() {
+        // Example test to assert sum from index 1 to 4 in inputArray (3+5+7+9).
+        assertEquals(24, segmentTree.getSumRange(1, 4));
+        
+        // Additional test cases, creating similar situations to hit different branches of the method
+        // Test querying the full range.
+        assertEquals(36, segmentTree.getSumRange(0, 5));
+        
+        // Test querying a single element.
+        assertEquals(5, segmentTree.getSumRange(2, 2));
+        
+        // Test querying with no overlap.
+        assertEquals(0, segmentTree.getSumRange(6, 10));
+        
+        // Test querying with partial overlap.
+        assertEquals(7, segmentTree.getSumRange(3, 3));
+    }
+}
+
+// Note: Additional methods, constructors, and fields for SegmentTree class would need to be implemented.
+
+
+No.10 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SegmentTreeTest {
+    private SegmentTree segmentTree;  // Assuming there's a class called SegmentTree
+    private int[] inputArr;
+
+    @BeforeEach
+    public void setup() {
+        // Initialize an array and create segmentTree for testing
+        inputArr = new int[]{3, 1, 4, 1, 5, 9, 2, 6, 5, 3};
+        segmentTree = new SegmentTree(inputArr);
+    }
+
+    @Test
+    public void getSumTreeTest() {
+        // Test the sum from index 0 to 3 which should be 3+1+4+1 = 9
+        assertEquals(9, segmentTree.getSumTree(0, inputArr.length - 1, 0, 3, 0));
+
+        // Test an edge case: sum from index 0 to 0 which should be 3
+        assertEquals(3, segmentTree.getSumTree(0, inputArr.length - 1, 0, 0, 0));
+
+        // Test the sum from index 4 to 9 which should be 5+9+2+6+5+3 = 30
+        assertEquals(30, segmentTree.getSumTree(0, inputArr.length - 1, 4, 9, 0));
+
+        // Test out of bounds query which should return 0
+        assertEquals(0, segmentTree.getSumTree(0, inputArr.length - 1, 10, 15, 0));
+    }
+}
+
+
+

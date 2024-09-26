@@ -1,0 +1,468 @@
+Source code: 
+
+
+public int[] grab_raw() {
+    if (camera.getCameraFrame(ps3_frame, timeout)) {
+        return ps3_frame;
+    }
+    else return null;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class PS3EyeFrameGrabberTest {
+    @Test
+    public void grab_rawTest() {
+        FrameGrabber grabber = new PS3EyeFrameGrabber(0);
+        
+        assertEquals(grabber.getImageMode(), ImageMode.COLOR, "checking image mode");
+        // ...
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.bytedeco.javacv;
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * PS3EyeFrameGrabberTest class.
+ */
+@DisplayName("PS3EyeFrameGrabber test")
+public class PS3EyeFrameGrabberTest {
+    @Nested
+    public class Grab_rawTest {
+        private PS3EyeFrameGrabber grabber;
+        
+        /**
+         * Initialization before running tests.
+         */
+        @BeforeEach
+        public void init() {
+            // <FILL>
+        }
+        
+        @AfterEach
+        public void release() {
+            if (grabber != null) grabber.release();
+        }
+        
+        /**
+         * Testing method that grabs frames and compares them to the expected values.
+         */
+        @Test
+        public void testGrab_raw() throws Exception {
+            // <FILL>
+        }
+    }
+}
+
+
+No.3 generated result --------------------------
+
+import org.bytedeco.javacv.*;
+import static org.bytedeco.javacv.FrameGrabber.ImageMode.RGB;
+
+public class PS3EyeFrameGrabberTest {
+    @Test
+    public void grab_rawTest() {
+        // Create a new PS3 Eye frame grabber instance
+        FrameGrabber grabber = new PS3EyeFrameGrabber();
+
+        // Set the image mode to RGB
+        grabber.setImageMode(RGB);
+
+        // Start the frame grabber
+        grabber.start();
+
+        // Read a frame from the camera
+        Frame frame = grabber.grab();
+
+        // Stop the frame grabber
+        grabber.stop();
+
+        // Release resources
+        grabber.release();
+    }
+}
+
+
+No.4 generated result --------------------------
+
+### PS3 Eye camera
+
+@Tony Liu - thank you for your comment! The PS3 Eye is not officially supported by OpenCV. However, there are some efforts to add support for it in the [OpenCV Extensions](https://docs.opencv.org/4.5.1/d0/d7c/classcv_1_1CLEyeCamera.html) library.
+
+You can also try using the [PS3 Eye SDK](http://www.ps3eye.com/support/) or [CLEyeMulticam](https://code.google.com/archive/p/cleymulticam/). There are some tutorials on using these SDKs, such as [this one for CLEyeMulticam](https://github.com/tayebin/OpenCV-PS3Eye#using-opencv-with-ps3eye).
+
+If you have any more questions or need help with this issue, feel free to ask!
+
+
+No.5 generated result --------------------------
+
+Sure, I can help you with that. Here's an example of a PS3 Eye frame grabber implementation in Java:
+
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
+#include <iostream>
+
+// CLEye Multicamera header files
+#include "CLEyeMulticam.h"
+
+using namespace std;
+using namespace cv;
+
+/**
+ * PS3 Eye frame grabber class.
+ */
+class PS3EyeFrameGrabber : public FrameGrabber {
+public:
+    // Constructor
+    PS3EyeFrameGrabber(int cameraIndex);
+    
+    /** Start camera first (before grabbing).
+     * 
+     * @return success/failure (true/false)
+     */
+    bool start();
+    
+    /** Stop camera. It can be re-started if needed.
+     * 
+     * @return success/failure (true/false)
+     */
+    bool stop();
+    
+    /** Release resources:
+     *   - CL driver internal resources binded with camera HW
+     *   - internal IplImage
+     *  After calling this function, this mini-grabber object instance can not be used anymore.
+     */
+    void release();
+    
+    /** Returns the status of the grabber (running/stopped).
+     * 
+     * @return true if grabber is running, false otherwise
+     */
+    bool isRunning() const;
+    
+    /** Grabs a frame and returns it as a OpenCV matrix.
+     *  
+     *  It will throw null pointer exception if not started before grabbing.
+     *  @return "read-only" RGB, 4-channel or GRAY/1-channel image, it throws exception if no image is available
+     */
+    Mat grab();
+    
+protected:
+    // Internal variables
+    CLEyeCamera* camera;   ///< PS3 Eye camera object pointer
+    bool running;          ///< Indicates that the grabber is running
+    IplImage* ipl_frame;   ///< Frame buffer used for OpenCV operations
+    
+    // Internal methods
+    void processFrame();   ///< Processes a new frame
+};
+
+// Implementation of PS3 Eye frame grabber class
+PS3EyeFrameGrabber::PS3EyeFrameGrabber(int cameraIndex) :
+camera(NULL), running(false), ipl_frame(NULL) {
+    // Create CLEyeCamera object using the given index and initialize it
+    camera = new CLEyeCamera;
+    if (!camera->createCamera(cameraIndex, 0, 0)) {
+        std::cerr << "Failed to create PS3 Eye camera" << std::endl;
+        return;
+    }
+    
+    // Initialize the camera properties
+    cameraProperties.nCameraMode = CLEYE_CAMERA_MODE_VIDEO;
+    cameraProperties.nFrameRate = 0;
+    cameraProperties.nColorMode = CLEYE_COLOR_PROCESSED;
+    cameraProperties.nResolution = CLEYE_VGA;
+    
+    // Set the frame grabber properties
+    setProperties(&cameraProperties);
+}
+
+bool PS3EyeFrameGrabber::start() {
+    if (running) return false;
+    
+    // Start grabbing frames from the camera
+    running = true;
+    processFrame();
+    return true;
+}
+
+bool PS3EyeFrameGrabber::stop() {
+    if (!running) return false;
+    
+    // Stop grabbing frames from the camera
+    running = false;
+    release();
+    return true;
+}
+
+void PS3EyeFrameGrabber::release() {
+    // Release all resources allocated by the grabber
+    if (ipl_frame != NULL) cvReleaseImage(&ipl_frame);
+    
+    // Delete CLEyeCamera object
+    delete camera;
+}
+
+bool PS3EyeFrameGrabber::isRunning() const {
+    return running;
+}
+
+Mat PS3EyeFrameGrabber::grab() {
+    if (!running) return NULL;
+    
+    // Allocate a new frame buffer and convert it from RGB to BGR format
+    ipl_frame = cvCreateImage(CV_8UC4, 640, 480);
+    Mat frame(ipl_frame);
+    cvtColor(ipl_frame, ipl_frame, CV_RGB2BGR);
+    
+    // Get the current camera frame
+    processFrame();
+    return frame;
+}
+
+void PS3EyeFrameGrabber::processFrame() {
+    // Retrieve the latest frame from the camera and convert it to OpenCV format
+    if (!camera->getLatestFrame(ipl_frame)) {
+        std::cerr << "Failed to get frame from PS3 Eye camera" << std::endl;
+        return;
+    }
+}
+
+#endif // PS3EYE_FRAME_GRABBER_H
+    
+
+// Implementation of PS3 Eye frame grabber class
+#include "PS3EyeFrameGrabber.h"
+
+// Constructor
+PS3EyeFrameGrabber::PS3EyeFrameGrabber(int cameraIndex) :
+camera(NULL), running(false), ipl_frame(NULL) {
+    // Create CLEyeCamera object using the given index and initialize it
+    camera = new CLEyeCamera;
+    if (!camera->createCamera(cameraIndex)) {
+        std::cerr << "Failed to create PS3 Eye camera" << std::endl;
+        return;
+    }
+    
+    // Initialize all properties of the grabber object
+    initProperties();
+}
+
+// Destructor
+PS3EyeFrameGrabber::~PS3EyeFrameGrabber() {
+    // Release all resources allocated by the grabber
+    release();
+}
+
+// Public methods
+bool PS3EyeFrameGrabber::start() {
+    if (running) return false;
+    
+    // Start grabbing frames from the camera
+    running = true;
+    processFrame();
+    return true;
+}
+
+bool PS3EyeFrameGrabber::stop() {
+    if (!running) return false;
+    
+    // Stop grabbing frames from the camera
+    running = false;
+    release();
+    return true;
+}
+
+void PS3EyeFrameGrabber::release() {
+    // Release all resources allocated by the grabber
+    if (ipl_frame != NULL) cvReleaseImage(&ipl_frame);
+    
+    // Delete CLEyeCamera object
+    delete camera;
+}
+
+bool PS3EyeFrameGrabber::isRunning() const {
+    return running;
+}
+
+Mat PS3EyeFrameGrabber::grab() {
+    if (!running) return NULL;
+    
+    // Allocate a new frame buffer and convert it from RGB to BGR format
+    ipl_frame = cvCreateImage(CV_8UC4, 640, 480);
+    Mat frame(ipl_frame);
+    cvtColor(ipl_frame, ipl_frame, CV_RGB2BGR);
+    
+    // Get the current camera frame
+    processFrame();
+    return frame;
+}
+
+void PS3EyeFrameGrabber::processFrame() {
+    // Retrieve the latest frame from the camera and convert it to OpenCV format
+    if (!camera->getLatestFrame(ipl_frame)) {
+        std::cerr << "Failed to get frame from PS3 Eye camera" << std::endl;
+        return;
+    }
+}
+    
+#endif // PS3EYE_FRAME_GRABBER_CPP
+
+
+
+No.6 generated result --------------------------
+
+import org.bytedeco.javacv.*;
+import static org.bytedeco.javacv.FrameGrabber.*;
+import static org.bytedeco.javacpp.opencv_core.*;
+import static org.bytedeco.javacpp.opencv_imgproc.*;
+import static org.bytedeco.javacpp.leptonica.*;
+
+public class PS3EyeFrameGrabberTest {
+    @Test
+    public void grab_rawTest() {
+        // Load camera driver (must be done only once)
+        if (!PS3EyeFrameGrabber.loadDriver()) {
+            System.out.println("Cannot load CLEye multicam driver");
+            return;
+        }
+        
+        // Find PS3 Eye camera devices 
+        String[] uuids = PS3EyeFrameGrabber.listPS3Cameras();
+        if (uuids == null || uuids.length < 1) {
+            System.out.println("No PS3 Eye camera detected");
+            return;
+        }
+        
+        // Create grabber for first available camera and set timeout to 5 seconds
+        int cameraIndex = 0;
+        FrameGrabber grabber = new PS3EyeFrameGrabber(cameraIndex, CAMERA_FORMAT.RGB4);
+        grabber.setTimeout(5000);
+        
+        // Start the grabber
+        grabber.start();
+        System.out.println("Camera started");
+        
+        // Grab 10 images and stop camera
+        for (int i = 0; i < 10; i++) {
+            Frame frame = grabber.grab();
+            if (frame == null) {
+                System.err.println("Grab timeout!");
+                break;
+            }
+            
+            // Convert to IplImage and show with OpenCV
+            IplImage img = new IplImage(frame);
+            cvFlip(img, img, 1);
+            cvShowImage("PS3 Eye camera", img);
+        }
+        
+        grabber.stop();
+    }
+}
+
+
+No.7 generated result --------------------------
+
+Sorry, I can't understand your request. Could you please rephrase or provide more context?
+
+
+
+No.8 generated result --------------------------
+
+import org.bytedeco.javacpp.*;
+import org.bytedeco.javacpp.opencv_core.*;
+import org.bytedeco.javacv.FrameGrabber;
+import org.bytedeco.javacv.OpenCVFrameConverter;
+
+
+No.9 generated result --------------------------
+
+import org.bytedeco.javacv.*;
+import static org.bytedeco.javacpp.opencv_core.*;
+import static org.bytedeco.javacpp.opencv_imgproc.*;
+import static org.bytedeco.javacpp.opencv_highgui.*;
+
+public class PS3EyeFrameGrabberTest {
+    public static void main(String[] args) throws Exception {
+        // Grab raw images from the first PS3 Eye camera
+        FrameGrabber grabber = new PS3EyeFrameGrabber();
+        try {
+            grabber.start();
+            int width = (int) grabber.getImageWidth();
+            int height = (int) grabber.getImageHeight();
+            while (true) {
+                // Grab a frame from the camera and convert it to an IplImage object
+                IplImage frame = grabber.grab().getIplImage();
+                if (frame == null) {
+                    System.out.println("Error: unable to grab a frame");
+                    return;
+                }
+                // Display the raw image
+                cvCvtColor(frame, frame, CV_RGB2BGR);
+                CvWindow window = new CvWindow("PS3 Eye Camera");
+                window.showImage(frame);
+            }
+        } finally {
+            grabber.stop();
+        }
+    }
+}
+
+
+No.10 generated result --------------------------
+
+@Slf4j
+public class PS3EyeFrameGrabberTest {
+    private static final int WIDTH = 1280;
+    private static final int HEIGHT = 720;
+    
+    // @BeforeEach
+    public void setup() {
+        // Set up the camera.
+        PS3EyeFrameGrabber grabber = new PS3EyeFrameGrabber();
+        try {
+            grabber.start();
+            
+            // Wait a bit for the camera to warm up.
+            Thread.sleep(500);
+            
+        } catch (Exception e) {
+            log.error("Could not start camera", e);
+        }
+    }
+    
+    // @Test
+    public void grab_raw() throws Exception {
+        
+        PS3EyeFrameGrabber grabber = new PS3EyeFrameGrabber();
+        try {
+            for (int i = 0; i < 10; i++) {
+                Frame frame = grabber.grab();
+                
+                assertNotNull(frame);
+                log.info("{}", frame);
+                
+                // TODO: Add some additional checks on the image data.
+            }
+        } finally {
+            grabber.release();
+        }
+    }
+}
+
+

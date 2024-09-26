@@ -1,0 +1,296 @@
+Source code: 
+
+
+public static void handleNestedObject(Object obj, Class entity, boolean isEncode) throws IllegalAccessException {
+    Field[] fields = obj.getClass().getDeclaredFields();
+    for (Field field : fields) {
+        if(field.getType().isPrimitive()){
+            continue;
+        }
+        if(field.getType().equals(entity)){
+            // 对象里面是实体
+            field.setAccessible(true);
+            Object nestedObject = field.get(obj);
+            handlerObject(nestedObject, isEncode);
+            break;
+        }else{
+            // 对象里面是List<实体>
+            if(field.getGenericType() instanceof ParameterizedType){
+                ParameterizedType pt = (ParameterizedType)field.getGenericType();
+                if(pt.getRawType().equals(List.class)){
+                    if(pt.getActualTypeArguments()[0].equals(entity)){
+                        field.setAccessible(true);
+                        Object nestedObject = field.get(obj);
+                        handleList(nestedObject, entity, isEncode);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+No.1 generated result --------------------------
+
+
+The `handleNestedObject` method in the `SensitiveInfoUtil` class is used to handle nested objects. It takes three parameters: an object, a class entity, and a boolean value indicating whether the data should be encoded or not. The method first retrieves all declared fields of the object using the `getDeclaredFields()` method of the `Class` class.
+
+The next step is to loop through each field and check if it is a primitive type. If it is, the loop continues to the next field. Otherwise, the method checks if the field's type is equal to the entity parameter. If it is, the method sets the accessible flag of the field to `true` using the `setAccessible(true)` method and retrieves the value of the field using the `get()` method.
+
+If the field's type is not a primitive type but is a list of entities, the method checks if the generic type of the field is an instance of `ParameterizedType`. If it is, the method casts the generic type to `ParameterizedType` and checks if the raw type of the parameterized type is equal to `List.class`. If it is, the method retrieves the actual type argument of the parameterized type and checks if it is equal to the entity parameter.
+
+If the field's value is an object or a list of objects that need to be handled, the method calls the `handlerObject` method with the nested object as the first parameter and the boolean value indicating whether the data should be encoded or not as the second parameter. If the field's value is a list of entities, the method calls the `handleList` method with the list of entities as the first parameter, the entity class as the second parameter, and the boolean value indicating whether the data should be encoded or not as the third parameter.
+
+The `handlerObject` method in the `SensitiveInfoUtil` class is used to handle objects that need to be encoded or decoded. It takes two parameters: an object and a boolean value indicating whether the data should be encoded or not. The method first retrieves all declared fields of the object using the `getDeclaredFields()` method of the `Class` class.
+
+The next step is to loop through each field and check if it has the `@SensitiveField` annotation. If it does, the method checks if the value of the field should be encoded or decoded based on the boolean value passed in as a parameter. If the field's value should be encoded, the method calls the `getEncodeData()` method with the field's value and the appropriate `SensitiveEnum` value as parameters. If the field's value should be decoded, the method calls the `getDecodeData()` method with the field's value as a parameter.
+
+The `handleList` method in the `SensitiveInfoUtil` class is used to handle lists of objects that need to be encoded or decoded. It takes three parameters: an object, a class entity, and a boolean value indicating whether the data should be encoded or not. The method first retrieves all declared fields of the list using the `getDeclaredFields()` method of the `Class` class.
+
+The next step is to loop through each field and check if it has the `@SensitiveField` annotation. If it does, the method checks if the value of the field should be encoded or decoded based on the boolean value passed in as a parameter. If the field's value should be encoded, the method calls the `getEncodeData()` method with the field's value and the appropriate `SensitiveEnum` value as parameters. If the field's value should be decoded, the method calls the `getDecodeData()` method with the field's value as a parameter.
+
+The `getDecodeData` method in the `SensitiveInfoUtil` class is used to decode data. It takes one parameter: a string representing the encoded data. The method first retrieves all declared fields of the object using the `getDeclaredFields()` method of the `Class` class.
+
+The next step is to loop through each field and check if it has the `@SensitiveField` annotation. If it does, the method checks if the value of the field should be decoded based on the boolean value passed in as a parameter. If the field's value should be decoded, the method calls the `getDecodeData()` method with the field's value and the appropriate `SensitiveEnum` value as parameters.
+
+The `getEncodeData` method in the `SensitiveInfoUtil` class is used to encode data. It takes two parameters: a string representing the original data and an enum value indicating the type of sensitive information. The method first retrieves all declared fields of the object using the `getDeclaredFields()` method of the `Class` class.
+
+The next step is to loop through each field and check if it has the `@SensitiveField` annotation. If it does, the method checks if the value of the field should be encoded based on the boolean value passed in as a parameter. If the field's value should be encoded, the method calls the `getEncodeData()` method with the field's value and the appropriate `SensitiveEnum` value as parameters.
+
+Overall, the methods in the `SensitiveInfoUtil` class are used to encode or decode sensitive information contained in objects that need to be handled. The `handlerObject` and `handleList` methods in particular provide a mechanism for handling arbitrary objects and lists of objects that need to be encoded or decoded.
+
+
+No.2 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SensitiveInfoUtilTest {
+    @Test
+    public void handleNestedObjectTest() {
+        // Create a person object with nested objects and lists of objects
+        Person person = new Person("John", 30, "123 Main St", "+1-555-1234");
+        
+        // Call the handleNestedObject method on the person object
+        SensitiveInfoUtil.handleNestedObject(person, Person.class, true);
+        
+        // Verify that the nested objects and lists of objects are correctly handled
+        assertEquals("encodedName", person.getName());
+        assertEquals("encodedAddress", person.getAddress());
+        assertEquals("encodedPhoneNumber", person.getPhoneNumber());
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SensitiveInfoUtilTest {
+    @Test
+    public void handleNestedObjectTest() throws IllegalAccessException {
+        Object obj = new Object();
+        Class entity = String.class;
+        boolean isEncode = true;
+        Field[] fields = obj.getClass().getDeclaredFields();
+        for (Field field : fields) {
+            if(field.getType().isPrimitive()){
+                continue;
+            }
+            if(field.getType().equals(entity)){
+                // 对象里面是实体
+                field.setAccessible(true);
+                Object nestedObject = field.get(obj);
+                handlerObject(nestedObject, isEncode);
+                break;
+            }else{
+                // 对象里面是List<实体>
+                if(field.getGenericType() instanceof ParameterizedType){
+                    ParameterizedType pt = (ParameterizedType)field.getGenericType();
+                    if(pt.getRawType().equals(List.class)){
+                        if(pt.getActualTypeArguments()[0].equals(entity)){
+                            field.setAccessible(true);
+                            Object nestedObject = field.get(obj);
+                            handleList(nestedObject, entity, isEncode);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+No.4 generated result --------------------------
+
+@Test
+public void handleNestedObjectTest() {
+    // Create a mock object that represents the "obj" parameter
+    Object obj = Mockito.mock(Object.class);
+    
+    // Create a mock entity class that represents the "entity" parameter
+    Class<MyEntity> entityClass = (Class<MyEntity>) MyEntity.class;
+    
+    // Create an instance of the SensitiveInfoUtil class and call the handleNestedObject method on it
+    SensitiveInfoUtil util = new SensitiveInfoUtil();
+    util.handleNestedObject(obj, entityClass, true);
+    
+    // Use JUnit's assertion statements to verify that the result of the handleNestedObject method is what you expect
+    assertEquals(expectedResult, obj.getFieldValue("myField"));
+}
+
+
+No.5 generated result --------------------------
+
+
+The `handleNestedObject` method in the `SensitiveInfoUtil` class is a recursive method that is used to traverse an object's fields and handle any sensitive information found within. The method takes three parameters: `obj`, which is the object being traversed; `entity`, which is the entity type being searched for; and `isEncode`, which indicates whether the sensitive information should be encoded or not.
+
+The method first retrieves all of the declared fields in the input object using `obj.getClass().getDeclaredFields()`. It then iterates over each field in the array, checking if it is a primitive type and skipping it if so. If the field is not a primitive, the method checks whether its type matches the entity parameter. If there is a match, the method sets the accessible flag on the field using `field.setAccessible(true)` and retrieves the value of the field using `field.get(obj)`.
+
+If the field's type does not match the entity parameter, the method checks whether it is a list containing the entity parameter using `field.getGenericType() instanceof ParameterizedType` and `pt.getRawType().equals(List.class)` and `pt.getActualTypeArguments()[0].equals(entity)`. If this is the case, the method sets the accessible flag on the field and retrieves the value of the field using `field.get(obj)`.
+
+The method then recursively calls itself with the retrieved value, passing in the new object and the entity parameter.
+
+If there are no more nested objects to traverse, the method returns the original input object.
+
+It is important to note that this method assumes that all of the sensitive information in the input object has been marked with the `@SensitiveField` annotation. If any sensitive fields are not annotated, they will not be handled by this method and may cause issues with the encoded output.
+
+
+No.6 generated result --------------------------
+
+The `handleNestedObject` method is a recursive method that handles nested objects. It takes three parameters: an object, a class entity, and a boolean value indicating whether the data should be encoded or decoded. The method first gets all declared fields of the object using the `getDeclaredFields()` method and then loops through them to check if any of them is a primitive type. If it finds one, it skips it and continues with the next field.
+
+If none of the fields are primitives, it checks if the current field's type is equal to the entity class passed as a parameter. If it is, it sets the accessible flag of the field to true using the `setAccessible(true)` method and then gets the value of the field using the `get()` method.
+
+If the field's type is not equal to the entity class, it checks if the current field is a list with the help of the `ParameterizedType` class. If it is, it checks if the raw type of the parameterized type is equal to `List` and if the actual type argument is equal to the entity class passed as a parameter. If both conditions are true, it sets the accessible flag of the field to true and then gets the value of the field using the `get()` method.
+
+If none of the above conditions are met, it recursively calls the `handleNestedObject` method with the current field's value as the object parameter and the entity class passed as a parameter. This allows the method to handle nested objects in the same way as the top-level object.
+
+The `handleList` method is similar to the `handleNestedObject` method, but it is specifically designed to handle lists of objects. It takes three parameters: an object, a class entity, and a boolean value indicating whether the data should be encoded or decoded. The method first gets all declared fields of the object using the `getDeclaredFields()` method and then loops through them to check if any of them is a primitive type. If it finds one, it skips it and continues with the next field.
+
+If none of the fields are primitives, it checks if the current field's type is equal to the entity class passed as a parameter. If it is, it sets the accessible flag of the field to true using the `setAccessible(true)` method and then gets the value of the field using the `get()` method.
+
+If the field's type is not equal to the entity class, it checks if the current field is a list with the help of the `ParameterizedType` class. If it is, it checks if the raw type of the parameterized type is equal to `List` and if the actual type argument is equal to the entity class passed as a parameter. If both conditions are true, it sets the accessible flag of the field to true and then gets the value of the field using the `get()` method.
+
+If none of the above conditions are met, it recursively calls the `handleList` method with the current field's value as the object parameter and the entity class passed as a parameter. This allows the method to handle nested lists in the same way as the top-level list.
+
+The `handlerObject` method is similar to the `handleNestedObject` method, but it only handles a single object rather than a list of objects. It takes two parameters: an object and a boolean value indicating whether the data should be encoded or decoded. The method first gets all declared fields of the object using the `getDeclaredFields()` method and then loops through them to check if any of them is a primitive type. If it finds one, it skips it and continues with the next field.
+
+If none of the fields are primitives, it checks if the current field's type is equal to the entity class passed as a parameter. If it is, it sets the accessible flag of the field to true using the `setAccessible(true)` method and then gets the value of the field using the `get()` method.
+
+If the field's type is not equal to the entity class, it checks if the current field is a list with the help of the `ParameterizedType` class. If it is, it checks if the raw type of the parameterized type is equal to `List` and if the actual type argument is equal to the entity class passed as a parameter. If both conditions are true, it sets the accessible flag of the field to true and then gets the value of the field using the `get()` method.
+
+If none of the above conditions are met, it recursively calls the `handlerObject` method with the current field's value as the object parameter and the entity class passed as a parameter. This allows the method to handle nested objects in the same way as the top-level object.
+
+The `handleNestedObjectTest` test case is a unit test that checks if the `handleNestedObject` method works correctly by passing it an object, a class entity, and a boolean value indicating whether the data should be encoded or decoded. The test first creates an object with some nested objects and then passes it to the `handleNestedObject` method along with the class entity and the boolean value. Finally, it checks if the result of the method call is correct by comparing it to an expected result.
+
+The `handleListTest` test case is similar to the `handleNestedObjectTest` test case but for the `handleList` method. It creates a list with some nested lists and then passes it to the `handleList` method along with the class entity and the boolean value. Finally, it checks if the result of the method call is correct by comparing it to an expected result.
+
+The `handlerObjectTest` test case is similar to the `handleNestedObjectTest` test case but for the `handlerObject` method. It creates a single object with some nested objects and then passes it to the `handlerObject` method along with the class entity and the boolean value. Finally, it checks if the result of the method call is correct by comparing it to an expected result.
+
+In summary, these three methods allow for handling of arbitrary structures of objects containing primitive types, lists of objects, and nested objects in a generic way. They are designed to be used recursively to handle any level of nesting.
+
+
+No.7 generated result --------------------------
+
+
+@Test
+public void handleNestedObjectTest() {
+    Object obj = new Object(); // Create an instance of the object to be tested
+    Class entity = String.class; // The class of the nested object
+    boolean isEncode = true; // Whether or not to encode the data
+    
+    // Set up any necessary mock objects and test data
+    Field[] fields = obj.getClass().getDeclaredFields(); // Get the declared fields of the object
+    for (Field field : fields) {
+        if (field.getType().equals(entity)) { // If the field is of the correct type
+            Object nestedObject = field.get(obj); // Get the nested object
+            handlerObject(nestedObject, isEncode); // Test the handleObject method with the nested object and isEncode flag set to true
+        } else if (field.getGenericType() instanceof ParameterizedType) { // If the field is a List<T> type
+            ParameterizedType pt = (ParameterizedType) field.getGenericType(); // Cast the generic type to a parameterized type
+            if (pt.getRawType().equals(List.class)) { // If the raw type of the list is List.class
+                if (pt.getActualTypeArguments()[0].equals(entity)) { // If the actual type argument of the list is of the same class as the entity parameter
+                    Object nestedObject = field.get(obj); // Get the nested object from the list
+                    handleList(nestedObject, entity, isEncode); // Test the handleList method with the nested object and isEncode flag set to true
+                }
+            }
+        }
+    }
+}
+
+
+No.8 generated result --------------------------
+
+@Test
+public void handleNestedObjectTest() {
+    // Create a new instance of the class
+    SensitiveInfoUtil util = new SensitiveInfoUtil();
+    
+    // Populate it with some nested objects
+    MyObject obj1 = new MyObject();
+    MyObject obj2 = new MyObject();
+    obj1.setNestedObject(obj2);
+    
+    // Call the method and check that it works correctly
+    util.handleNestedObject(obj1, MyObject.class, true);
+}
+
+
+No.9 generated result --------------------------
+
+@Test
+public void handleNestedObjectTest() throws IllegalAccessException {
+    Object obj = new Object(); // create an instance of the object
+    Class entity = String.class; // set the type of the nested object to be handled
+    boolean isEncode = true; // set whether to encode or decode the nested object
+    
+    SensitiveInfoUtil.handleNestedObject(obj, entity, isEncode); // call the method to handle the nested object
+    
+    assertEquals(expectedResult, actualResult); // compare the expected result with the actual result
+}
+
+
+No.10 generated result --------------------------
+
+@Test
+public void handleNestedObjectTest() throws IllegalAccessException {
+    Object obj = new Object();
+    Class entity = String.class;
+    boolean isEncode = true;
+    
+    Field[] fields = obj.getClass().getDeclaredFields();
+    for (Field field : fields) {
+        if(field.getType().isPrimitive()){
+            continue;
+        }
+        if(field.getType().equals(entity)){
+            // 对象里面是实体
+            field.setAccessible(true);
+            Object nestedObject = field.get(obj);
+            assertNotNull(nestedObject);
+            break;
+        }else{
+            // 对象里面是List<实体>
+            if(field.getGenericType() instanceof ParameterizedType){
+                ParameterizedType pt = (ParameterizedType)field.getGenericType();
+                if(pt.getRawType().equals(List.class)){
+                    if(pt.getActualTypeArguments()[0].equals(entity)){
+                        field.setAccessible(true);
+                        Object nestedObject = field.get(obj);
+                        assertNotNull(nestedObject);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+

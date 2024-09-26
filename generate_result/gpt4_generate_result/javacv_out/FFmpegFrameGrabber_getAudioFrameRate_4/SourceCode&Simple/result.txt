@@ -1,0 +1,553 @@
+Source code: 
+
+
+public double getAudioFrameRate() {
+    if (audio_st == null) {
+        return 0.0;
+    } else {
+        if (samples_frame == null || samples_frame.nb_samples() == 0) {
+            try {
+                grabFrame(true, false, false, false, false);
+                frameGrabbed = true;
+            } catch (Exception e) {
+                return 0.0;
+            }
+        }
+        if (samples_frame != null && samples_frame.nb_samples() != 0)
+            return ((double) getSampleRate()) / samples_frame.nb_samples();
+        else return 0.0;
+
+    }
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class FFmpegFrameGrabberTest {
+
+    @Test
+    public void getAudioFrameRateTest() {
+        FFmpegFrameGrabber grabber = mock(FFmpegFrameGrabber.class, CALLS_REAL_METHODS);
+
+        // Test when audio_st is null
+        grabber.audio_st = null;
+        assertEquals(0.0, grabber.getAudioFrameRate(), "Expected frame rate to be 0 when audio stream is null");
+
+        // Test when samples_frame is null
+        try {
+            grabber.audio_st = new AVStream(); // assuming valid non-null AVStream
+            grabber.samples_frame = null;
+            when(grabber.grabFrame(true, false, false, false, false)).thenThrow(new FFmpegFrameGrabber.Exception("Grab frame error"));
+            assertEquals(0.0, grabber.getAudioFrameRate(), "Expected frame rate to be 0 when samples_frame is null and grabFrame throws Exception");
+        } catch (FFmpegFrameGrabber.Exception e) {
+            fail("Did not expect FFmpegFrameGrabber.Exception to be thrown here");
+        }
+
+        // Test when samples_frame.nb_samples() returns 0
+        try {
+            grabber.samples_frame = mock(AVFrame.class);
+            when(grabber.samples_frame.nb_samples()).thenReturn(0);
+            assertEquals(0.0, grabber.getAudioFrameRate(), "Expected frame rate to be 0 when nb_samples is 0");
+        } catch (Exception e) {
+            fail("Did not expect Exception to be thrown for this test case");
+        }
+
+        // Test when samples_frame.nb_samples() is non-zero
+        try {
+            int sampleRate = 44100;
+            int nbSamples = 1024;
+            when(grabber.getSampleRate()).thenReturn(sampleRate);
+            when(grabber.samples_frame.nb_samples()).thenReturn(nbSamples);
+            double expectedFrameRate = (double) sampleRate / nbSamples;
+
+            assertEquals(expectedFrameRate, grabber.getAudioFrameRate(), "Expected correct frame rate calculation when nb_samples is non-zero");
+        } catch (Exception e) {
+            fail("Did not expect Exception to be thrown for this test case");
+        }
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FFmpegFrameGrabberTest {
+
+    private FFmpegFrameGrabber frameGrabber;
+
+    @BeforeEach
+    public void setUp() {
+        frameGrabber = new FFmpegFrameGrabber("test.mp3");
+    }
+
+    @AfterEach
+    public void tearDown() throws Exception {
+        frameGrabber.release();
+    }
+
+    @Test
+    public void getAudioFrameRateTestWhenAudioStIsNull() {
+        assertEquals(0.0, frameGrabber.getAudioFrameRate(), "Audio frame rate should be 0 when audio_st is null");
+    }
+
+    @Test
+    public void getAudioFrameRateTestWhenSamplesFrameIsNull() {
+        frameGrabber.audio_st = new AVStream();
+        assertNull(frameGrabber.samples_frame, "samples_frame should be null for this test");
+        assertEquals(0.0, frameGrabber.getAudioFrameRate(), "Audio frame rate should be 0 when samples_frame is null or nb_samples is 0");
+    }
+
+    @Test
+    public void getAudioFrameRateTestWhenNoSamples() {
+        frameGrabber.audio_st = new AVStream();
+        frameGrabber.samples_frame = new AVFrame();
+        when(frameGrabber.samples_frame.nb_samples()).thenReturn(0);
+        assertEquals(0.0, frameGrabber.getAudioFrameRate(), "Audio frame rate should be 0 when there are no samples");
+    }
+
+    @Test
+    public void getAudioFrameRateTestWithValidSamples() throws Exception {
+        frameGrabber.audio_st = new AVStream();
+        frameGrabber.samples_frame = new AVFrame();
+        frameGrabber.samples_frame.nb_samples(1024);
+        when(frameGrabber.getSampleRate()).thenReturn(44100);
+
+        // An example of how the audio frame rate might be calculated.
+        double expectedFrameRate = 44100.0 / 1024.0;
+        assertEquals(expectedFrameRate, frameGrabber.getAudioFrameRate(), "Audio frame rate should match the expected value for given sample rate and nb_samples");
+    }
+
+    @Test
+    public void getAudioFrameRateTestCatchesException() throws Exception {
+        frameGrabber.audio_st = new AVStream();
+        frameGrabber.samples_frame = new AVFrame();
+        frameGrabber.samples_frame.nb_samples(1024);
+        when(frameGrabber.getSampleRate()).thenThrow(new Exception());
+
+        assertEquals(0.0, frameGrabber.getAudioFrameRate(), "Audio frame rate should be 0 if an exception is thrown while getting the sample rate");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class FFmpegFrameGrabberTest {
+    @Test
+    public void getAudioFrameRateTest() {
+        // Mock the necessary objects
+        FrameGrabber samples_frame = mock(FrameGrabber.class);
+        FFmpegFrameGrabber grabber = spy(new FFmpegFrameGrabber((String) null));
+
+        // Define behavior for these objects when methods are called
+        when(grabber.getSampleRate()).thenReturn(44100); // Assume the sample rate is 44100 Hz
+        when(samples_frame.nb_samples()).thenReturn(1024); // Assume there are 1024 samples in the frame
+        when(grabber.samples_frame).thenReturn(samples_frame);
+
+        // Test audio_st is null, expecting 0.0
+        grabber.audio_st = null;
+        assertEquals(0.0, grabber.getAudioFrameRate(), "Audio frame rate should be 0.0 when audio_st is null");
+
+        // Test samples_frame is null, expecting 0.0
+        grabber.audio_st = mock(AVStream.class); // Restore audio_st to prevent null
+        grabber.samples_frame = null;
+        try {
+            doNothing().when(grabber).grabFrame(true, false, false, false, false);
+            assertEquals(0.0, grabber.getAudioFrameRate(), "Audio frame rate should be 0.0 when samples_frame is null");
+        } catch (Exception e) {
+            fail("Unexpected exception: " + e.getMessage());
+        }
+
+        // Test samples_frame.nb_samples() is 0, expecting 0.0
+        when(samples_frame.nb_samples()).thenReturn(0);
+        assertEquals(0.0, grabber.getAudioFrameRate(), "Audio frame rate should be 0.0 when the number of samples is 0");
+
+        // Test a valid samples_frame with nb_samples > 0
+        when(samples_frame.nb_samples()).thenReturn(1024);
+        assertEquals(43.06640625, grabber.getAudioFrameRate(), 0.0001, "Incorrect audio frame rate calculation");
+
+        // Test exception during grabFrame call, expecting 0.0
+        try {
+            doThrow(new Exception()).when(grabber).grabFrame(true, false, false, false, false);
+        } catch (Exception e) {
+            // Handle exception from mocking behavior
+        }
+        assertEquals(0.0, grabber.getAudioFrameRate(), "Audio frame rate should be 0.0 when exception is thrown during grabFrame");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FFmpegFrameGrabberTest {
+
+    @Test
+    public void getAudioFrameRateTest() {
+        FFmpegFrameGrabber grabber = new FFmpegFrameGrabber("test.mp3");
+        
+        // Test with audio_st being null - should return 0.0
+        grabber.audio_st = null;
+        assertEquals(0.0, grabber.getAudioFrameRate(), "Audio stream is null, expected frame rate of 0.0");
+        
+        // Prepare test for when samples_frame is null or has 0 samples
+        grabber.audio_st = new AVStream();
+        grabber.samples_frame = null;
+        
+        // Test with samples_frame being null - should simulate grabbing a frame
+        // but in tests we should then check for the exception and return 0.0
+        try {
+            grabber.getAudioFrameRate();
+            fail("Expected an Exception to be thrown when samples_frame is null");
+        } catch (Exception e) {
+            assertEquals(0.0, grabber.getAudioFrameRate(), "Should return frame rate of 0.0 when an exception occurs");
+        }
+        
+        // Now let's set samples_frame to a non-null value but with 0 samples
+        grabber.samples_frame = new AVFrame();
+        grabber.samples_frame.nb_samples(0);
+        
+        // Test with samples_frame having 0 samples - should simulate grabbing a frame
+        // but in tests we should then check for the exception and return 0.0
+        try {
+            grabber.getAudioFrameRate();
+            fail("Expected an Exception to be thrown when samples_frame has 0 samples");
+        } catch (Exception e) {
+            assertEquals(0.0, grabber.getAudioFrameRate(), "Should return frame rate of 0.0 when an exception occurs");
+        }
+        
+        // Create valid conditions for samples_frame to have a positive frame rate
+        grabber.samples_frame.nb_samples(50);
+        grabber.samples_rate = 48000;
+        
+        // Test with valid samples_frame - expected correct frame rate
+        // We assume the `getSampleRate` method returns the `samples_rate` field
+        // This mock functionality should be implemented in test or grabber should be partially mocked.
+        // Assuming `getSampleRate` returns 48000
+        assertEquals(48000.0 / 50, grabber.getAudioFrameRate(), "Expected a valid frame rate calculation");
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FFmpegFrameGrabberTest {
+    
+    FFmpegFrameGrabber frameGrabber;
+    
+    @BeforeEach
+    public void setUp() {
+        // Initialization of the frameGrabber object can go here
+        // We will assume that we have a working setup ready that initializes frameGrabber
+        // You might need to create a valid frameGrabber with necessary stubbed data for audio_st and samples_frame
+    }
+    
+    @Test
+    public void getAudioFrameRateTest() {
+        // Scenario 1: audio_st is null. Expected outcome: 0.0
+        frameGrabber.audio_st = null;
+        assertEquals(0.0, frameGrabber.getAudioFrameRate(), "Audio frame rate should be 0.0 when audio_st is null");
+
+        // Assuming existence of a helper method to mock or setup behavior, to avoid dealing with the actual implementation details
+        // Scenario 2: samples_frame is null or its nb_samples is 0, without exception.
+        MockHelper.mockSamplesFrame(frameGrabber, null); // Assuming this helper method sets the samples_frame and related behaviors
+        assertEquals(0.0, frameGrabber.getAudioFrameRate(), "Audio frame rate should be 0.0 when samples_frame is null or nb_samples is 0");
+
+        // Scenario 3: samples_frame is not null and has non-zero nb_samples, without exception. Assume getSampleRate() returns a non-zero int.
+        int expectedSampleRate = 48000;
+        int expectedNbSamples = 1024;
+        MockHelper.mockSamplesFrame(frameGrabber, expectedNbSamples); // Assuming this sets a valid samples_frame
+        MockHelper.mockGetSampleRate(frameGrabber, expectedSampleRate); // And this ensures getSampleRate() returns the expected value
+        assertEquals((double) expectedSampleRate / expectedNbSamples, frameGrabber.getAudioFrameRate(), 0.001, "Audio frame rate calculation is incorrect");
+
+        // Scenario 4: Exception is thrown when grabbing the frame.
+        MockHelper.mockGrabFrameWithException(frameGrabber); // Assuming this method mimics an exception thrown during grabFrame
+        assertEquals(0.0, frameGrabber.getAudioFrameRate(), "Audio frame rate should be 0.0 when an exception is thrown during frame grab");
+    }
+
+    @AfterEach
+    public void tearDown() {
+        // Cleanup resources if needed
+        // If frameGrabber required certain resources or initialization, this is where you would release or clean them
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class FFmpegFrameGrabberTest {
+    
+    @Test
+    public void getAudioFrameRateTest() {
+        // Create a mock FFmpegFrameGrabber instance
+        FFmpegFrameGrabber grabber = mock(FFmpegFrameGrabber.class);
+        
+        // Define behavior for `getSampleRate()` and `samples_frame.nb_samples()`
+        when(grabber.getSampleRate()).thenReturn(48000); // Assuming 48000 samples per second
+        AVFrame mockFrame = mock(AVFrame.class);
+        when(mockFrame.nb_samples()).thenReturn(1600); // Assuming there are 1600 samples in the frame
+
+        // Set expectations for audio stream being null
+        when(grabber.audio_st).thenReturn(null);
+        assertEquals(0.0, grabber.getAudioFrameRate(), "Audio frame rate should be 0.0 when audio_st is null");
+        
+        // Set expectations for audio stream being non-null but frame has no samples
+        when(grabber.audio_st).thenReturn(mock(AVStream.class)); // Non-null stream
+        when(grabber.samples_frame).thenReturn(null);
+        assertEquals(0.0, grabber.getAudioFrameRate(), "Audio frame rate should be 0.0 when samples_frame is null");
+
+        // Set NON-NULL frame with ZERO samples
+        when(grabber.samples_frame).thenReturn(mockFrame);
+        when(mockFrame.nb_samples()).thenReturn(0);
+        assertEquals(0.0, grabber.getAudioFrameRate(), "Audio frame rate should be 0.0 when nb_samples is 0");
+
+        // Simulate exception in `grabFrame`
+        when(grabber.samples_frame).thenReturn(mockFrame);
+        doThrow(new Exception()).when(grabber).grabFrame(true, false, false, false, false);
+        assertEquals(0.0, grabber.getAudioFrameRate(), "Audio frame rate should be 0.0 when grabFrame throws an exception");
+
+        // Set expectations for correct frame rate calculation
+        when(grabber.samples_frame.nb_samples()).thenReturn(1600); // Non-zero samples
+        // Expected frame rate calculation: 48000 samples/second / 1600 samples/frame = 30.0 frames/second
+        assertEquals(30.0, grabber.getAudioFrameRate(), "Audio frame rate should be 30.0 with valid data");
+    }
+}
+
+
+
+No.7 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FFmpegFrameGrabberTest {
+
+    @Test
+    public void getAudioFrameRateTest() {
+        FFmpegFrameGrabber frameGrabber = new FFmpegFrameGrabber("test.mp3");
+
+        // Test when audio_st is null.
+        assertNull(frameGrabber.audio_st);
+        assertEquals(0.0, frameGrabber.getAudioFrameRate(), "Audio Frame Rate should be 0.0 when audio_st is null");
+
+        // Mocking the behavior when audio_st is not null, samples_frame is null.
+        frameGrabber.audio_st = new AVStream();
+        assertNull(frameGrabber.samples_frame);
+        assertEquals(0.0, frameGrabber.getAudioFrameRate(), "Audio Frame Rate should be 0.0 when samples_frame is null");
+
+        // Mocking the behavior when audio_st is not null, and samples_frame.nb_samples() returns 0.
+        frameGrabber.samples_frame = new AVFrame();
+        when(frameGrabber.samples_frame.nb_samples()).thenReturn(0);
+        assertEquals(0.0, frameGrabber.getAudioFrameRate(), "Audio Frame Rate should be 0.0 when there are no samples");
+
+        // Mocking the behavior when audio_st is not null, and samples_frame.nb_samples() returns a positive number.
+        int mockNbSamples = 1024;
+        int mockSampleRate = 48000;
+        when(frameGrabber.samples_frame.nb_samples()).thenReturn(mockNbSamples);
+        when(frameGrabber.getSampleRate()).thenReturn(mockSampleRate);
+        double expectedFrameRate = (double) mockSampleRate / mockNbSamples;
+        assertEquals(expectedFrameRate, frameGrabber.getAudioFrameRate(), "Audio Frame Rate should match the expected rate");
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FFmpegFrameGrabberTest {
+    
+    @Test
+    public void getAudioFrameRateTest() {
+        FFmpegFrameGrabber grabber = new FFmpegFrameGrabber("test.mp3");
+        // Set some hypothetical values for testing purposes
+        int sampleRate = 44100;
+        int nbSamples = 1024;
+        
+        // Pretend we have a valid audio stream
+        AVStream audioStream = new AVStream();
+        AVCodecContext audioCodecContext = new AVCodecContext();
+        audioStream.codecpar(audioCodecContext);
+        AVFrame samplesFrame = new AVFrame();
+        
+        // Setting up the grabber state
+        grabber.audio_st = audioStream;
+        grabber.samples_frame = samplesFrame;
+        grabber.samples_frame.nb_samples(nbSamples);
+        grabber.samples_rate = sampleRate;
+        grabber.frameGrabbed = true;
+
+        // Execute getAudioFrameRate method
+        double frameRate = grabber.getAudioFrameRate();
+
+        // Check that the calculated frame rate matches our expectations
+        double expectedFrameRate = (double) sampleRate / nbSamples;
+        assertEquals(expectedFrameRate, frameRate, "The frame rate should be calculated as sampleRate / nb_samples");
+
+        // Test behavior when audio_st is null
+        grabber.audio_st = null;
+        assertEquals(0.0, grabber.getAudioFrameRate(), "The frame rate should be 0.0 when audio_st is null");
+
+        // Test behavior when samples_frame is null
+        grabber.audio_st = audioStream;
+        grabber.samples_frame = null;
+        assertEquals(0.0, grabber.getAudioFrameRate(), "The frame rate should be 0.0 when samples_frame is null");
+
+        // Test behavior when samples_frame.nb_samples() is 0
+        // (This implies an exception is thrown in grabFrame)
+        grabber.audio_st = audioStream;
+        grabber.samples_frame = samplesFrame;
+        grabber.samples_frame.nb_samples(0);
+        try {
+            grabber.grabFrame(true, false, false, false, false);
+            fail("An exception should have been thrown by grabFrame");
+        } catch (Exception e) {
+            // Expected exception
+        }
+        assertEquals(0.0, grabber.getAudioFrameRate(), "The frame rate should be 0.0 when an exception is thrown in grabFrame");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+class FFmpegFrameGrabberTest {
+
+    @Test
+    public void getAudioFrameRateTest() {
+        // Create an FFmpegFrameGrabber instance to be tested
+        FFmpegFrameGrabber frameGrabber = mock(FFmpegFrameGrabber.class);
+        
+        // Stubbing for when audio_st is null
+        when(frameGrabber.getAudioFrameRate()).thenCallRealMethod();
+        when(frameGrabber.audio_st).thenReturn(null);
+        assertEquals(0.0, frameGrabber.getAudioFrameRate(), "Frame rate should be 0.0 when audio_st is null");
+
+        // Prepare a mock for AVFrame and stubbing for when audio_st is not null
+        AVFrame mockSamplesFrame = mock(AVFrame.class);
+        when(frameGrabber.audio_st).thenReturn(new AVStream()); // Mocked non-null audio_st
+        when(frameGrabber.samples_frame).thenReturn(mockSamplesFrame);
+
+        // Case: samples_frame is not null, but nb_samples equals 0
+        when(mockSamplesFrame.nb_samples()).thenReturn(0);
+        assertEquals(0.0, frameGrabber.getAudioFrameRate(), "Frame rate should be 0.0 when nb_samples is 0 and Exception is caught");
+
+        // Case: samples_frame is not null, nb_samples is greater than 0
+        when(mockSamplesFrame.nb_samples()).thenReturn(100);
+        when(frameGrabber.getSampleRate()).thenReturn(48000); // Stubbing getSampleRate to return 48000
+        assertEquals(480.0, frameGrabber.getAudioFrameRate(), "Frame rate should be (sampleRate/nb_samples)");
+        
+        // Clean up
+        reset(frameGrabber);
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FFmpegFrameGrabberTest {
+
+    private FFmpegFrameGrabber frameGrabber;
+
+    @BeforeEach
+    public void setUp() {
+        // Assuming we have a method to create a mock FFmpegFrameGrabber
+        frameGrabber = mock(FFmpegFrameGrabber.class);
+        // Setting up the pre-conditions and the expected behavior of the mock
+        when(frameGrabber.getAudioFrameRate()).thenCallRealMethod();
+        when(frameGrabber.getSampleRate()).thenReturn(48000);
+    }
+
+    @Test
+    public void getAudioFrameRateTestWhenAudioStreamIsNull() {
+        when(frameGrabber.audio_st).thenReturn(null);
+        assertEquals(0.0, frameGrabber.getAudioFrameRate(), "The audio frame rate should be 0.0 when audio_st is null");
+    }
+
+    @Test
+    public void getAudioFrameRateTestWhenSampleFrameIsNull() {
+        when(frameGrabber.audio_st).thenReturn(mock(AVStream.class));
+        when(frameGrabber.samples_frame).thenReturn(null);
+        assertEquals(0.0, frameGrabber.getAudioFrameRate(), "The audio frame rate should be 0.0 when samples_frame is null");
+    }
+
+    @Test
+    public void getAudioFrameRateTestWhenNbSamplesIsZero() {
+        when(frameGrabber.audio_st).thenReturn(mock(AVStream.class));
+        AVFrame mockSamplesFrame = mock(AVFrame.class);
+        when(mockSamplesFrame.nb_samples()).thenReturn(0);
+        when(frameGrabber.samples_frame).thenReturn(mockSamplesFrame);
+        assertEquals(0.0, frameGrabber.getAudioFrameRate(), "The audio frame rate should be 0.0 when nb_samples is 0");
+    }
+
+    @Test
+    public void getAudioFrameRateTestWithValidFrame() throws FFmpegFrameGrabber.Exception {
+        when(frameGrabber.audio_st).thenReturn(mock(AVStream.class));
+        AVFrame mockSamplesFrame = mock(AVFrame.class);
+        when(mockSamplesFrame.nb_samples()).thenReturn(1024);
+        when(frameGrabber.samples_frame).thenReturn(mockSamplesFrame);
+        frameGrabber.grabFrame(true, false, false, false, false); // This would be called inside the method
+        assertTrue(frameGrabber.frameGrabbed);
+        assertEquals(48000.0 / 1024, frameGrabber.getAudioFrameRate(), "The audio frame rate should be calculated correctly for valid frames");
+    }
+
+    @AfterEach
+    public void tearDown() {
+        frameGrabber = null;
+    }
+
+    // Utility method to mock FFmpegFrameGrabber, can be omitted if a mocking framework like Mockito is used in reality
+    private static FFmpegFrameGrabber mock(Class<FFmpegFrameGrabber> classToMock) {
+        // Put mock creation logic here, perhaps using a mocking framework
+        return new FFmpegFrameGrabber((InputStream) null);
+    }
+}
+
+

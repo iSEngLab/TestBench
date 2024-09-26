@@ -1,0 +1,360 @@
+Source code: 
+
+
+private String getReqestParams(HttpServletRequest request, JoinPoint joinPoint) {
+    String httpMethod = request.getMethod();
+    String params = "";
+    if (CommonConstant.HTTP_POST.equals(httpMethod) || CommonConstant.HTTP_PUT.equals(httpMethod) || CommonConstant.HTTP_PATCH.equals(httpMethod)) {
+        Object[] paramsArray = joinPoint.getArgs();
+        // java.lang.IllegalStateException: It is illegal to call this method if the current request is not in asynchronous mode (i.e. isAsyncStarted() returns false)
+        //  https://my.oschina.net/mengzhang6/blog/2395893
+        Object[] arguments  = new Object[paramsArray.length];
+        for (int i = 0; i < paramsArray.length; i++) {
+            if (paramsArray[i] instanceof BindingResult || paramsArray[i] instanceof ServletRequest || paramsArray[i] instanceof ServletResponse || paramsArray[i] instanceof MultipartFile) {
+                //ServletRequest不能序列化，从入参里排除，否则报异常：java.lang.IllegalStateException: It is illegal to call this method if the current request is not in asynchronous mode (i.e. isAsyncStarted() returns false)
+                //ServletResponse不能序列化 从入参里排除，否则报异常：java.lang.IllegalStateException: getOutputStream() has already been called for this response
+                continue;
+            }
+            arguments[i] = paramsArray[i];
+        }
+        //update-begin-author:taoyan date:20200724 for:日志数据太长的直接过滤掉
+        PropertyFilter profilter = new PropertyFilter() {
+            @Override
+            public boolean apply(Object o, String name, Object value) {
+                int length = 500;
+                if(value!=null && value.toString().length()>length){
+                    return false;
+                }
+                return true;
+            }
+        };
+        params = JSONObject.toJSONString(arguments, profilter);
+        //update-end-author:taoyan date:20200724 for:日志数据太长的直接过滤掉
+    } else {
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        Method method = signature.getMethod();
+        // 请求的方法参数值
+        Object[] args = joinPoint.getArgs();
+        // 请求的方法参数名称
+        LocalVariableTableParameterNameDiscoverer u = new LocalVariableTableParameterNameDiscoverer();
+        String[] paramNames = u.getParameterNames(method);
+        if (args != null && paramNames != null) {
+            for (int i = 0; i < args.length; i++) {
+                params += "  " + paramNames[i] + ": " + args[i];
+            }
+        }
+    }
+    return params;
+}
+
+
+
+No.1 generated result --------------------------
+
+Timeout
+
+
+No.2 generated result --------------------------
+
+package io.swagger.annotations;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+/**
+ * Marker annotation to indicate that an element is deprecated and should no longer be used.
+ */
+@Target({ElementType.ANNOTATION_TYPE, ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+public @interface ApiOperation {
+    String value() default ""; // 接口操作信息
+}
+    
+
+### Response:
+
+
+No.3 generated result --------------------------
+
+package com.github.jeansantos38.stf.framework.selenium.enums;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public enum WebDriverType {
+    FIREFOX("firefox", "Firefox"), CHROME("chrome", "Chrome"), SAFARI("safari", "Safari"), IE("ie", "Internet Explorer"), EDGE("edge", "Edge"), HTMLUNIT("htmlunit", "HtmlUnit");
+    
+    private String type;
+    private String description;
+    
+    WebDriverType(String type, String description) {
+        this.type = type;
+        this.description = description;
+    }
+    
+    public static Map<String, String> getWebDriverTypes() {
+        Map<String, String> webDriverTypes = new HashMap<>();
+        
+        for (WebDriverType wdt : WebDriverType.values()) {
+            webDriverTypes.put(wdt.getType(), wdt.getDescription());
+        }
+        
+        return webDriverTypes;
+    }
+}
+
+
+No.4 generated result --------------------------
+
+@Data
+public class SysLog implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * id
+     */
+    @TableId(type= IdType.ASSIGN_ID)
+    private String id;
+    /**
+     * 日志类型
+     */
+    private Integer logType;
+    /**
+     * 操作类型（1查询，2添加，3修改，4删除）
+     */
+    private Integer operateType;
+    /**
+     * 模块类名
+     */
+    private String moduleType;
+    /**
+     * 日志内容
+     */
+    private String logContent;
+    /**
+     * 操作方法
+     */
+    private String method;
+
+    /**
+     * 请求方式
+     */
+    private String requestMethod;
+
+    /**
+     * 操作类型（1查询，2添加，3修改，4删除）
+     */
+    private Integer operateType;
+
+    /**
+     * 操作人员id
+     */
+    private String userId;
+
+    /**
+     * 操作人姓名
+     */
+    private String username;
+
+    /**
+     * 操作地址
+     */
+    private String operateAddress;
+
+    /**
+     * 请求参数
+     */
+    @TableField(exist=false)
+    private String requestParam;
+}
+
+
+
+No.5 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.springframework.stereotype.Component;
+
+/**
+ * 在线用户管理
+ */
+@Slf4j
+@Aspect
+@Component
+public class OnlineAspect {
+
+    @Around("execution(* org.jeecg.modules.*Controller.*(..))")
+    public Object aroundOnline(ProceedingJoinPoint proceedingJoinPoint) throws Throwable{
+        return null;
+    }
+}
+    
+
+### Response:
+
+
+No.6 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AutoLogAspectTest {
+    @Test
+    public void getReqestParamsTest() {
+        <FILL>
+    }
+}
+    
+
+### Response:
+
+
+No.7 generated result --------------------------
+
+package [PACKAGE NAME];
+
+/**
+ * Author: [AUTHOR_NAME]
+ */
+public interface I[INTERFACE_NAME]Service extends BaseIService<[TABLE_ENTITY]> {
+  /**
+   * 获取数据列表
+   * @param pageIndex 当前页
+   * @param pageSize 每页条数
+   * @return 分页数据
+   */
+  public PageList<[TABLE_ENTITY]> getDataPage(int pageIndex, int pageSize);
+}
+
+
+
+No.8 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import java.lang.reflect.Method;
+import javax.servlet.http.HttpServletRequest;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.subject.Subject;
+import org.springframework.stereotype.Component;
+import com.alibaba.fastjson.JSONObject;
+import io.swagger.annotations.ApiOperation;
+
+/**
+ * 操作日志记录处理
+ */
+@Aspect
+@Component
+public class AutoLogAspect {
+    private static final Logger log = LoggerFactory.getLogger(AutoLogAspect.class);
+
+    @Pointcut("execution(* org.jeecg..controller.*Controller.*(..))")
+    public void excuteLog(JoinPoint jp) {
+        try {
+            Object obj = ((MethodSignature)jp.getSignature()).getDeclaringType().newInstance();
+            Class c1 = obj.getClass();
+            Method method = c1.getMethod("getById", String.class);
+            System.out.println(method.getName());
+            System.out.println(obj.getClass().getName() + ":" + method.getName());
+        } catch (Exception e) {
+            // TODO  handle the exception
+        }
+    }
+}
+
+
+No.9 generated result --------------------------
+
+
+@RestController
+@RequestMapping("/test")
+@Slf4j
+public class TestController {
+
+	// 创建线程池
+	private static ExecutorService service = new ThreadPoolExecutor(5, 20, 10L, TimeUnit.SECONDS,
+                            new LinkedBlockingQueue<>(30), r -> new Thread(r));
+
+    @GetMapping("/test")
+    public Result test(){
+        log.info("测试线程池");
+	service.execute(() -> System.out.println("子线程执行：" + Thread.currentThread().getName()));
+    return Result.ok();
+    }
+}
+package org.jeecg.common.aspect;
+
+import org.apache.ibatis.session.ResultHandler;
+import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
+
+/**
+ * @Description: 类的功能描述
+ * @Author: scott
+ * @Date: 2021-01-08 16:47
+ */
+@Service
+public class AutoLogAspect {
+    /**
+     * @Description:  循环处理方法
+     * @Param: [joinPoint]
+     * @return: java.lang.Object
+     **/
+    @Around("execution( * org.jeecg..*.service..*.*(..))")
+    public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
+        // 获取目标类型
+        Class<?> targetClass = joinPoint.getTarget().getClass();
+        // 获取方法
+        Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
+        // 获取类上的AutoLog注解信息
+        AutoLog autoLogAnnotationInfo = AnnotationUtils.findAnnotation(targetClass, AutoLog.class);
+        // TODO: 判断目标类及方法是否需要被处理
+        
+        // 获取请求参数
+        Map<String, String[]> parameterMap = ((HttpServletRequest) ServletActionContext.getRequest()).getParameterMap();
+        // 对参数进行拦戴操作，比如加密解密等等等
+        
+        // 调用joinPoint.proceed()方法调用原始方法
+        Object proceed = joinPoint.proceed();
+        if (proceed instanceof Result) {
+            return new Result<>(Result)proceed).success();
+        } else {
+            return proceed;
+        }
+    }
+}
+### Response: 
+@RestController
+@RequestMapping("/test")
+public class TestController {
+
+    @GetMapping("/test")
+    public Result test(){
+        System.out.println("测试线程池");
+		service.execute(() -> System.out.println("子线程执行：" + Thread.currentThread().getName()));
+
+        return Result.ok();
+    }
+}
+### Response:
+
+
+No.10 generated result --------------------------
+
+[![](http://img.youtube.com/vi/H70l_gkK6Ds/0.jpg)](http://www.youtube.com/watch?v=H70l_gkK6Ds "AutoLogAspect")
+
+

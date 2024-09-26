@@ -1,0 +1,554 @@
+Source code: 
+
+
+private static void calculateThresholdForBlock(byte[] luminances,
+                                               int subWidth,
+                                               int subHeight,
+                                               int width,
+                                               int height,
+                                               int[][] blackPoints,
+                                               BitMatrix matrix) {
+  int maxYOffset = height - BLOCK_SIZE;
+  int maxXOffset = width - BLOCK_SIZE;
+  for (int y = 0; y < subHeight; y++) {
+    int yoffset = y << BLOCK_SIZE_POWER;
+    if (yoffset > maxYOffset) {
+      yoffset = maxYOffset;
+    }
+    int top = cap(y, subHeight - 3);
+    for (int x = 0; x < subWidth; x++) {
+      int xoffset = x << BLOCK_SIZE_POWER;
+      if (xoffset > maxXOffset) {
+        xoffset = maxXOffset;
+      }
+      int left = cap(x, subWidth - 3);
+      int sum = 0;
+      for (int z = -2; z <= 2; z++) {
+        int[] blackRow = blackPoints[top + z];
+        sum += blackRow[left - 2] + blackRow[left - 1] + blackRow[left] + blackRow[left + 1] + blackRow[left + 2];
+      }
+      int average = sum / 25;
+      thresholdBlock(luminances, xoffset, yoffset, average, width, matrix);
+    }
+  }
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class HybridBinarizerTest {
+  
+    // Dummy values for the sake of a unit test
+    private static final int WIDTH = 120;
+    private static final int HEIGHT = 160;
+    private static final int SUB_WIDTH = WIDTH >> HybridBinarizer.BLOCK_SIZE_POWER;
+    private static final int SUB_HEIGHT = HEIGHT >> HybridBinarizer.BLOCK_SIZE_POWER;
+  
+    private static byte[] generateTestLuminances(int width, int height) {
+        byte[] luminances = new byte[width * height];
+        for (int i = 0; i < luminances.length; i++) {
+            luminances[i] = (byte)(i % 256);
+        }
+        return luminances;
+    }
+
+    private static int[][] generateTestBlackPoints(int subWidth, int subHeight) {
+        int[][] blackPoints = new int[subHeight][subWidth];
+        for (int y = 0; y < subHeight; y++) {
+            for (int x = 0; x < subWidth; x++) {
+                blackPoints[y][x] = (byte) ((y * subWidth + x) % 256);
+            }
+        }
+        return blackPoints;
+    }
+
+    @Test
+    public void calculateThresholdForBlockTest() {
+        byte[] luminances = generateTestLuminances(WIDTH, HEIGHT);
+        int[][] blackPoints = generateTestBlackPoints(SUB_WIDTH, SUB_HEIGHT);
+        BitMatrix matrix = new BitMatrix(WIDTH, HEIGHT);
+        
+        // Call the method to test
+        HybridBinarizer.calculateThresholdForBlock(luminances, SUB_WIDTH, SUB_HEIGHT, WIDTH, HEIGHT, blackPoints, matrix);
+
+        // Now check some assertions on the matrix
+        // Asserting the entire matrix would be excessive, so let's check a few strategic points
+        assertTrue(matrix.get(5, 5), "Expected point at (5, 5) should be set (black).");
+        assertFalse(matrix.get(WIDTH - 5, HEIGHT - 5), "Expected point at (WIDTH - 5, HEIGHT - 5) should not be set (white).");
+        
+        // Verify that the edges are processed correctly (assuming threshold logic does not set them black)
+        assertFalse(matrix.get(0, 0), "Corner (0,0) should not be set.");
+        assertFalse(matrix.get(WIDTH - 1, HEIGHT - 1), "Corner (WIDTH-1, HEIGHT-1) should not be set.");
+        
+        // More assertions can be placed here based on expected behaviour of the threshold algorithm
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class HybridBinarizerTest {
+    private static final int BLOCK_SIZE_POWER = 3;
+    private static final int BLOCK_SIZE = 1 << BLOCK_SIZE_POWER;
+
+    @Test
+    public void calculateThresholdForBlockTest() {
+        int width = 100;
+        int height = 100;
+        int subWidth = width >> BLOCK_SIZE_POWER;
+        int subHeight = height >> BLOCK_SIZE_POWER;
+        byte[] luminances = new byte[width * height];
+        int[][] blackPoints = new int[subHeight][subWidth];
+        BitMatrix matrix = new BitMatrix(width, height);
+
+        // Initialize dummy data for luminances and black points
+        for (int i = 0; i < luminances.length; i++) {
+            luminances[i] = (byte) (i % 256);
+        }
+        for (int y = 0; y < subHeight; y++) {
+            for (int x = 0; x < subWidth; x++) {
+                blackPoints[y][x] = (byte) (x + y);
+            }
+        }
+
+        // Call the method to test
+        HybridBinarizer.calculateThresholdForBlock(luminances, subWidth, subHeight, width, height, blackPoints, matrix);
+
+        // Asserts to verify that the BitMatrix behaves correctly
+        for (int y = 0; y < subHeight; y++) {
+            int yoffset = y << BLOCK_SIZE_POWER;
+            if (yoffset > height - BLOCK_SIZE) {
+                yoffset = height - BLOCK_SIZE;
+            }
+            for (int x = 0; x < subWidth; x++) {
+                int xoffset = x << BLOCK_SIZE_POWER;
+                if (xoffset > width - BLOCK_SIZE) {
+                    xoffset = width - BLOCK_SIZE;
+                }
+                for (int dy = 0; dy < BLOCK_SIZE; dy++) {
+                    for (int dx = 0; dx < BLOCK_SIZE; dx++) {
+                        int pixelLuminance = luminances[(yoffset + dy) * width + (xoffset + dx)] & 0xFF;
+                        int averageBlackPoint = blackPoints[y][x];
+                        if (pixelLuminance <= averageBlackPoint) {
+                            assertTrue(matrix.get(xoffset + dx, yoffset + dy), "Pixel at (" + (xoffset + dx) + ", " + (yoffset + dy) + ") should be black");
+                        } else {
+                            assertFalse(matrix.get(xoffset + dx, yoffset + dy), "Pixel at (" + (xoffset + dx) + ", " + (yoffset + dy) + ") should be white");
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class HybridBinarizerTest {
+
+    @Test
+    public void calculateThresholdForBlockTest() {
+        int subWidth = 3;
+        int subHeight = 3;
+        int width = HybridBinarizer.BLOCK_SIZE * subWidth;
+        int height = HybridBinarizer.BLOCK_SIZE * subHeight;
+        byte[] luminances = new byte[width * height];
+        int[][] blackPoints = new int[subHeight][subWidth];
+
+        for (int y = 0; y < subHeight; y++) {
+            for (int x = 0; x < subWidth; x++) {
+                blackPoints[y][x] = 0; // Set all black points to pure white
+            }
+        }
+
+        // Fill the luminances array with a gradient
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                // Set the byte value as an increasing gradient from 0 to 255
+                luminances[y * width + x] = (byte) ((y * width + x) / (height * width) * 255);
+            }
+        }
+
+        BitMatrix matrix = new BitMatrix(width, height);
+        // This line is supposed to run without exceptions for a valid implementation.
+        HybridBinarizer.calculateThresholdForBlock(luminances, subWidth, subHeight, width, height, blackPoints, matrix);
+
+        // Checking some assertions to ensure the matrix was updated correctly
+        // We expect the upper-left corner to remain white (thresholded as white)
+        assertFalse(matrix.get(0, 0), "Upper-left corner should not be thresholded as black");
+
+        // We expect the lower-right corner to be black since gradient scales to max black (255)
+        assertTrue(matrix.get(width - 1, height - 1), "Lower-right corner should be thresholded as black");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class HybridBinarizerTest {
+
+    @Test
+    public void calculateThresholdForBlockTest() {
+        int subWidth = 3;
+        int subHeight = 3;
+        int width = 24;
+        int height = 24;
+        byte[] luminances = new byte[width * height];
+        int[][] blackPoints = new int[subHeight][subWidth];
+        for (int y = 0; y < subHeight; y++) {
+            for (int x = 0; x < subWidth; x++) {
+                blackPoints[y][x] = 100; // a made-up constant for the black points
+            }
+        }
+
+        BitMatrix matrix = new BitMatrix(width, height);
+        assertDoesNotThrow(() -> 
+            HybridBinarizer.calculateThresholdForBlock(luminances, subWidth, subHeight, width, height, blackPoints, matrix)
+        );
+
+        // Validate some known points or conditions
+        // You may need to calculate these based on your blackPoint and luminances setup
+        assertFalse(matrix.get(0, 0), "Top left should not be set as a black point with high threshold");
+        assertFalse(matrix.get(width - 1, height - 1), "Bottom right should not be set as a black point with high threshold");
+
+        // Test points that should be black if threshold is correct
+        // For this test case, we need to know the expected black points
+        // which is difficult without a specific luminance and blackPoints data set.
+        // Here we assume certain positions should be black based on the mock data.
+        // assertTrue(matrix.get(expectedBlackPointX, expectedBlackPointY), "This point should be black based on the black points");
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class HybridBinarizerTest {
+
+    @Test
+    public void calculateThresholdForBlockTest() {
+        // Assuming BLOCK_SIZE, BLOCK_SIZE_POWER to be accessible within the test. 
+        // If not, they should be provided or the methods requiring them should be made package-private or public for testing.
+
+        // Mocking or creating required data for the test
+        final int subWidth = 5; // arbitrary small subWidth for test purposes
+        final int subHeight = 5; // arbitrary small subHeight for test purposes
+        final int width = HybridBinarizer.BLOCK_SIZE * subWidth;
+        final int height = HybridBinarizer.BLOCK_SIZE * subHeight;
+        byte[] luminances = new byte[width * height]; // a dummy luminance array with all zeroes
+        int[][] blackPoints = new int[subHeight][subWidth]; // dummy black points initialised to zero
+        BitMatrix matrix = new BitMatrix(width, height);
+
+        // Invoke the method to test
+        HybridBinarizer.calculateThresholdForBlock(luminances, subWidth, subHeight, width, height, blackPoints, matrix);
+
+        // Assertions and validation
+        // As the luminances array consists of all zeros and black points are also zero, 
+        // all points in the matrix should remain unset (i.e., false)
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                assertFalse(matrix.get(x, y), String.format("Pixel at (%d, %d) should be false", x, y));
+            }
+        }
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class HybridBinarizerTest {
+
+    private static final int BLOCK_SIZE_POWER = 3;
+    private static final int BLOCK_SIZE = 1 << BLOCK_SIZE_POWER; // ...0100...00
+
+    @Test
+    public void calculateThresholdForBlockTest() {
+        // Assuming BLOCK_SIZE_POWER and BLOCK_SIZE are accessible within the test scope. If not, they need to be
+        // either passed to the method or elevated in visibility within the HybridBinarizer.
+
+        // Test data setup
+        int width = 3 * BLOCK_SIZE; // ensure it's a multiple of BLOCK_SIZE
+        int height = 3 * BLOCK_SIZE; // ensure it's a multiple of BLOCK_SIZE
+        byte[] luminances = new byte[width * height];
+        int subWidth = width >> BLOCK_SIZE_POWER;
+        int subHeight = height >> BLOCK_SIZE_POWER;
+        int[][] blackPoints = new int[subHeight][subWidth];
+
+        // Fill the blackPoints array with dummy data, could be more sophisticated
+        for (int y = 0; y < subHeight; y++) {
+            for (int x = 0; x < subWidth; x++) {
+                blackPoints[y][x] = 1; // Arbitrarily chosen
+            }
+        }
+
+        BitMatrix matrix = new BitMatrix(width, height);
+
+        // Perform the actual test call
+        HybridBinarizer.calculateThresholdForBlock(luminances, subWidth, subHeight, width, height, blackPoints, matrix);
+        
+        // Now, we need to assert that the method has performed as expected. This would typically involve
+        // checking the BitMatrix for expected modifications. Since we didn't define what thresholdBlock
+        // does precisely, this is a placeholder for what the check might look like:
+
+        boolean hasSetBits = false;
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                if (matrix.get(x, y)) {
+                    hasSetBits = true;
+                    break;
+                }
+            }
+        }
+        assertTrue(hasSetBits, "The BitMatrix should have some bits set from the threshold processing.");
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class HybridBinarizerTest {
+    
+    @Test
+    public void calculateThresholdForBlockTest() {
+        final int subWidth = 3;
+        final int subHeight = 3;
+        final int width = 8;
+        final int height = 8;
+        final int[][] blackPoints = {
+            {1, 2, 3},
+            {4, 5, 6},
+            {7, 8, 9}
+        };
+        byte[] luminances = new byte[width * height];
+        BitMatrix matrix = new BitMatrix(width, height);
+
+        // Fill the luminances array with dummy data
+        for (int i = 0; i < luminances.length; i++) {
+            luminances[i] = (byte) (i % 255);
+        }
+
+        // Invoke the static method to threshold the block
+        // We can only do this by using reflections since the method is private
+        try {
+            java.lang.reflect.Method method = HybridBinarizer.class.getDeclaredMethod(
+                    "calculateThresholdForBlock",
+                    byte[].class, int.class, int.class, int.class, int.class, int[][].class, BitMatrix.class
+            );
+            method.setAccessible(true);
+            method.invoke(null, luminances, subWidth, subHeight, width, height, blackPoints, matrix);
+
+            // Now check parts of the matrix to ensure the method worked as expected
+            // The checks would be specific to the expected results based on the input data
+            for (int y = 0; y < subHeight; y++) {
+                for (int x = 0; x < subWidth; x++) {
+                    int yoffset = Math.min(y << HybridBinarizer.BLOCK_SIZE_POWER, height - HybridBinarizer.BLOCK_SIZE);
+                    int xoffset = Math.min(x << HybridBinarizer.BLOCK_SIZE_POWER, width - HybridBinarizer.BLOCK_SIZE);
+                    for (int yy = yoffset; yy < yoffset + HybridBinarizer.BLOCK_SIZE; yy++) {
+                        for (int xx = xoffset; xx < xoffset + HybridBinarizer.BLOCK_SIZE; xx++) {
+                            assertEquals(matrix.get(xx, yy), (luminances[yy * width + xx] & 0xFF) <= blackPoints[y][x]);
+                        }
+                    }
+                }
+            }
+            
+        } catch (Exception e) {
+            fail("Reflective operation failed: " + e.getMessage());
+        }
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class HybridBinarizerTest {
+    
+    @Test
+    public void calculateThresholdForBlockTest() {
+        // Simulated image parameters
+        int width = 120; // example width, divisible by 8
+        int height = 80; // example height, divisible by 8
+        byte[] luminances = new byte[width * height];
+        for (int i = 0; i < width * height; i++) {
+            luminances[i] = (byte) i; // Fill with example data
+        }
+        int subWidth = width >> HybridBinarizer.BLOCK_SIZE_POWER;
+        int subHeight = height >> HybridBinarizer.BLOCK_SIZE_POWER;
+        int[][] blackPoints = new int[subHeight][subWidth];
+        // Fill blackPoints with dummy values for testing
+        for (int y = 0; y < subHeight; y++) {
+            for (int x = 0; x < subWidth; x++) {
+                blackPoints[y][x] = 5;  // An arbitrary black point for testing
+            }
+        }
+        BitMatrix matrix = new BitMatrix(width, height);
+
+        // Invoke the calculateThresholdForBlock method, which populates the BitMatrix based on the black points
+        HybridBinarizer.calculateThresholdForBlock(luminances, subWidth, subHeight, width, height, blackPoints, matrix);
+
+        // Verify the BitMatrix has been updated correctly by checking some basic properties
+        assertNotNull(matrix, "The BitMatrix should not be null");
+        assertEquals(width, matrix.getWidth(), "The BitMatrix width should match the image width");
+        assertEquals(height, matrix.getHeight(), "The BitMatrix height should match the image height");
+
+        // Perform additional checks here if necessary, for example:
+        // - Check if specific pixels are set correctly based on the threshold
+        // - Check if the method correctly handles edge cases
+        // - Check if the method throws the correct exceptions for invalid input parameters if applicable
+    }
+}
+
+
+
+No.9 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class HybridBinarizerTest {
+    
+    // You may need to create some private mock objects or methods depending on what 
+    // thresholdBlock method does since it's not provided in the code snippet above. 
+    // Here I'm assuming it sets bits in the matrix according to some logic.
+    
+    private static final int BLOCK_SIZE_POWER = 3;
+    private static final int BLOCK_SIZE = 1 << BLOCK_SIZE_POWER;
+
+    @Test
+    public void calculateThresholdForBlockTest() {
+        int width = 100;
+        int height = 100;
+        byte[] luminances = new byte[width * height];
+
+        // Populate luminances with some dummy data 
+        for (int i = 0; i < width * height; i++) {
+            luminances[i] = (byte)(i % 256);
+        }
+
+        int subWidth = width >> BLOCK_SIZE_POWER;
+        int subHeight = height >> BLOCK_SIZE_POWER;
+
+        int[][] blackPoints = new int[subHeight][subWidth];
+        // Again, assuming black points are simply averages we could calculate them like this:
+        for (int y = 0; y < subHeight; y++) {
+            for (int x = 0; x < subWidth; x++) {
+                blackPoints[y][x] = 128; // Just a dummy value for the black points average
+            }
+        }
+
+        int[][] expectedBlackPoints = new int[subHeight][subWidth];
+        // Fill expectedBlackPoints based on your logic for testing
+        
+        BitMatrix matrix = new BitMatrix(width, height);
+        HybridBinarizer.calculateThresholdForBlock(luminances, subWidth, subHeight, width, height, blackPoints, matrix);
+
+        // Assert statements to verify if blackPoints are as expected
+        assertArrayEquals(expectedBlackPoints, blackPoints);
+        
+        // Assuming matrix.get(x, y) returns whether a bit is set,
+        // check some bits according to your logic.
+        assertTrue(matrix.get(0, 0), "The bit at (0,0) should be set.");
+        assertFalse(matrix.get(width - 1, height - 1), "The bit at (width-1,height-1) should not be set.");
+        
+        // Additional assertions can be made depending on the logic inside thresholdBlock
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class HybridBinarizerTest {
+    @Test
+    public void calculateThresholdForBlockTest() {
+        // Set up necessary mock data
+        byte[] mockLuminances = new byte[40 * 40];
+        for (int i = 0; i < mockLuminances.length; i++) {
+            mockLuminances[i] = (byte) (i % 256);
+        }
+        int subWidth = 5;
+        int subHeight = 5;
+        int width = 40;
+        int height = 40;
+        int[][] blackPoints = new int[subHeight][subWidth];
+        for (int y = 0; y < subHeight; y++) {
+            for (int x = 0; x < subWidth; x++) {
+                blackPoints[y][x] = 0xFF;
+            }
+        }
+        BitMatrix matrix = new BitMatrix(width, height);
+
+        // The test will check if the BitMatrix has been altered as expected.
+        // Ideally, you would check the BitMatrix against a known good result.
+        HybridBinarizer.calculateThresholdForBlock(mockLuminances, subWidth, subHeight, width, height, blackPoints, matrix);
+
+        // Verify the BitMatrix is not empty
+        boolean isNotEmpty = false;
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                if (matrix.get(i, j)) {
+                    isNotEmpty = true;
+                    break;
+                }
+            }
+        }
+
+        // Assertions
+        assertTrue(isNotEmpty, "BitMatrix should not be empty after processing.");
+        
+        // Further assertions can be added to check for specific expected values
+        // within certain ranges of the BitMatrix.
+        // Note: Due to the nature of the `calculateThresholdForBlock` being a static
+        // utility method with no return and no obvious side effects, an in-depth
+        // test including checks for each potentially set pixel would require
+        // either a more thorough understanding of the specific expected output
+        // or access to additional utility methods for checking BitMatrix state.
+    }
+}
+
+

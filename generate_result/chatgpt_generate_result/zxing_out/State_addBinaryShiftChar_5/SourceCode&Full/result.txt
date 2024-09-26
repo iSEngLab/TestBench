@@ -1,0 +1,141 @@
+Source code: 
+
+// Create a new state representing this state, but an additional character
+// output in Binary Shift mode.
+State addBinaryShiftChar(int index) {
+  Token token = this.token;
+  int mode = this.mode;
+  int bitCount = this.bitCount;
+  if (this.mode == HighLevelEncoder.MODE_PUNCT || this.mode == HighLevelEncoder.MODE_DIGIT) {
+    int latch = HighLevelEncoder.LATCH_TABLE[mode][HighLevelEncoder.MODE_UPPER];
+    token = token.add(latch & 0xFFFF, latch >> 16);
+    bitCount += latch >> 16;
+    mode = HighLevelEncoder.MODE_UPPER;
+  }
+  int deltaBitCount =
+      (binaryShiftByteCount == 0 || binaryShiftByteCount == 31) ? 18 :
+      (binaryShiftByteCount == 62) ? 9 : 8;
+  State result = new State(token, mode, binaryShiftByteCount + 1, bitCount + deltaBitCount);
+  if (result.binaryShiftByteCount == 2047 + 31) {
+    // The string is as long as it's allowed to be.  We should end it.
+    result = result.endBinaryShift(index + 1);
+  }
+  return result;
+}
+
+
+
+No.1 generated result --------------------------
+
+@Test
+public void addBinaryShiftCharTest() {
+    State state = new State(Token.EMPTY, HighLevelEncoder.MODE_UPPER, 0, 0);
+    State newState = state.addBinaryShiftChar(0);
+    assertEquals(0, newState.getBinaryShiftByteCount());
+    assertEquals(5, newState.getBitCount());
+}
+
+
+No.2 generated result --------------------------
+
+@Test
+public void addBinaryShiftCharTest() {
+    State initialState = new State(Token.EMPTY, HighLevelEncoder.MODE_UPPER, 0, 0);
+    State resultState = initialState.addBinaryShiftChar(5);
+    assertEquals(5, resultState.getBinaryShiftByteCount());
+}
+
+
+No.3 generated result --------------------------
+
+@Test
+public void addBinaryShiftCharTest() {
+    State initialState = State.INITIAL_STATE;
+    State newState = initialState.addBinaryShiftChar(0);
+    assertEquals(newState.getMode(), HighLevelEncoder.MODE_UPPER);
+}
+
+
+No.4 generated result --------------------------
+
+@Test
+public void addBinaryShiftCharTest() {
+    Token token = new Token(5, 8);
+    State state = new State(token, HighLevelEncoder.MODE_PUNCT, 1, 16);
+    State result = state.addBinaryShiftChar(3);
+    assertEquals(2, result.getBinaryShiftByteCount());
+    assertEquals(24, result.getBitCount());
+}
+
+
+No.5 generated result --------------------------
+
+@Test
+public void addBinaryShiftCharTest() {
+  State initialState = State.INITIAL_STATE;
+  State newState = initialState.addBinaryShiftChar(5);
+  // Add assertions to test the newState
+  // assertEquals(expected, actual);
+  // assertTrue(condition);
+}
+
+
+No.6 generated result --------------------------
+
+@Test
+public void addBinaryShiftCharTest() {
+    State initialState = State.INITIAL_STATE;
+    State resultState = initialState.addBinaryShiftChar(0);
+    Token expectedToken = new Token(0, 0);
+    int expectedMode = HighLevelEncoder.MODE_UPPER;
+    int expectedBinaryShiftByteCount = 1;
+    int expectedBitCount = 18;
+    State expectedState = new State(expectedToken, expectedMode, expectedBinaryShiftByteCount, expectedBitCount);
+    assertEquals(expectedState, resultState);
+}
+
+
+No.7 generated result --------------------------
+
+@Test
+public void addBinaryShiftCharTest() {
+    State state = new State(Token.EMPTY, HighLevelEncoder.MODE_UPPER, 0, 0);
+    State result = state.addBinaryShiftChar(0);
+    // Add the assertions for the expected result
+    // ...
+}
+
+
+No.8 generated result --------------------------
+
+@Test
+public void addBinaryShiftCharTest() {
+    Token token = new Token(100, 200);
+    State state = new State(token, 1, 3, 500);
+    State result = state.addBinaryShiftChar(5);
+    assertEquals(1, result.getMode());
+    assertEquals(5, result.getBinaryShiftByteCount());
+    assertEquals(520, result.getBitCount());
+}
+
+
+No.9 generated result --------------------------
+
+State state = new State(Token.EMPTY, HighLevelEncoder.MODE_UPPER, 0, 0);
+State newState = state.addBinaryShiftChar(5);
+assertEquals("Expected mode after adding binary shift char", HighLevelEncoder.MODE_UPPER, newState.getMode());
+assertEquals("Expected binary shift byte count after adding binary shift char", 1, newState.getBinaryShiftByteCount());
+
+
+No.10 generated result --------------------------
+
+@Test
+public void addBinaryShiftCharTest() {
+    State state = new State(Token.EMPTY, HighLevelEncoder.MODE_UPPER, 0, 0);
+    State result = state.addBinaryShiftChar(0);
+    // Verify the expected result
+    assertEquals(0, result.getBinaryShiftByteCount());
+    // Add more specific verifications here
+}
+
+

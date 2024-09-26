@@ -1,0 +1,575 @@
+Source code: 
+
+
+ArrayList<E> topSortOrder() {
+    calculateInDegree();
+    Queue<E> q = new LinkedList<E>();
+
+    for (E vertex : inDegree.keySet()) {
+        if (inDegree.get(vertex) == 0) {
+            q.add(vertex);
+        }
+    }
+
+    ArrayList<E> answer = new ArrayList<>();
+
+    while (!q.isEmpty()) {
+        E current = q.poll();
+        answer.add(current);
+        for (E adjacent : graph.getAdjacents(current)) {
+            inDegree.put(adjacent, inDegree.get(adjacent) - 1);
+            if (inDegree.get(adjacent) == 0) {
+                q.add(adjacent);
+            }
+        }
+    }
+
+    return answer;
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.thealgorithms.datastructures.graphs;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Queue;
+
+class MockGraph<E> {
+    HashMap<E, Integer> inDegree = new HashMap<>();
+    HashMap<E, ArrayList<E>> graph = new HashMap<>();
+
+    public void addEdge(E from, E to) {
+        graph.computeIfAbsent(from, k -> new ArrayList<>()).add(to);
+        inDegree.putIfAbsent(from, 0);
+        inDegree.put(to, inDegree.getOrDefault(to, 0) + 1);
+    }
+
+    public ArrayList<E> getAdjacents(E vertex) {
+        return graph.getOrDefault(vertex, new ArrayList<>());
+    }
+}
+
+public class AdjacencyListTest {
+    MockGraph<String> mockGraph;
+    ArrayList<String> result;
+
+    @BeforeEach
+    public void setUp() {
+        mockGraph = new MockGraph<>();
+        mockGraph.addEdge("A", "C");
+        mockGraph.addEdge("B", "C");
+        mockGraph.addEdge("C", "D");
+        mockGraph.addEdge("C", "E");
+        mockGraph.addEdge("D", "F");
+        mockGraph.addEdge("E", "F");
+        result = new ArrayList<>();
+    }
+
+    @Test
+    public void topSortOrderTest() {
+        result = mockGraph.topSortOrder();
+        ArrayList<String> expectedResult = new ArrayList<>();
+        expectedResult.add("A");
+        expectedResult.add("B");
+        expectedResult.add("C");
+        expectedResult.add("D");
+        expectedResult.add("E");
+        expectedResult.add("F");
+
+        assertNotNull(result); // check that the result is not null
+        assertEquals(expectedResult.size(), result.size()); // check they are the same size
+
+        // The exact order can vary, but it should satisfy the partial order defined by the edges
+        assertTrue(result.indexOf("A") < result.indexOf("C")); // A must come before C
+        assertTrue(result.indexOf("B") < result.indexOf("C")); // B must come before C
+        assertTrue(result.indexOf("C") < result.indexOf("D")); // C must come before D
+        assertTrue(result.indexOf("C") < result.indexOf("E")); // C must come before E
+        assertTrue(result.indexOf("D") < result.indexOf("F")); // D must come before F
+        assertTrue(result.indexOf("E") < result.indexOf("F")); // E must come before F
+    }
+
+    @AfterEach
+    public void tearDown() {
+        mockGraph = null;
+        result = null;
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package com.thealgorithms.datastructures.graphs;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Queue;
+
+public class AdjacencyListTest {
+
+    static class Graph<E> {
+        private HashMap<E, Integer> inDegree = new HashMap<>();
+        private HashMap<E, ArrayList<E>> graph = new HashMap<>();
+
+        public void addVertex(E vertex) {
+            graph.putIfAbsent(vertex, new ArrayList<>());
+            inDegree.putIfAbsent(vertex, 0);
+        }
+
+        public void addEdge(E from, E to) {
+            graph.get(from).add(to);
+            inDegree.put(to, inDegree.getOrDefault(to, 0) + 1);
+        }
+
+        public ArrayList<E> getAdjacents(E vertex) {
+            return graph.get(vertex);
+        }
+
+        private void calculateInDegree() {
+            // Presumed to be implemented previously. Mock here if necessary.
+        }
+
+        public ArrayList<E> topSortOrder() {
+            calculateInDegree();
+            Queue<E> q = new LinkedList<E>();
+
+            for (E vertex : inDegree.keySet()) {
+                if (inDegree.get(vertex) == 0) {
+                    q.add(vertex);
+                }
+            }
+
+            ArrayList<E> answer = new ArrayList<>();
+
+            while (!q.isEmpty()) {
+                E current = q.poll();
+                answer.add(current);
+                for (E adjacent : graph.getAdjacents(current)) {
+                    inDegree.put(adjacent, inDegree.get(adjacent) - 1);
+                    if (inDegree.get(adjacent) == 0) {
+                        q.add(adjacent);
+                    }
+                }
+            }
+
+            return answer;
+        }
+    }
+
+    @Test
+    public void topSortOrderTest() {
+        Graph<Character> graph = new Graph<>();
+        graph.addVertex('A');
+        graph.addVertex('B');
+        graph.addVertex('C');
+        graph.addVertex('D');
+        graph.addVertex('E');
+        
+        graph.addEdge('A', 'B');
+        graph.addEdge('B', 'C');
+        graph.addEdge('C', 'D');
+        graph.addEdge('A', 'D');
+        graph.addEdge('E', 'D');
+        
+        ArrayList<Character> sortOrder = graph.topSortOrder();
+        
+        assertEquals(5, sortOrder.size(), "The sort order should include all vertices.");
+        
+        // Check if the resultant array is a valid topological ordering.
+        // Since multiple valid topological sorts can exist, we might need a more intricate test to check validity.
+        // Here we just check if every vertex appears before its dependants.
+        assertTrue(sortOrder.indexOf('A') < sortOrder.indexOf('B'), "'A' should come before 'B'");
+        assertTrue(sortOrder.indexOf('B') < sortOrder.indexOf('C'), "'B' should come before 'C'");
+        assertTrue(sortOrder.indexOf('C') < sortOrder.indexOf('D'), "'C' should come before 'D'");
+        assertTrue(sortOrder.indexOf('A') < sortOrder.indexOf('D'), "'A' should come before 'D'");
+        assertTrue(sortOrder.indexOf('E') < sortOrder.indexOf('D'), "'E' should come before 'D'");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.thealgorithms.datastructures.graphs;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AdjacencyListTest {
+    private Graph<Character> graph;
+
+    @BeforeEach
+    public void setup() {
+        graph = new Graph<>();
+
+        // Set up a simple graph
+        // For example, a graph with vertices 'A' to 'E' with some edges
+        graph.addEdge('A', 'C');
+        graph.addEdge('B', 'C');
+        graph.addEdge('B', 'D');
+        graph.addEdge('C', 'E');
+        graph.addEdge('D', 'E');
+    }
+
+    @Test
+    public void topSortOrderTest() {
+        ArrayList<Character> result = graph.topSortOrder();
+        
+        // Create an expected order list (this might vary based on the graph)
+        // Since topological sort is not unique, there can be multiple valid orders.
+        // For this example, let's assume one correct order is ["B", "D", "A", "C", "E"]
+        ArrayList<Character> expectedOrder = new ArrayList<>(Arrays.asList('B', 'D', 'A', 'C', 'E'));
+
+        // Validate the result
+        assertEquals(expectedOrder, result, "The topological order is incorrect.");
+    }
+
+    // Additional tests here if needed ...
+}
+
+
+No.4 generated result --------------------------
+
+package com.thealgorithms.datastructures.graphs;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+
+public class AdjacencyListTest {
+
+    private <YOUR_CLASS> graph;
+
+    @BeforeEach
+    public void setup() {
+        graph = new <YOUR_CLASS>();
+        // Assuming setupGraph and createInDegreeMap are methods to setup the graph and its inDegree map
+        graph.setupGraph(); 
+        graph.createInDegreeMap();
+        // Add vertices and edges to the graph here, for example:
+        // graph.addEdge("A", "B");
+        // graph.addEdge("A", "C");
+        // graph.addEdge("B", "D");
+        // graph.addEdge("C", "D");
+    }
+
+    @Test
+    public void topSortOrderTest() {
+        ArrayList<String> expectedOrder = new ArrayList<>(Arrays.asList("A", "B", "C", "D"));
+        ArrayList<String> sortOrder = graph.topSortOrder();
+
+        assertNotNull(sortOrder, "The sortOrder should not be null");
+        assertEquals(expectedOrder.size(), sortOrder.size(), "sortOrder should have the same size as expectedOrder");
+        for (int i = 0; i < expectedOrder.size(); i++) {
+            assertEquals(expectedOrder.get(i), sortOrder.get(i), "Elements should be sorted in the defined topological order");
+        }
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.thealgorithms.datastructures.graphs;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Queue;
+
+public class AdjacencyListTest {
+
+    private HashMap<Character, Integer> inDegree = new HashMap<>();
+    private HashMap<Character, ArrayList<Character>> graph = new HashMap<>();
+
+    private void calculateInDegree() {
+        // Assuming this method correctly calculates in-degrees for each vertex
+    }
+
+    private ArrayList<Character> graphGetAdjacents(Character vertex) {
+        // Assuming this method retrieves the list of adjacent vertices correctly
+        return graph.getOrDefault(vertex, new ArrayList<>());
+    }
+
+    ArrayList<Character> topSortOrder() {
+        calculateInDegree();
+        Queue<Character> q = new LinkedList<Character>();
+
+        for (Character vertex : inDegree.keySet()) {
+            if (inDegree.get(vertex) == 0) {
+                q.add(vertex);
+            }
+        }
+
+        ArrayList<Character> answer = new ArrayList<>();
+
+        while (!q.isEmpty()) {
+            Character current = q.poll();
+            answer.add(current);
+            for (Character adjacent : graphGetAdjacents(current)) {
+                inDegree.put(adjacent, inDegree.get(adjacent) - 1);
+                if (inDegree.get(adjacent) == 0) {
+                    q.add(adjacent);
+                }
+            }
+        }
+
+        return answer;
+    }
+
+    // Initialize graph with a test case
+    private void createGraph() {
+        // Reset the graph and inDegree map
+        graph.clear();
+        inDegree.clear();
+
+        // Assuming that this is a directed acyclic graph (DAG)
+        // Example vertices (A, B, C, D, ...)
+        graph.put('A', new ArrayList<Character>(List.of('B', 'C')));
+        graph.put('B', new ArrayList<Character>(List.of('D')));
+        graph.put('C', new ArrayList<Character>(List.of('D')));
+        graph.put('D', new ArrayList<Character>());
+
+        // Manually setting in-degrees
+        inDegree.put('A', 0);
+        inDegree.put('B', 1);
+        inDegree.put('C', 1);
+        inDegree.put('D', 2);
+    }
+
+    @Test
+    public void topSortOrderTest() {
+        createGraph(); // Prepare the test graph
+        ArrayList<Character> sortOrder = topSortOrder();
+        ArrayList<Character> expectedOrder = new ArrayList<>(List.of('A', 'B', 'C', 'D'));
+        assertEquals(expectedOrder, sortOrder, "The topological sort order should match the expected order.");
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package com.thealgorithms.datastructures.graphs;
+
+import org.junit.jupiter.api.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+
+public class AdjacencyListTest {
+
+    private AdjacencyList<Character> adjacencyList;
+
+    @BeforeEach
+    public void setUp() {
+        adjacencyList = new AdjacencyList<>();
+        // Assuming we have methods to add vertices and edges
+        adjacencyList.addVertex('A');
+        adjacencyList.addVertex('B');
+        adjacencyList.addVertex('C');
+        adjacencyList.addVertex('D');
+        // Assume 'D' has no incoming edges for simplicity
+        adjacencyList.addEdge('A', 'B');
+        adjacencyList.addEdge('B', 'C');
+    }
+
+    @Test
+    public void topSortOrderTest() {
+        ArrayList<Character> expectedOrder = new ArrayList<>(Arrays.asList('D', 'A', 'B', 'C'));
+        ArrayList<Character> actualOrder = adjacencyList.topSortOrder();
+        assertEquals(expectedOrder, actualOrder, "The topological sort order does not match the expected output.");
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.thealgorithms.datastructures.graphs;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Queue;
+
+public class AdjacencyList<E> {
+
+    private HashMap<E, Integer> inDegree = new HashMap<>();
+    private HashMap<E, ArrayList<E>> graph = new HashMap<>();
+    
+    public ArrayList<E> topSortOrder() {
+        //... given code here ...
+    }
+    
+    // Assume we have methods to fill the graph and calculate in-degrees (not provided).
+
+    // Rest of the class definition...
+}
+
+public class AdjacencyListTest {
+
+    private AdjacencyList<Character> adjacencyList;
+
+    @BeforeEach
+    public void setUp() {
+        adjacencyList = new AdjacencyList<>();
+        // Assuming methods to setup the graph are called `addEdge` and `calculateInDegree()`
+        adjacencyList.addEdge('A', 'C'); // Sample edges to create a directed graph
+        adjacencyList.addEdge('B', 'C');
+        adjacencyList.addEdge('C', 'D');
+        adjacencyList.calculateInDegree();
+    }
+
+    @Test
+    public void topSortOrderTest() {
+        ArrayList<Character> sortedOrder = adjacencyList.topSortOrder();
+        ArrayList<Character> expectedOrder = new ArrayList<>(Arrays.asList('A', 'B', 'C', 'D'));
+        assertTrue(expectedOrder.equals(sortedOrder), "The topological order should match the expected order");
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package com.thealgorithms.datastructures.graphs;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+
+public class AdjacencyListTest {
+    
+    private Graph<Character> graph;
+
+    @BeforeEach
+    public void setUp() {
+        graph = new Graph<>();
+        // Assumption: Graph class has addEdge method and calculateInDegree is used as part of topSortOrder.
+        graph.addEdge('A', 'C');
+        graph.addEdge('B', 'C');
+        graph.addEdge('B', 'D');
+        graph.addEdge('C', 'E');
+        graph.addEdge('E', 'F');
+        graph.addEdge('D', 'F');
+        // ... add other edges as needed to form a directed acyclic graph.
+    }
+
+    @Test
+    public void topSortOrderTest() {
+        ArrayList<Character> expectedOrder = new ArrayList<>(Arrays.asList('B', 'A', 'D', 'C', 'E', 'F'));
+        // This expectedOrder is based on the assumption of the graph edges provided in the setUp.
+        ArrayList<Character> actualOrder = graph.topSortOrder();
+        assertEquals(expectedOrder, actualOrder, "Topological sort order should match the expected order.");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package com.thealgorithms.datastructures.graphs;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AdjacencyListTest {
+
+    private AdjacencyList<Character> graph;
+
+    @BeforeEach
+    public void setUp() {
+        // Initialize the graph
+        graph = new AdjacencyList<Character>();
+        // Populate the graph with vertices and edges to form a DAG (Directed Acyclic Graph)
+        graph.addEdge('A', 'C');
+        graph.addEdge('B', 'C');
+        graph.addEdge('B', 'D');
+        graph.addEdge('C', 'E');
+        graph.addEdge('E', 'F');
+        graph.addEdge('D', 'F');
+    }
+
+    @Test
+    public void topSortOrderTest() {
+        ArrayList<Character> expectedOrder = new ArrayList<>(Arrays.asList('A', 'B', 'C', 'D', 'E', 'F'));
+        ArrayList<Character> actualOrder = graph.topSortOrder();
+        assertEquals(expectedOrder, actualOrder);
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.thealgorithms.datastructures.graphs;
+
+import org.junit.jupiter.api.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Queue;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AdjacencyListTest {
+
+    private AdjacencyList<Integer> graph;
+    private HashMap<Integer, Integer> inDegree;
+
+    @BeforeEach
+    public void setUp() {
+        graph = new AdjacencyList<>();
+        inDegree = new HashMap<>();
+
+        // Assuming the methods exist to set up the graph and in-degree map
+        // Here is a simplistic graph setup for demonstration purposes
+        graph.addVertex(1);
+        graph.addVertex(2);
+        graph.addVertex(3);
+        graph.addVertex(4);
+        graph.addVertex(5);
+        graph.addEdge(1, 2);
+        graph.addEdge(1, 3);
+        graph.addEdge(3, 4);
+        graph.addEdge(5, 2);
+        graph.addEdge(5, 3);
+
+        // Setting up in-degree for the vertices
+        inDegree.put(1, 0);
+        inDegree.put(2, 2);
+        inDegree.put(3, 2);
+        inDegree.put(4, 1);
+        inDegree.put(5, 0);
+        graph.setInDegree(inDegree); // Assuming we can set the in-degree map
+    }
+
+    @Test
+    public void topSortOrderTest() {
+        ArrayList<Integer> expectedResult = new ArrayList<>(Arrays.asList(1, 5, 2, 3, 4));
+        ArrayList<Integer> topSortResult = graph.topSortOrder();
+        assertEquals(expectedResult, topSortResult, "The topSortOrder method does not return the expected topological sort order.");
+    }
+}
+
+// Placeholder class names and methods for the purpose of the unit test
+// These would need to be replaced by the actual implementation in `AdjacencyList`
+class AdjacencyList<E> {
+    public void addVertex(E vertex) { /* ... */ }
+    public void addEdge(E from, E to) { /* ... */ }
+    public void setInDegree(HashMap<E, Integer> inDegree) { /* ... */ }
+    public ArrayList<E> topSortOrder() { /* ... */ return null; }
+}
+
+

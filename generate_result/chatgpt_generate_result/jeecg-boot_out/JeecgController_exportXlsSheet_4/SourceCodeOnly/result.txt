@@ -1,0 +1,231 @@
+Source code: 
+
+
+protected ModelAndView exportXlsSheet(HttpServletRequest request, T object, Class<T> clazz, String title,String exportFields,Integer pageNum) {
+    // Step.1 组装查询条件
+    QueryWrapper<T> queryWrapper = QueryGenerator.initQueryWrapper(object, request.getParameterMap());
+    LoginUser sysUser = (LoginUser) SecurityUtils.getSubject().getPrincipal();
+    // Step.2 计算分页sheet数据
+    double total = service.count();
+    int count = (int)Math.ceil(total/pageNum);
+    //update-begin-author:liusq---date:20220629--for: 多sheet导出根据选择导出写法调整 ---
+    // Step.3  过滤选中数据
+    String selections = request.getParameter("selections");
+    if (oConvertUtils.isNotEmpty(selections)) {
+        List<String> selectionList = Arrays.asList(selections.split(","));
+        queryWrapper.in("id",selectionList);
+    }
+    //update-end-author:liusq---date:20220629--for: 多sheet导出根据选择导出写法调整 ---
+    // Step.4 多sheet处理
+    List<Map<String, Object>> listMap = new ArrayList<Map<String, Object>>();
+    for (int i = 1; i <=count ; i++) {
+        Page<T> page = new Page<T>(i, pageNum);
+        IPage<T> pageList = service.page(page, queryWrapper);
+        List<T> exportList = pageList.getRecords();
+        Map<String, Object> map = new HashMap<>(5);
+        ExportParams exportParams=new ExportParams(title + "报表", "导出人:" + sysUser.getRealname(), title+i,jeecgBaseConfig.getPath().getUpload());
+        exportParams.setType(ExcelType.XSSF);
+        //map.put("title",exportParams);
+        //表格Title
+        map.put(NormalExcelConstants.PARAMS,exportParams);
+        //表格对应实体
+        map.put(NormalExcelConstants.CLASS,clazz);
+        //数据集合
+        map.put(NormalExcelConstants.DATA_LIST, exportList);
+        listMap.add(map);
+    }
+    // Step.4 AutoPoi 导出Excel
+    ModelAndView mv = new ModelAndView(new JeecgEntityExcelView());
+    //此处设置的filename无效 ,前端会重更新设置一下
+    mv.addObject(NormalExcelConstants.FILE_NAME, title);
+    mv.addObject(NormalExcelConstants.MAP_LIST, listMap);
+    return mv;
+}
+
+
+
+No.1 generated result --------------------------
+
+@Test
+public void exportXlsSheetTest() {
+    // Create a new instance of the object
+    HttpServletRequest request = new HttpServletRequest();
+    //declare variables to be used as input for the method
+    T object = new T();
+    Class<T> clazz = new Class<T>();
+    String title = "Sample Title";
+    Integer pageNum = 10;
+    // Call the method and output the result
+    ModelAndView result = exportXlsSheet(request, object, clazz, title, "exportFields", pageNum);
+    System.out.println(result);
+}
+
+
+No.2 generated result --------------------------
+
+@Test
+public void exportXlsSheetTest() {
+    // Create mock HttpServletRequest
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    
+    // Create mock objects for T, Class<T>, and other required parameters
+    
+    // Call the method
+    ModelAndView result = exportXlsSheet(request, object, clazz, "Test Title", "exportFields", 10);
+    
+    // Assert the result
+    assertNotNull(result);
+}
+
+
+No.3 generated result --------------------------
+
+@Test
+public void exportXlsSheetTest() {
+    HttpServletRequest request = new HttpServletRequest();
+    T object = new T();
+    Class<T> clazz = T.class;
+    String title = "Test Title";
+    String exportFields = "Field1, Field2, Field3";
+    Integer pageNum = 10;
+    ModelAndView actual = exportXlsSheet(request, object, clazz, title, exportFields, pageNum);
+    // Add assertions here for the expected output
+}
+
+
+No.4 generated result --------------------------
+
+protected ModelAndView mv = this.exportXlsSheet(request, object, clazz, title, exportFields, pageNum);
+assertNotNull(mv);
+
+
+No.5 generated result --------------------------
+
+@Test
+public void exportXlsSheetTest() {
+    // Arrange
+    HttpServletRequest request = new HttpServletRequest();
+    T object = new T();
+    Class<T> clazz = T.class;
+    String title = "Test Title";
+    String exportFields = "field1, field2, field3";
+    Integer pageNum = 10;
+    
+    // Act
+    ModelAndView result = exportXlsSheet(request, object, clazz, title, exportFields, pageNum);
+    
+    // Assert
+    assertNotNull(result);
+    // Add more assertions as needed
+}
+
+
+No.6 generated result --------------------------
+
+@Test
+public void exportXlsSheetTest() {
+    // Arrange
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    T object = new T();
+    Class<T> clazz = T.class;
+    String title = "Test Title";
+    String exportFields = "field1,field2,field3";
+    Integer pageNum = 10;
+    
+    // Act
+    ModelAndView result = exportXlsSheet(request, object, clazz, title, exportFields, pageNum);
+    
+    // Assert
+    assertNotNull(result);
+    // Add more specific assertions based on the expected behavior of the exportXlsSheet method
+}
+
+
+No.7 generated result --------------------------
+
+@Test
+public void exportXlsSheetTest() {
+    // Arrange
+    HttpServletRequest request = new HttpServletRequest();
+    T object = new T();
+    Class<T> clazz = new Class<T>();
+    String title = "TestTitle";
+    String exportFields = "Field1, Field2";
+    Integer pageNum = 10;
+    
+    // Act
+    ModelAndView result = exportXlsSheet(request, object, clazz, title, exportFields, pageNum);
+    
+    // Assert
+    assertNotNull(result);
+}
+
+
+No.8 generated result --------------------------
+
+@Test
+public void exportXlsSheetTest() {
+    // Arrange
+    HttpServletRequest request = null; // fill with appropriate HttpServletRequest
+    T object = null; // fill with appropriate object
+    Class<T> clazz = null; // fill with appropriate class
+    String title = null; // fill with appropriate title
+    String exportFields = null; // fill with appropriate export fields
+    Integer pageNum = 10; // fill with appropriate page number
+
+    // Act
+    ModelAndView result = exportXlsSheet(request, object, clazz, title, exportFields, pageNum);
+
+    // Assert
+    // add assertions here to validate the result
+}
+
+
+
+No.9 generated result --------------------------
+
+import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.servlet.ModelAndView;
+
+@Test
+public void exportXlsSheetTest() {
+    MockHttpServletRequest request = new MockHttpServletRequest();
+    // Populate request with necessary parameters
+    // TODO: Add necessary parameters to the request
+    //...
+    
+    // Create an instance of the object and class needed for the method
+    // TODO: Instantiate object and class needed for the method
+    //...
+    
+    JeecgController jeecgController = new JeecgController();
+    
+    ModelAndView modelAndView = jeecgController.exportXlsSheet(request, object, clazz, "Test Title", "field1,field2", 10);
+    // Assert the output of the method
+    // TODO: Add necessary assertions for the output
+    //...
+}
+
+
+
+No.10 generated result --------------------------
+
+ @Test
+   public void exportXlsSheetTest() {
+       // Arrange
+       HttpServletRequest request = new MockHttpServletRequest();
+       T object = new T(); // Provide input for 'T' object
+       Class<T> clazz = T.class; // Provide input for 'T' class
+       String title = "Test Title"; // Provide input for title
+       String exportFields = "field1, field2, field3"; // Provide input for export fields
+       Integer pageNum = 10; // Provide input for page number
+       
+       // Act
+       ModelAndView result = exportXlsSheet(request, object, clazz, title, exportFields, pageNum);
+       
+       // Assert
+       assertNotNull(result);
+   }
+
+

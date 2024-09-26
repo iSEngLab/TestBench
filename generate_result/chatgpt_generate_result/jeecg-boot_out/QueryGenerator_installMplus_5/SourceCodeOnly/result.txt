@@ -1,0 +1,283 @@
+Source code: 
+
+
+private static void installMplus(QueryWrapper<?> queryWrapper,Object searchObj,Map<String, String[]> parameterMap) {
+	
+	/*
+	 * 注意:权限查询由前端配置数据规则 当一个人有多个所属部门时候 可以在规则配置包含条件 orgCode 包含 #{sys_org_code}
+	但是不支持在自定义SQL中写orgCode in #{sys_org_code} 
+	当一个人只有一个部门 就直接配置等于条件: orgCode 等于 #{sys_org_code} 或者配置自定义SQL: orgCode = '#{sys_org_code}'
+	*/
+	
+	//区间条件组装 模糊查询 高级查询组装 简单排序 权限查询
+	PropertyDescriptor[] origDescriptors = PropertyUtils.getPropertyDescriptors(searchObj);
+	Map<String,SysPermissionDataRuleModel> ruleMap = getRuleMap();
+	
+	//权限规则自定义SQL表达式
+	for (String c : ruleMap.keySet()) {
+		if(oConvertUtils.isNotEmpty(c) && c.startsWith(SQL_RULES_COLUMN)){
+			queryWrapper.and(i ->i.apply(getSqlRuleValue(ruleMap.get(c).getRuleValue())));
+		}
+	}
+	
+	String name, type, column;
+	// update-begin--Author:taoyan  Date:20200923 for：issues/1671 如果字段加注解了@TableField(exist = false),不走DB查询-------
+	//定义实体字段和数据库字段名称的映射 高级查询中 只能获取实体字段 如果设置TableField注解 那么查询条件会出问题
+	Map<String,String> fieldColumnMap = new HashMap<>(5);
+	for (int i = 0; i < origDescriptors.length; i++) {
+		//aliasName = origDescriptors[i].getName();  mybatis  不存在实体属性 不用处理别名的情况
+		name = origDescriptors[i].getName();
+		type = origDescriptors[i].getPropertyType().toString();
+		try {
+			if (judgedIsUselessField(name)|| !PropertyUtils.isReadable(searchObj, name)) {
+				continue;
+			}
+
+			Object value = PropertyUtils.getSimpleProperty(searchObj, name);
+			column = ReflectHelper.getTableFieldName(searchObj.getClass(), name);
+			if(column==null){
+				//column为null只有一种情况 那就是 添加了注解@TableField(exist = false) 后续都不用处理了
+				continue;
+			}
+			fieldColumnMap.put(name,column);
+			//数据权限查询
+			if(ruleMap.containsKey(name)) {
+				addRuleToQueryWrapper(ruleMap.get(name), column, origDescriptors[i].getPropertyType(), queryWrapper);
+			}
+			//区间查询
+			doIntervalQuery(queryWrapper, parameterMap, type, name, column);
+			//判断单值  参数带不同标识字符串 走不同的查询
+			//TODO 这种前后带逗号的支持分割后模糊查询(多选字段查询生效) 示例：,1,3,
+			if (null != value && value.toString().startsWith(COMMA) && value.toString().endsWith(COMMA)) {
+				String multiLikeval = value.toString().replace(",,", COMMA);
+				String[] vals = multiLikeval.substring(1, multiLikeval.length()).split(COMMA);
+				final String field = oConvertUtils.camelToUnderline(column);
+				if(vals.length>1) {
+					queryWrapper.and(j -> {
+                           log.info("---查询过滤器，Query规则---field:{}, rule:{}, value:{}", field, "like", vals[0]);
+						j = j.like(field,vals[0]);
+						for (int k=1;k<vals.length;k++) {
+							j = j.or().like(field,vals[k]);
+							log.info("---查询过滤器，Query规则 .or()---field:{}, rule:{}, value:{}", field, "like", vals[k]);
+						}
+						//return j;
+					});
+				}else {
+					log.info("---查询过滤器，Query规则---field:{}, rule:{}, value:{}", field, "like", vals[0]);
+					queryWrapper.and(j -> j.like(field,vals[0]));
+				}
+			}else {
+				//根据参数值带什么关键字符串判断走什么类型的查询
+				QueryRuleEnum rule = convert2Rule(value);
+				value = replaceValue(rule,value);
+				// add -begin 添加判断为字符串时设为全模糊查询
+				//if( (rule==null || QueryRuleEnum.EQ.equals(rule)) && "class java.lang.String".equals(type)) {
+					// 可以设置左右模糊或全模糊，因人而异
+					//rule = QueryRuleEnum.LIKE;
+				//}
+				// add -end 添加判断为字符串时设为全模糊查询
+				addEasyQuery(queryWrapper, column, rule, value);
+			}
+			
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+	}
+	// 排序逻辑 处理
+	doMultiFieldsOrder(queryWrapper, parameterMap, fieldColumnMap);
+			
+	//高级查询
+	doSuperQuery(queryWrapper, parameterMap, fieldColumnMap);
+	// update-end--Author:taoyan  Date:20200923 for：issues/1671 如果字段加注解了@TableField(exist = false),不走DB查询-------
+	
+}
+
+
+
+No.1 generated result --------------------------
+
+@Test
+public void installMplusTest() {
+    // Given
+    QueryWrapper<?> queryWrapper = new QueryWrapper<>();
+    Object searchObj = new Object();
+    Map<String, String[]> parameterMap = new HashMap<>();
+
+    // When
+    installMplus(queryWrapper, searchObj, parameterMap);
+
+    // Then
+    Assertions.assertEquals(<expectedResult>, <actualResult>);
+}
+
+
+No.2 generated result --------------------------
+
+@Test
+public void installMplusTest() {
+    // Arrange
+    // create test data for searchObj and parameterMap
+    QueryWrapper<?> queryWrapper = new QueryWrapper<>();
+    Object searchObj = new Object();
+    Map<String, String[]> parameterMap = new HashMap<>();
+    
+    // Act
+    installMplus(queryWrapper, searchObj, parameterMap);
+    
+    // Assert
+    // Add assertions to verify the behavior of installMplus method
+    // For example:
+    // assertEquals(expectedValue, actualValue);
+    // assertTrue(condition);
+}
+
+
+No.3 generated result --------------------------
+
+@Test
+public void installMplusTest() {
+    //Arrange
+    QueryWrapper<Object> queryWrapper = new QueryWrapper<>();
+    Object searchObj = new Object();
+    Map<String, String[]> parameterMap = new HashMap<>();
+    //Act
+    //Perform the method call
+    //Assert
+    //Add assertion statements here
+}
+
+
+No.4 generated result --------------------------
+
+@Test
+public void installMplusTest() {
+    // Arrange
+    QueryWrapper<?> queryWrapper = new QueryWrapper<>();
+    Object searchObj = new Object();
+    Map<String, String[]> parameterMap = new HashMap<>();
+    
+    // Act
+    installMplus(queryWrapper, searchObj, parameterMap);
+    
+    // Assert
+    // Add assertions here to validate the result after calling the installMplus method.
+    // Example: assertEquals(expectedValue, actualValue);
+}
+
+
+No.5 generated result --------------------------
+
+package org.jeecg.common.system.query;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class QueryGeneratorTest {
+    @Test
+    public void installMplusTest() {
+        // Initialize test objects
+        QueryWrapper<?> queryWrapper = new QueryWrapper<>();
+        Object searchObj = new Object();
+        Map<String, String[]> parameterMap = new HashMap<>();
+
+        // Call the method to be tested
+        installMplus(queryWrapper, searchObj, parameterMap);
+
+        // Validate the output
+        // Add assertions here to validate the behavior of the method
+    }
+}
+
+
+No.6 generated result --------------------------
+
+@Test
+public void installMplusTest() {
+    // Create test data
+    QueryWrapper<?> queryWrapper = new QueryWrapper<>();
+    Object searchObj = new Object();
+    Map<String, String[]> parameterMap = new HashMap<>();
+
+    // Call the method to be tested
+    installMplus(queryWrapper, searchObj, parameterMap);
+
+    // Add assertions based on expected behavior
+    // Example: assertEquals(expectedValue, actualValue);
+}
+
+
+No.7 generated result --------------------------
+
+@Test
+public void installMplusTest() {
+    // Arrange
+    QueryWrapper<?> queryWrapper = new QueryWrapper<>();
+    Object searchObj = new Object();
+    Map<String, String[]> parameterMap = new HashMap<>();
+    
+    // Act
+    installMplus(queryWrapper, searchObj, parameterMap);
+    
+    // Assert
+    // Add assertions based on the expected behavior of the installMplus method
+}
+
+
+No.8 generated result --------------------------
+
+package org.jeecg.common.system.query;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class QueryGeneratorTest {
+    @Test
+    public void installMplusTest() {
+        // Arrange
+        QueryWrapper<Object> queryWrapper = new QueryWrapper<>();
+        Object searchObj = new Object();
+        Map<String, String[]> parameterMap = new HashMap<>();
+
+        // Act
+        installMplus(queryWrapper, searchObj, parameterMap);
+
+        // Assert
+        // Add assertions based on the expected behavior of the installMplus method
+    }
+}
+
+
+No.9 generated result --------------------------
+
+@Test
+public void installMplusTest() {
+    // Create test objects
+    QueryWrapper<?> queryWrapper = new QueryWrapper<>();
+    Object searchObj = new Object();
+    Map<String, String[]> parameterMap = new HashMap<>();
+    
+    // Call the method to be tested
+    installMplus(queryWrapper, searchObj, parameterMap);
+    
+    // Assert the expected output or behavior
+    // Add assertions here
+}
+
+
+No.10 generated result --------------------------
+
+@Test
+public void installMplusTest() {
+    // Arrange
+    QueryWrapper<?> queryWrapper = new QueryWrapper<>();
+    Object searchObj = new Object();
+    Map<String, String[]> parameterMap = new HashMap<>();
+    
+    // Act
+    installMplus(queryWrapper, searchObj, parameterMap);
+    
+    // Assert
+    <FILL> // Include assertions based on the expected behavior of installMplus method
+}
+
+

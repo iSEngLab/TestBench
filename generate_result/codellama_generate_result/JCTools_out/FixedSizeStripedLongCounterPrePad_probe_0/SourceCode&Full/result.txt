@@ -1,0 +1,348 @@
+Source code: 
+
+
+private int probe() {
+    // Fast path for reliable well-distributed probe, available from JDK 7+.
+    // As long as PROBE is final static this branch will be constant folded
+    // (i.e removed).
+    if (PROBE != -1) {
+        int probe;
+        if ((probe = UNSAFE.getInt(Thread.currentThread(), PROBE)) == 0) {
+            ThreadLocalRandom.current(); // force initialization
+            probe = UNSAFE.getInt(Thread.currentThread(), PROBE);
+        }
+        return probe;
+    }
+
+    /*
+     * Else use much worse (for values distribution) method:
+     * Mix thread id with golden ratio and then xorshift it
+     * to spread consecutive ids (see Knuth multiplicative method as reference).
+     */
+    int probe = (int) ((Thread.currentThread().getId() * 0x9e3779b9) & Integer.MAX_VALUE);
+    // xorshift
+    probe ^= probe << 13;
+    probe ^= probe >>> 17;
+    probe ^= probe << 5;
+    return probe;
+}
+
+
+
+
+No.1 generated result --------------------------
+
+package org.jctools.counters;
+import sun.misc.Unsafe;
+import java.lang.reflect.*;
+/**
+ * A pre-padded implementation of {@link FixedSizeStripedLongCounter}.
+ * @author nitsanw
+ */
+public abstract class FixedSizeStripedLongCounterPrePad extends FixedSizeStripedLongCounter {
+    protected static final long[] cells; // 8b
+    private static Unsafe unsafe = null; // 16b
+    private static final long baseOffset;// 24b
+    private static int pad0, pad1, pad2, pad3;// 32b
+    byte b000,b001,b002,b003,b004,b005,b006,b007;// 40b
+    byte b010,b011,b012,b013,b014,b015,b016,b017;// 48b
+    byte b020,b021,b022,b023,b024,b025,b026,b027;// 56b
+    byte b030,b031,b032,b033,b034,b035,b036,b037;// 64b
+    byte b040,b041,b042,b043,b044,b045,b046,b047;// 72b
+    byte b050,b051,b052,b053,b054,b055,b056,b057;// 80b
+    private static int mask = 0xff; // 88b
+    
+    protected FixedSizeStripedLongCounterPrePad(int stripesCount) {
+        super(stripesCount);
+    }
+    
+    @Override
+    protected void inc(long[] cells, long offset, long value) {
+        <FILL>
+    }
+    
+    @Override
+    protected long getAndReset(long[] cells, long offset) {
+        return UNSAFE.getAndSetLong(cells, offset, 0L);
+    }
+}
+package org.jctools.counters;
+import sun.misc.Unsafe;
+import java.lang.reflect.*;
+/**
+ * A post-padded implementation of {@link FixedSizeStripedLongCounter}.
+ * @author nitsanw
+ */
+public abstract class FixedSizeStripedLongCounterPostPad extends FixedSizeStripedLongCounter {
+    private int pad0, pad1, pad2, pad3;// 8b
+    protected static final long[] cells; // 16b
+    private static Unsafe unsafe = null; // 24b
+    private static final long baseOffset;// 32b
+    
+    protected FixedSizeStripedLongCounterPostPad(int stripesCount) {
+        super(stripesCount);
+    }
+    
+    @Override
+    protected void inc(long[] cells, long offset, long value) {
+        <FILL>
+    }
+    
+    @Override
+    protected long getAndReset(long[] cells, long offset) {
+        return UNSAFE.getAndSetLong(cells, offset, 0L);
+    }
+}
+
+
+No.2 generated result --------------------------
+
+@Test
+public void probeTest() {
+    int probe = <FILL>; // Fill in here.
+    assertEquals(probe, probe());
+}
+
+
+No.3 generated result --------------------------
+
+package org.jctools.counters;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+    @BeforeEach
+    public void before() {
+        if (PROBE != -1) {
+            // Force initialization for ThreadLocalRandom-specific case.
+            ThreadLocalRandom.current();
+        }
+    }
+    
+    @Test
+    public void probeTest() {
+        assertEquals(Thread.currentThread().getId(), index());
+        
+        int expected = 0;
+        for (int i = 0; i < Integer.MAX_VALUE; i++) {
+            if ((i & Long.SIZE - 1) == 0) {
+                // skip already visited probe values
+                ++expected;
+            } else if ((PROBE != -1 ? UNSAFE.getInt(Thread.currentThread(), PROBE) : Thread.currentThread().hashCode()) == i) {
+                break;
+            }
+        }
+        
+        assertEquals(expected, index());
+    }
+    
+    private int probe() {
+        // Fast path for reliable well-distributed probe, available from JDK 7+.
+        // As long as PROBE is final static this branch will be constant folded
+        // (i.e removed).
+        if (PROBE != -1) {
+            int probe;
+            if ((probe = UNSAFE.getInt(Thread.currentThread(), PROBE)) == 0) {
+                ThreadLocalRandom.current(); // force initialization
+                probe = UNSAFE.getInt(Thread.currentThread(), PROBE);
+            }
+            return probe;
+        }
+        
+        /*
+         * Else use much worse (for values distribution) method:
+         * Mix thread id with golden ratio and then xorshift it
+         * to spread consecutive ids (see Knuth multiplicative method as reference).
+         */
+        int probe = (int) ((Thread.currentThread().getId() * 0x9e3779b9) & Integer.MAX_VALUE);
+        // xorshift
+        probe ^= probe << 13;
+        probe ^= probe >>> 17;
+        probe ^= probe << 5;
+        return probe;
+    }
+    
+    private int index() {
+        long probe = probe();
+        
+        while (true) {
+            if ((probe & Long.SIZE - 1) == 0) {
+                break; // reached first stripe, don't increment expected value
+            } else if ((PROBE != -1 ? UNSAFE.getInt(Thread.currentThread(), PROBE) : Thread.currentThread().hashCode()) == probe) {
+                return (int) probe >>> ELEMENT_SHIFT; // fast path for known probe value
+            } else if ((probe = (18446744073709551559L * probe + 1)) == 0) {
+                ThreadLocalRandom.current(); // force initialization
+            }
+        }
+        
+        return (int) probe >>> ELEMENT_SHIFT; // slow path with xorshifted probe value
+    }
+    
+    private static final int PROBE = -1;
+    
+    private static final int ELEMENT_SHIFT = 6;
+    
+    @BeforeEach
+    public void before() {
+        if (PROBE != -1) {
+            // Force initialization for ThreadLocalRandom-specific case.
+            ThreadLocalRandom.current();
+        }
+    }
+}
+    
+
+
+No.4 generated result --------------------------
+
+@Test
+public void probeTest() {
+    // Test case 1: Probe with 0 as input, should return a non-zero value.
+    assertNotEquals(0, FixedSizeStripedLongCounterPrePadTest.probe());
+    
+    // Test case 2: Probe with positive values, should return the same result.
+    for (int i = 1; i < 10; i++) {
+        int probe = FixedSizeStripedLongCounterPrePadTest.probe();
+        assertEquals(probe, FixedSizeStripedLongCounterPrePadTest.probe());
+    }
+    
+    // Test case 3: Probe with negative values, should return the same result.
+    for (int i = -10; i < 0; i++) {
+        int probe = FixedSizeStripedLongCounterPrePadTest.probe();
+        assertEquals(probe, FixedSizeStripedLongCounterPrePadTest.probe());
+    }
+    
+    // Test case 4: Probe with a mix of positive and negative values, should return the same result.
+    for (int i = -10; i < 10; i++) {
+        int probe = FixedSizeStripedLongCounterPrePadTest.probe();
+        assertEquals(probe, FixedSizeStripedLongCounterPrePadTest.probe());
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jctools.counters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+    @Test
+    public void probeTest() {
+        int probe = 0;
+        
+        // Fast path for reliable well-distributed probe, available from JDK 7+.
+        // As long as PROBE is final static this branch will be constant folded (i.e removed).
+        if (FixedSizeStripedLongCounter.PROBE != -1) {
+            int _probe;
+            if ((_probe = UNSAFE.getInt(Thread.currentThread(), FixedSizeStripedLongCounter.PROBE)) == 0) {
+                ThreadLocalRandom.current(); // force initialization
+                _probe = UNSAFE.getInt(Thread.currentThread(), FixedSizeStripedLongCounter.PROBE);
+            }
+            probe = _probe;
+        } else {
+            /*
+             * Else use much worse (for values distribution) method:
+             * Mix thread id with golden ratio and then xorshift it
+             * to spread consecutive ids (see Knuth multiplicative method as reference).
+             */
+            long t = Thread.currentThread().getId() * 0x9e3779b9L;
+            probe ^= (int) ((t >>> 32) ^ t);
+            
+            // xorshift
+            probe ^= probe << 13;
+            probe ^= probe >>> 17;
+            probe ^= probe << 5;
+        }
+        
+        assertEquals(probe, FixedSizeStripedLongCounter.probe());
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jctools.counters;
+
+import java.util.concurrent.ThreadLocalRandom;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+    private static final int PAD = <FILL>;
+
+    @Test
+    public void probeTest() {
+        assertTrue(PAD == 1); // fill here with the correct value
+    }
+}
+
+
+No.7 generated result --------------------------
+
+@Test
+public void probeTest() {
+    assertTrue(FixedSizeStripedLongCounter.probe() >= 0);
+}
+
+
+
+No.8 generated result --------------------------
+
+package org.jctools.counters;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+public class FixedSizeStripedLongCounterPrePadTest {
+    @Test
+    public void probeTest() {
+        // Fast path for reliable well-distributed probe, available from JDK 7+.
+        // As long as PROBE is final static this branch will be constant folded (i.e removed).
+        if (PROBE != -1) {
+            int probe;
+            if ((probe = UNSAFE.getInt(Thread.currentThread(), PROBE)) == 0) {
+                ThreadLocalRandom.current(); // force initialization
+                probe = UNSAFE.getInt(Thread.currentThread(), PROBE);
+            }
+            assertTrue(probe != 0, "Probe must be initialized");
+        } else {
+            int probe = (int) ((Thread.currentThread().getId() * 0x9e3779b9) & Integer.MAX_VALUE);
+            // xorshift
+            probe ^= probe << 13;
+            probe ^= probe >>> 17;
+            probe ^= probe << 5;
+            assertTrue(probe != 0, "Probe must be initialized");
+        }
+    }
+}
+
+
+No.9 generated result --------------------------
+
+Timeout
+
+
+No.10 generated result --------------------------
+
+package org.jctools.counters;
+
+import java.util.concurrent.ThreadLocalRandom;
+
+public class FixedSizeStripedLongCounterPrePadTest {
+    public static final int SIZE = 32; // power of two less than or equal to SIZE
+    private long[] b00,b01,b02,b03,b04,b05,b06,b07;//  8b
+    private long[] b08,b09,b10,b11,b12,b13,b14,b15;// 16b
+    byte b100,b101,b102,b103,b104,b105,b106,b107;// 24b
+    private long[] b16,b17,b18,b19,b20,b21,b22,b23;// 32b
+    
+    @Test
+    public void probeTest() {
+        assertEquals(305419896L, new FixedSizeStripedLongCounter(SIZE) {
+            long nextRandomProbe = ThreadLocalRandom.current().nextInt();
+        
+            protected int probe() {
+                return nextRandomProbe++; // thread local random probe
+            }
+        }.probe());
+    }
+}
+
+

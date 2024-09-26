@@ -1,0 +1,286 @@
+Source code: 
+
+
+@Override
+public Frame clone() {
+    Frame newFrame = new Frame();
+
+    // Video part
+    newFrame.imageWidth = imageWidth;
+    newFrame.imageHeight = imageHeight;
+    newFrame.imageDepth = imageDepth;
+    newFrame.imageChannels = imageChannels;
+    newFrame.imageStride = imageStride;
+    newFrame.keyFrame = keyFrame;
+    newFrame.pictType = pictType;
+    newFrame.streamIndex = streamIndex;
+    newFrame.type = type;
+    newFrame.opaque = new Pointer[3];
+    if (image != null) {
+        newFrame.image = new Buffer[image.length];
+        ((Pointer[])newFrame.opaque)[0] = cloneBufferArray(image, newFrame.image);
+    }
+
+    // Audio part
+    newFrame.audioChannels = audioChannels;
+    newFrame.sampleRate = sampleRate;
+    if (samples != null) {
+        newFrame.samples = new Buffer[samples.length];
+        ((Pointer[])newFrame.opaque)[1] = cloneBufferArray(samples, newFrame.samples);
+    }
+
+    // Other data streams
+    if (data != null) {
+        ByteBuffer[] dst = new ByteBuffer[1];
+        ((Pointer[])newFrame.opaque)[2] = cloneBufferArray(new ByteBuffer[]{data}, dst);
+        newFrame.data = dst[0];
+    }
+
+    // Add timestamp
+    newFrame.timestamp = timestamp;
+
+    return newFrame;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import java.nio.*;
+import java.util.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.*;
+
+public class FrameTest {
+    @Test
+    public void cloneTest() {
+        Frame frame = new Frame();
+        // Add sample data to frame
+        byte[] sampleData = new byte[10];
+        for (int i = 0; i < sampleData.length; i++) {
+            sampleData[i] = (byte)i;
+        }
+        frame.samples = ByteBuffer.wrap(sampleData);
+        // Add video image data to frame
+        byte[] imageData = new byte[10];
+        for (int i = 0; i < imageData.length; i++) {
+            imageData[i] = (byte)i;
+        }
+        frame.image = ByteBuffer.wrap(imageData);
+        // Add metadata to frame
+        Map<String, Object> meta = new HashMap<>();
+        meta.put("key", "value");
+        frame.metadata = meta;
+        
+        Frame cloneFrame = frame.clone();
+        assertEquals(frame.samples, cloneFrame.samples);
+        assertNotSame(frame.samples, cloneFrame.samples);
+        assertEquals(frame.image, cloneFrame.image);
+        assertNotSame(frame.image, cloneFrame.image);
+        assertEquals(frame.metadata, cloneFrame.metadata);
+        assertNotSame(frame.metadata, cloneFrame.metadata);
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import java.nio.*;
+import org.junit.jupiter.api.*;
+
+public class FrameTest {
+    @Test
+    public void cloneTest() {
+        // ByteBuffer
+        ByteBuffer byteBuffer = ByteBuffer.allocate(10);
+        byteBuffer.put((byte) 1).put((byte) 2).put((byte) 3).flip();
+        Frame frame = new Frame(byteBuffer);
+        assertEquals(frame.data[0], (byte) 1);
+        assertEquals(frame.data[1], (byte) 2);
+        assertEquals(frame.data[2], (byte) 3);
+
+        // ShortBuffer
+        ShortBuffer shortBuffer = ShortBuffer.allocate(10);
+        shortBuffer.put((short) 4).put((short) 5).flip();
+        frame = new Frame(shortBuffer);
+        assertEquals(frame.data[0], (short) 4);
+        assertEquals(frame.data[1], (short) 5);
+    }
+}
+
+
+No.3 generated result --------------------------
+
+    
+    package org.bytedeco.javacv;
+
+import java.nio.*;
+import java.util.EnumSet;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
+
+/** Tests for the Frame class */
+public class FrameTest {
+    @Test
+    public void cloneTest() {
+        Frame frame = new Frame(640, 480);
+        frame.image = ByteBuffer.allocateDirect(123456).asShortBuffer();
+        frame.samples = ByteBuffer.allocateDirect(789).asIntBuffer();
+        frame.data = ByteBuffer.allocateDirect(91011);
+        Frame clonedFrame = new Frame(frame);
+
+        // Check that the cloned frame is equal to the original one
+        assertEquals(frame.image, clonedFrame.image);
+        assertEquals(frame.samples, clonedFrame.samples);
+        assertEquals(frame.data, clonedFrame.data);
+    }
+}
+
+    
+
+
+No.4 generated result --------------------------
+
+
+Frame originalFrame = ...; // initialize with some data
+Frame clonedFrame = originalFrame.clone();
+clonedFrame.image = ...;   // modify only the cloned frame
+assertEquals(originalFrame.image, ...);  // check that the original frame was not modified
+
+
+
+No.5 generated result --------------------------
+
+public class FrameTest {
+    @Test
+    public void cloneTest() {
+        // 1. Create a frame with data and make sure the data is not null
+        Frame frame = new Frame(500, 500, 4);
+        assertNotNull(frame.image);
+        // 2. Clone the frame
+        Frame clonedFrame = frame.clone();
+        // 3. Check that both frames have the same data
+        assertEquals(clonedFrame.image[0], frame.image[0]);
+    }
+}
+    
+
+
+
+No.6 generated result --------------------------
+
+import org.junit.jupiter.api.*;
+
+public class FrameTest {
+    @Test
+    public void cloneTest() throws Exception {
+        // Create a new Frame object
+        Frame frame = new Frame();
+        
+        // Set the image field of the Frame object to null
+        frame.image = null;
+        
+        // Clone the Frame object using the clone() method
+        Frame clonedFrame = (Frame)frame.clone();
+        
+        // Check if the opaque field is properly initialized
+        assertNotNull(clonedFrame.opaque);
+        
+        // Check if the image field of the original Frame object is copied correctly
+        assertEquals(null, frame.image);
+        assertEquals(null, clonedFrame.image);
+        
+        // Check that calling clone() again on the same Frame object will not cause problems
+        Frame secondClone = (Frame)frame.clone();
+        assertNotNull(secondClone.opaque);
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FrameTest {
+    @Test
+    public void cloneTest() {
+        // Test 1: create a new frame with an empty constructor
+        Frame f = new Frame();
+        assertTrue(f.image == null);
+        assertTrue(f.samples == null);
+        assertTrue(f.data == null);
+        
+        // Test 2: clone the frame and check if it's the same
+        Frame fClone = f.clone();
+        assertEquals(f, fClone);
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import java.nio.*;
+
+public class FrameTest {
+    public void cloneTest() {
+        <FILL>
+    }
+}
+
+
+No.9 generated result --------------------------
+
+@Disabled
+public class FrameTest {
+    <FILL>
+}
+
+
+No.10 generated result --------------------------
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class FrameTest {
+    @ParameterizedTest
+    @ValueSource(strings = {"VIDEO", "AUDIO", "DATA"})
+    public void cloneTest(String type) {
+        // Set up your test fixture here, including any required objects like `Frame` or `ByteBuffer`.
+        Frame frame1 = new Frame();
+        if (type.equals("VIDEO")) {
+            frame1.image = ...;  // Your video data goes here
+        } else if (type.equals("AUDIO")) {
+            frame1.samples = ...;  // Your audio data goes here
+        } else if (type.equals("DATA")) {
+            frame1.data = ...;  // Your data goes here
+        }
+        Frame frame2 = frame1.clone();
+
+        // Check that the cloned `Frame` is not null and has the same type as the original `Frame`.
+        assertNotNull(frame2);
+        assertEquals(type, frame2.getType());
+
+        if (type.equals("VIDEO")) {
+            // Verify that the image data is correct
+            ...
+        } else if (type.equals("AUDIO")) {
+            // Verify that the audio data is correct
+            ...
+        } else if (type.equals("DATA")) {
+            // Verify that the data is correct
+            ...
+        }
+    }
+}
+
+

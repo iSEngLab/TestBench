@@ -1,0 +1,543 @@
+Source code: 
+
+
+private static String bytesToHexString(byte[] src) {
+    StringBuilder stringBuilder = new StringBuilder();
+    if (src == null || src.length <= 0) {
+        return null;
+    }
+    for (int i = 0; i < src.length; i++) {
+        int v = src[i] & 0xFF;
+        String hv = Integer.toHexString(v);
+        if (hv.length() < 2) {
+            stringBuilder.append(0);
+        }
+        stringBuilder.append(hv);
+    }
+    return stringBuilder.toString();
+}
+
+
+
+No.1 generated result --------------------------
+
+
+[FUNCTION_NAME]
+-----------------------------------
+
+function getFileName(file, suffix) {
+  // Get file name and replace spaces with dashes
+  var fileName = file.name.replace(/ /g, "-");
+
+  // Append a unique identifier to the file name (useful for multiple files with the same name)
+  fileName += "." + Date.now();
+  
+  // Return an object containing the file name and its original extension
+  return {
+    "name": fileName,
+    "ext": suffix
+  };
+}
+
+
+
+No.2 generated result --------------------------
+
+import org.springframework.web.multipart.MultipartFile;
+import java.util.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * @author yuqiyu
+ * @date 2021/8/31
+ */
+public class SsrfFileTypeFilter implements Filter {
+    private static final Logger log = LoggerFactory.getLogger(SsrfFileTypeFilter.class);
+    /**
+     * 拦截文件上传请求，避免ssrf漏洞
+     */
+    @Override
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+        HttpServletRequest request = (HttpServletRequest) servletRequest;
+        String uri = request.getRequestURI();
+        log.info("当前请求的URI：{}", uri);
+        if (!uri.contains("/sys/common/upload")) {
+            filterChain.doFilter(servletRequest, servletResponse);
+            return;
+        }
+        HttpServletResponse response = (HttpServletResponse) servletResponse;
+        // 如果是文件上传，拦截并验证文件类型
+        if ("POST".equalsIgnoreCase(request.getMethod()) && request instanceof MultipartHttpServletRequest) {
+            MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
+            Iterator<String> it = multipartRequest.getFileNames();
+            while (it.hasNext()) {
+                String name = it.next();
+                MultipartFile file = multipartRequest.getFile(name);
+                // 验证上传文件类型
+                if (file != null) {
+                    try {
+                        this.validateUploadFileType(file);
+                    } catch (Exception e) {
+                        log.error("文件类型拦截校验失败:{}", e.getMessage());
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN, "非法上传请求");
+                        return;
+                    }
+                }
+            }
+        }
+        // 如果不是文件上传，直接放行
+        filterChain.doFilter(servletRequest, servletResponse);
+    }
+
+    /**
+     * 验证文件类型
+     */
+    private void validateUploadFileType(MultipartFile file) throws Exception {
+        // 获取上传文件名称，并取得其后缀信息
+        String fileName = file.getOriginalFilename();
+        log.info("原始文件名：{}", fileName);
+        if (StringUtils.isBlank(fileName)) {
+            throw new Exception("上传失败，文件名不能为空");
+        }
+        // 获取文件后缀信息
+        String suffix = this.getFileSuffix(fileName);
+        log.info("文件后缀：{}", suffix);
+        boolean isAllowExtension = FILE_TYPE_WHITE_LIST.contains(suffix.toLowerCase());
+        // 是否允许上传的文件类型
+        if (!isAllowExtension) {
+            throw new Exception("上传失败，存在非法文件类型：" + suffix);
+        }
+    }
+
+    /**
+     * 获取文件后缀信息
+     */
+    private String getFileSuffix(String filename) {
+        return this.getFilenameExtension(filename).toLowerCase();
+    }
+
+    /**
+     * 获得上传文件的扩展名
+     * @param fileName 文件名
+     * @return 返回文件的扩展名, 如果没有扩展名, 则返回空字符串
+     */
+    private String getFilenameExtension(String filename) {
+        if ((filename != null) && (filename.length() > 0)) {
+            int dotIndex = filename.lastIndexOf('.');
+            if ((dotIndex > -1) && (dotIndex < (filename.length() - 1))) {
+                return filename.substring(dotIndex + 1);
+            }
+        }
+        return "";
+    }
+}
+
+
+### Response:
+
+
+No.3 generated result --------------------------
+
+@ResponseBody
+@PostMapping("/bytesToHexStringTest")
+public String bytesToHexStringTest(@RequestParam(value = "file", required = false) MultipartFile file, HttpServletRequest request, HttpServletResponse response) throws Exception {
+    if (file != null && !file.isEmpty()) {
+        try {
+            String suffix = FileUtil.getFileType(file);
+            String fileExtendName = FileUtil.getFileTypeBySuffix(file.getOriginalFilename());
+            if (!StringUtils.isBlank(suffix) && !StringUtils.equalsIgnoreCase(suffix, fileExtendName)) {
+                return "文件类型不匹配";
+            }
+        } catch (Exception e) {
+            log.error("文件类型校验失败: {}", e);
+            return "文件类型校验失败";
+        }
+    }
+    return "success";
+}
+
+
+No.4 generated result --------------------------
+
+@Slf4j(topic = "ssrf")
+public class SsrfFileTypeFilter extends FileUploadBase.FileItemFilter implements Configurable {
+  private static final long serialVersionUID = -263194780915819639L;
+  
+  public static final String ALLOW_EXTENSIONS = "allowExtensions";
+  private static final List<String> FILE_TYPE_WHITE_LIST = new ArrayList<>();
+  private static final Map<String, String> FILE_TYPE_MAP = new HashMap<>();
+  private String[] allowExtension;
+  
+  public SsrfFileTypeFilter() {
+    try {
+      init();
+    } catch (ServletException e) {
+      log.error(e.getMessage(), e);
+    }
+  }
+  
+  @Override
+  protected boolean isAccepted(FileItem item) throws Exception {
+    if (!item.isFormField()) {
+      //获得文件名称后缀
+      String suffix = getFileType(item);
+      
+      log.info("suffix:{}", suffix);
+      boolean isAllowExtension = FILE_TYPE_WHITE_LIST.contains(suffix.toLowerCase());
+      //是否允许下载的文件
+      if (!isAllowExtension) {
+        throw new Exception("上传失败，存在非法文件类型：" + suffix);
+      }
+    }
+    
+    return true;
+  }
+  
+  /**
+   * 通过读取文件头部获得文件类型
+   *
+   * @param item
+   * @return 文件类型
+   * @throws Exception
+   */
+  private static String getFileType(FileItem item) throws Exception {
+    //update-begin-author:liusq date:20230404 for: [issue/4672]方法造成的文件被占用，注释掉此方法tomcat就能自动清理掉临时文件
+    String fileExtendName = null;
+    InputStream is = null;
+    try {
+      //is = new FileInputStream(item.getStoreLocation());
+      is = item.getInputStream();
+      byte[] b = new byte[10];
+      is.read(b, 0, b.length);
+      String fileTypeHex = String.valueOf(bytesToHexString(b));
+      Iterator<String> keyIter = FILE_TYPE_MAP.keySet().iterator();
+      while (keyIter.hasNext()) {
+        String key = keyIter.next();
+        // 验证前5个字符比较
+        if (key.toLowerCase().startsWith(fileTypeHex.toLowerCase().substring(0, 5))
+            || fileTypeHex.toLowerCase().substring(0, 5).startsWith(key.toLowerCase())) {
+          fileExtendName = FILE_TYPE_MAP.get(key);
+          break;
+        }
+      }
+      
+      // 如果不是上述类型，则判断扩展名
+      if (StringUtils.isBlank(fileExtendName)) {
+        String fileName = item.getName();
+        // 如果无扩展名，则直接返回空串
+        if (-1 == fileName.indexOf(".")) {
+          return "";
+        }
+        // 如果有扩展名，则返回扩展名
+        return getFileTypeBySuffix(fileName);
+      }
+      
+      is.close();
+      return fileExtendName;
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+      return "";
+    }finally {
+      if (is != null) {
+        is.close();
+      }
+    }
+    //update-end-author:liusq date:20230404 for: [issue/4672]方法造成的文件被占用，tomcat自动清理
+  }
+  
+  @Override
+  public void init(FilterConfig filterConfig) throws ServletException {
+    this.allowExtension = StringUtils.split((String) filterConfig.get("allowExtensions"));
+    
+    if (this.allowExtension == null || this.allowExtension.length < 1) {
+      return;
+    }
+    
+    for (int i = 0; i < this.allowExtension.length; i++) {
+      FILE_TYPE_WHITE_LIST.add(StringUtils.lowerCase((this.allowExtension[i])));
+      
+      String type = this.allowExtension[i];
+      //获取文件类型白名单
+      InputStream inputStream = Thread.currentThread().getContextClassLoader()
+          .getResourceAsStream("META-INF/file-type-white-list.xml");
+      
+      if (inputStream == null) {
+        throw new RuntimeException(String.format("文件类型白名单%s不存在", type));
+      }
+      
+      DocumentBuilder builder = DocumentBuilderFactory.newInstance();
+      
+      try {
+        Document document = builder.parse(inputStream);
+        
+        NodeList nodeList = document.getElementsByTagName("type");
+        
+        for (int i = 0; i < nodeList.getLength(); i++) {
+          Element element = (Element) nodeList.item(i);
+          
+          if ("file".equalsIgnoreCase(element.getAttribute("name"))) {
+            NodeList typeNodeList = element.getElementsByTagName("type");
+            
+            for (int j = 0; j < typeNodeList.getLength(); j++) {
+              Element typeElement = (Element) typeNodeList.item(j);
+              
+              if ("file".equalsIgnoreCase(typeElement.getAttribute("name"))) {
+                String[] types = StringUtils.split((String) typeElement.getTextContent(), ",");
+                
+                for (int j = 0; j < types.length; j++) {
+                  FILE_TYPE_MAP.put(types[j], type);
+                }
+              }
+            }
+          }
+        }
+      } catch (ParserConfigurationException | SAXException e) {
+        throw new RuntimeException("获取文件类型白名单出错", e);
+      }
+    }
+  }
+  
+  private void init() throws ServletException {
+    if (!FILE_TYPE_WHITE_LIST.isEmpty()) {
+      return;
+    }
+    
+    InputStream inputStream = Thread.currentThread().getContextClassLoader()
+        .getResourceAsStream("META-INF/file-type-white-list.xml");
+    
+    if (inputStream == null) {
+      throw new ServletException("文件类型白名单不存在");
+    }
+    
+    DocumentBuilder builder = DocumentBuilderFactory.newInstance();
+    
+    try {
+      Document document = builder.parse(inputStream);
+      
+      NodeList nodeList = document.getElementsByTagName("type");
+      
+      for (int i = 0; i < nodeList.getLength(); i++) {
+        Element element = (Element) nodeList.item(i);
+        
+        if ("file".equalsIgnoreCase(element.getAttribute("name"))) {
+          NodeList typeNodeList = element.getElementsByTagName("type");
+          
+          for (int j = 0; j < typeNodeList.getLength(); j++) {
+            Element typeElement = (Element) typeNodeList.item(j);
+            
+            if ("file".equalsIgnoreCase(typeElement.getAttribute("name"))) {
+              String[] types = StringUtils.split((String) typeElement.getTextContent(), ",");
+              
+              for (int j = 0; j < types.length; j++) {
+                FILE_TYPE_MAP.put(types[j], element.getAttribute("value"));
+              }
+            }
+          }
+        }
+      }
+    } catch (ParserConfigurationException | SAXException e) {
+      throw new ServletException("获取文件类型白名单出错", e);
+    }
+  }
+  
+  @Override
+  public void destroy() {
+    
+  }
+}
+
+
+No.5 generated result --------------------------
+
+import org.jeecg.common.util.filter.SsrfFileTypeFilter;
+
+public class SsrfFileTypeFilterTest {
+    @Test
+    public void bytesToHexStringTest() {
+        // 模拟一个文件，文件名为12345678901234567890.java，注意：这只是一个随机的文件名
+        MultipartFile file = new MockMultipartFile("file", "12345678901234567890.java", null, "Hello World!".getBytes());
+        // 验证是否能正常的获取到文件类型
+        try {
+            String suffix = SsrfFileTypeFilter.getFileType(file);
+            assertEquals("txt", suffix);
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+    }
+}
+
+
+
+No.6 generated result --------------------------
+
+import org.apache.commons.lang3.StringUtils;
+import org.jeecg.common.util.filter.SsrfFileTypeFilter;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+public class SsrfFileTypeFilter {
+    @Test
+    public void bytesToHexString() throws Exception {
+        String fileExtendName = "";
+        InputStream is = null;
+        try {
+            //is = new FileInputStream(file);
+            byte[] b = new byte[10];
+            is.read(b, 0, b.length);
+            String fileTypeHex = String.valueOf(bytesToHexString(b));
+            Iterator<String> keyIter = FILE_TYPE_MAP.keySet().iterator();
+            while (keyIter.hasNext()) {
+                String key = keyIter.next();
+                // 验证前5个字符比较
+                if (key.toLowerCase().startsWith(fileTypeHex.toLowerCase().substring(0, 5))
+                        || fileTypeHex.toLowerCase().substring(0, 5).startsWith(key.toLowerCase())) {
+                    fileExtendName = FILE_TYPE_MAP.get(key);
+                    break;
+                }
+            }
+            // 如果不是上述类型，则判断扩展名
+            if (StringUtils.isBlank(fileExtendName)) {
+                String fileName = file.getOriginalFilename();
+                // 如果无扩展名，则直接返回空串
+                if (-1 == fileName.indexOf(".")) {
+                    return "";
+                }
+                // 如果有扩展名，则返回扩展名
+                return getFileTypeBySuffix(fileName);
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return "";
+        } finally {
+            if (is != null) {
+                is.close();
+            }
+        }
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jeecg.common.util.filter;
+
+import java.io.IOException;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+
+public class SsrfFileTypeFilter extends AbstractFileTypeFilter {
+    public static final String FILTER_NAME = "ssrfFileType";
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        // 判断是否为Multipart类型的表单
+        if (!(request instanceof MultipartHttpServletRequest)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        try {
+            // 获取文件类型
+            String fileType = getFileType((MultipartHttpServletRequest) request);
+            log.info("-----获取到的指定文件类型------"+fileType);
+            // 是否允许下载的文件
+            if (!FILE_TYPE_WHITE_LIST.contains(fileType)) {
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write(objectMapper.writeValueAsString(Result.error("您上传的文件类型不允许，可以下载 " + StringUtils.join(FILE_TYPE_WHITE_LIST, ","))));
+            } else {
+                filterChain.doFilter(request, response);
+            }
+        } catch (Exception e) {
+            log.error("SSRF攻击防范过滤器出现异常", e);
+            throw new ServletException();
+        }
+    }
+
+    /**
+     * 获取文件类型
+     *
+     * @param request
+     * @return 文件类型
+     */
+    private String getFileType(MultipartHttpServletRequest request) {
+        Iterator<String> it = request.getFileNames();
+        MultipartFile file = null;
+        //获取第一个文件，后续的漏洞也随之出现。
+        while (it.hasNext()) {
+            String key = it.next();
+            file = request.getFile(key);
+        }
+        return fileType(file);
+    }
+}
+
+
+No.8 generated result --------------------------
+
+public static String bytesToHexString(byte[] src) {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (src == null || src.length <= 0) {
+            return null;
+        }
+        for (int i = 0; i < src.length; i++) {
+            int v = src[i] & 0xFF;
+            String hv = Integer.toHexString(v);
+            if (hv.length() < 2) {
+                stringBuilder.append(0);
+            }
+            stringBuilder.append(hv);
+        }
+        return stringBuilder.toString();
+    }
+
+### Response:
+
+
+No.9 generated result --------------------------
+
+
+@RestControllerAdvice(basePackages = "com.jeecg")
+public class GlobalExceptionHandler extends BaseExceptionHandler{
+    
+    @ExceptionHandler(value= Exception.class)
+    public Result<String> exceptionHandle(Exception e){
+        return new Result<>(HttpCodeEnum.SERVER_ERROR,e.getMessage());
+    }
+}
+
+
+### Controller:
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.common.util.filter;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+public class SsrfFileTypeFilterTest {
+    @Test
+    public void bytesToHexStringTest() {
+        // Arrange
+        byte[] src = new byte[2];
+        String expected = "0x4854";
+        
+        // Act
+        String actual = SsrfFileTypeFilter.bytesToHexString(src);
+        
+        // Assert
+        assertEquals(expected, actual);
+    }
+}
+
+    
+
+

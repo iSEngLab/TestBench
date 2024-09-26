@@ -1,0 +1,805 @@
+Source code: 
+
+
+private Point getMatrixCenter() {
+
+  ResultPoint pointA;
+  ResultPoint pointB;
+  ResultPoint pointC;
+  ResultPoint pointD;
+
+  //Get a white rectangle that can be the border of the matrix in center bull's eye or
+  try {
+
+    ResultPoint[] cornerPoints = new WhiteRectangleDetector(image).detect();
+    pointA = cornerPoints[0];
+    pointB = cornerPoints[1];
+    pointC = cornerPoints[2];
+    pointD = cornerPoints[3];
+
+  } catch (NotFoundException e) {
+
+    // This exception can be in case the initial rectangle is white
+    // In that case, surely in the bull's eye, we try to expand the rectangle.
+    int cx = image.getWidth() / 2;
+    int cy = image.getHeight() / 2;
+    pointA = getFirstDifferent(new Point(cx + 7, cy - 7), false, 1, -1).toResultPoint();
+    pointB = getFirstDifferent(new Point(cx + 7, cy + 7), false, 1, 1).toResultPoint();
+    pointC = getFirstDifferent(new Point(cx - 7, cy + 7), false, -1, 1).toResultPoint();
+    pointD = getFirstDifferent(new Point(cx - 7, cy - 7), false, -1, -1).toResultPoint();
+
+  }
+
+  //Compute the center of the rectangle
+  int cx = MathUtils.round((pointA.getX() + pointD.getX() + pointB.getX() + pointC.getX()) / 4.0f);
+  int cy = MathUtils.round((pointA.getY() + pointD.getY() + pointB.getY() + pointC.getY()) / 4.0f);
+
+  // Redetermine the white rectangle starting from previously computed center.
+  // This will ensure that we end up with a white rectangle in center bull's eye
+  // in order to compute a more accurate center.
+  try {
+    ResultPoint[] cornerPoints = new WhiteRectangleDetector(image, 15, cx, cy).detect();
+    pointA = cornerPoints[0];
+    pointB = cornerPoints[1];
+    pointC = cornerPoints[2];
+    pointD = cornerPoints[3];
+  } catch (NotFoundException e) {
+    // This exception can be in case the initial rectangle is white
+    // In that case we try to expand the rectangle.
+    pointA = getFirstDifferent(new Point(cx + 7, cy - 7), false, 1, -1).toResultPoint();
+    pointB = getFirstDifferent(new Point(cx + 7, cy + 7), false, 1, 1).toResultPoint();
+    pointC = getFirstDifferent(new Point(cx - 7, cy + 7), false, -1, 1).toResultPoint();
+    pointD = getFirstDifferent(new Point(cx - 7, cy - 7), false, -1, -1).toResultPoint();
+  }
+
+  // Recompute the center of the rectangle
+  cx = MathUtils.round((pointA.getX() + pointD.getX() + pointB.getX() + pointC.getX()) / 4.0f);
+  cy = MathUtils.round((pointA.getY() + pointD.getY() + pointB.getY() + pointC.getY()) / 4.0f);
+
+  return new Point(cx, cy);
+}
+
+
+
+No.1 generated result --------------------------
+
+    package com.google.zxing.aztec.detector;
+
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.Collection;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DetectorTest {
+    private final BufferedImage image = new BufferedImage(10, 10, BufferedImage.TYPE_BYTE_GRAY);
+    
+    @Test
+    public void getMatrixCenterTest() throws IOException {
+        final Collection<Detector> detectors = createDetectors();
+        
+        for (final Detector detector : detectors) {
+            assertEquals(new Point(4, 5), detector.getMatrixCenter().toResultPoint());
+        }
+    }
+    
+    @Test
+    public void getDimensionTest() throws IOException {
+        final Collection<Detector> detectors = createDetectors();
+        
+        for (final Detector detector : detectors) {
+            assertEquals(14, detector.getDimension());
+        }
+    }
+    
+    @Test
+    public void getCenterTest() throws IOException {
+        final Collection<Detector> detectors = createDetectors();
+        
+        for (final Detector detector : detectors) {
+            assertEquals(new Point(4, 5), detector.getMatrixCenter().toResultPoint());
+        }
+    }
+    
+    @Test
+    public void isValidTest() throws IOException {
+        final Collection<Detector> detectors = createDetectors();
+        
+        for (final Detector detector : detectors) {
+            assertTrue(detector.isValid(4, 5));
+            assertFalse(detector.isValid(-1, -1));
+            assertFalse(detector.isValid(-1, 0));
+            assertFalse(detector.isValid(image.getWidth(), image.getHeight()));
+        }
+    }
+    
+    @Test
+    public void isValidResultPoint() throws IOException {
+        final Collection<Detector> detectors = createDetectors();
+        
+        for (final Detector detector : detectors) {
+            assertTrue(detector.isValid(new ResultPoint(4, 5)));
+            assertFalse(detector.isValid(new ResultPoint(-1, -1)));
+            assertFalse(detector.isValid(new ResultPoint(-1, 0)));
+        }
+    }
+    
+    @Test
+    public void expandSquareResultPoint() throws IOException {
+        final Collection<Detector> detectors = createDetectors();
+        
+        for (final Detector detector : detectors) {
+            assertArrayEquals(new ResultPoint[]{new ResultPoint(2, 3), new ResultPoint(5, 7), new ResultPoint(12, 9), new ResultPoint(8, 15)}, detector.expandSquare(new ResultPoint[]{new ResultPoint(0, 0), new ResultPoint(2, 3), new ResultPoint(4, 6), new ResultPoint(8, 9)}, 4, 16));
+        }
+    }
+    
+    @Test
+    public void findAlignmentInRegion() throws IOException {
+        final Collection<Detector> detectors = createDetectors();
+        
+        for (final Detector detector : detectors) {
+            assertEquals(new Point(1, 2), detector.findAlignmentInRegion(image, new Rectangle(0, 0, image.getWidth(), image.getHeight())));
+        }
+    }
+    
+    @Test
+    public void calculateSkew() throws IOException {
+        final Collection<Detector> detectors = createDetectors();
+        
+        for (final Detector detector : detectors) {
+            assertEquals(0, detector.calculateSkew(image), 0);
+        }
+    }
+    
+    @Test
+    public void calculateModuleSize() throws IOException {
+        final Collection<Detector> detectors = createDetectors();
+        
+        for (final Detector detector : detectors) {
+            assertEquals(1, detector.calculateModuleSize(image), 0);
+        }
+    }
+    
+    private static Collection<Detector> createDetectors() throws IOException {
+        final AztecDetectorResult result = new AztecDetectorResult();
+        
+        return Detector.createDetectors(result, image);
+    }
+}
+    
+
+
+No.2 generated result --------------------------
+
+@SuppressWarnings("unused")
+public class DetectorTest {
+  private static final int NB_LAYERS = 4;
+  private static final float TOLERANCE = 0.1f;
+  private Detector detector;
+  
+  @BeforeEach
+  public void setUp() {
+    this.detector = new Detector(NB_LAYERS, true);
+  }
+  
+  @Test
+  public void getMatrixCenterTest() {
+    Point[] cornerPoints = new Point[]{
+        new Point(0f, 0f),
+        new Point(1f, 0f),
+        new Point(2f, 1f),
+        new Point(3f, 1f)
+      };
+    
+    // Top left corner is at (0.0, 0.0)
+    ResultPoint topLeft = this.detector.getMatrixCenter(cornerPoints);
+    assertEquals(0f, topLeft.getX(), TOLERANCE);
+    assertEquals(0f, topLeft.getY(), TOLERANCE);
+    
+    // Top right corner is at (3.0, 0.0)
+    ResultPoint topRight = this.detector.getMatrixCenter(cornerPoints);
+    assertEquals(3f, topRight.getX(), TOLERANCE);
+    assertEquals(0f, topRight.getY(), TOLERANCE);
+    
+    // Bottom left corner is at (0.0, 1.0)
+    ResultPoint bottomLeft = this.detector.getMatrixCenter(cornerPoints);
+    assertEquals(0f, bottomLeft.getX(), TOLERANCE);
+    assertEquals(1f, bottomLeft.getY(), TOLERANCE);
+    
+    // Bottom right corner is at (3.0, 1.0)
+    ResultPoint bottomRight = this.detector.getMatrixCenter(cornerPoints);
+    assertEquals(3f, bottomRight.getX(), TOLERANCE);
+    assertEquals(1f, bottomRight.getY(), TOLERANCE);
+    
+    // Center is at (1.5, 0.5)
+    ResultPoint center = this.detector.getMatrixCenter(cornerPoints);
+    assertEquals(1.5f, center.getX(), TOLERANCE);
+    assertEquals(0.5f, center.getY(), TOLERANCE);
+  }
+}
+
+
+
+No.3 generated result --------------------------
+
+
+// 1. You could create a private field called `matrixCenter` and initialize it in the constructor of your class.
+private Point matrixCenter;
+public Detector(AztecDetectorResult aztecDetectorResult) {
+    // ...
+    this.matrixCenter = getMatrixCenter();
+}
+// 2. Or, you could create a public method called `getMatrixCenter()` that computes the center of the matrix.
+public Point getMatrixCenter() {
+    // ...
+}
+
+
+
+No.4 generated result --------------------------
+
+
+package com.google.zxing.aztec.detector;
+
+import java.util.*;
+import com.google.zxing.*;
+import com.google.zxing.aztec.AztecDetectorResult;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DetectorTest {
+    @Test
+    public void getMatrixCenterTest() {
+        // Arrange
+        List<ResultPoint> corners = new ArrayList<>();
+        corners.add(new ResultPoint(10, 20));
+        corners.add(new ResultPoint(30, 20));
+        corners.add(new ResultPoint(40, 60));
+        corners.add(new ResultPoint(30, 80));
+        AztecDetectorResult result = new AztecDetectorResult();
+        result.setCorners(corners);
+        
+        // Act
+        Point center = Detector.getMatrixCenter(result);
+        
+        // Assert
+        assertEquals(25, center.x);
+        assertEquals(70, center.y);
+    }
+}
+
+
+
+No.5 generated result --------------------------
+
+python
+import cv2
+img = cv2.imread('aztec_image.png')
+
+
+
+No.6 generated result --------------------------
+
+
+package com.google.zxing.aztec.detector;
+
+import com.google.zxing.ResultPoint;
+
+/**
+ * Detects an Aztec code in an image.
+ */
+public final class Detector {
+    private static final int MAX = 32;
+
+    private final BitMatrix image;
+    private final ResultPoint center;
+
+    /**
+     * <p>Creates a new instance.</p>
+     * @param image image to detect Aztec code in
+     * @param center center of the image
+     */
+    public Detector(BitMatrix image, ResultPoint center) {
+        this.image = image;
+        this.center = center;
+    }
+
+    /**
+     * <p>Detects an Aztec code in an image.</p>
+     * @param image image to detect Aztec code in
+     * @return {@link DetectorResult} encapsulating results of detecting an Aztec code or null if an Aztec code cannot be found.
+     */
+    public static DetectorResult detect(BitMatrix image) {
+        ResultPoint center = getMatrixCenter(image);
+        return new Detector(image, center).detect();
+    }
+
+    /**
+     * <p>Detects an Aztec code in a subset of an image.</p>
+     * @param image image to detect Aztec code in
+     * @return {@link DetectorResult} encapsulating results of detecting an Aztec code or null if an Aztec code cannot be found.
+     */
+    public static DetectorResult detect(BitMatrix image, int minSize) {
+        ResultPoint center = getMatrixCenter(image);
+        return new Detector(image, center).detect();
+    }
+
+    /**
+     * <p>Detects an Aztec code in a subset of an image.</p>
+     * @param image image to detect Aztec code in
+     * @return {@link DetectorResult} encapsulating results of detecting an Aztec code or null if an Aztec code cannot be found.
+     */
+    public static DetectorResult detect(BitMatrix image, int minSize, float centerX, float centerY) {
+        return new Detector(image, new ResultPoint(centerX, centerY)).detect();
+    }
+
+    /**
+     * <p>Detects an Aztec code in a subset of an image.</p>
+     * @param image image to detect Aztec code in
+     * @return {@link DetectorResult} encapsulating results of detecting an Aztec code or null if an Aztec code cannot be found.
+     */
+    public static DetectorResult detect(BitMatrix image, int minSize, float centerX, float centerY, boolean compact) {
+        return new Detector(image, new ResultPoint(centerX, centerY)).detect();
+    }
+
+    private DetectorResult detect() {
+        if (center == null || image.getWidth() < 4 * getDimension()) {
+            return null;
+        }
+
+        int size = getDimension();
+
+        float matrixCenterX = center.getX();
+        float matrixCenterY = center.getY();
+
+        boolean tryHarder = true;
+        for (int i = 0; i < MAX && tryHarder; i++) {
+            ResultPoint point = getMatrixCorner(matrixCenterX, matrixCenterY);
+            if (point == null) {
+                return null;
+            } else {
+                center = new ResultPoint(matrixCenterX = point.getX(), matrixCenterY = point.getY());
+            }
+        }
+
+        return new DetectorResult(center, size, tryHarder);
+    }
+
+    private static float distance(float aX, float aY, float bX, float bY) {
+        float xDiff = aX - bX;
+        float yDiff = aY - bY;
+        return (float) Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+    }
+
+    private static ResultPoint getMatrixCorner(float matrixCenterX, float matrixCenterY) {
+        int size = 1;
+        for (int i = 0; i < MAX && distance(matrixCenterX, matrixCenterY, size, size / 2f) > size * 3.5f; i++) {
+            size++;
+        }
+        return new ResultPoint(size + 7, size + 7);
+    }
+
+    private static float centerDistance(float x1, float y1, float x2, float y2) {
+        return distance(x1, y1, x2, y2);
+    }
+
+    private static ResultPoint getMatrixCenter(BitMatrix image) {
+        int[] found = new int[3];
+
+        float max = Float.MIN_VALUE;
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                if (!image.get(x, y)) {
+                    continue;
+                }
+
+                float centerX = x + 0.5f;
+                float centerY = y + 0.5f;
+                int count = 0;
+
+                for (int i = 0; i < found.length; i++) {
+                    if (!found[i] != -1 && centerDistance(centerX, centerY, x, y) <= found[i]) {
+                        count++;
+                    }
+                }
+
+                if (count == found.length) {
+                    float d = distance(centerX, centerY, x, y);
+                    if (d > max) {
+                        return new ResultPoint(x + 0.5f, y + 0.5f);
+                    } else if ((d == max) && distance(matrixCenterX, matrixCenterY, x, y) < d) {
+                        // Found another one at almost the same distance as this one.
+                        return new ResultPoint(x + 0.5f, y + 0.5f);
+                    }
+                }
+            }
+        }
+
+        throw new IllegalArgumentException("Couldn't find center of matrix");
+    }
+
+    private static int getDimension() {
+        return 1;
+    }
+}
+
+
+
+No.7 generated result --------------------------
+
+package com.google.zxing.aztec.detector;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DetectorTest {
+    @Test
+    public void getMatrixCenterTest() {
+        int matrixSize = 128; // The size of the aztec matrix
+        Point expectedCenterPoint = new Point(matrixSize / 2, matrixSize / 2);
+
+        float squareSize = 10.5f;
+        boolean compact = false;
+        Detector detector = new Detector(expectedCenterPoint, squareSize, compact);
+        
+        // Actual center point returned by the getMatrixCenter() method
+        Point actualCenterPoint = detector.getMatrixCenter();
+
+        assertEquals(expectedCenterPoint, actualCenterPoint, "The matrix center should match");
+    }
+}
+
+
+No.8 generated result --------------------------
+
+
+public Point getMatrixCenter() {
+    int width = points[0].x - points[2].x;
+    int height = points[0].y - points[2].y;
+    return new Point(points[0].x + (width / 2), points[0].y + (height / 2));
+}
+
+
+
+No.9 generated result --------------------------
+
+package com.google.zxing.aztec.detector;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+public class DetectorTest {
+    @Test
+    public void getMatrixCenterTest() {
+        ResultPoint[] points = new ResultPoint[]{
+                new ResultPoint(0, 0), // Top-left corner
+                new ResultPoint(3, 2), // Top-right corner
+                new ResultPoint(1, 4), // Bottom-left corner
+                new ResultPoint(5, 6)   // Bottom-right corner
+        };
+        Point center = Detector.getMatrixCenter(points);
+        Assertions.assertEquals(2, center.x);
+        Assertions.assertEquals(3, center.y);
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.google.zxing.aztec.detector;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public final class Detector {
+  private static final float MAX_AVG_VARIANCE = .12f;
+  private static final float MAX_INDIVIDUAL_VARIANCE = .24f;
+  public ResultPoint resultPointCallback;
+  public boolean compact;
+  public int nbLayers;
+  public int dimensionMax;
+  public AztecDetectorResult pointsOnly;
+  public Bounds bounds;
+  private final BitMatrix image;
+  
+  /**
+   * <p>Creates a new instance.</p>
+   */
+  public Detector(BitMatrix image) {
+    this.image = image;
+  }
+  
+  /**
+   * Locate the Aztec code in an image.
+   *
+   * @param hints optional hints to detector
+   * @return {@link AztecDetectorResult} encapsulating results of detecting Aztec code
+   */
+  public AztecDetectorResult detect(Map<DecodeHintType,?> hints) throws NotFoundException {
+    if (pointsOnly != null) {
+      return pointsOnly;
+    }
+    
+    ResultPoint callback = resultPointCallback;
+    boolean compact = true;
+    int nbLayers = 0;
+    int dimensionMax = Integer.MAX_VALUE;
+    
+    // Look for an alignment pattern in a 32×32 area around the center of the image, which should be
+    // aligned with any Aztec code
+    float size = MathUtils.max(image.getWidth(), image.getHeight()) / 10f;
+    
+    ResultPoint point = findAlignmentInRegion(null, new Bounds((int) (image.getWidth() - size) / 2, (int) (image.getHeight() - size) / 2), (int) size);
+    if (point != null) {
+      // If we found an alignment pattern, use it to locate the center of the code and the center of the alignment pattern
+      float cx = point.getX();
+      float cy = point.getY();
+      
+      bounds = Bounds.centerAt(cx, cy);
+    } else {
+      // If we didn't find an alignment pattern, we don't know which way is up; guess left-right and hope for the best
+      size = MathUtils.max(image.getWidth(), image.getHeight()) / 2f;
+      
+      bounds = new Bounds((int) (image.getWidth() - size), (int) (size));
+    }
+    
+    // Now just look for a corner in the general direction of where we think the center is
+    point = findCornerFromCenter(null, null, 177);
+    if (point != null) {
+      // If we found a corner that should be from an Aztec code, assume we're done
+      float cx = point.getX();
+      float cy = point.getY();
+      
+      bounds = Bounds.centerAt(cx, cy);
+    } else {
+      // Otherwise look for the corners in another 32 × 32 area around the center of the image
+      size = MathUtils.max(image.getWidth(), image.getHeight()) / 10f;
+      
+      point = findAlignmentInRegion(bounds, new Bounds((int) (image.getWidth() - size) / 2, (int) (size)), (int) size);
+    }
+    
+    float cx = point.getX();
+    float cy = point.getY();
+    
+    // Actually transform the image to a square with sides of size (dimension + 8 × dimModules) and then crop it to the target size
+    int dimension = getMatrixDimension(cx, cy);
+    boolean compactSize = false;
+    if ((hints == null || !hints.containsKey(DecodeHintType.TRY_HARDER)) && dimension < 32) {
+      // We got the dimension by guessing; check bounds and see if this guess was correct
+      for (int i : new int[]{1, -1}) {
+        float x = cx + i * MathUtils.distance(bounds.left, bounds.right);
+        
+        point = findCornerFromCenter(point, null, 177);
+        if (!isValid(point)) {
+          continue;
+        }
+      }
+      
+      int correctedDimension = getMatrixDimension(cx, cy);
+      if (correctedDimension > dimension) {
+        // Oh, it's bigger. Well, then.
+        dimension = correctedDimension;
+        compactSize = true;
+        
+        // But we can only do this once
+        nbLayers++;
+      } else if (correctedDimension < dimension) {
+        // Wait, it's smaller. That's weird.
+        dimension = correctedDimension;
+        compactSize = false;
+        nbLayers--;
+        
+        bounds = Bounds.centerAt(cx, cy);
+      } else {
+        // No, it was right
+        compactSize = true;
+      }
+    }
+    
+    // Actually transform the image to a square with sides of size (dimension + 8 × dimModules) and then crop it to the target size
+    float ratio = MathUtils.distance(bounds.left, bounds.right) / (float) dimension;
+    int left = (int) (cx - ratio * (dimension - 1) + .5f);
+    int right = (int) (cx + ratio * (dimension - 1) + .5f);
+    
+    int ymin = bounds.top;
+    for (int i : new int[]{1, -1}) {
+      float x = cx + i * MathUtils.distance(bounds.left, bounds.right);
+      
+      ResultPoint point2 = findCornerFromCenter(null, null, 177);
+      if (!isValid(point2)) {
+        continue;
+      }
+    }
+    
+    int ymax = bounds.bottom;
+    if (ymax > image.getHeight()) {
+      ymax = image.getHeight();
+      
+      // If we go all the way to the bottom, and we're still not done...
+      if ((right & 1) == 0 && !isValid(null)) {
+        right++;
+        
+        int i;
+        for (i = ymin + 2; i <= ymax - 2 && isValid(null); i++) {
+          float x = cx + ratio * (dimension - 1) / 2f + .5f;
+          
+          findAlignmentInRegion(new Bounds(left, right), new Bounds(i - 2, i + 2));
+        }
+        
+        // If we're still not done... try once more with a projected width of dimension - 3
+      } else {
+        if (dimension > 3) {
+          compact = false;
+          
+          left -= ratio * 4f + .5f;
+          right += ratio * 4f + .5f;
+          
+          int i2;
+          for (i2 = ymin + 2; i2 <= ymax - 2 && isValid(null); i2++) {
+            float x2 = cx + ratio * (dimension - 3) / 2f + .5f;
+            
+            findAlignmentInRegion(new Bounds(left, right), new Bounds(i2 - 2, i2 + 2));
+          }
+          
+          // Try the compact size
+        } else {
+          compact = false;
+          
+          left -= ratio * (dimension - 1) / 2f + .5f;
+          right += ratio * (dimension - 1) / 2f + .5f;
+          
+          int i3;
+          for (i3 = ymin + 2; i3 <= ymax - 2 && isValid(null); i3++) {
+            float x3 = cx + ratio * (dimension - 1) / 2f + .5f;
+            
+            findAlignmentInRegion(new Bounds(left, right), new Bounds(i3 - 2, i3 + 2));
+          }
+        }
+        
+        // We found something! Return it.
+      }
+    } else {
+      ymax = ymin;
+      
+      if (compactSize) {
+        compact = false;
+      }
+    }
+    
+    int top = ymin - 2;
+    if (top < 0) {
+      top = 0;
+    }
+    
+    int bottom = ymax + 3;
+    if (bottom > image.getHeight()) {
+      bottom = image.getHeight();
+      
+      if (!compactSize && ymin - 2 >= 0) {
+        compact = false;
+        
+        left -= ratio * dimension / 2f + .5f;
+        right += ratio * dimension / 2f + .5f;
+        
+        findAlignmentInRegion(new Bounds(left, right), new Bounds(ymin - 3, ymin));
+      } else {
+        compact = true;
+      }
+    }
+    
+    // Actually transform the image to a square with sides of size (dimension + 8 × dimModules) and then crop it to the target size
+    int width = right - left;
+    float ratio2 = MathUtils.distance(bounds.left, bounds.right) / (float) dimension;
+    
+    // Actually transform the image to a square with sides of size (dimension + 8 × dimModules) and then crop it to the target size
+    int height = bottom - top;
+    float ratio3 = MathUtils.distance(bounds.top, bounds.bottom) / (float) dimension;
+    
+    // Actually transform the image to a square with sides of size (dimension + 8 × dimModules) and then crop it to the target size
+    ImageTransform xform = new ImageTransform(image, left, top, width, height);
+    BufferedImage result = xform.transform();
+    
+    // Actually transform the image to a square with sides of size (dimension + 8 × dimModules) and then crop it to the target size
+    left = (int) (cx - ratio2 * (dimension - 1) / 2f + .5f);
+    if (left < 0) {
+      left = 0;
+      
+      width += -left;
+    }
+    
+    // Actually transform the image to a square with sides of size (dimension + 8 × dimModules) and then crop it to the target size
+    right = left + width;
+    if (right > result.getWidth()) {
+      int i4 = result.getWidth() - left;
+      
+      width -= i4;
+    } else {
+      width -= right - result.getWidth();
+    }
+    
+    // Actually transform the image to a square with sides of size (dimension + 8 × dimModules) and then crop it to the target size
+    top = (int) (cy - ratio3 * (dimension - 1) / 2f + .5f);
+    if (top < 0) {
+      top = 0;
+      
+      height += -top;
+    }
+    
+    // Actually transform the image to a square with sides of size (dimension + 8 × dimModules) and then crop it to the target size
+    bottom = top + height;
+    if (bottom > result.getHeight()) {
+      int i5 = result.getHeight() - top;
+      
+      height -= i5;
+    } else {
+      height -= bottom - result.getHeight();
+    }
+    
+    // Actually transform the image to a square with sides of size (dimension + 8 × dimModules) and then crop it to the target size
+    BufferedImage cropped = xform.crop(left, top, width, height);
+    
+    return new ImageTransform(cropped, left, top, width, height).transform();
+  }
+  
+  // Actually transform the image to a square with sides of size (dimension + 8 × dimModules) and then crop it to the target size
+  private int getModuleSize(BufferedImage image) {
+    // Actually transform the image to a square with sides of size (dimension + 8 × dimModules) and then crop it to the target size
+    int width = image.getWidth();
+    
+    // Actually transform the image to a square with sides of size (dimension + 8 × dimModules) and then crop it to the target size
+    int height = image.getHeight();
+    
+    if (width == height) {
+      return width / this.moduleSize;
+      
+      // Actually transform the image to a square with sides of size (dimension + 8 × dimModules) and then crop it to the target size
+    } else if (width < height) {
+      int i = height / width;
+      
+      return width * i / this.moduleSize;
+      
+      // Actually transform the image to a square with sides of size (dimension + 8 × dimModules) and then crop it to the target size
+    } else {
+      int i2 = width / height;
+      
+      return height * i2 / this.moduleSize;
+    }
+  }
+  
+  // Actually transform the image to a square with sides of size (dimension + 8 × dimModules) and then crop it to the target size
+  private boolean isWhite(BufferedImage image, int x, int y) {
+    // Actually transform the image to a square with sides of size (dimension + 8 × dimModules) and then crop it to the target size
+    Raster raster = image.getRaster();
+    
+    // Actually transform the image to a square with sides of size (dimension + 8 × dimModules) and then crop it to the target size
+    int width = image.getWidth();
+    
+    // Actually transform the image to a square with sides of size (dimension + 8 × dimModules) and then crop it to the target size
+    int height = image.getHeight();
+    
+    if ((x < 0 || x >= width) && (y < 0 || y >= height)) {
+      // Actually transform the image to a square with sides of size (dimension + 8 × dimModules) and then crop it to the target size
+    } else if (x < 0) {
+      return isWhite(image, x + width - 1, y);
+      
+      // Actually transform the image to a square with sides of size (dimension + 8 × dimModules) and then crop it to the target size
+    } else if (x >= width) {
+      return isWhite(image, x - width + 1, y);
+      
+      // Actually transform the image to a square with sides of size (dimension + 8 × dimModules) and then crop it to the target size
+    } else if (y < 0) {
+      return isWhite(image, x, y + height - 1);
+      
+      // Actually transform the image to a square with sides of size (dimension + 8 × dimModules) and then crop it to the target size
+    } else if (y >= height) {
+      return isWhite(image, x, y - height + 1);
+    }
+    
+    // Actually transform the image to a square with sides of size (dimension + 8 × dimModules) and then crop it to the target size
+    int[] pixels = raster.getPixels(x / this.moduleSize, y / this.moduleSize, 1, 1, (int[]) null);
+    
+    // Actually transform the image to a square with sides of size (dimension + 8 × dimModules) and then crop it to the target size
+    return pixels[0] > 250;
+  }
+}
+
+

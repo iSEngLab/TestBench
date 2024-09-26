@@ -1,0 +1,297 @@
+Source code: 
+
+
+public static int getCodeword(int symbol) {
+  int i = Arrays.binarySearch(SYMBOL_TABLE, symbol & 0x3FFFF);
+  if (i < 0) {
+    return -1;
+  }
+  return (CODEWORD_TABLE[i] - 1) % NUMBER_OF_CODEWORDS;
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.google.zxing.pdf417;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class PDF417CommonTest {
+
+    @Test
+    public void getCodewordTest() {
+        // Symbol from the SYMBOL_TABLE to test for a known codeword
+        int symbolInTable = PDF417Common.SYMBOL_TABLE[0];
+        int expectedCodeword = (PDF417Common.CODEWORD_TABLE[0] - 1) % PDF417Common.NUMBER_OF_CODEWORDS;
+        assertEquals(expectedCodeword, PDF417Common.getCodeword(symbolInTable));
+
+        // Symbol not in the SYMBOL_TABLE to test for a -1 codeword
+        int symbolNotInTable = 0x1025f; // Arbitrary choice outside the SYMBOL_TABLE
+        assertEquals(-1, PDF417Common.getCodeword(symbolNotInTable));
+        
+        // Testing the boundary condition (the last index of SYMBOL_TABLE)
+        int lastSymbolIndex = PDF417Common.SYMBOL_TABLE.length - 1;
+        int lastSymbol = PDF417Common.SYMBOL_TABLE[lastSymbolIndex];
+        int expectedLastCodeword = (PDF417Common.CODEWORD_TABLE[lastSymbolIndex] - 1) % PDF417Common.NUMBER_OF_CODEWORDS;
+        assertEquals(expectedLastCodeword, PDF417Common.getCodeword(lastSymbol));
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package com.google.zxing.pdf417;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class PDF417CommonTest {
+
+    @Test
+    public void getCodewordTest() {
+        // Test recognized symbols
+        assertEquals(2627, PDF417Common.getCodeword(PDF417Common.SYMBOL_TABLE[0]), "Codeword for first symbol should match");
+        assertEquals(1700, PDF417Common.getCodeword(PDF417Common.SYMBOL_TABLE[PDF417Common.SYMBOL_TABLE.length - 1]), "Codeword for last symbol should match");
+        
+        // Test boundaries of SYMBOL_TABLE
+        assertEquals(-1, PDF417Common.getCodeword(Integer.MIN_VALUE), "Codeword should be -1 for a value below the SYMBOL_TABLE range");
+        assertEquals(-1, PDF417Common.getCodeword(Integer.MAX_VALUE), "Codeword should be -1 for a value above the SYMBOL_TABLE range");
+
+        // Test an arbitrary symbol that is not in the SYMBOL_TABLE (assuming 123456 is not a valid symbol in the table)
+        assertEquals(-1, PDF417Common.getCodeword(123456), "Codeword should be -1 for a symbol not in the SYMBOL_TABLE");
+
+        // Test a known symbol within the SYMBOL_TABLE (we pick an arbitrary one for this test)
+        // Note: Since the symbol chosen is random and not actually from the SYMBOL_TABLE,
+        // you would need to replace 'randomSymbol' with an actual symbol from the SYMBOL_TABLE
+        // and 'expectedCodeword' with the corresponding codeword from the CODEWORD_TABLE.
+        // int randomSymbol = <actual_symbol_from_SYMBOL_TABLE>;
+        // int expectedCodeword = <corresponding_codeword_from_CODEWORD_TABLE>;
+        // assertEquals(expectedCodeword, PDF417Common.getCodeword(randomSymbol), "Codeword should match the expected value for the known symbol");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.google.zxing.pdf417;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+
+public class PDF417CommonTest {
+
+    @Test
+    public void getCodewordTest() {
+        // Test known symbols that should return valid codewords.
+        assertEquals(2627, PDF417Common.getCodeword(PDF417Common.SYMBOL_TABLE[0]));
+        assertEquals(900, PDF417Common.getCodeword(PDF417Common.SYMBOL_TABLE[350]));
+
+        // Test known symbols at the end of the SYMBOL_TABLE.
+        assertEquals(1700, PDF417Common.getCodeword(PDF417Common.SYMBOL_TABLE[PDF417Common.SYMBOL_TABLE.length - 1]));
+
+        // Test a symbol that does not exist in the SYMBOL_TABLE (should return -1).
+        assertEquals(-1, PDF417Common.getCodeword(-1));
+
+        // Test a symbol that is on the boundary of what could exist in the SYMBOL_TABLE.
+        assertEquals(-1, PDF417Common.getCodeword(PDF417Common.NUMBER_OF_CODEWORDS));
+        
+        // Test a symbol that should be masked and found in the SYMBOL_TABLE.
+        assertEquals(2627, PDF417Common.getCodeword(PDF417Common.SYMBOL_TABLE[0] | 0xC0000));
+
+        // Test valid symbol but not in the SYMBOL_TABLE (should also return -1).
+        assertNotEquals(-1, PDF417Common.getCodeword(0x1025e)); // The first symbol in the table.
+        assertEquals(-1, PDF417Common.getCodeword(0x1025f)); // Close to a valid symbol but not valid.
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.google.zxing.pdf417;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class PDF417CommonTest {
+
+    @Test
+    public void getCodewordTest() {
+        // Test valid symbols present in SYMBOL_TABLE
+        assertEquals(PDF417Common.getCodeword(0x1025e), 2627 % PDF417Common.NUMBER_OF_CODEWORDS);
+        assertEquals(PDF417Common.getCodeword(0x1035c), 1035 % PDF417Common.NUMBER_OF_CODEWORDS);
+        assertEquals(PDF417Common.getCodeword(0x10822), 82 % PDF417Common.NUMBER_OF_CODEWORDS);
+
+        // Test invalid symbol (not present in SYMBOL_TABLE)
+        assertEquals(PDF417Common.getCodeword(0x99999), -1);
+
+        // Test edge cases: min and max values in SYMBOL_TABLE
+        assertEquals(PDF417Common.getCodeword(0x1813a), 1813 % PDF417Common.NUMBER_OF_CODEWORDS);
+        assertEquals(PDF417Common.getCodeword(0x1f7d4), 3197 % PDF417Common.NUMBER_OF_CODEWORDS);
+
+        // Test symbol masked with 0x3FFFF
+        assertEquals(PDF417Common.getCodeword(0x123456), PDF417Common.getCodeword(0x34356));
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.google.zxing.pdf417;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class PDF417CommonTest {
+
+    @Test
+    public void getCodewordTest() {
+        // Test for expected codewords
+        assertEquals(2627, PDF417Common.getCodeword(0x1025e));
+        assertEquals(1819, PDF417Common.getCodeword(0x1027a));
+        assertEquals(902, PDF417Common.getCodeword(0x10422));
+        
+        // Test for symbol not in symbol table (should return -1)
+        assertEquals(-1, PDF417Common.getCodeword(0x12345));
+        
+        // Test for symbol that wraps around the number of codewords (should module and subtract 1)
+        // Assuming wrapping symbol 0x10b8e should wrap around
+        int codewordForWrapSymbol = PDF417Common.getCodeword(0x10b8e);
+        int expectedCodeword = (PDF417Common.CODEWORD_TABLE[642] - 1) % PDF417Common.NUMBER_OF_CODEWORDS;
+        assertEquals(expectedCodeword, codewordForWrapSymbol);
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package com.google.zxing.pdf417;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class PDF417CommonTest {
+    @Test
+    public void getCodewordTest() {
+        // Assuming SYMBOL_TABLE and CODEWORD_TABLE are visible within this test context
+        int symbolInTable = PDF417Common.SYMBOL_TABLE[10]; // Assumed to be part of the SYMBOL_TABLE
+        int codeword = PDF417Common.getCodeword(symbolInTable);
+        int expectedCodeword = (PDF417Common.CODEWORD_TABLE[10] - 1) % PDF417Common.NUMBER_OF_CODEWORDS;
+        assertEquals(expectedCodeword, codeword, "The codeword did not match the expected value");
+
+        // Test a symbol not in the table
+        int symbolNotInTable = 0xABCDE; // Assumed not to be part of the SYMBOL_TABLE
+        int invalidCodeword = PDF417Common.getCodeword(symbolNotInTable);
+        assertEquals(-1, invalidCodeword, "Lookup of a symbol not in the CODEWORD_TABLE should return -1");
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.google.zxing.pdf417;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class PDF417CommonTest {
+    @Test
+    public void getCodewordTest() {
+        // Test valid symbols from SYMBOL_TABLE matching a codeword
+        assertEquals(PDF417Common.getCodeword(PDF417Common.SYMBOL_TABLE[0]), (PDF417Common.CODEWORD_TABLE[0] - 1) % PDF417Common.NUMBER_OF_CODEWORDS);
+        assertEquals(PDF417Common.getCodeword(PDF417Common.SYMBOL_TABLE[100]), (PDF417Common.CODEWORD_TABLE[100] - 1) % PDF417Common.NUMBER_OF_CODEWORDS);
+        assertEquals(PDF417Common.getCodeword(PDF417Common.SYMBOL_TABLE[500]), (PDF417Common.CODEWORD_TABLE[500] - 1) % PDF417Common.NUMBER_OF_CODEWORDS);
+
+        // Test out-of-range symbol which is not in the SYMBOL_TABLE
+        assertEquals(PDF417Common.getCodeword(0xAAAAAA), -1);
+        // Test another out-of-range symbol
+        assertEquals(PDF417Common.getCodeword(0xFFFFFF), -1);
+        // Test negative symbol
+        assertEquals(PDF417Common.getCodeword(-1), -1);
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package com.google.zxing.pdf417;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class PDF417CommonTest {
+    @Test
+    public void getCodewordTest() {
+        // Test with a valid symbol that exists in SYMBOL_TABLE
+        int symbolExists = 0x1025e;
+        int expectedCodeword = (PDF417Common.CODEWORD_TABLE[0] - 1) % PDF417Common.NUMBER_OF_CODEWORDS;
+        assertEquals(expectedCodeword, PDF417Common.getCodeword(symbolExists));
+
+        // Test with an invalid symbol that does not exist in SYMBOL_TABLE
+        int symbolNotExists = 0x99999;
+        int expectedInvalidCodeword = -1;
+        assertEquals(expectedInvalidCodeword, PDF417Common.getCodeword(symbolNotExists));
+
+        // Test with corner case: the last symbol in SYMBOL_TABLE
+        int lastSymbol = PDF417Common.SYMBOL_TABLE[PDF417Common.SYMBOL_TABLE.length - 1];
+        int expectedLastCodeword = (PDF417Common.CODEWORD_TABLE[PDF417Common.SYMBOL_TABLE.length - 1] - 1) % PDF417Common.NUMBER_OF_CODEWORDS;
+        assertEquals(expectedLastCodeword, PDF417Common.getCodeword(lastSymbol));
+        
+        // Test with corner case: the first symbol in SYMBOL_TABLE
+        int firstSymbol = PDF417Common.SYMBOL_TABLE[0];
+        int expectedFirstCodeword = (PDF417Common.CODEWORD_TABLE[0] - 1) % PDF417Common.NUMBER_OF_CODEWORDS;
+        assertEquals(expectedFirstCodeword, PDF417Common.getCodeword(firstSymbol));
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package com.google.zxing.pdf417;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class PDF417CommonTest {
+    @Test
+    public void getCodewordTest() {
+        // Test existing symbol codeword mapping
+        assertEquals(2627, PDF417Common.getCodeword(PDF417Common.SYMBOL_TABLE[0]));
+        assertEquals(1819, PDF417Common.getCodeword(PDF417Common.SYMBOL_TABLE[1]));
+        // Test non-existing symbol which should return -1
+        assertEquals(-1, PDF417Common.getCodeword(PDF417Common.SYMBOL_TABLE[0] + 1));
+        // Test maximum valid symbol which should be within the codeword table
+        assertEquals(PDF417Common.getCodeword(PDF417Common.SYMBOL_TABLE[PDF417Common.SYMBOL_TABLE.length - 1]),
+                     PDF417Common.CODEWORD_TABLE[PDF417Common.SYMBOL_TABLE.length - 1]);
+        // Test symbol outside the maximum range which should return -1
+        assertEquals(-1, PDF417Common.getCodeword(0x3FFFF + 1));
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.google.zxing.pdf417;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class PDF417CommonTest {
+
+    @Test
+    public void getCodewordTest() {
+        // Existing symbol from SYMBOL_TABLE should return correct codeword
+        assertEquals(2627, PDF417Common.getCodeword(PDF417Common.SYMBOL_TABLE[0]));
+        // Non-existing symbol should return -1
+        assertEquals(-1, PDF417Common.getCodeword(123456));
+        // Check edge cases: first and last symbols
+        assertEquals(2627, PDF417Common.getCodeword(PDF417Common.SYMBOL_TABLE[0]));
+        assertEquals(1700, PDF417Common.getCodeword(PDF417Common.SYMBOL_TABLE[PDF417Common.SYMBOL_TABLE.length - 1]));
+        // SYMBOL_TABLE constraint (0x3FFFF) should be applied
+        assertEquals(PDF417Common.getCodeword(0x3FFFF), PDF417Common.getCodeword(0x7FFFF));
+    }
+}
+
+

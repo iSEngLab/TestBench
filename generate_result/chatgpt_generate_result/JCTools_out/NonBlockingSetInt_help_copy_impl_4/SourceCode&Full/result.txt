@@ -1,0 +1,208 @@
+Source code: 
+
+// Help copy this one word.  State Machine.
+// (1) If not "made immutable" in the old array, set the sign bit to make
+//     it immutable.
+// (2) If non-zero in old array & zero in new, CAS new from 0 to copy-of-old
+// (3) If non-zero in old array & non-zero in new, CAS old to zero
+// (4) Zero in old, new is valid
+// At this point, old should be immutable-zero & new has a copy of bits
+private NBSI help_copy_impl( int i ) {
+  // Handle every 64th bit via using a nested array
+  NBSI old = this;          // The bit array being copied from
+  NBSI nnn = _new;          // The bit array being copied to
+  if( nnn == null ) return this; // Promoted already
+  int j = i;                // The bit index being added
+  while( (j&63) == 63 ) {   // Bit 64? (low 6 bits are all set)
+    old = old._nbsi64;      // Recurse
+    nnn = nnn._nbsi64;      // Recurse
+    j = j>>6;               // Strip off low 6 bits (all set)
+  }
+
+  // Transit from state 1: word is not immutable yet
+  // Immutable is in bit 63, the sign bit.
+  long bits = old._bits[j>>6];
+  while( bits >= 0 ) {      // Still in state (1)?
+    long oldbits = bits;
+    bits |= mask(63);       // Target state of bits: sign-bit means immutable
+    if( old.CAS( j>>6, oldbits, bits ) ) {
+      if( oldbits == 0 ) _copyDone.addAndGet(1);
+      break;                // Success - old array word is now immutable
+    }
+    bits = old._bits[j>>6]; // Retry if CAS failed
+  }
+
+  // Transit from state 2: non-zero in old and zero in new
+  if( bits != mask(63) ) {  // Non-zero in old?
+    long new_bits = nnn._bits[j>>6];
+    if( new_bits == 0 ) {   // New array is still zero
+      new_bits = bits & ~mask(63); // Desired new value: a mutable copy of bits
+      // One-shot CAS attempt, no loop, from 0 to non-zero.
+      // If it fails, somebody else did the copy for us
+      if( !nnn.CAS( j>>6, 0, new_bits ) )
+        new_bits = nnn._bits[j>>6]; // Since it failed, get the new value
+      assert new_bits != 0;
+    }
+
+    // Transit from state 3: non-zero in old and non-zero in new
+    // One-shot CAS attempt, no loop, from non-zero to 0 (but immutable)
+    if( old.CAS( j>>6, bits, mask(63) ) )
+      _copyDone.addAndGet(1); // One more word finished copying
+  }
+
+  // Now in state 4: zero (and immutable) in old
+
+  // Return the self bitvector for 'fluid' programming style
+  return this;
+}
+
+
+
+No.1 generated result --------------------------
+
+@Test
+public void help_copy_implTest() {
+    NonBlockingSetInt.NBSI nbsi = new NonBlockingSetInt.NBSI(64, null, null);
+    NonBlockingSetInt.NBSI result = nbsi.help_copy_impl(0);
+    assertNotNull(result);
+}
+
+
+No.2 generated result --------------------------
+
+@Test
+public void help_copy_implTest() {
+    // Initialize the NBSI object
+    NonBlockingSetInt.NBSI nbsi = new NonBlockingSetInt.NBSI(63, new ConcurrentAutoTable(), new NonBlockingSetInt());
+    
+    // Call the help_copy_impl method passing in a valid index 'i'
+    NonBlockingSetInt.NBSI result = nbsi.help_copy_impl(5);
+    
+    // Assert that the result is not null
+    assertNotNull(result);
+}
+
+
+No.3 generated result --------------------------
+
+@Test
+public void help_copy_implTest() {
+    // Test the help_copy_impl method with a specific scenario
+    NonBlockingSetInt.NBSI nbsi = new NonBlockingSetInt.NBSI(10, null, null);
+    
+    // Perform the help_copy_impl method and check the result
+    NonBlockingSetInt.NBSI result = nbsi.help_copy_impl(5);
+    // Add assertions here
+}
+
+
+No.4 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NonBlockingSetIntTest {
+    @Test
+    public void help_copy_implTest() {
+        NonBlockingSetInt.NBSI nbsi = new NonBlockingSetInt.NBSI(10, null, null);
+        
+        NonBlockingSetInt.NBSI result = nbsi.help_copy_impl(5);
+        
+        assertNotNull(result);
+    }
+}
+
+
+No.5 generated result --------------------------
+
+@Test
+public void help_copy_implTest() {
+    // Create a new NonBlockingSetInt object with a max element of 1000
+    NonBlockingSetInt set = new NonBlockingSetInt(1000);
+  
+    // Test the help_copy_impl method by adding an element to the set and calling help_copy_impl
+    set.add(500);
+    NonBlockingSetInt.NBSI result = set._nbsi.help_copy_impl(500);
+    
+    // Check if the result is not null
+    assertNotNull(result);
+  
+    // Add further assertions as needed based on the expected behavior of the help_copy_impl method
+}
+
+
+No.6 generated result --------------------------
+
+@Test
+public void help_copy_implTest() {
+    // Create a new NonBlockingSetInt
+    NonBlockingSetInt set = new NonBlockingSetInt();
+    // Add some elements to the set
+    set.add(5);
+    set.add(10);
+    set.add(15);
+    // Perform the help_copy_impl method test
+    NBSI nbsi = set._nbsi;
+    NBSI nnn = nbsi._new;
+    NBSI result = nbsi.help_copy_impl(5);
+    // Add assertions to verify the behavior of the help_copy_impl method
+    assertEquals(nnn, nbsi._new);
+    assertEquals(nbsi, result);
+}
+
+
+No.7 generated result --------------------------
+
+@Test
+public void help_copy_implTest() {
+    // Create a test case for the help_copy_impl method
+    NonBlockingSetInt.NBSI nbsi = new NonBlockingSetInt.NBSI(63, new ConcurrentAutoTable(), new NonBlockingSetInt());
+    // Add test logic here
+    NonBlockingSetInt.NBSI result = nbsi.help_copy_impl(0);
+    // Add assertions here
+    assertNotNull(result);
+}
+
+
+No.8 generated result --------------------------
+
+    @Test
+    public void help_copy_implTest() {
+        // Create a NBSI object for testing
+        NonBlockingSetInt.NBSI nbsi = new NonBlockingSetInt.NBSI(64, new ConcurrentAutoTable(), new NonBlockingSetInt());
+        // Fill in the test case with the appropriate assertions
+        // Test the help_copy_impl method with different inputs
+        <FILL>
+        
+        // Assert for the output of the method with different inputs
+        // Use assertTrue or assertFalse based on the expected output
+    }
+
+
+No.9 generated result --------------------------
+
+@Test
+public void help_copy_implTest() {
+    NonBlockingSetInt.NBSI nbsi = new NonBlockingSetInt.NBSI(64, new ConcurrentAutoTable(), null);
+    NonBlockingSetInt.NBSI result = nbsi.help_copy_impl(10);
+    // Add assertions here to verify the result
+    assertNotNull(result);
+}
+
+
+No.10 generated result --------------------------
+
+@Test
+public void help_copy_implTest() {
+    // Create a NonBlockingSetInt instance
+    NonBlockingSetInt set = new NonBlockingSetInt();
+    // Call the help_copy_impl method with a specific index
+    NBSI result = set._nbsi.help_copy_impl(1);
+    // Verify that the result is not null
+    assertNotNull(result);
+    // Add additional assertions as needed
+}
+
+

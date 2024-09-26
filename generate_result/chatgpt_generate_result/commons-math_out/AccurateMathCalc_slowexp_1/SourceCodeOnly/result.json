@@ -1,0 +1,27 @@
+{
+    "project_name": "commons-math",
+    "file_name": "AccurateMathCalc.java",
+    "relative_path": "commons-math/commons-math-core/src/main/java/org/apache/commons/math4/core/jdkmath/AccurateMathCalc.java",
+    "execute_path": "commons-math/commons-math-core",
+    "package": "org.apache.commons.math4.core.jdkmath",
+    "docstring": "/**\n     *  For x between 0 and 1, returns exp(x), uses extended precision.\n     *  @param x argument of exponential\n     *  @param result placeholder where to place exp(x) split in two terms\n     *  for extra precision (i.e. exp(x) = result[0] + result[1]\n     *  @return exp(x)\n     */",
+    "source_code": "\nstatic double slowexp(final double x, final double[] result) {\n    final double[] xs = new double[2];\n    final double[] ys = new double[2];\n    final double[] facts = new double[2];\n    final double[] as = new double[2];\n    split(x, xs);\n    ys[0] = ys[1] = 0.0;\n\n    for (int i = FACT.length - 1; i >= 0; i--) {\n        splitMult(xs, ys, as);\n        ys[0] = as[0];\n        ys[1] = as[1];\n\n        split(FACT[i], as);\n        splitReciprocal(as, facts);\n\n        splitAdd(ys, facts, as);\n        ys[0] = as[0];\n        ys[1] = as[1];\n    }\n\n    if (result != null) {\n        result[0] = ys[0];\n        result[1] = ys[1];\n    }\n\n    return ys[0] + ys[1];\n}\n",
+    "class_name": "AccurateMathCalc",
+    "method_name": "slowexp",
+    "arguments": [
+        "double x",
+        "double[] result"
+    ],
+    "generate_test": [
+        "@Test\npublic void slowexpTest() {\n    double[] result = new double[2];\n    double x = 2.0;\n    double expected = Math.exp(x);\n    double actual = AccurateMathCalc.slowexp(x, result);\n    assertEquals(expected, actual);\n}",
+        "@Test\npublic void slowexpTest() {\n    double x = 5.0;\n    double[] result = new double[2];\n    double actual = slowexp(x, result);\n    double expected = 148.4131591025766; // Expected value\n    assertEquals(expected, actual);\n}",
+        "@Test\npublic void slowexpTest() {\n    double input = 2.5;\n    double[] result = new double[2];\n    double output = slowexp(input, result);\n    assertEquals(expectedOutput, output);\n}",
+        "@Test\npublic void slowexpTest() {\n    double x = 5.0;\n    double[] result = new double[2];\n    double expected = 148.41316; // Expected output of slowexp(5.0, result)\n\n    double actual = AccurateMathCalc.slowexp(x, result);\n\n    assertEquals(expected, actual, 0.00001);\n}",
+        "@Test\npublic void slowexpTest() {\n    double[] result = new double[2];\n    double input = 5.0;\n    double expected = Math.exp(input);\n    \n    // Call the slowexp method and pass the input and result array\n    double actual = slowexp(input, result);\n    \n    // Compare the actual result with the expected result\n    assertEquals(expected, actual, 0.0001);\n    assertEquals(expected, result[0] + result[1], 0.0001);\n}",
+        "@Test\npublic void slowexpTest() {\n    double[] result = new double[2];\n    double x = 2.0;\n    double expected = Math.exp(x);\n    double actual = slowexp(x, result);\n    double delta = 1e-15;\n    assertEquals(expected, actual, delta);\n}",
+        "@Test\npublic void slowexpTest() {\n    double x = 2.0;\n    double[] result = new double[2];\n    AccurateMathCalc.slowexp(x, result);\n    double expected = Math.exp(x);\n    double actual = result[0] + result[1];\n    assertEquals(expected, actual, 0.0001);\n}",
+        "@Test\npublic void slowexpTest() {\n    double x = 2.0;\n    double[] result = new double[2];\n    double expected = Math.exp(x);\n    double actual = slowexp(x, result);\n    assertEquals(expected, actual, 0.0001);\n}",
+        "@Test\npublic void slowexpTest() {\n    double[] result = new double[2];\n    AccurateMathCalc.slowexp(10, result);\n    assertEquals(22026.465794806718, result[0]);\n    assertEquals(2293.693179580857, result[1]);\n}",
+        "@Test\npublic void slowexpTest() {\n    double[] result = new double[2];\n    double output = AccurateMathCalc.slowexp(5.0, result);\n    assertEquals(148.4131591025766, output);\n}"
+    ]
+}

@@ -1,0 +1,431 @@
+Source code: 
+
+
+public int getNextSet(int from) {
+  if (from >= size) {
+    return size;
+  }
+  int bitsOffset = from / 32;
+  int currentBits = bits[bitsOffset];
+  // mask off lesser bits first
+  currentBits &= -(1 << (from & 0x1F));
+  while (currentBits == 0) {
+    if (++bitsOffset == bits.length) {
+      return size;
+    }
+    currentBits = bits[bitsOffset];
+  }
+  int result = (bitsOffset * 32) + Integer.numberOfTrailingZeros(currentBits);
+  return Math.min(result, size);
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BitArrayTest {
+
+    @Test
+    public void getNextSetTest() {
+        // Given a BitArray with some bits set
+        BitArray bitArray = new BitArray(64);
+        bitArray.set(3);
+        bitArray.set(5);
+        bitArray.set(29);
+        bitArray.set(30);
+        bitArray.set(60);
+
+        // Verify getNextSet returns the correct index of the next set bit
+        assertEquals(3, bitArray.getNextSet(0), "Next set bit after index 0 should be at 3");
+        assertEquals(5, bitArray.getNextSet(4), "Next set bit after index 4 should be at 5");
+        assertEquals(29, bitArray.getNextSet(6), "Next set bit after index 6 should be at 29");
+        assertEquals(30, bitArray.getNextSet(29), "Next set bit after index 29 should be at 30");
+
+        // Given that the next set bit is out of bounds (beyond size), it should return size
+        assertEquals(64, bitArray.getNextSet(61), "Next set bit after index 61 should be 64 (out of bounds)");
+        assertEquals(64, bitArray.getNextSet(64), "Next set bit after index 64 should be 64 (out of bounds)");
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BitArrayTest {
+
+    @Test
+    public void getNextSetTest() {
+        BitArray bitArray = new BitArray(64);
+        
+        // Initially, all bits are unset. getNextSet should return the size (64) for any valid index.
+        assertEquals(64, bitArray.getNextSet(0));
+        assertEquals(64, bitArray.getNextSet(32));
+        assertEquals(64, bitArray.getNextSet(63));
+        
+        // Set a single bit and check if the getNextSet gives the correct index.
+        bitArray.set(10); // Set the bit at index 10
+        assertEquals(10, bitArray.getNextSet(0));
+        assertEquals(10, bitArray.getNextSet(10));
+        assertEquals(64, bitArray.getNextSet(11));
+        
+        // Set another bit further along and test the two segments.
+        bitArray.set(50); // Set the bit at index 50
+        assertEquals(10, bitArray.getNextSet(0));
+        assertEquals(50, bitArray.getNextSet(11));
+        assertEquals(50, bitArray.getNextSet(40));
+        assertEquals(64, bitArray.getNextSet(51));
+        
+        // Set a bit at the last possible index in the array.
+        bitArray.set(63);
+        assertEquals(63, bitArray.getNextSet(51));
+        assertEquals(63, bitArray.getNextSet(63));
+        
+        // Test with index out of bounds.
+        assertThrows(ArrayIndexOutOfBoundsException.class, () -> bitArray.getNextSet(64));
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BitArrayTest {
+
+    @Test
+    public void getNextSetTest() {
+        // Initialize a BitArray with a specific size
+        BitArray bitArray = new BitArray(64);
+
+        // Set some bits in the BitArray
+        bitArray.set(0);
+        bitArray.set(5);
+        bitArray.set(36);
+
+        // Test finding the next set bit when it exists
+        assertEquals(0, bitArray.getNextSet(0), "First set bit from index 0 should be at index 0");
+        assertEquals(5, bitArray.getNextSet(1), "Next set bit from index 1 should be at index 5");
+        assertEquals(36, bitArray.getNextSet(6), "Next set bit from index 6 should be at index 36");
+
+        // Test that it returns the size of the BitArray when no next set bit exists
+        assertEquals(64, bitArray.getNextSet(37), "Next set bit from index 37 should return the size 64 when not found");
+
+        // Set the last possible bit
+        bitArray.set(63);
+        // Test that getNextSet returns the last bit when requested
+        assertEquals(63, bitArray.getNextSet(37), "Next set bit from index 37 should be at index 63 after setting last bit");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BitArrayTest {
+    @Test
+    public void getNextSetTest() {
+        BitArray bitArray;
+
+        // Test with an empty BitArray
+        bitArray = new BitArray(0);
+        assertEquals(0, bitArray.getNextSet(0));
+
+        // Test where all bits are unset
+        bitArray = new BitArray(32);
+        assertEquals(32, bitArray.getNextSet(0));
+
+        // Test with some bits set
+        bitArray = new BitArray(new int[]{0xFFFF0000, 0xFFFF0000}, 64);
+        assertEquals(16, bitArray.getNextSet(0));
+
+        // Test where the search starts after the last set bit
+        assertEquals(64, bitArray.getNextSet(48));
+
+        // Test where the search starts at the position of the last set bit
+        bitArray.set(63);
+        assertEquals(63, bitArray.getNextSet(62));
+
+        // Test getting the next set bit after a certain index
+        bitArray = new BitArray(new int[] {0x0, 0xF0FF1000}, 64);
+        assertEquals(36, bitArray.getNextSet(32));
+
+        // Test with no set bits after the given index
+        bitArray = new BitArray(new int[]{0x0, 0xA0000000}, 64);
+        assertEquals(64, bitArray.getNextSet(57));
+
+        // Test with the last bit set in the array
+        bitArray = new BitArray(new int[]{0x0, 0x80000000}, 64);
+        assertEquals(63, bitArray.getNextSet(32));
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BitArrayTest {
+    @Test
+    public void getNextSetTest() {
+        // Case: empty BitArray
+        BitArray emptyBitArray = new BitArray();
+        assertEquals(emptyBitArray.getSize(), emptyBitArray.getNextSet(0));
+
+        // Case: BitArray with no set bits should return size for any index
+        BitArray noSetBits = new BitArray(32);
+        assertEquals(noSetBits.getSize(), noSetBits.getNextSet(0));
+        assertEquals(noSetBits.getSize(), noSetBits.getNextSet(31));
+
+        // Case: BitArray with set bits
+        BitArray bitArray = new BitArray(64);
+        bitArray.set(32);
+        assertEquals(32, bitArray.getNextSet(0));
+        assertEquals(32, bitArray.getNextSet(32));
+        assertEquals(64, bitArray.getNextSet(33));
+
+        // Case: Check the last bit
+        bitArray.set(63);
+        assertEquals(32, bitArray.getNextSet(0));
+        assertEquals(63, bitArray.getNextSet(33));
+
+        // Case: Check out of bounds
+        assertThrows(ArrayIndexOutOfBoundsException.class, () -> bitArray.getNextSet(64));
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BitArrayTest {
+    @Test
+    public void getNextSetTest() {
+        
+        // Create a BitArray and set some bits
+        int size = 64;
+        BitArray bitArray = new BitArray(size);
+        bitArray.set(3);
+        bitArray.set(36);
+        bitArray.set(48);
+        
+        // Test different scenarios
+        assertEquals(3, bitArray.getNextSet(0)); // First set bit is at index 3
+        assertEquals(36, bitArray.getNextSet(4)); // Next after 3 is at index 36
+        assertEquals(48, bitArray.getNextSet(37)); // Next after 36 is at index 48
+        assertEquals(size, bitArray.getNextSet(49)); // No set bits after index 48
+        assertEquals(size, bitArray.getNextSet(64)); // Start index >= size
+        
+        // Edge cases
+        assertEquals(size, bitArray.getNextSet(size)); // From index equals size
+        assertEquals(3, bitArray.getNextSet(3)); // The "from" index itself is set
+        
+        // Set a bit at the end and test
+        bitArray.set(63);
+        assertEquals(63, bitArray.getNextSet(49)); // Next after 48 is now at index 63
+        assertEquals(size, bitArray.getNextSet(64)); // Still returns size when starting from index >= actual size
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BitArrayTest {
+    @Test
+    public void getNextSetTest() {
+        // Here we need to create a test case to check the functionality of getNextSet
+        
+        // Let's start with an empty BitArray and check if the next set bit is size
+        BitArray emptyBitArray = new BitArray(32);
+        assertEquals(32, emptyBitArray.getNextSet(0), "Next set bit of an empty array at start should be size.");
+
+        // Now let's test a non-empty BitArray
+        int size = 64;
+        BitArray bitArray = new BitArray(size);
+        // Set some bits
+        bitArray.set(3);
+        bitArray.set(36);
+        bitArray.set(63);
+
+        // Testing the first set bit from the start
+        assertEquals(3, bitArray.getNextSet(0), "Next set bit from index 0 should be 3.");
+
+        // Testing next set bit from a position after a set bit
+        assertEquals(36, bitArray.getNextSet(4), "Next set bit from index 4 should be 36.");
+
+        // Testing next set bit from a position that is a set bit itself
+        assertEquals(36, bitArray.getNextSet(36), "Next set bit from index 36 should be 36.");
+
+        // Testing next set bit after the last set bit
+        assertEquals(63, bitArray.getNextSet(37), "Next set bit from index 37 should be 63.");
+
+        // Testing next set bit when there's no more set bits
+        assertEquals(64, bitArray.getNextSet(64), "Next set bit from index 64 should be size (64).");
+
+        // Testing out of range index for next set bit
+        assertEquals(64, bitArray.getNextSet(100), "Next set bit from index 100 should be size (64).");
+
+        // Testing for an exact position of the set bit
+        assertEquals(63, bitArray.getNextSet(63), "Next set bit from index 63 should be 63.");
+
+        // Testing for no set bit
+        assertEquals(size, bitArray.getNextSet(size), "Next set bit from index equal to size should be size.");
+
+        // Testing with a complex case where bits are set, unset, and then set again
+        BitArray complexBitArray = new BitArray(size);
+        complexBitArray.set(1);
+        complexBitArray.set(2);
+        complexBitArray.flip(1); // Unset bit index 1
+        complexBitArray.set(30);
+        assertEquals(30, complexBitArray.getNextSet(0), "Next set bit from index 0 should be 30 after flipping bit index 1.");
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class BitArrayTest {
+    @Test
+    public void getNextSetTest() {
+        // Create a BitArray with a certain size
+        BitArray bitArray = new BitArray(64);
+        // Set some bits
+        bitArray.set(5);
+        bitArray.set(32);
+        bitArray.set(50);
+
+        // Test various scenarios
+        assertEquals(5, bitArray.getNextSet(0), 
+            "First set bit after index 0 should be 5.");
+        assertEquals(32, bitArray.getNextSet(6), 
+            "First set bit after index 6 should be 32.");
+        assertEquals(50, bitArray.getNextSet(33), 
+            "First set bit after index 33 should be 50.");
+        assertEquals(64, bitArray.getNextSet(51), 
+            "There are no set bits after index 50, so return the size.");
+        assertEquals(64, bitArray.getNextSet(64), 
+            "No set bits at or beyond the size of the array, return the size.");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class BitArrayTest {
+    @Test
+    public void getNextSetTest() {
+        BitArray bitArray = new BitArray(64);
+
+        // All bits are initially unset, so getNextSet from 0 should return size (64)
+        assertEquals(64, bitArray.getNextSet(0));
+        
+        // Set a bit and test that getNextSet returns the correct index
+        bitArray.set(10);
+        assertEquals(10, bitArray.getNextSet(0));
+
+        // Test that getNextSet returns the correct index after the set bit
+        assertEquals(64, bitArray.getNextSet(11));
+
+        // Test that getNextSet returns the size if starting from an index >= size
+        assertEquals(64, bitArray.getNextSet(65));
+        
+        // Set another bit further on and test getNextSet with an index before it
+        bitArray.set(50);
+        assertEquals(50, bitArray.getNextSet(11));
+
+        // Edge case: set the last bit, and ensure it finds it
+        bitArray.set(63);
+        assertEquals(63, bitArray.getNextSet(51));
+
+        // Test that getNextSet returns the correct index in case of consecutive set bits
+        bitArray.set(30);
+        bitArray.set(31);
+        assertEquals(30, bitArray.getNextSet(29));
+        assertEquals(30, bitArray.getNextSet(30));
+        assertEquals(31, bitArray.getNextSet(31));
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BitArrayTest {
+    
+    @Test
+    public void getNextSetTest() {
+        // Create a bit array with a size of 100 and set some bits
+        BitArray bitArray = new BitArray(100);
+        bitArray.set(10);
+        bitArray.set(20);
+        bitArray.set(30);
+        
+        // Test for a bit set before the first set bit
+        assertEquals(10, bitArray.getNextSet(0), "Next set bit should be at index 10.");
+
+        // Test for the next set bit at the position of the first set bit
+        assertEquals(10, bitArray.getNextSet(10), "Next set bit after index 10 should be 10 itself.");
+
+        // Test for a bit in between two set bits
+        assertEquals(20, bitArray.getNextSet(11), "Next set bit after index 11 should be 20.");
+
+        // Test for the last set bit
+        assertEquals(30, bitArray.getNextSet(21), "Next set bit after index 21 should be 30.");
+
+        // Test for a bit set after the last set bit
+        assertEquals(100, bitArray.getNextSet(31), "Should return the size of bit array as it's beyond last set bit.");
+
+        // Test for a bit set at the boundary of the bit array's size
+        assertEquals(100, bitArray.getNextSet(100), "Should return the size of bit array when start index equals size.");
+        
+        // Test with an index beyond the BitArray's size
+        assertEquals(100, bitArray.getNextSet(101), "Should return the size of bit array when start index is beyond size.");
+
+        // Add more tests here if necessary
+    }
+}
+
+

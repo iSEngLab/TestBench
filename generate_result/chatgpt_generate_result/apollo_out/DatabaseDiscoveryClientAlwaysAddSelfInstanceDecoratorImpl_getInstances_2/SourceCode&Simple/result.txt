@@ -1,0 +1,220 @@
+Source code: 
+
+
+@Override
+public List<ServiceInstance> getInstances(String serviceName) {
+  if (Objects.equals(serviceName, this.selfInstance.getServiceName())) {
+    List<ServiceInstance> serviceInstances = this.delegate.getInstances(serviceName);
+    if (containSelf(serviceInstances, this.selfInstance)) {
+      // contains self instance already
+      return serviceInstances;
+    }
+
+    // add self instance to result
+    List<ServiceInstance> result = new ArrayList<>(serviceInstances.size() + 1);
+    result.add(this.selfInstance);
+    result.addAll(serviceInstances);
+    return result;
+  } else {
+    return this.delegate.getInstances(serviceName);
+  }
+}
+
+
+
+No.1 generated result --------------------------
+
+@Test
+public void getInstancesTest() {
+    // Test when getting instances for the self service
+    List<ServiceInstance> serviceInstances = new ArrayList<>();
+    ServiceInstance selfInstance = new ServiceInstance(new URI("http://localhost:8080"));
+    DatabaseDiscoveryClient delegate = new DatabaseDiscoveryClientImpl();
+    DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl client = new DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl(delegate, selfInstance);
+    List<ServiceInstance> result = client.getInstances("selfService");
+    assertTrue(result.contains(selfInstance));
+}
+
+
+No.2 generated result --------------------------
+
+@Test
+public void getInstancesTest() {
+    // Given
+    DatabaseDiscoveryClient delegate = new DatabaseDiscoveryClient();
+    ServiceInstance selfInstance = new ServiceInstance(new URI("http://localhost:8080"), "TestService");
+    DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl client = new DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl(delegate, selfInstance);
+
+    // When
+    List<ServiceInstance> instances = client.getInstances("TestService");
+
+    // Then
+    assertNotNull(instances);
+    assertEquals(1, instances.size());
+    assertEquals(selfInstance, instances.get(0));
+}
+
+
+No.3 generated result --------------------------
+
+@Test
+public void getInstancesTest() {
+    // Create mock DatabaseDiscoveryClient delegate and selfInstance
+    DatabaseDiscoveryClient delegate = mock(DatabaseDiscoveryClient.class);
+    ServiceInstance selfInstance = new ServiceInstance(new URI("http://localhost:8080"));
+    
+    // Create an instance of DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl
+    DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl decorator = new DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl(delegate, selfInstance);
+    
+    // Verify the behavior of getInstances method
+    when(delegate.getInstances(anyString())).thenReturn(Collections.singletonList(new ServiceInstance(new URI("http://otherhost:8080"))));
+    
+    List<ServiceInstance> instances = decorator.getInstances("someServiceName");
+    assertEquals(2, instances.size());
+}
+
+
+
+No.4 generated result --------------------------
+
+@Test
+public void getInstancesTest() {
+    // Create a DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl object
+    DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl client = new DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl(delegate, selfInstance);
+    
+    // Create a list of ServiceInstance objects
+    List<ServiceInstance> serviceInstances = new ArrayList<>();
+    
+    // Add ServiceInstance objects to the list
+    
+    // Call the getInstances method and assert the expected result
+    List<ServiceInstance> result = client.getInstances("serviceName");
+    assertNotNull(result);
+    // Add assertions for the expected behavior of the getInstances method
+}
+
+
+No.5 generated result --------------------------
+
+@Test
+public void getInstancesTest() {
+    DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl client = new DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl(delegate, selfInstance);
+    List<ServiceInstance> result = client.getInstances("serviceName");
+    assertNotNull(result);
+    // Add assertions for the expected result based on the logic in the Java Source Code
+}
+
+
+No.6 generated result --------------------------
+
+@Service
+public class DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImplTest {
+
+  @Mock
+  private DatabaseDiscoveryClient delegate;
+
+  private DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl databaseDiscoveryClient;
+
+  private ServiceInstance selfInstance;
+
+  @Before
+  public void setUp() {
+    databaseDiscoveryClient = new DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl(delegate, selfInstance);
+  }
+
+  @Test
+  public void getInstancesTest() {
+      // Arrange
+      when(delegate.getInstances(anyString())).thenReturn(Collections.singletonList(new ServiceInstance("serviceName", new URI("http://example.com"))));
+      
+      // Act
+      List<ServiceInstance> result = databaseDiscoveryClient.getInstances("serviceName");
+      
+      // Assert
+      assertNotNull(result);
+      assertEquals(2, result.size());
+      assertEquals(selfInstance, result.get(0));
+  }
+}
+
+
+No.7 generated result --------------------------
+
+@Test
+public void getInstancesTest() {
+  DatabaseDiscoveryClient delegate = mock(DatabaseDiscoveryClient.class);
+  ServiceInstance selfInstance = new ServiceInstance(new URI("http://localhost:8080"));
+  DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl client = new DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl(delegate, selfInstance);
+  ServiceInstance instance = new ServiceInstance(new URI("http://localhost:8080"));
+  List<ServiceInstance> serviceInstances = new ArrayList<>();
+  serviceInstances.add(instance);
+  when(delegate.getInstances("myService")).thenReturn(serviceInstances);
+
+  List<ServiceInstance> result = client.getInstances("myService");
+  assertTrue(result.size() == 2);
+}
+
+
+
+No.8 generated result --------------------------
+
+@Test
+public void getInstancesTest() {
+    //create mock objects for delegate and selfInstance
+    DatabaseDiscoveryClient delegate = createDelegateMock();
+    ServiceInstance selfInstance = createSelfInstanceMock();
+
+    //create instance of DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl
+    DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl client = new DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl(delegate, selfInstance);
+
+    //initialize serviceInstances and serviceName
+    List<ServiceInstance> serviceInstances = new ArrayList<>();
+    String serviceName = "exampleService";
+
+    //call the method
+    List<ServiceInstance> result = client.getInstances(serviceName);
+
+    //assertions
+    assertEquals(result.size(), serviceInstances.size() + 1); //checking size increase
+    assertTrue(result.contains(selfInstance)); //checking self instance is added
+    assertTrue(result.containsAll(serviceInstances)); //checking all other service instances are present
+}
+
+
+
+No.9 generated result --------------------------
+
+@Test
+public void getInstancesTest() {
+    // Given
+    String serviceName = "exampleService";
+    DatabaseDiscoveryClient delegate = new DatabaseDiscoveryClientImpl();
+    ServiceInstance selfInstance = new ServiceInstance(new URI("http://localhost:8080"), "exampleService");
+    DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl client = new DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl(delegate, selfInstance);
+    
+    // When
+    List<ServiceInstance> instances = client.getInstances(serviceName);
+    
+    // Then
+    assertEquals(2, instances.size()); // Including self instance
+}
+
+
+No.10 generated result --------------------------
+
+@Test
+public void getInstancesTest() {
+    // Given
+    DatabaseDiscoveryClient delegate = new DatabaseDiscoveryClient();
+    ServiceInstance selfInstance = new ServiceInstance(new URI("http://localhost:8080"));
+    DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl client = new DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl(delegate, selfInstance);
+    
+    // When
+    List<ServiceInstance> instances = client.getInstances("exampleService");
+    
+    // Then
+    assertNotNull(instances);
+    assertFalse(instances.isEmpty());
+}
+
+

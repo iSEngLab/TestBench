@@ -1,0 +1,699 @@
+Source code: 
+
+
+public Frame convert(byte[] data, int width, int height) {
+    if (frame == null || frame.imageWidth != width
+            || frame.imageHeight != height || frame.imageChannels != 3) {
+        if (frame != null) {
+            frame.close();
+        }
+        frame = new Frame(width, height, Frame.DEPTH_UBYTE, 3);
+    }
+    ByteBuffer out = (ByteBuffer)frame.image[0];
+    int stride = frame.imageStride;
+
+    // ported from https://android.googlesource.com/platform/development/+/master/tools/yuv420sp2rgb/yuv420sp2rgb.c
+    int offset = height * width;
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            int Y = data[i * width + j] & 0xFF;
+            int V = data[offset + (i/2) * width + 2 * (j/2)    ] & 0xFF;
+            int U = data[offset + (i/2) * width + 2 * (j/2) + 1] & 0xFF;
+
+            // Yuv Convert
+            Y -= 16;
+            U -= 128;
+            V -= 128;
+
+            if (Y < 0)
+                Y = 0;
+
+            // R = (int)(1.164 * Y + 2.018 * U);
+            // G = (int)(1.164 * Y - 0.813 * V - 0.391 * U);
+            // B = (int)(1.164 * Y + 1.596 * V);
+
+            int B = (int)(1192 * Y + 2066 * U);
+            int G = (int)(1192 * Y - 833 * V - 400 * U);
+            int R = (int)(1192 * Y + 1634 * V);
+
+            R = Math.min(262143, Math.max(0, R));
+            G = Math.min(262143, Math.max(0, G));
+            B = Math.min(262143, Math.max(0, B));
+
+            R >>= 10; R &= 0xff;
+            G >>= 10; G &= 0xff;
+            B >>= 10; B &= 0xff;
+
+            out.put(i * stride + 3 * j,     (byte)B);
+            out.put(i * stride + 3 * j + 1, (byte)G);
+            out.put(i * stride + 3 * j + 2, (byte)R);
+        }
+    }
+    return frame;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.nio.ByteBuffer;
+
+public class AndroidFrameConverterTest {
+    
+    private byte[] createTestYuvData(int width, int height) {
+        // Create dummy YUV data to test the convert method
+        byte[] yuv = new byte[width * height * 3 / 2]; // Assuming YUV420 format
+        
+        // Fill with test values that can be checked after conversion
+        for (int i = 0; i < yuv.length; i++) {
+            yuv[i] = (byte) i; // This is just for test and may not represent a real YUV420 image
+        }
+        
+        return yuv;
+    }
+
+    @Test
+    public void convertTest() {
+        int testWidth = 10;
+        int testHeight = 10;
+        byte[] testData = createTestYuvData(testWidth, testHeight);
+        AndroidFrameConverter androidFrameConverter = new AndroidFrameConverter();
+
+        Frame resultFrame = androidFrameConverter.convert(testData, testWidth, testHeight);
+
+        assertNotNull(resultFrame, "The resulting frame should not be null.");
+        assertEquals(testWidth, resultFrame.imageWidth, "Frame width should match the specified width.");
+        assertEquals(testHeight, resultFrame.imageHeight, "Frame height should match the specified height.");
+        assertEquals(3, resultFrame.imageChannels, "Frame should have 3 channels for RGB data.");
+
+        ByteBuffer buffer = (ByteBuffer) resultFrame.image[0];
+        assertNotNull(buffer, "The frame's ByteBuffer should not be null.");
+        assertEquals(testWidth * testHeight * 3, buffer.capacity(), "The ByteBuffer capacity should be width * height * 3 for RGB byte data.");
+
+        // Additional tests could include checking specific RGB values at certain positions,
+        // but since our YUV data is not real image data, such tests will not be accurate.
+        // A thorough test would require known YUV data and corresponding expected RGB values.
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.nio.ByteBuffer;
+
+public class AndroidFrameConverterTest {
+
+    AndroidFrameConverter converter = new AndroidFrameConverter();
+
+    @Test
+    public void convertTest() {
+        // Assuming the existence of a valid constructor for AndroidFrameConverter
+        // and a close() method in the Frame class
+        
+        // Prepare test data
+        int width = 2;
+        int height = 2;
+        byte[] yuvData = new byte[] {
+            (byte)16, (byte)16, (byte)16, (byte)16, // Y values
+            (byte)128, (byte)128, (byte)128, (byte)128, // UV values (U and V)
+            (byte)128, (byte)128, (byte)128, (byte)128
+        };
+
+        // Call the method to convert YUV to RGB
+        Frame resultFrame = converter.convert(yuvData, width, height);
+        
+        // Assert frame not null
+        assertNotNull(resultFrame);
+        
+        // Assert width, height, and channels
+        assertEquals(width, resultFrame.imageWidth);
+        assertEquals(height, resultFrame.imageHeight);
+        assertEquals(3, resultFrame.imageChannels);
+
+        // Verify the frame buffer for correctness
+        ByteBuffer out = (ByteBuffer)resultFrame.image[0];
+        int stride = resultFrame.imageStride;
+        
+        // Check the RGB values of the output
+        // Assuming the color conversion formula is correct and
+        // the expected RGB values are known
+        byte expectedB = <expected blue value>;
+        byte expectedG = <expected green value>;
+        byte expectedR = <expected red value>;
+
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                // Considering stride and the fact that we're storing 3 bytes per pixel (RGB)
+                assertEquals(expectedB, out.get(i * stride + 3 * j));
+                assertEquals(expectedG, out.get(i * stride + 3 * j + 1));
+                assertEquals(expectedR, out.get(i * stride + 3 * j + 2));
+            }
+        }
+
+        // Close the frame if necessary
+        resultFrame.close();
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.nio.ByteBuffer;
+
+public class AndroidFrameConverterTest {
+
+    private AndroidFrameConverter frameConverter; // Assuming the method belongs to this class
+    private byte[] data;
+    private int width;
+    private int height;
+    private Frame frame;
+
+    @BeforeEach
+    public void setUp() {
+        frameConverter = new AndroidFrameConverter();
+        width = 2; 
+        height = 2;
+        // Define a simple YUV 4:2:0 frame with just black (Y=0, U=0, V=0), only needs a size of 6
+        data = new byte[] { (byte)0, (byte)0, (byte)128, (byte)128, (byte)128, (byte)128 };
+    }
+
+    @Test
+    public void convertTest() {
+        // Expected RGB values for black color assuming the formula used in Java Source Code
+        byte expectedRed = 0;
+        byte expectedGreen = 0;
+        byte expectedBlue = 0;
+
+        // Perform conversion
+        frame = frameConverter.convert(data, width, height);
+
+        // Check if the frame is not null
+        assertNotNull(frame, "Frame should not be null after conversion.");
+
+        // Check the dimensions of the frame
+        assertEquals(width, frame.imageWidth, "Width does not match.");
+        assertEquals(height, frame.imageHeight, "Height does not match.");
+        assertEquals(3, frame.imageChannels, "Number of channels should be 3.");
+
+        // Read the output buffer
+        ByteBuffer out = (ByteBuffer)frame.image[0];
+
+        // We expect the width to be the same as stride for the test simplicity
+        int stride = width * frame.imageChannels;
+
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                byte B = out.get(i * stride + 3 * j);
+                byte G = out.get(i * stride + 3 * j + 1);
+                byte R = out.get(i * stride + 3 * j + 2);
+
+                assertEquals(expectedBlue, B, "Blue value mismatch at (" + i + ", " + j + ").");
+                assertEquals(expectedGreen, G, "Green value mismatch at (" + i + ", " + j + ").");
+                assertEquals(expectedRed, R, "Red value mismatch at (" + i + ", " + j + ").");
+            }
+        }
+    }
+
+    @AfterEach
+    public void tearDown() {
+        if (frame != null) {
+            frame.close();
+        }
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import java.nio.ByteBuffer;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AndroidFrameConverterTest {
+    
+    private static final int WIDTH = 4;
+    private static final int HEIGHT = 4;
+    private AndroidFrameConverter converter;
+    private byte[] yuvData;
+    private Frame frame;
+    
+    @BeforeEach
+    public void setUp() {
+        converter = new AndroidFrameConverter();
+        
+        // Mock a simple YUV image with only the Y component having white pixels (assume UV is centered and equals to 0)
+        yuvData = new byte[WIDTH * HEIGHT * 3 / 2];
+        for (int i = 0; i < WIDTH * HEIGHT; i++) {
+            yuvData[i] = (byte) 0xFF; // Y is full white
+            if (i < WIDTH * HEIGHT / 4) {
+                yuvData[WIDTH * HEIGHT + i * 2] = 0;     // V is 0
+                yuvData[WIDTH * HEIGHT + i * 2 + 1] = 0; // U is 0
+            }
+        }
+    }
+    
+    @AfterEach
+    public void tearDown() {
+        if (frame != null) {
+            frame.close();
+        }
+    }
+    
+    @Test
+    public void convertTest() {
+        frame = converter.convert(yuvData, WIDTH, HEIGHT);
+        assertNotNull(frame, "Frame should not be null after conversion");
+        assertEquals(WIDTH, frame.imageWidth, "Frame width should match input width");
+        assertEquals(HEIGHT, frame.imageHeight, "Frame height should match input height");
+        assertEquals(Frame.DEPTH_UBYTE, frame.imageDepth, "Frame depth should be DEPTH_UBYTE");
+        assertEquals(3, frame.imageChannels, "Frame should have 3 channels");
+
+        ByteBuffer out = (ByteBuffer) frame.image[0];
+        assertNotNull(out, "Frame buffer should not be null");
+
+        int stride = frame.imageStride;
+        for (int i = 0; i < HEIGHT; i++) {
+            for (int j = 0; j < WIDTH; j++) {
+                // Check colors for each pixel: Since the YUV data was mocked for white color, RGB should be white.
+                int b = out.get(i * stride + 3 * j) & 0xFF;
+                int g = out.get(i * stride + 3 * j + 1) & 0xFF;
+                int r = out.get(i * stride + 3 * j + 2) & 0xFF;
+                assertEquals(255, r, "Red component should be 255");
+                assertEquals(255, g, "Green component should be 255");
+                assertEquals(255, b, "Blue component should be 255");
+            }
+        }
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import java.nio.ByteBuffer;
+
+public class AndroidFrameConverterTest {
+    
+    private final <TYPE_OF_FRAME> frameConverter = new <TYPE_OF_FRAME>(); // Replace <TYPE_OF_FRAME> with the actual type of your frame converter
+
+    @Test
+    public void convertTest() {
+        // Define the parameters for the test
+        int width = 2;
+        int height = 2;
+        byte[] data = {
+            0, 0,   // Y values for first row
+            0, 0,   // Y values for second row
+            127, 127, // U values (subsampled by width/2 and height/2 for YUV 420 format)
+            -128, -128 // V values (subsampled like U values)
+        };
+        
+        // Expected output (dummy values, need to be adjusted according to the logic in convert)
+        byte[] expectedOutput = {
+            <EXPECTED_BYTE>, 0, 0,
+            <EXPECTED_BYTE>, 0, 0,
+            <EXPECTED_BYTE>, 0, 0,
+            <EXPECTED_BYTE>, 0, 0
+        };
+
+        // Convert the data
+        Frame resultFrame = frameConverter.convert(data, width, height);
+
+        // Verify the frame is not null
+        assertNotNull(resultFrame, "Frame should not be null");
+
+        // Get the ByteBuffer from the result frame
+        ByteBuffer out = (ByteBuffer)resultFrame.image[0];
+        
+        // Verify the ByteBuffer size
+        assertEquals(expectedOutput.length, out.capacity(), "ByteBuffer capacity should match the expected output length");
+
+        // Verify each byte in the output
+        for (int i = 0; i < out.capacity(); i++) {
+            assertEquals(expectedOutput[i], out.get(i), "Byte at position " + i + " should match the expected value");
+        }
+        
+        // Clean up if necessary
+        if (resultFrame != null) {
+            resultFrame.close();
+        }
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import java.nio.ByteBuffer;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AndroidFrameConverterTest {
+
+    private FrameConverter frameConverter;
+    private Frame frame;
+
+    @BeforeEach
+    public void setUp() {
+        frameConverter = new FrameConverter();
+        // Frame is assumed to be initialized somewhere within FrameConverter.
+        // If not, it should be initialized here or in the convert method.
+    }
+
+    @AfterEach
+    public void tearDown() {
+        if (frame != null) {
+            frame.close();
+        }
+    }
+
+    @Test
+    public void convertTest() {
+        // Example parameters
+        int width = 2;
+        int height = 2;
+        byte[] data = {0, 0, 0, 0, // Y values
+                       -128, -128, // U values
+                        127, 127}; // V values
+
+        // Call the convert method
+        frame = frameConverter.convert(data, width, height);
+
+        // Assertions
+        assertNotNull(frame, "The converted frame should not be null.");
+        assertEquals(width, frame.imageWidth, "Frame width mismatch.");
+        assertEquals(height, frame.imageHeight, "Frame height mismatch.");
+        assertEquals(3, frame.imageChannels, "Frame should have 3 channels for RGB.");
+
+        ByteBuffer out = (ByteBuffer) frame.image[0];
+        int stride = frame.imageStride;
+
+        // We assert that each pixel has been calculated and placed correctly.
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                byte b = out.get(i * stride + 3 * j);
+                byte g = out.get(i * stride + 3 * j + 1);
+                byte r = out.get(i * stride + 3 * j + 2);
+
+                // Since the test data is all zeros for Y and has max/min values for U/V,
+                // we should check for the specific color output that results from this.
+                // This will depend on the conversion formula used.
+                assertEquals((byte)0, r, "Red channel value is incorrect at " + i + "," + j);
+                assertEquals((byte)0, g, "Green channel value is incorrect at " + i + "," + j);
+                assertEquals((byte)0, b, "Blue channel value is incorrect at " + i + "," + j);
+            }
+        }
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import java.nio.ByteBuffer;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AndroidFrameConverterTest {
+
+    private FrameConverter frameConverter;
+
+    @BeforeEach
+    public void setUp() {
+        frameConverter = new FrameConverter();
+    }
+
+    @Test
+    public void convertTest() {
+        // Given a known byte array of YUV data
+        byte[] yuv = new byte[] {
+                // Dummy data for simplicity; real YUV byte buffer needed for actual testing
+                // Y values
+                0x12, 0x34, 0x56, 0x78,
+                // U values
+                (byte)0x9A, 0x00,
+                // V values
+                (byte)0xFF, 0x00
+        };
+        int width = 2;
+        int height = 2;
+
+        // When convert is called
+        Frame resultFrame = frameConverter.convert(yuv, width, height);
+
+        // Then the result frame should not be null
+        assertNotNull(resultFrame);
+
+        // And should have the correct properties
+        assertEquals(width, resultFrame.imageWidth);
+        assertEquals(height, resultFrame.imageHeight);
+        assertEquals(3, resultFrame.imageChannels); // Assuming that result frame channels should be 3
+
+        // And the frame buffer should have the RGB values corresponding to the original YUV
+        ByteBuffer out = (ByteBuffer) resultFrame.image[0];
+        int stride = resultFrame.imageStride;
+        
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                // Expected RGB value assertions (dummy values used here)
+                // One should calculate expected values based on conversion logic or use known expected output
+                assertEquals((byte) 0x00, out.get(i * stride + 3 * j));     // B
+                assertEquals((byte) 0x00, out.get(i * stride + 3 * j + 1)); // G
+                assertEquals((byte) 0x00, out.get(i * stride + 3 * j + 2)); // R
+            }
+        }
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import java.nio.ByteBuffer;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AndroidFrameConverterTest {
+    FrameConverter converter;
+    byte[] mockData;
+    final int width = 640;
+    final int height = 480;
+
+    @BeforeEach
+    public void setUp() {
+        converter = new FrameConverter();
+        // Assuming a YUV format, where Y is full resolution and UV is half resolution
+        int frameSize = width * height;
+        int uvFrameSize = (width / 2) * (height / 2);
+        mockData = new byte[frameSize + 2 * uvFrameSize]; 
+        
+        // Initialize with some dummy data, for simplicity, we'll initialize all Y, U, and V to middle value 128
+        for (int i = 0; i < mockData.length; i++) {
+            mockData[i] = (byte) 128;
+        }
+    }
+
+    @Test
+    public void convertTest() {
+        Frame frame = converter.convert(mockData, width, height);
+        assertNotNull(frame, "Frame should not be null after conversion.");
+
+        ByteBuffer out = (ByteBuffer) frame.image[0];
+        assertNotNull(out, "Frame's ByteBuffer should not be null.");
+
+        out.rewind(); // Ensure we start reading from the beginning of the buffer
+
+        // Test some pixel values at different positions
+        assertEquals(0, out.get(0) & 0xFF, "Blue component of the first pixel should be 0.");
+        assertEquals(0, out.get(1) & 0xFF, "Green component of the first pixel should be 0.");
+        assertEquals(0, out.get(2) & 0xFF, "Red component of the first pixel should be 0.");
+
+        // Check last pixel if it matches what we expect (with data we initialized)
+        int lastPixelIndex = (height - 1) * frame.imageStride + (width - 1) * 3;
+        assertEquals(0, out.get(lastPixelIndex) & 0xFF, "Blue component of the last pixel should be 0.");
+        assertEquals(0, out.get(lastPixelIndex + 1) & 0xFF, "Green component of the last pixel should be 0.");
+        assertEquals(0, out.get(lastPixelIndex + 2) & 0xFF, "Red component of the last pixel should be 0.");
+
+        // More thorough tests could be done here depending on the requirements
+    }
+}
+
+class FrameConverter {
+    Frame frame;
+
+    public Frame convert(byte[] data, int width, int height) {
+        // I've omitted the method body since it was already provided
+        return frame;
+    }
+}
+
+class Frame {
+    public static final int DEPTH_UBYTE = 0;
+    public int imageWidth;
+    public int imageHeight;
+    public int imageChannels;
+    public int imageStride;
+    public Object[] image;
+
+    public Frame(int width, int height, int depthUbyte, int channels) {
+        this.imageWidth = width;
+        this.imageHeight = height;
+        this.imageChannels = channels;
+        this.imageStride = width * channels;
+        this.image = new Object[] {ByteBuffer.allocate(height * imageStride)};
+    }
+
+    public void close() {
+        // Cleanup if necessary
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import java.nio.ByteBuffer;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AndroidFrameConverterTest {
+    private AndroidFrameConverter converter;
+    private Frame frame;
+
+    @BeforeEach
+    public void setUp() {
+        converter = new AndroidFrameConverter();
+        frame = null;
+    }
+    
+    @AfterEach
+    public void tearDown() {
+        if (frame != null) {
+            frame.close();
+            frame = null;
+        }
+    }
+
+    @Test
+    public void convertTest() {
+        int width = 640;
+        int height = 480;
+        byte[] data = new byte[width * height * 3 / 2]; // Assuming YUV420sp format
+        // Populate data with test values
+        
+        // ... (code to fill 'data' would go here) ...
+
+        frame = converter.convert(data, width, height);
+        
+        assertNotNull(frame, "Frame should not be null after conversion");
+        assertEquals(width, frame.imageWidth, "Frame width should match input width");
+        assertEquals(height, frame.imageHeight, "Frame height should match input height");
+        assertEquals(3, frame.imageChannels, "Frame should have 3 image channels for RGB");
+        
+        ByteBuffer out = (ByteBuffer) frame.image[0];
+        assertNotNull(out, "ByteBuffer should not be null");
+        
+        // Verify first pixel conversion if data was set to known values
+        // Example:
+        // byte Y = data[0] & 0xFF;
+        // byte U = data[width * height] & 0xFF;
+        // byte V = data[width * height + 1] & 0xFF;
+        // assertEquals(expectedR, out.get(0) & 0xFF, "Red channel of first pixel should be correct");
+        // assertEquals(expectedG, out.get(1) & 0xFF, "Green channel of first pixel should be correct");
+        // assertEquals(expectedB, out.get(2) & 0xFF, "Blue channel of first pixel should be correct");
+
+        // Test arbitrary pixel if there is a pattern or predefined input
+        // int index = someRow * frame.imageStride + someColumn * 3;
+        // assertEquals(expectedRed, out.get(index) & 0xFF, "Red channel should be correctly calculated");
+        // assertEquals(expectedGreen, out.get(index + 1) & 0xFF, "Green channel should be correctly calculated");
+        // assertEquals(expectedBlue, out.get(index + 2) & 0xFF, "Blue channel should be correctly calculated");
+        
+        // Additional tests for edge cases like last pixel, stride handling, etc.
+    }
+
+    // Add additional test methods if necessary
+}
+
+
+No.10 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.nio.ByteBuffer;
+
+public class AndroidFrameConverterTest {
+    
+    private AndroidFrameConverter converter; // Assuming this class exists and convert() method is part of it.
+    private Frame frame; // Assuming this in scope Frame class is available.
+
+    @BeforeEach
+    public void setUp() {
+        converter = new AndroidFrameConverter();
+        frame = null; // Assuming frame is an instance variable of the outer class
+    }
+
+    @AfterEach
+    public void tearDown() {
+        if (frame != null) {
+            frame.close(); // Assuming close() properly releases any resources tied to the frame
+            frame = null;
+        }
+    }
+
+    @Test
+    public void convertTest() {
+        int width = 2;
+        int height = 2;
+        byte[] data = new byte[]{
+                0, 0, 0, 0,
+                // U and V components
+                0, (byte) 128
+        };
+
+        Frame result = converter.convert(data, width, height);
+
+        assertNotNull(result, "The converted frame should not be null.");
+        assertEquals(width, result.imageWidth, "Image width should match input.");
+        assertEquals(height, result.imageHeight, "Image height should match input.");
+        assertEquals(3, result.imageChannels, "Should have 3 channels for RGB.");
+
+        ByteBuffer out = (ByteBuffer) result.image[0];
+        assertEquals((byte) 0, out.get(0), "Blue component should be 0 at (0,0).");
+        assertEquals((byte) 0, out.get(1), "Green component should be 0 at (0,0).");
+        assertEquals((byte) 0, out.get(2), "Red component should be 0 at (0,0).");
+
+        // Add more assertions as necessary to test different parts of the data array and resulting image.
+        // For a full test, iterate over the whole image data and check values for each component 
+        // to make sure conversion is properly applied.
+    }
+}
+
+

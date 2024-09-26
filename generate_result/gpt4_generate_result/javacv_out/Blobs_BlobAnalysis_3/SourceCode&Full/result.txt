@@ -1,0 +1,807 @@
+Source code: 
+
+//---------------------------------------------------------------------------------------
+// Main blob analysis routine
+//---------------------------------------------------------------------------------------
+// RegionData[0] is the border. It has Property[BLOBPARENT] = 0. 
+
+public int BlobAnalysis(IplImage Src,           // input image
+            int Col0, int Row0,                 // start of ROI
+            int Cols, int Rows,                 // size of ROI
+            int Border,                         // border color (0 = black; 1 = white)
+            int MinArea)                        // minimum region area
+{
+    CvMat SrcMat = Src.asCvMat();
+    int SrcCols = SrcMat.cols();
+    int SrcRows = SrcMat.rows();
+    
+    if(Col0 < 0) Col0 = 0;
+    if(Row0 < 0) Row0 = 0;
+    if(Cols < 0) Cols = SrcCols;
+    if(Rows < 0) Rows = SrcRows;
+    if(Col0 + Cols > SrcCols) Cols = SrcCols - Col0;
+    if(Row0 + Rows > SrcRows) Rows = SrcRows - Row0;
+
+    if(Cols > BLOBCOLCOUNT || Rows > BLOBROWCOUNT )
+    {
+        System.out.println("Error in Class Blobs: Image too large: Edit Blobs.java");
+        System.exit(666);
+        return 0;
+    }
+    
+    // Initialization
+    int FillLabel = 0;
+    int FillColor = 0; if(Border > 0) { FillColor = 1; }
+    LabelA = LabelB = LabelC = LabelD = 0;
+    ColorA = ColorB = ColorC = ColorD = FillColor;
+    for(int k = 0; k < BLOBTOTALCOUNT; k++) SubsumedLabel[k] = -1;
+    
+    // Initialize border region
+    MaxLabel = 0;
+    double [] BorderRegion = RegionData[0];
+    BorderRegion[BLOBLABEL] = 0.0;
+    BorderRegion[BLOBPARENT] = -1.0;
+    BorderRegion[BLOBAREA] = Rows + Cols + 4;   // Top, left, and 4 corners
+    BorderRegion[BLOBCOLOR] = FillColor;
+    BorderRegion[BLOBSUMX] = 0.5 * ( (2.0 + Cols) * (Cols - 1.0) ) - Rows - 1 ;
+    BorderRegion[BLOBSUMY] = 0.5 * ( (2.0 + Rows) * (Rows - 1.0) ) - Cols - 1 ;
+    BorderRegion[BLOBMINX] = -1;
+    BorderRegion[BLOBMINY] = -1;
+    BorderRegion[BLOBMAXX] = Cols + 1.0;
+    BorderRegion[BLOBMAXY] = Rows + 1.0;
+    System.arraycopy(BorderRegion,0,RegionData[0],0,BLOBDATACOUNT); // RegionData[0] <- BorderRegion;
+    
+    //  The cells are identified this way
+    //          Last |AB|
+    //          This |CD|
+    //
+    // With 4 connectivity, there are 8 possibilities for the cells:
+    //                      No color transition     Color transition
+    //          Case              1  2  3  4          5  6  7  8 
+    //          Last Row        |pp|pp|pq|pq|       |pp|pp|pq|pq|   
+    //          This Row        |pP|qQ|pP|qQ|       |pQ|qP|pQ|qP|
+    //
+    // Region numbers are p, q, r, x; where p<>q
+    // Upper case letter is the current element at column=x row=y
+    // Color is 0 or 1      (1 stands for 255 in the actual image)
+    // Note that Case 4 is complicated because it joins two regions
+    //--------------------------
+    // Case 1: Colors A=B; C=D; A=C     
+    // Case 2: Colors A=B; C=D; A<>C    
+    // Case 3: Colors A<>B;C=D; A=C     
+    // Case 4: Colors A<>B;C=D; A<>C    
+    // Case 5: Colors A=B; C<>D; A=C    
+    // Case 6: Colors A=B; C<>D; A<>C   
+    // Case 7: Colors A<>B;C<>D; A=C    
+    // Case 8: Colors A<>B;C<>D; A<>C   
+    //--------------------------
+                
+    // Loop over rows of ROI. irow = Row0 is 1st row of image; irow = Row0+Row is last row of image.
+    for(int irow = Row0; irow < Row0+Rows; irow++)  // index within Src
+    {
+        jrow = irow - Row0; // index within ROI. 0 is first row. Rows is last row.
+        
+        // Loop over columns of ROI.
+        for(int icol = Col0; icol < Col0+Cols; icol++)  // index within Src
+        {
+            jcol = icol - Col0; // index within ROI
+
+            // initialize
+            ColorA = ColorB = ColorC = FillColor;
+            LabelA = LabelB = LabelC = LabelD = 0;
+            ColorD = (int) SrcMat.get(jrow,jcol);       // fetch color of cell
+        
+            if(jrow == 0 || jcol == 0)  // first column or row
+            {
+                if(jcol > 0)
+                {
+                    ColorC = (int) SrcMat.get(jrow,jcol-1);
+                    LabelC = LabelMat[jrow][jcol-1];
+                }
+                if(jrow > 0)
+                {
+                    ColorB = (int) SrcMat.get(jrow-1,jcol);
+                    LabelB = LabelMat[jrow-1][jcol];
+                }
+            }
+            else
+            {
+                ColorA = (int) SrcMat.get(jrow-1,jcol-1); if(ColorA > 0) ColorA = 1;
+                ColorB = (int) SrcMat.get(jrow-1,jcol); if(ColorB > 0) ColorB = 1;
+                ColorC = (int) SrcMat.get(jrow,jcol-1); if(ColorC > 0) ColorC = 1;
+                LabelA = LabelMat[jrow-1][jcol-1];
+                LabelB = LabelMat[jrow-1][jcol];
+                LabelC = LabelMat[jrow][jcol-1];
+            }   
+            if(ColorA > 0) ColorA = 1;
+            if(ColorB > 0) ColorB = 1;
+            if(ColorC > 0) ColorC = 1;
+            if(ColorD > 0) ColorD = 1;
+                
+            // Determine Case
+            int Case = 0;
+            if(ColorA == ColorB)
+            {
+                if(ColorC == ColorD) { if(ColorA == ColorC) Case = 1; else Case = 2; }
+                else { if(ColorA == ColorC) Case = 5; else Case = 6; }
+            }
+            else
+            {
+                if(ColorC == ColorD) { if(ColorA == ColorC) Case = 3; else Case = 4; }
+                else { if(ColorA == ColorC) Case = 7; else Case = 8; }
+            }
+
+            // Take appropriate action
+            if(Case == 1) { OldRegion(LabelC, -1, -1); }
+            else if(Case == 2 || Case == 3) { OldRegion(LabelC, LabelB, LabelC); }
+            else if(Case == 5 || Case == 8) // Isolated
+            {
+                if((jrow == Rows || jcol == Cols) && ColorD == FillColor) { OldRegion(0, -1, -1); } // attached to border region 0
+                else NewRegion(LabelB);
+            }
+            else if(Case == 6 || Case == 7) { OldRegion(LabelB, LabelB, LabelC); }
+            else            // Case 4 - The complicated situation
+            {
+                int LabelBRoot = SubsumptionChain(LabelB); 
+                int LabelCRoot = SubsumptionChain(LabelC);
+                int LabelRoot = Math.min(LabelBRoot, LabelCRoot);
+                int LabelX;
+                if(LabelBRoot < LabelCRoot) { OldRegion(LabelB, -1, -1); LabelX = LabelC; }
+                else { OldRegion(LabelC, -1, -1); LabelX = LabelB; }
+                int NextLabelX = LabelX;
+                while(LabelRoot < LabelX)
+                {
+                    NextLabelX = SubsumedLabel[LabelX];
+                    SubsumedLabel[LabelX] = LabelRoot;
+                    LabelX = NextLabelX;
+                }
+            }
+                
+            // Last column or row. Final corner was handled earlier in Cases 5 and 8.
+            if((jrow == Rows || jcol == Cols) && ColorD == FillColor)
+            {
+                if(jcol < Cols)         // bottom row   
+                {
+                    if(ColorC != FillColor)     // Subsume B chain to border region 0
+                    {
+                        int LabelRoot = SubsumptionChain(LabelB);
+                        SubsumedLabel[LabelRoot] = 0;
+                    }
+                }
+                else if(jrow < Rows)    // right column
+                {
+                    if(ColorB != FillColor)     // Subsume C chain to border region 0
+                    {
+                        int LabelRoot = SubsumptionChain(LabelC);
+                        SubsumedLabel[LabelRoot] = 0;
+                    }
+                }
+                OldRegion(0, -1, -1);   // attached to border region 0
+            }
+
+            LabelMat[jrow][jcol] = LabelD;
+                
+        }
+    }
+
+    // Compute Condensation map
+    int Offset = 0;
+    for(int Label = 1; Label <= MaxLabel; Label++)
+    {
+        if(SubsumedLabel[Label] > -1) Offset++;
+        CondensationMap[Label] = Label - Offset;
+    }
+
+    // Subsume regions that were flagged as connected; Perimeters add
+    for(int Label = 1; Label <= MaxLabel; Label++)
+    {
+        int BetterLabel = SubsumptionChain(Label);
+        if(BetterLabel != Label) Subsume(BetterLabel, Label, 1);
+    }   
+
+    // Condense subsumed regions
+    int NewMaxLabel = 0;
+    for(int OldLabel = 1; OldLabel <= MaxLabel; OldLabel++)
+    {
+        if(SubsumedLabel[OldLabel] < 0) // Renumber valid regions only
+        {
+            double [] OldRegion = RegionData[OldLabel];
+            int OldParent = (int) OldRegion[BLOBPARENT];
+            int NewLabel = CondensationMap[OldLabel];
+            int NewParent = SubsumptionChain(OldParent);
+            NewParent = CondensationMap[NewParent];
+            OldRegion[BLOBLABEL] = (double) NewLabel;
+            OldRegion[BLOBPARENT] = (double) NewParent;
+            System.arraycopy(OldRegion,0,RegionData[NewLabel],0,BLOBDATACOUNT); //RegionData[NewLabel] <- ThisRegion;
+            NewMaxLabel = NewLabel;
+        }
+    }
+
+    // Zero out unneeded high labels
+    for(int Label = NewMaxLabel+1; Label <= MaxLabel; Label++) ResetRegion(Label);
+    MaxLabel = NewMaxLabel;
+    
+    // Flag for subsumption regions that have too small area
+    for(int Label = MaxLabel; Label > 0; Label--)
+    {
+        double [] ThisRegion = RegionData[Label];
+        int ThisArea = (int) ThisRegion[BLOBAREA];
+        if(ThisArea < MinArea)
+        {
+            int ThisParent = (int) ThisRegion[BLOBPARENT];
+            SubsumedLabel[Label] =  ThisParent;             // Flag this label as having been subsumed
+        }
+        else SubsumedLabel[Label] =  -1;
+    }
+    
+    // Compute Condensation map
+    Offset = 0;
+    for(int Label = 1; Label <= MaxLabel; Label++)
+    {
+        if(SubsumedLabel[Label] > -1) Offset++;
+        CondensationMap[Label] = Label - Offset;      
+    }
+
+    // Subsume regions that were flagged as enclosed; Perimeters subtract
+    for(int Label = 1; Label <= MaxLabel; Label++)
+    {
+        int BetterLabel = SubsumptionChain(Label);
+        if(BetterLabel != Label) Subsume(BetterLabel, Label, -1);
+    }   
+
+    // Condense subsumed regions
+    for(int OldLabel = 1; OldLabel <= MaxLabel; OldLabel++)
+    {
+        if(SubsumedLabel[OldLabel] < 0) // Renumber valid regions only
+        {
+            double [] OldRegion = RegionData[OldLabel];
+            int OldParent = (int) OldRegion[BLOBPARENT];
+            int NewLabel = CondensationMap[OldLabel];
+            int NewParent = SubsumptionChain(OldParent);
+            NewParent = CondensationMap[NewParent];
+            OldRegion[BLOBLABEL] = (double) NewLabel;
+            OldRegion[BLOBPARENT] = (double) NewParent;
+            System.arraycopy(OldRegion,0,RegionData[NewLabel],0,BLOBDATACOUNT); //RegionData[NewLabel] <- ThisRegion;
+            NewMaxLabel = NewLabel;
+        }
+    }
+    
+    // Zero out unneeded high labels
+    for(int Label = NewMaxLabel+1; Label <= MaxLabel; Label++) ResetRegion(Label);
+    MaxLabel = NewMaxLabel;
+
+    // Normalize summation fields into moments 
+    for(int Label = 0; Label <= MaxLabel; Label++)
+    {
+        double [] ThisRegion = RegionData[Label];
+        
+        // Extract fields
+        double Area = ThisRegion[BLOBAREA];
+        double SumX = ThisRegion[BLOBSUMX];
+        double SumY = ThisRegion[BLOBSUMY];
+        double SumXX = ThisRegion[BLOBSUMXX];
+        double SumYY = ThisRegion[BLOBSUMYY];
+        double SumXY = ThisRegion[BLOBSUMXY];
+        
+        // Get averages
+        SumX /= Area;
+        SumY /= Area;
+        SumXX /= Area;
+        SumYY /= Area;
+        SumXY /= Area;
+        
+        // Create moments
+        SumXX -= SumX * SumX;
+        SumYY -= SumY * SumY;
+        SumXY -= SumX * SumY;
+        if(SumXY > -1.0E-14 && SumXY < 1.0E-14) SumXY = (float) 0.0; // Eliminate roundoff error
+
+        ThisRegion[BLOBSUMX] = SumX;
+        ThisRegion[BLOBSUMY] = SumY;
+        ThisRegion[BLOBSUMXX] = SumXX;
+        ThisRegion[BLOBSUMYY] = SumYY;
+        ThisRegion[BLOBSUMXY] = SumXY;
+
+        System.arraycopy(ThisRegion,0,RegionData[Label],0,BLOBDATACOUNT);   // RegionData[Label] <- ThisRegion;
+    }
+
+    // Adjust border region
+    BorderRegion = RegionData[0];
+    BorderRegion[BLOBSUMXX] = BorderRegion[BLOBSUMYY] = BorderRegion[BLOBSUMXY] = 0;    // Mark invalid fields
+    System.arraycopy(BorderRegion,0,RegionData[0],0,BLOBDATACOUNT); // RegionData[0] <- BorderRegion;
+    
+    return MaxLabel;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.bytedeco.opencv.opencv_core.IplImage;
+
+import static org.bytedeco.opencv.global.opencv_imgcodecs.*;
+
+public class BlobsTest {
+
+    @Test
+    public void BlobAnalysisTest() {
+        // Prepare a simple binary image with a black border and a white rectangle inside
+        // Dimensions match the ones as per Blobs.BLOBROWCOUNT and Blobs.BLOBCOLCOUNT for simplicity
+        int width = Blobs.BLOBCOLCOUNT;
+        int height = Blobs.BLOBROWCOUNT;
+        IplImage testImage = IplImage.create(width, height, IPL_DEPTH_8U, 1);
+
+        // Set the entire image to white (all ones, since black is zero)
+        cvSet(testImage, cvScalarAll(1));
+
+        // Draw a black rectangle simulating a border
+        int borderWidth = 10; // 10 pixels wide border for testing
+        cvRectangle(testImage, cvPoint(0, 0), cvPoint(width, height), cvScalarAll(0), borderWidth, 8, 0);
+
+        // Initialize the Blobs instance
+        Blobs blobAnalysis = new Blobs();
+
+        // Arguments for BlobAnalysis - analyzing the entire image with a white border (1) and a minimum area of 50
+        int numLabels = blobAnalysis.BlobAnalysis(testImage, -1, -1, -1, -1, 1, 50);
+
+        // Assertions (illustrative purposes, actual values depend on implementation details)
+        // We expect that there should be two blobs detected: the black border and the white area inside
+        assertEquals(2, numLabels);
+
+        // Assuming that the smaller label is the border and the next label is the inner white area
+        double[] borderRegion = Blobs.RegionData[0];
+        double[] whiteRegion = Blobs.RegionData[1];
+
+        // Check the area of the border region; it should be equal to the border area calculated
+        assertEquals(4 * (borderWidth * width) - 4 * (borderWidth * borderWidth), borderRegion[Blobs.BLOBAREA]);
+
+        // Check that the inner white region's area is as expected (total area - border area)
+        assertEquals((width - 2 * borderWidth) * (height - 2 * borderWidth), whiteRegion[Blobs.BLOBAREA]);
+
+        // Clean up the test image after the test
+        testImage.release();
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.bytedeco.opencv.global.opencv_core.*;
+
+import org.bytedeco.javacpp.*;
+import org.bytedeco.javacv.*;
+import org.bytedeco.opencv.opencv_core.IplImage;
+
+public class BlobsTest {
+
+    private Blobs instance;
+    private IplImage testImage;
+
+    @BeforeEach
+    public void setUp() {
+        instance = new Blobs();
+        // Setup a test image with known regions characteristics
+        testImage = IplImage.create(100, 100, IPL_DEPTH_8U, 1);
+        cvSet(testImage, cvScalarAll(0)); // Black background
+        
+        // Draw white squares as blobs
+        cvRectangle(testImage, cvPoint(10, 10), cvPoint(30, 30), CvScalar.WHITE, CV_FILLED, 8, 0);
+        cvRectangle(testImage, cvPoint(40, 40), cvPoint(60, 60), CvScalar.WHITE, CV_FILLED, 8, 0);
+
+        // Initialize the data structures used by BlobAnalysis
+        for(int i = 0; i < Blobs.BLOBTOTALCOUNT; i++) {
+            instance.ResetRegion(i);
+        }
+    }
+    
+    @Test
+    public void BlobAnalysisTest() {
+        int result = instance.BlobAnalysis(
+            testImage, // input image
+            -1, -1,    // ROI start col, row (-1 means full image)
+            -1, -1,    // ROI cols, rows
+            0,         // border color (0 = black)
+            1);        // minimum region area
+
+        // Test the expected number of blobs found (2 squares + 1 for border)
+        assertEquals(3, result);
+
+        // Test that the areas of the detected regions match expectations (blobs + border)
+        double[] region1 = Blobs.RegionData[1];
+        double[] region2 = Blobs.RegionData[2];
+        assertEquals(441.0, region1[Blobs.BLOBAREA], "Region 1 area incorrect");
+        assertEquals(441.0, region2[Blobs.BLOBAREA], "Region 2 area incorrect");
+
+        // Test that no regions have been marked as subsumed (they should all be standalone regions)
+        for (int i = 1; i <= result; i++) {
+            assertEquals(-1, Blobs.SubsumedLabel[i], "Region " + i + " incorrectly subsumed");
+        }
+
+        // Clean up resources for test image
+        testImage.release();
+    }
+
+    @AfterEach
+    public void tearDown() {
+        // Code to release any resources used during the testing can be placed here
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.bytedeco.opencv.opencv_core.IplImage;
+import static org.bytedeco.opencv.global.opencv_core.CV_8UC1;
+import static org.bytedeco.opencv.global.opencv_imgproc.cvThreshold;
+import static org.bytedeco.opencv.global.opencv_core.cvCreateImage;
+import static org.bytedeco.opencv.global.opencv_core.cvGetSize;
+import static org.bytedeco.opencv.global.opencv_core.cvSet;
+import static org.bytedeco.opencv.global.opencv_core.IPL_DEPTH_8U;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+    private Blobs blobs;
+    private IplImage testImage;
+
+    @BeforeEach
+    public void setUp() {
+        blobs = new Blobs();
+        // Creating a test image of 10x10 with a 2x2 white square (with value 255) in the center
+        testImage = cvCreateImage(cvGetSize(cvCreateImage(cvSize(10, 10), IPL_DEPTH_8U, 1)), CV_8UC1, 1);
+        cvSet(testImage, cvScalar(0, 0, 0, 0)); // Set image to all black
+        // Set a white square in the image
+        for (int i = 4; i < 6; i++) {
+            for (int j = 4; j < 6; j++) {
+                testImage.imageData().put(i * testImage.widthStep() + j, (byte) 255);
+            }
+        }
+    }
+
+    @Test
+    public void BlobAnalysisTest() {
+        // Start the test: BlobAnalysis does not return the number of blobs, so we test other properties
+        int result = blobs.BlobAnalysis(testImage, 0, 0, -1, -1, 0, 1);
+        // Expecting at least one blob detected
+        assertTrue(result > 0);
+
+        // Check if the border properties are set correctly
+        assertEquals(blobs.RegionData[0][Blobs.BLOBPARENT], -1, "The border should have a parent value of -1.");
+
+        // Checking for the correct number of blobs including the border (2 in this case)
+        assertEquals(result, 2, "There should be 2 blobs including border");
+
+        // Check if center blob has expected values (Area of 4 and Color of 1)
+        assertEquals(blobs.RegionData[1][Blobs.BLOBAREA], 4.0, "The blob should have area of 4.");
+        assertEquals(blobs.RegionData[1][Blobs.BLOBCOLOR], 1.0, "The blob color should be 1 (white).");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.bytedeco.opencv.opencv_core.IplImage;
+import static org.bytedeco.opencv.global.opencv_core.CV_8U;
+import static org.bytedeco.opencv.global.opencv_core.cvCreateImage;
+import static org.bytedeco.opencv.global.opencv_core.cvSetZero;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+    @Test
+    public void BlobAnalysisTest() {
+        // Create a test image (with small dimensions for test purposes)
+        IplImage testImage = cvCreateImage(new CvSize(100, 100), CV_8U, 1);
+        cvSetZero(testImage); // Set all pixels to black
+
+        // Create an instance of Blobs
+        Blobs blobs = new Blobs();
+
+        // Set ROI parameters (start with the full image as the ROI)
+        int startCol = -1;
+        int startRow = -1; 
+        int cols = -1;
+        int rows = -1;
+
+        // Border color (0 for black, 1 for white)
+        int borderColor = 0;
+
+        // Minimum area of blobs to be considered in the analysis (setting to 1 for the test)
+        int minArea = 1;
+
+        // Run blob analysis
+        int result = blobs.BlobAnalysis(testImage, startCol, startRow, cols, rows, borderColor, minArea);
+
+        // Verify results
+        // Since we have an all-black image and we're not interested in black blobs (border color is black), the expected MaxLabel should be 0.
+        assertEquals(0, result, "BlobAnalysis should return 0 for all-black image with black border.");
+        
+        // Cleanup
+        testImage.release();
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.bytedeco.opencv.opencv_core.*;
+import static org.bytedeco.opencv.global.opencv_core.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+    @Test
+    public void BlobAnalysisTest() {
+        // Instantiate a Blobs object
+        Blobs blobs = new Blobs();
+
+        // Create a mock IplImage (for simplicity, this will not contain actual pixel data)
+        final int imageWidth = 100;
+        final int imageHeight = 100;
+        IplImage mockImage = IplImage.create(imageWidth, imageHeight, IPL_DEPTH_8U, 1);
+
+        // Set parameters for the BlobAnalysis method
+        int col0 = 0;    // Start of ROI in X
+        int row0 = 0;    // Start of ROI in Y
+        int cols = 50;   // Width of ROI
+        int rows = 50;   // Height of ROI
+        int border = 1;  // Border color (1 = white)
+        int minArea = 10; // Minimum region area
+
+        // Prepare a testable environment by resetting the RegionData array (which is otherwise static)
+        for (int i = 0; i < blobs.BLOBTOTALCOUNT; i++) {
+            blobs.ResetRegion(i);
+        }
+
+        // Perform the BlobAnalysis with the mock parameters
+        int numberOfLabels = blobs.BlobAnalysis(mockImage, col0, row0, cols, rows, border, minArea);
+
+        // Since we do not have actual data, we cannot check for specific expectations. 
+        // However, we can verify that the method completed without exceptions and that no labels were created.
+        assertEquals(0, numberOfLabels, "Number of labels should be zero for a mock image with no blobs.");
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+    @Test
+    public void BlobAnalysisTest() {
+        // Consider having a predefined test image of known dimensions and characteristics.
+        // For the purpose of this test, we will generate a mock IplImage with simple content.
+        IplImage testImage = IplImage.create(100, 100, IPL_DEPTH_8U, 1);
+        // Add some test blobs to the image, for instance, we can make a simple cross.
+        cvLine(testImage, cvPoint(50, 0), cvPoint(50, 99), CvScalar.WHITE, 1, LINE_8, 0);
+        cvLine(testImage, cvPoint(0, 50), cvPoint(99, 50), CvScalar.WHITE, 1, LINE_8, 0);
+
+        Blobs blobAnalysis = new Blobs();
+        int numBlobs = blobAnalysis.BlobAnalysis(testImage, 0, 0, 100, 100, 0, 1);
+        
+        // Define expected numbers after blob analysis. This will depend on the actual test image.
+        int expectedNumberOfLabels = 5; // Including the border and 4 sections of the cross.
+
+        // Check if the number of blobs found matches what we expect.
+        assertEquals(expectedNumberOfLabels, numBlobs, "The number of found labels does not match the expected number.");
+        
+        // Optionally verify specific properties of blobs here.
+        // Additional tests could involve checking region area, perimeters, color, etc.
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.bytedeco.opencv.opencv_core.IplImage;
+import static org.bytedeco.opencv.global.opencv_imgcodecs.*;
+
+public class BlobsTest {
+
+    @Test
+    public void BlobAnalysisTest() {
+        // Create a dummy image for testing
+        IplImage testImage = IplImage.create(100, 100, IPL_DEPTH_8U, 1);
+        
+        // Fill the image with some pattern if necessary
+        // for example, setting half of the image to white
+        cvSetImageROI(testImage, cvRect(50, 0, 50, 100));
+        cvSet(testImage, cvScalar(255,0,0,0),null);
+        cvResetImageROI(testImage);
+
+        Blobs blobs = new Blobs();
+        // Call BlobAnalysis with reasonable test parameters
+        // Assuming a black and white image, a small ROI, simple border, and min area
+        int blobCount = blobs.BlobAnalysis(testImage, 10, 10, 50, 50, 0, 10);
+        
+        // Validate if the blob count is as expected, assuming we know the expected result
+        int expectedBlobCount = 1; // as an example
+        assertEquals(expectedBlobCount, blobCount, "The blob count did not match the expected value");
+
+        // Additional validity checks can include:
+        // - Checking properties of specific blobs if you have a known test pattern
+        // - Ensuring no blobs are larger than the ROI
+        // - Checking blob properties such as area, perimeter, etc.
+
+        // Release resources of the test image
+        testImage.release();
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import org.bytedeco.opencv.opencv_core.IplImage;
+import static org.bytedeco.opencv.global.opencv_core.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+
+    @Test
+    public void BlobAnalysisTest() {
+        // Create an empty black image with the dimensions specified in Blobs
+        IplImage iplImage = IplImage.create(Blobs.BLOBCOLCOUNT, Blobs.BLOBROWCOUNT, IPL_DEPTH_8U, 1);
+        cvZero(iplImage); // Setting the image to black
+
+        Blobs blobs = new Blobs();
+        
+        // Set region of interest (ROI) parameters; using full image in this case
+        int col0 = -1; // start of ROI X-coordinate
+        int row0 = -1; // start of ROI Y-coordinate
+        int cols = -1; // width of ROI
+        int rows = -1; // height of ROI
+        int border = 0; // black border
+        int minArea = 1; // minimum region area to consider valid
+
+        // Perform blob analysis on the black image; expecting no blobs to be found
+        int maxLabel = blobs.BlobAnalysis(iplImage, col0, row0, cols, rows, border, minArea);
+
+        assertEquals(0, maxLabel, "Maximum label should be 0 since no blobs should be found in a black image.");
+
+        // Draw white rectangle on the image
+        CvRect rect = cvRect(100, 100, 50, 50); // rectangle at (100, 100) with width 50 and height 50
+        cvSetImageROI(iplImage, rect);
+        cvSet(iplImage, cvScalar(255, 0, 0, 0), null); // set rectangle pixels to white
+        cvResetImageROI(iplImage);
+
+        // Perform blob analysis on the image with one white rectangle; expecting one blob to be found
+        maxLabel = blobs.BlobAnalysis(iplImage, col0, row0, cols, rows, border, minArea);
+
+        assertEquals(1, maxLabel, "Maximum label should be 1 since one blob should be found in the image.");
+
+        // Clean up
+        iplImage.release();
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.bytedeco.opencv.opencv_core.*;
+import static org.bytedeco.opencv.global.opencv_core.CV_8U;
+
+public class BlobsTest {
+
+    @Test
+    public void BlobAnalysisTest() {
+        // Set up
+        int testWidth = Blobs.BLOBCOLCOUNT;
+        int testHeight = Blobs.BLOBROWCOUNT;
+        IplImage testImage = IplImage.create(testWidth, testHeight, IPL_DEPTH_8U, 1);
+        cvSetZero(testImage);
+
+        // Create an example region of white color in the black image
+        CvMat testRegion = testImage.asCvMat();
+        int regionSize = 100;
+        int offsetX = 50;
+        int offsetY = 50;
+        for (int y = offsetY; y < offsetY + regionSize; y++) {
+            for (int x = offsetX; x < offsetX + regionSize; x++) {
+                testRegion.put(y * testWidth + x, 255); // Set pixel to white
+            }
+        }
+
+        // Perform Blob Analysis on the prepared image
+        Blobs blobAnalyser = new Blobs();
+        int result = blobAnalyser.BlobAnalysis(testImage, 0, 0, -1, -1, 0, 1);
+
+        // Assertions
+        // The specific assertions depend on the expected output.
+        // Here we assume the method returns the number of blobs detected
+        // and expect to find a single blob for the white region we drew in the black image.
+        assertEquals(1, result, "The number of blobs detected should be 1.");
+
+        // Clean up
+        testImage.release(); // Release the image after the test
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.bytedeco.javacv;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.bytedeco.opencv.opencv_core.IplImage;
+
+public class BlobsTest {
+    private Blobs blobs;
+    private IplImage image;
+    private int border = 0; // assuming a black border here
+    private int minArea = 20;
+
+    @BeforeEach
+    public void setUp() {
+        blobs = new Blobs();
+        // Set up the test IplImage here
+        // For example:
+        // image = IplImage.create(width, height, IPL_DEPTH_8U, 1); // 1 channel (grayscale)
+        
+        // Fill the image with test data here
+        // ...
+    }
+
+    @AfterEach
+    public void tearDown() {
+        // Clean-up code if necessary
+    }
+
+    @Test
+    public void BlobAnalysisTest() {
+        // Perform blob analysis on the entire image using a stubbed mock image.
+        // Since we do not have an actual image to work with, this test will be limited
+        // to checking if the blob analysis method returns a plausible label count.
+        // For a real image, we would compare the actual label count to an expected count.
+        int labelCount = blobs.BlobAnalysis(image, 0, 0, -1, -1, border, minArea);
+        
+        // Assertions
+        
+        // Check that the label count is non-negative.
+        assertTrue(labelCount >= 0, "Label count should be non-negative.");
+
+        // Check that the maximum label is equal to the label count returned.
+        assertEquals(labelCount, Blobs.MaxLabel, "MaxLabel should be equal to the label count returned.");
+        
+        // Check that each region has an Area at least as large as the specified minArea.
+        // This assumes the method BlobAnalysis fills the RegionData array.
+        for (int i = 1; i <= labelCount; i++) {
+            assertTrue(Blobs.RegionData[i][Blobs.BLOBAREA] >= minArea, "Region " + i + " has smaller area than expected.");
+        }
+
+        // If we had expected values for specific properties of regions, insert more assertions here.
+        // ...
+    }
+}
+
+

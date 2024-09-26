@@ -1,0 +1,864 @@
+Source code: 
+
+
+private Object parseDictText(Object result) {
+    if (result instanceof Result) {
+        if (((Result) result).getResult() instanceof IPage) {
+            List<JSONObject> items = new ArrayList<>();
+
+            //step.1 筛选出加了 Dict 注解的字段列表
+            List<Field> dictFieldList = new ArrayList<>();
+            // 字典数据列表， key = 字典code，value=数据列表
+            Map<String, List<String>> dataListMap = new HashMap<>(5);
+            //取出结果集
+            List<Object> records=((IPage) ((Result) result).getResult()).getRecords();
+            //update-begin--Author:zyf -- Date:20220606 ----for：【VUEN-1230】 判断是否含有字典注解,没有注解返回-----
+            Boolean hasDict= checkHasDict(records);
+            if(!hasDict){
+                return result;
+            }
+
+            log.debug(" __ 进入字典翻译切面 DictAspect —— " );
+            //update-end--Author:zyf -- Date:20220606 ----for：【VUEN-1230】 判断是否含有字典注解,没有注解返回-----
+            for (Object record : records) {
+                String json="{}";
+                try {
+                    //update-begin--Author:zyf -- Date:20220531 ----for：【issues/#3629】 DictAspect Jackson序列化报错-----
+                    //解决@JsonFormat注解解析不了的问题详见SysAnnouncement类的@JsonFormat
+                     json = objectMapper.writeValueAsString(record);
+                    //update-end--Author:zyf -- Date:20220531 ----for：【issues/#3629】 DictAspect Jackson序列化报错-----
+                } catch (JsonProcessingException e) {
+                    log.error("json解析失败"+e.getMessage(),e);
+                }
+                //update-begin--Author:scott -- Date:20211223 ----for：【issues/3303】restcontroller返回json数据后key顺序错乱 -----
+                JSONObject item = JSONObject.parseObject(json, Feature.OrderedField);
+                //update-end--Author:scott -- Date:20211223 ----for：【issues/3303】restcontroller返回json数据后key顺序错乱 -----
+
+                //update-begin--Author:scott -- Date:20190603 ----for：解决继承实体字段无法翻译问题------
+                //for (Field field : record.getClass().getDeclaredFields()) {
+                // 遍历所有字段，把字典Code取出来，放到 map 里
+                for (Field field : oConvertUtils.getAllFields(record)) {
+                    String value = item.getString(field.getName());
+                    if (oConvertUtils.isEmpty(value)) {
+                        continue;
+                    }
+                //update-end--Author:scott  -- Date:20190603 ----for：解决继承实体字段无法翻译问题------
+                    if (field.getAnnotation(Dict.class) != null) {
+                        if (!dictFieldList.contains(field)) {
+                            dictFieldList.add(field);
+                        }
+                        String code = field.getAnnotation(Dict.class).dicCode();
+                        String text = field.getAnnotation(Dict.class).dicText();
+                        String table = field.getAnnotation(Dict.class).dictTable();
+
+                        List<String> dataList;
+                        String dictCode = code;
+                        if (!StringUtils.isEmpty(table)) {
+                            dictCode = String.format("%s,%s,%s", table, text, code);
+                        }
+                        dataList = dataListMap.computeIfAbsent(dictCode, k -> new ArrayList<>());
+                        this.listAddAllDeduplicate(dataList, Arrays.asList(value.split(",")));
+                    }
+                    //date类型默认转换string格式化日期
+                    //update-begin--Author:zyf -- Date:20220531 ----for：【issues/#3629】 DictAspect Jackson序列化报错-----
+                    //if (JAVA_UTIL_DATE.equals(field.getType().getName())&&field.getAnnotation(JsonFormat.class)==null&&item.get(field.getName())!=null){
+                        //SimpleDateFormat aDate=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                        // item.put(field.getName(), aDate.format(new Date((Long) item.get(field.getName()))));
+                    //}
+                    //update-end--Author:zyf -- Date:20220531 ----for：【issues/#3629】 DictAspect Jackson序列化报错-----
+                }
+                items.add(item);
+            }
+
+            //step.2 调用翻译方法，一次性翻译
+            Map<String, List<DictModel>> translText = this.translateAllDict(dataListMap);
+
+            //step.3 将翻译结果填充到返回结果里
+            for (JSONObject record : items) {
+                for (Field field : dictFieldList) {
+                    String code = field.getAnnotation(Dict.class).dicCode();
+                    String text = field.getAnnotation(Dict.class).dicText();
+                    String table = field.getAnnotation(Dict.class).dictTable();
+
+                    String fieldDictCode = code;
+                    if (!StringUtils.isEmpty(table)) {
+                        fieldDictCode = String.format("%s,%s,%s", table, text, code);
+                    }
+
+                    String value = record.getString(field.getName());
+                    if (oConvertUtils.isNotEmpty(value)) {
+                        List<DictModel> dictModels = translText.get(fieldDictCode);
+                        if(dictModels==null || dictModels.size()==0){
+                            continue;
+                        }
+
+                        String textValue = this.translDictText(dictModels, value);
+                        log.debug(" 字典Val : " + textValue);
+                        log.debug(" __翻译字典字段__ " + field.getName() + CommonConstant.DICT_TEXT_SUFFIX + "： " + textValue);
+
+                        // TODO-sun 测试输出，待删
+                        log.debug(" ---- dictCode: " + fieldDictCode);
+                        log.debug(" ---- value: " + value);
+                        log.debug(" ----- text: " + textValue);
+                        log.debug(" ---- dictModels: " + JSON.toJSONString(dictModels));
+
+                        record.put(field.getName() + CommonConstant.DICT_TEXT_SUFFIX, textValue);
+                    }
+                }
+            }
+
+            ((IPage) ((Result) result).getResult()).setRecords(items);
+        }
+
+    }
+    return result;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.jeecg.common.api.CommonAPI;
+import org.jeecg.common.api.vo.Result;
+import org.jeecg.common.system.vo.DictModel;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.data.redis.core.RedisTemplate;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+
+public class DictAspectTest {
+
+    @Mock
+    private CommonAPI commonApi;
+    @Mock
+    private RedisTemplate<String, Object> redisTemplate;
+    @Mock
+    private ObjectMapper objectMapper;
+    @Mock
+    private IPage page;
+
+    private DictAspect dictAspect;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.initMocks(this);
+        dictAspect = new DictAspect();
+        dictAspect.commonApi = commonApi;
+        dictAspect.redisTemplate = redisTemplate;
+        dictAspect.objectMapper = objectMapper;
+    }
+
+    @Test
+    public void parseDictTextTest() {
+        // Assume
+        Result<Object> result = new Result<>();
+        result.setResult(page);
+        List<Object> records = new ArrayList<>();
+        records.add("RecordData"); // Add your record data here. It needs to be well-formed for the test.
+        when(page.getRecords()).thenReturn(records);
+        when(commonApi.translateManyDict(anyString(), anyString())).thenReturn(new HashMap<>());
+        when(redisTemplate.hasKey(anyString())).thenReturn(false); // No cache hits for simplicity
+
+        // Execute the method under test
+        Object actualResult = dictAspect.parseDictText(result);
+
+        // Assert
+        assertEquals(result, actualResult, "Expected result should be equal to actual result after running parseDictText");
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import org.jeecg.common.api.vo.Result;
+import org.jeecg.common.system.vo.DictModel;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+public class DictAspectTest {
+
+    @Test
+    public void parseDictTextTest() {
+        // Given
+        Result<?> mockResult = mock(Result.class);
+        IPage<?> mockPage = mock(IPage.class);
+        List<Object> fakeRecords = new ArrayList<>();
+        fakeRecords.add(new Object()); // Pretend this object has Dict annotations
+        List<JSONObject> mockRecordItems = new ArrayList<>();
+        Field mockField = mock(Field.class);
+        Dict mockDictAnnotation = mock(Dict.class);
+
+        DictAspect aspect = Mockito.spy(new DictAspect());
+        Map<String, List<DictModel>> fakeTranslationMap = new HashMap<>();
+        fakeTranslationMap.put("mockDictCode", new ArrayList<>());
+
+        when(mockResult.getResult()).thenReturn(mockPage);
+        when(mockPage.getRecords()).thenReturn(fakeRecords);
+        doReturn(true).when(aspect).checkHasDict(fakeRecords);
+        when(mockField.getAnnotation(Dict.class)).thenReturn(mockDictAnnotation);
+        when(mockDictAnnotation.dicCode()).thenReturn("mockDictCode");
+        when(mockField.getName()).thenReturn("mockFieldName");
+        doReturn(fakeTranslationMap).when(aspect).translateAllDict(any());
+        doNothing().when(aspect).listAddAllDeduplicate(any(), any());
+        doReturn(new ArrayList<>(List.of(mockField))).when(aspect, "getAllFields", any());
+
+        // When
+        Object result = aspect.parseDictText(mockResult);
+
+        // Then
+        verify(mockResult, times(1)).getResult();
+        verify(mockPage, times(1)).getRecords();
+        verify(aspect, times(1)).checkHasDict(fakeRecords);
+        verify(mockField, atLeastOnce()).getAnnotation(Dict.class);
+        assertSame(mockResult, result, "The result should be the same as the input when there are no actual Dict annotations.");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import org.jeecg.common.api.CommonAPI;
+import org.jeecg.common.api.vo.Result;
+import org.jeecg.common.system.vo.DictModel;
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DictAspectTest {
+
+    private DictAspect dictAspect;
+    private CommonAPI commonAPI;
+
+    @BeforeEach
+    public void setUp() {
+        dictAspect = new DictAspect();
+        commonAPI = Mockito.mock(CommonAPI.class);
+        ReflectionTestUtils.setField(dictAspect, "commonApi", commonAPI);
+    }
+
+    @Test
+    public void parseDictTextTest() {
+        // Arrange
+        Result<IPage> result = new Result<>();
+        IPage page = Mockito.mock(IPage.class);
+        // Assume that we have a simple record with a Dictionary-annotated field.
+        JSONObject record = new JSONObject();
+        record.put("status", "1");
+
+        // Mock IPage behavior
+        when(page.getRecords()).thenReturn(Arrays.asList(record));
+        result.setResult(page);
+
+        // Assume that the common API returns a mapping for the "status" field
+        DictModel dictModel = new DictModel("1", "Active");
+        when(commonAPI.translateDict(any(), any())).thenReturn("Active");
+        Map<String, List<DictModel>> translationMap = new HashMap<>();
+        translationMap.put("status", Arrays.asList(dictModel));
+
+        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "debug");
+
+        // Act
+        Object modifiedResult = dictAspect.parseDictText(result);
+
+        // Assert
+        assertTrue(modifiedResult instanceof Result);
+        Result<IPage> returnedResult = (Result<IPage>) modifiedResult;
+        IPage<?> returnedPage = returnedResult.getResult();
+        assertNotNull(returnedPage);
+
+        List<?> records = returnedPage.getRecords();
+        assertNotNull(records);
+        assertFalse(records.isEmpty());
+
+        JSONObject modifiedRecord = (JSONObject) records.get(0);
+        assertNotNull(modifiedRecord.getString("status_dictText"));
+        assertEquals("Active", modifiedRecord.getString("status_dictText"));
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import org.jeecg.common.api.vo.Result;
+import org.jeecg.common.system.vo.DictModel;
+import org.junit.jupiter.api.*;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.data.redis.core.RedisTemplate;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+
+import static org.mockito.Mockito.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class DictAspectTest {
+    private DictAspect dictAspect;
+    
+    @Mock
+    private IPage<Object> iPage;
+
+    @Mock
+    private Result<?> result;
+
+    @Mock
+    private RedisTemplate<String, Object> redisTemplate;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+        dictAspect = new DictAspect();
+        dictAspect.redisTemplate = redisTemplate;
+    }
+
+    @Test
+    public void testParseDictText_validResult() {
+        // Mock the result and page behavior
+        List<Object> records = new ArrayList<>();
+        // Assume the record is JSONObject
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("name", "John Doe");
+        records.add(jsonObject);
+
+        when(iPage.getRecords()).thenReturn(records);
+        when(result.getResult()).thenReturn(iPage);
+
+        // Mock checkHasDict method to return true as we are expecting dict annotations
+        when(dictAspect.checkHasDict(records)).thenReturn(true);
+
+        // Mock translateAllDict method to return an empty translation text map
+        // as we are not focusing on the translation part in this test
+        when(dictAspect.translateAllDict(any())).thenReturn(new HashMap<>());
+
+        // Act
+        Object finalResult = dictAspect.parseDictText(result);
+
+        // Assert
+        assertNotNull(finalResult);
+        assertTrue(finalResult instanceof Result);
+        IPage<?> pageResult = ((IPage<?>) ((Result<?>) finalResult).getResult());
+        assertNotNull(pageResult);
+        List<?> recordsResult = pageResult.getRecords();
+        assertNotNull(recordsResult);
+        assertFalse(recordsResult.isEmpty());
+        assertEquals(1, recordsResult.size());
+        assertTrue(recordsResult.get(0) instanceof JSONObject);
+        JSONObject record = (JSONObject) recordsResult.get(0);
+        assertEquals("John Doe", record.getString("name"));
+    }
+
+    @Test
+    public void testParseDictText_nullResult() {
+        // Pass null to the method
+        Object finalResult = dictAspect.parseDictText(null);
+
+        // Assert that the null input leads to null output
+        assertNull(finalResult);
+    }
+
+    @AfterEach
+    public void tearDown() {
+        // Cleaning up resources
+        dictAspect = null;
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class DictAspectTest {
+
+    private DictAspect dictAspect;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @Mock
+    private CommonAPI commonApi;
+
+    @Mock
+    private IPage<Object> iPage;
+
+    @Mock
+    private RedisTemplate<String, String> redisTemplate;
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
+        dictAspect = new DictAspect();
+        dictAspect.commonApi = commonApi;
+        dictAspect.objectMapper = objectMapper;
+        dictAspect.redisTemplate = redisTemplate;
+    }
+
+    @Test
+    public void parseDictTextTest() {
+        try {
+            Result<?> mockResult = new Result<>();
+            List<Object> mockRecords = new ArrayList<>();
+            JSONObject mockRecord = new JSONObject();
+            // Assuming "status" is a field with Dict annotation in the record class
+            mockRecord.put("status", "1");
+            mockRecords.add(mockRecord);
+
+            when(iPage.getRecords()).thenReturn(mockRecords);
+            mockResult.setResult(iPage);
+
+            String jsonString = mockRecord.toJSONString();
+            when(objectMapper.writeValueAsString(any(Object.class))).thenReturn(jsonString);
+
+            DictModel mockDictModel = new DictModel("1", "Active");
+            List<DictModel> mockDictModels = new ArrayList<>();
+            mockDictModels.add(mockDictModel);
+
+            when(commonApi.translateManyDict(anyString(), anyString())).thenReturn(mockDictModels);
+
+            Object result = dictAspect.parseDictText(mockResult);
+
+            JSONObject jsonResult = ((IPage) ((Result) result).getResult()).getRecords().get(0);
+            assertEquals("Active", jsonResult.getString("status_dictText"));
+        } catch (Exception e) {
+            fail("Caught exception during parseDictTextTest: " + e.getMessage());
+        }
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import org.jeecg.common.api.vo.Result;
+import org.jeecg.common.system.vo.DictModel;
+import org.junit.jupiter.api.*;
+import org.mockito.*;
+import org.springframework.data.redis.core.RedisTemplate;
+
+import java.lang.reflect.Field;
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+public class DictAspectTest {
+
+    @Mock
+    private CommonAPI commonApi;
+
+    @Mock
+    private RedisTemplate<String, Object> redisTemplate;
+
+    @InjectMocks
+    private DictAspect dictAspect;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void parseDictTextTest() {
+        // Mock the dependencies's behavior
+        when(commonApi.translateManyDict(any(String.class), any(String.class)))
+                .thenReturn(new HashMap<>());
+        when(redisTemplate.hasKey(any(String.class)))
+                .thenReturn(false); // Here you should specify the expected behavior depending on your test
+
+        // Arrange: Create a Result object with an IPage containing dummy data that should be converted by the parseDictText method.
+        Result<IPage> result = new Result<>();
+        result.setResult(Mockito.mock(IPage.class)); // Replace with actual mocked IPage containing records that have fields annotated with @Dict
+        when(result.getResult().getRecords()).thenReturn(Collections.singletonList(new DummyRecordWithDict())); // DummyRecordWithDict should be replaced with an actual test object containing @Dict annotations
+
+        // Add @Dict annotation to the dummy field
+        Field fieldWithDict = DummyRecordWithDict.class.getDeclaredField("dummyField");
+        fieldWithDict.setAccessible(true);
+        Dict annotation = Mockito.mock(Dict.class);
+        when(annotation.dicCode()).thenReturn("dummyCode");
+        when(fieldWithDict.getAnnotation(Dict.class)).thenReturn(annotation);
+
+        // Act: Execute the method to be tested
+        Object modifiedResult = dictAspect.parseDictText(result);
+
+        // Assert: Check whether the annotations and mocking behaved as expected and if the method's functionality is correct
+        assertTrue(modifiedResult instanceof Result);
+
+        // The following assert should be adapted to fit the expected result format
+        // For example, check if the dict text was properly added to the `items` and if the `records` were updated in the `IPage`
+        // You should replace `expectedValue` with the actual expected value based on your dummy data and mocked behavior
+        JSONObject expectedJson = new JSONObject();
+        expectedJson.put("dummyField" + CommonConstant.DICT_TEXT_SUFFIX, "expectedValue");
+        assertEquals(expectedJson, ((Result) modifiedResult).getResult().getRecords().get(0));
+    }
+    
+    // Dummy class to represent a record that would normally be passed to the parseDictText method
+    // This class needs to be replaced with a meaningful class corresponding to your actual implementation
+    static class DummyRecordWithDict {
+        @Dict(dicCode = "dummyCode")
+        private String dummyField = "dummyFieldValue";
+        // Getters and setters
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.junit.jupiter.api.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.data.redis.core.RedisTemplate;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.jeecg.common.api.CommonAPI;
+import org.jeecg.common.api.vo.Result;
+import org.jeecg.modules.system.entity.SysUser;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
+import java.util.ArrayList;
+import java.util.List;
+
+@RunWith(MockitoJUnitRunner.class)
+public class DictAspectTest {
+
+    @Mock
+    private CommonAPI commonApi;
+    @Mock
+    private RedisTemplate redisTemplate;
+    @Mock
+    private ObjectMapper objectMapper;
+    @InjectMocks
+    private DictAspect dictAspect;
+
+    @Test
+    public void parseDictTextTest() throws Exception {
+        Result<IPage> mockResult = mock(Result.class);
+        IPage mockPage = mock(IPage.class);
+        List<SysUser> recordsList = new ArrayList<>();
+        SysUser user = new SysUser();
+        user.setSex("1");
+        recordsList.add(user);
+        
+        when(mockResult.getResult()).thenReturn(mockPage);
+        when(mockPage.getRecords()).thenReturn(recordsList);
+        
+        Object resultPassedToParseDictText = mockResult;
+
+        String json = "{\"sex\":\"1\"}";
+        when(objectMapper.writeValueAsString(any(SysUser.class))).thenReturn(json);
+        
+        // Assuming translateAllDict and other methods to be mocked accordingly
+        
+        Object finalResult = dictAspect.parseDictText(resultPassedToParseDictText);
+        
+        // Verify that returned object is the same as what we passed in
+        assertSame(mockResult, finalResult);
+        
+        // Additional assertions and verifications can be added here
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import org.jeecg.common.api.vo.Result;
+import org.jeecg.common.system.vo.DictModel;
+import org.junit.jupiter.api.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class DictAspectTest {
+    
+    @InjectMocks
+    private DictAspect dictAspect;
+
+    @Mock
+    private CommonAPI commonApi;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    public void parseDictTextTest() {
+        // Given
+        IPage pageMock = mock(IPage.class);
+        List<Object> records = new ArrayList<>();
+        records.add(new MockRecord()); // MockRecord should be a mock object with a Dict annotation
+        
+        Result<IPage> result = new Result<>();
+        result.setResult(pageMock);
+        
+        when(pageMock.getRecords()).thenReturn(records);
+        when(commonApi.translateDict(anyString(), anyString())).thenReturn("Mock Text");
+        
+        // When
+        Object actualResult = dictAspect.parseDictText(result);
+        
+        // Then
+        assertNotNull(actualResult, "The result should not be null.");
+        Result<?> actualResultCasted = (Result<?>) actualResult;
+        assertTrue(actualResultCasted.getResult() instanceof IPage);
+
+        List<?> actualRecords = ((IPage) actualResultCasted.getResult()).getRecords();
+        assertFalse(actualRecords.isEmpty(), "The records list should not be empty.");
+        
+        JSONObject actualRecord = (JSONObject) actualRecords.get(0);
+        assertNotNull(actualRecord.getString("mockField_dictText"), "The dictionary text should have been added to the field.");
+        assertEquals("Mock Text", actualRecord.getString("mockField_dictText"), "The dictionary text should match the mock response.");
+    }
+    
+    // Replace with an actual class that is used in your application with Dict annotations
+    private static class MockRecord {
+        @Dict(dicCode = "mock_dict_code")
+        private String mockField;
+        
+        // Getter and setter for mockField
+        public String getMockField() {
+            return mockField;
+        }
+
+        public void setMockField(String mockField) {
+            this.mockField = mockField;
+        }
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import org.junit.jupiter.api.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.*;
+
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.jeecg.common.api.CommonAPI;
+import org.jeecg.common.api.vo.Result;
+import org.jeecg.common.system.vo.DictModel;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.data.redis.core.RedisTemplate;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@RunWith(MockitoJUnitRunner.class)
+public class DictAspectTest {
+    
+    @InjectMocks
+    private DictAspect dictAspect;
+    
+    @Mock
+    private CommonAPI commonApi;
+    
+    @Mock
+    private RedisTemplate<String, Object> redisTemplate;
+    
+    @Mock
+    private ObjectMapper objectMapper;
+    
+    @BeforeEach
+    public void setUp() {
+        // Initialize any necessary setup here, e.g. mocked commonApi return values, etc.
+    }
+    
+    @Test
+    public void parseDictTextTest() {
+        // Assuming we have predefined a Result<IPage> instance with appropriate mocks
+        Result<IPage> inputResult = mock(Result.class);
+        IPage page = mock(IPage.class);
+        
+        // Use when().thenReturn() to provide mock behaviors
+        
+        List<Object> records = new ArrayList<>(); // Replace with actual mocked records if needed
+        when(inputResult.getResult()).thenReturn(page);
+        when(page.getRecords()).thenReturn(records);
+
+        // Assuming the tested method uses a mocked commonApi method translateAllDict
+        when(commonApi.translateAllDict(any(Map.class)))
+            .thenReturn(Collections.singletonMap("dicCode", Collections.singletonList(new DictModel("1", "One"))));
+
+        
+        Object result = dictAspect.parseDictText(inputResult);
+        
+        // Assumptions and Assertions
+        // ...
+
+        assertNotNull(result, "The result should not be null.");
+        assertTrue(result instanceof Result, "The result should be an instance of Result.");
+
+        // Assume there would be additional checks on the modified content of 'result'
+        // depending on how 'parseDictText' transforms the input 'Result'
+        // ...
+
+        // This part needs to be filled with actual test cases related to the specific implementation scenarios
+    }
+    
+    @AfterEach
+    public void tearDown() {
+        // Perform any necessary cleanup after tests are run, if needed
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import org.jeecg.common.api.vo.Result;
+
+import java.util.*;
+
+public class DictAspectTest {
+
+    private DictAspect dictAspect;
+    private CommonAPI commonApiMock;
+
+    @BeforeEach
+    public void setUp() {
+        dictAspect = new DictAspect();
+        commonApiMock = Mockito.mock(CommonAPI.class);
+        dictAspect.commonApi = commonApiMock;
+    }
+
+    @Test
+    public void parseDictTextTest() {
+        // Mock IPage
+        IPage pageMock = Mockito.mock(IPage.class);
+        List<Object> records = new ArrayList<>();
+
+        // Create a sample record with a "Dict" annotation
+        Map<String, Object> record = new HashMap<>();
+        record.put("status", "1"); // Assume "1" indicates active status
+
+        records.add(record);
+        when(pageMock.getRecords()).thenReturn(records);
+
+        // Mock the Result object
+        Result<IPage> result = new Result<>();
+        result.setResult(pageMock);
+
+        // Mock the common API translate method 
+        when(commonApiMock.translateDict("status", "1")).thenReturn("Active");
+
+        // Prepare the expected JSONObject after dict translation
+        JSONObject expectedItem = new JSONObject();
+        expectedItem.put("status", "1");
+        expectedItem.put("status_dictText", "Active"); // Assume the suffix is "_dictText"
+
+        // Invoke the method to test
+        Result actualResult = (Result) dictAspect.parseDictText(result);
+
+        // Verify the records
+        assertNotNull(actualResult);
+        assertTrue(actualResult.getResult() instanceof IPage);
+        IPage actualPage = (IPage) actualResult.getResult();
+        assertNotNull(actualPage.getRecords());
+        assertFalse(actualPage.getRecords().isEmpty());
+        assertEquals(expectedItem.toJSONString(), actualPage.getRecords().get(0).toString());
+    }
+
+    // Additional clean up if necessary
+    @AfterEach
+    public void tearDown() {
+        // Cleanup resources if needed
+    }
+}
+
+

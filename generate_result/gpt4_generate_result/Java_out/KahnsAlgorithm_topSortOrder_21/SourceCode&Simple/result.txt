@@ -1,0 +1,475 @@
+Source code: 
+
+
+ArrayList<E> topSortOrder() {
+    calculateInDegree();
+    Queue<E> q = new LinkedList<E>();
+
+    for (E vertex : inDegree.keySet()) {
+        if (inDegree.get(vertex) == 0) {
+            q.add(vertex);
+        }
+    }
+
+    ArrayList<E> answer = new ArrayList<>();
+
+    while (!q.isEmpty()) {
+        E current = q.poll();
+        answer.add(current);
+        for (E adjacent : graph.getAdjacents(current)) {
+            inDegree.put(adjacent, inDegree.get(adjacent) - 1);
+            if (inDegree.get(adjacent) == 0) {
+                q.add(adjacent);
+            }
+        }
+    }
+
+    return answer;
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.thealgorithms.datastructures.graphs;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Arrays;
+
+public class AdjacencyListTest {
+    private AdjacencyList<String> createTestGraph() {
+        AdjacencyList<String> graph = new AdjacencyList<>();
+        graph.addEdge("A", "C");
+        graph.addEdge("B", "C");
+        graph.addEdge("C", "E");
+        graph.addEdge("D", "F");
+        graph.addEdge("E", "H");
+        graph.addEdge("E", "F");
+        graph.addEdge("F", "G");
+
+        return graph;
+    }
+
+    @Test
+    public void topSortOrderTest() {
+        AdjacencyList<String> graph = createTestGraph();
+        TopologicalSort<String> topologicalSort = new TopologicalSort<>(graph);
+        ArrayList<String> expectedResult = new ArrayList<>(Arrays.asList("A", "B", "D", "C", "E", "F", "G", "H"));
+        ArrayList<String> actualResult = topologicalSort.topSortOrder();
+
+        // The order in topological sorting is not unique, so assert that the array contains all elements
+        assertEquals(expectedResult.size(), actualResult.size(), "The topological sort does not return the expected number of vertices");
+
+        for (String vertex : expectedResult) {
+            assertTrue(actualResult.contains(vertex), "The topological sort result does not contain vertex: " + vertex);
+        }
+
+        // To further check that the order satisfies the topological ordering, we can ensure that for each directed edge u -> v, u comes before v in the list
+        assertTrue(actualResult.indexOf("A") < actualResult.indexOf("C"), "In topological ordering, A should come before C");
+        assertTrue(actualResult.indexOf("B") < actualResult.indexOf("C"), "In topological ordering, B should come before C");
+        assertTrue(actualResult.indexOf("C") < actualResult.indexOf("E"), "In topological ordering, C should come before E");
+        assertTrue(actualResult.indexOf("D") < actualResult.indexOf("F"), "In topological ordering, D should come before F");
+        assertTrue(actualResult.indexOf("E") < actualResult.indexOf("H"), "In topological ordering, E should come before H");
+        assertTrue(actualResult.indexOf("E") < actualResult.indexOf("F"), "In topological ordering, E should come before F");
+        assertTrue(actualResult.indexOf("F") < actualResult.indexOf("G"), "In topological ordering, F should come before G");
+    }
+}
+
+
+
+No.2 generated result --------------------------
+
+package com.thealgorithms.datastructures.graphs;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AdjacencyListTest {
+
+    private TopologicalSort<Character> topologicalSort;
+    private AdjacencyList<Character> adjacencyList;
+
+    @BeforeEach
+    public void setUp() {
+        // Set up a simple graph with a known topological sort
+        adjacencyList = new AdjacencyList<>();
+        adjacencyList.addEdge('A', 'C');
+        adjacencyList.addEdge('B', 'C');
+        adjacencyList.addEdge('B', 'D');
+        adjacencyList.addEdge('C', 'E');
+        adjacencyList.addEdge('D', 'F');
+        adjacencyList.addEdge('E', 'F');
+        adjacencyList.addEdge('F', 'G');
+        
+        topologicalSort = new TopologicalSort<>(adjacencyList);
+    }
+    
+    @Test
+    public void topSortOrderTest() {
+        // Call the topSortOrder to get the result
+        ArrayList<Character> sortedOrder = topologicalSort.topSortOrder();
+        
+        // Expected topological sort result
+        ArrayList<Character> expectedOrder = new ArrayList<>();
+        expectedOrder.add('A');
+        expectedOrder.add('B');
+        expectedOrder.add('C');
+        expectedOrder.add('D');
+        expectedOrder.add('E');
+        expectedOrder.add('F');
+        expectedOrder.add('G');
+        
+        // Assert that the returned topological sort order is correct
+        assertEquals(expectedOrder, sortedOrder, "The topological sort order is not as expected");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.thealgorithms.datastructures.graphs;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AdjacencyListTest {
+
+    @Test
+    public void topSortOrderTest() {
+        // Create an instance of an adjacency list graph with integers
+        AdjacencyList<Integer> graph = new AdjacencyList<>();
+
+        // Add edges to represent a directed acyclic graph (DAG)
+        graph.addEdge(5, 2);
+        graph.addEdge(5, 0);
+        graph.addEdge(4, 0);
+        graph.addEdge(4, 1);
+        graph.addEdge(2, 3);
+        graph.addEdge(3, 1);
+
+        // Create a TopologicalSort instance with the DAG
+        TopologicalSort<Integer> topologicalSort = new TopologicalSort<>(graph);
+
+        // Run the topSortOrder method
+        ArrayList<Integer> result = topologicalSort.topSortOrder();
+
+        // Expected topological order result, one possible result could be {5, 4, 2, 3, 1, 0}
+        // Due to the nature of graphs, there could be multiple valid topological sorts.
+        // To test successfully, you can consider checking the validity of the topological sort
+        // instead of a specific expected order, or adapt the test if you are certain of the expected output.
+
+        // Test length first
+        assertEquals(6, result.size(), "Topological sort result should have 6 vertices.");
+
+        // Then test the validity of the topological sort
+        // The topological sort must satisfy that for every directed edge u -> v, u comes before v in the ordering
+        assertTrue(result.indexOf(5) < result.indexOf(2), "Vertex 5 should come before Vertex 2.");
+        assertTrue(result.indexOf(5) < result.indexOf(0), "Vertex 5 should come before Vertex 0.");
+        assertTrue(result.indexOf(4) < result.indexOf(0), "Vertex 4 should come before Vertex 0.");
+        assertTrue(result.indexOf(4) < result.indexOf(1), "Vertex 4 should come before Vertex 1.");
+        assertTrue(result.indexOf(2) < result.indexOf(3), "Vertex 2 should come before Vertex 3.");
+        assertTrue(result.indexOf(3) < result.indexOf(1), "Vertex 3 should come before Vertex 1.");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.thealgorithms.datastructures.graphs;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AdjacencyListTest {
+
+    @Test
+    public void topSortOrderTest() {
+        // GIVEN: A directed acyclic graph (DAG)
+        AdjacencyList<String> graph = new AdjacencyList<>();
+        graph.addEdge("5", "2");
+        graph.addEdge("5", "0");
+        graph.addEdge("4", "0");
+        graph.addEdge("4", "1");
+        graph.addEdge("2", "3");
+        graph.addEdge("3", "1");
+
+        // WHEN: Applying topological sort using Kahn's Algorithm
+        TopologicalSort<String> topSort = new TopologicalSort<>(graph);
+        ArrayList<String> result = topSort.topSortOrder();
+
+        // THEN: The result should be a valid topological ordering
+        ArrayList<String> expectedResult = new ArrayList<>();
+        expectedResult.add("5");
+        expectedResult.add("4");
+        expectedResult.add("2");
+        expectedResult.add("3");
+        expectedResult.add("1");
+        expectedResult.add("0");
+
+        // Since there may be multiple valid topological orderings,
+        // the specific expected result depends on the implementation details.
+        // For this test, we are assuming one such valid ordering, as defined above.
+        
+        assertEquals(expectedResult, result);
+        
+        // Additionally, we can check if the result meets the criteria for valid topological ordering
+        // A valid topological order should have all vertices and for every directed edge uv,
+        // u should come before v in the ordering.
+        assertNotNull(result);
+        assertEquals(6, result.size());
+        assertTrue(result.indexOf("5") < result.indexOf("2"));
+        assertTrue(result.indexOf("5") < result.indexOf("0"));
+        assertTrue(result.indexOf("4") < result.indexOf("0"));
+        assertTrue(result.indexOf("4") < result.indexOf("1"));
+        assertTrue(result.indexOf("2") < result.indexOf("3"));
+        assertTrue(result.indexOf("3") < result.indexOf("1"));
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.thealgorithms.datastructures.graphs;
+
+import org.junit.jupiter.api.*;
+
+import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AdjacencyListTest {
+  
+    private AdjacencyList<Character> graph;
+    private TopologicalSort<Character> topologicalSort;
+
+    @BeforeEach
+    public void setUp() {
+        graph = new AdjacencyList<>();
+        graph.addEdge('A', 'C');
+        graph.addEdge('B', 'C');
+        graph.addEdge('B', 'D');
+        graph.addEdge('C', 'E');
+        graph.addEdge('E', 'F');
+        graph.addEdge('D', 'F');
+        topologicalSort = new TopologicalSort<>(graph);
+    }
+
+    @Test
+    public void topSortOrderTest() {
+        ArrayList<Character> expectedResult = new ArrayList<>(
+                Arrays.asList('A', 'B', 'C', 'D', 'E', 'F')
+        );
+
+        topologicalSort.calculateInDegree();
+        ArrayList<Character> actualResult = topologicalSort.topSortOrder();
+
+        assertNotNull(actualResult, "Top Sort result should not be null");
+        assertEquals(expectedResult.size(), actualResult.size(), "Top Sort result should have the same size as expected");
+        assertArrayEquals(expectedResult.toArray(), actualResult.toArray(), "Top Sort should return the correct order");
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package com.thealgorithms.datastructures.graphs;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AdjacencyListTest {
+    
+    @Test
+    public void topSortOrderTest() {
+        // Initialize AdjacencyList with Character edges for simplicity
+        AdjacencyList<Character> graph = new AdjacencyList<>();
+        graph.addEdge('A', 'C');
+        graph.addEdge('B', 'C');
+        graph.addEdge('C', 'D');
+        
+        // Create an instance of the TopologicalSort class
+        TopologicalSort<Character> topologicalSort = new TopologicalSort<>(graph);
+        
+        // List to hold expected sort result, should be consistent with the edge relations
+        ArrayList<Character> expectedSortOrder = new ArrayList<>();
+        expectedSortOrder.add('A');
+        expectedSortOrder.add('B');
+        expectedSortOrder.add('C');
+        expectedSortOrder.add('D');
+        
+        // Perform topological sort using KahnsAlgorithm and get the sort result
+        ArrayList<Character> actualTopSortOrder = topologicalSort.topSortOrder();
+        
+        // Check if the two lists are equal
+        assertEquals(expectedSortOrder, actualTopSortOrder, "The topologically sorted order does not match the expected order.");
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.thealgorithms.datastructures.graphs;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AdjacencyListTest {
+    
+    private TopologicalSort<String> topSort;
+    private AdjacencyList<String> graph;
+
+    @BeforeEach
+    public void setUp() {
+        graph = new AdjacencyList<>();
+        graph.addEdge("a", "d");
+        graph.addEdge("f", "b");
+        graph.addEdge("b", "d");
+        graph.addEdge("f", "a");
+        graph.addEdge("d", "c");
+        topSort = new TopologicalSort<>(graph);
+    }
+
+    @Test
+    public void topSortOrderTest() {
+        topSort.calculateInDegree();
+        ArrayList<String> result = topSort.topSortOrder();
+        
+        ArrayList<String> expectedOrder = new ArrayList<>();
+        expectedOrder.add("f");
+        expectedOrder.add("b");
+        expectedOrder.add("a");
+        expectedOrder.add("d");
+        expectedOrder.add("c");
+
+        assertEquals(expectedOrder, result, "The topological sort did not return the expected order.");
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package com.thealgorithms.datastructures.graphs;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AdjacencyListTest {
+    @Test
+    public void topSortOrderTest() {
+        // Assuming `E` stands for Integer for simplicity, it should be a generic type
+        AdjacencyList<Integer> graph = new AdjacencyList<>();
+        TopologicalSort<Integer> sorter = new TopologicalSort<>(graph);
+
+        // Construct a simple DAG
+        // A-->B-->C
+        graph.addEdge(1, 2); // A to B
+        graph.addEdge(2, 3); // B to C
+
+        sorter.calculateInDegree();
+
+        ArrayList<Integer> sorted = sorter.topSortOrder();
+        ArrayList<Integer> expected = new ArrayList<>();
+        expected.add(1); // A
+        expected.add(2); // B
+        expected.add(3); // C
+
+        // Check the topological order
+        assertEquals(expected, sorted, "The topological sort order is not as expected");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package com.thealgorithms.datastructures.graphs;
+
+// Import statements for junit and other relevant classes
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AdjacencyListTest {
+
+    @Test
+    public void topSortOrderTest() {
+        // Create a mock graph from the AdjacencyList
+        AdjacencyList<String> graph = new AdjacencyList<>();
+        graph.addEdge("A", "C");
+        graph.addEdge("B", "C");
+        graph.addEdge("C", "D");
+        graph.addEdge("C", "E");
+
+        // Create the TopologicalSort object with the mock graph
+        TopologicalSort<String> topologicalSort = new TopologicalSort<>(graph);
+
+        // Call the method to test
+        ArrayList<String> sortedOrder = topologicalSort.topSortOrder();
+
+        // Validate the topSortOrder. Assuming we know the correct order.
+        // The correct order should be either A, B, C, D, E or B, A, C, D, E
+        // Since A and B don't depend on each other.
+        ArrayList<String> expectedOrder1 = new ArrayList<>();
+        expectedOrder1.add("A");
+        expectedOrder1.add("B");
+        expectedOrder1.add("C");
+        expectedOrder1.add("D");
+        expectedOrder1.add("E");
+
+        ArrayList<String> expectedOrder2 = new ArrayList<>();
+        expectedOrder2.add("B");
+        expectedOrder2.add("A");
+        expectedOrder2.add("C");
+        expectedOrder2.add("D");
+        expectedOrder2.add("E");
+
+        assertTrue(sortedOrder.equals(expectedOrder1) || sortedOrder.equals(expectedOrder2),
+                "The topological sort order is incorrect.");
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.thealgorithms.datastructures.graphs;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AdjacencyListTest {
+    @Test
+    public void topSortOrderTest() {
+        // Create a graph for the test
+        AdjacencyList<Integer> adjacencyList = new AdjacencyList<>();
+        // Build the graph by adding edges
+        adjacencyList.addEdge(5, 0);
+        adjacencyList.addEdge(5, 2);
+        adjacencyList.addEdge(4, 0);
+        adjacencyList.addEdge(4, 1);
+        adjacencyList.addEdge(2, 3);
+        adjacencyList.addEdge(3, 1);
+        
+        // Create an instance of TopologicalSort class with the graph created
+        TopologicalSort<Integer> topologicalSort = new TopologicalSort<>(adjacencyList);
+        
+        // Get the topological order of the graph
+        ArrayList<Integer> topSortOrder = topologicalSort.topSortOrder();
+        
+        // Expected topological order
+        // Note: There can be multiple valid topological orders for a graph
+        // The test assumes the above graph has the only valid topological sort order
+        ArrayList<Integer> expectedOrder = new ArrayList<>();
+        expectedOrder.add(5);
+        expectedOrder.add(4);
+        expectedOrder.add(2);
+        expectedOrder.add(3);
+        expectedOrder.add(1);
+        expectedOrder.add(0);
+        
+        // Assert that the actual topological order is the same as the expected one
+        assertEquals(expectedOrder, topSortOrder, "The topological order is not as expected.");
+    }
+}
+
+

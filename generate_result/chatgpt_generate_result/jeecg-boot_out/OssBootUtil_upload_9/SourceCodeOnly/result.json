@@ -1,0 +1,27 @@
+{
+    "project_name": "jeecg-boot",
+    "file_name": "OssBootUtil.java",
+    "relative_path": "jeecg-boot/jeecg-boot-base-core/src/main/java/org/jeecg/common/util/oss/OssBootUtil.java",
+    "execute_path": "jeecg-boot",
+    "package": "org.jeecg.common.util.oss",
+    "docstring": "/**\n     * \u4e0a\u4f20\u6587\u4ef6\u81f3\u963f\u91cc\u4e91 OSS\n     * \u6587\u4ef6\u4e0a\u4f20\u6210\u529f,\u8fd4\u56de\u6587\u4ef6\u5b8c\u6574\u8bbf\u95ee\u8def\u5f84\n     * \u6587\u4ef6\u4e0a\u4f20\u5931\u8d25,\u8fd4\u56de null\n     *\n     * @param file    \u5f85\u4e0a\u4f20\u6587\u4ef6\n     * @param fileDir \u6587\u4ef6\u4fdd\u5b58\u76ee\u5f55\n     * @return oss \u4e2d\u7684\u76f8\u5bf9\u6587\u4ef6\u8def\u5f84\n     */",
+    "source_code": "\npublic static String upload(FileItemStream file, String fileDir) {\n    String filePath = null;\n    initOss(endPoint, accessKeyId, accessKeySecret);\n    StringBuilder fileUrl = new StringBuilder();\n    try {\n        String suffix = file.getName().substring(file.getName().lastIndexOf('.'));\n        String fileName = UUID.randomUUID().toString().replace(\"-\", \"\") + suffix;\n        if (!fileDir.endsWith(SymbolConstant.SINGLE_SLASH)) {\n            fileDir = fileDir.concat(SymbolConstant.SINGLE_SLASH);\n        }\n        fileDir = StrAttackFilter.filter(fileDir);\n        fileUrl = fileUrl.append(fileDir + fileName);\n        if (oConvertUtils.isNotEmpty(staticDomain) && staticDomain.toLowerCase().startsWith(CommonConstant.STR_HTTP)) {\n            filePath = staticDomain + SymbolConstant.SINGLE_SLASH + fileUrl;\n        } else {\n            filePath = \"https://\" + bucketName + \".\" + endPoint + SymbolConstant.SINGLE_SLASH + fileUrl;\n        }\n        PutObjectResult result = ossClient.putObject(bucketName, fileUrl.toString(), file.openStream());\n        // \u8bbe\u7f6e\u6743\u9650(\u516c\u5f00\u8bfb)\n        ossClient.setBucketAcl(bucketName, CannedAccessControlList.PublicRead);\n        if (result != null) {\n            log.info(\"------OSS\u6587\u4ef6\u4e0a\u4f20\u6210\u529f------\" + fileUrl);\n        }\n    } catch (IOException e) {\n        e.printStackTrace();\n        return null;\n    }\n    return filePath;\n}\n",
+    "class_name": "OssBootUtil",
+    "method_name": "upload",
+    "arguments": [
+        "FileItemStream file",
+        "String fileDir"
+    ],
+    "generate_test": [
+        "@Test\npublic void uploadTest() {\n    FileItemStream file = mock(FileItemStream.class);\n    String fileDir = \"testDirectory/\";\n    String result = OssBootUtil.upload(file, fileDir);\n    assertNotNull(result);\n}",
+        "@Test\npublic void uploadTest() {\n    String fileDir = \"test/\";\n    FileItemStream file = new FileItemStream();\n    String result = OssBootUtil.upload(file, fileDir);\n    assertNotNull(result);\n}",
+        "public void uploadTest() {\n    // Create a FileItemStream using Mockito\n    FileItemStream file = Mockito.mock(FileItemStream.class);\n    String fileDir = \"testDirectory/\";\n    String result = OssBootUtil.upload(file, fileDir);\n    assertNotNull(result);\n}",
+        "@Test\npublic void uploadTest() {\n    FileItemStream file = <mock file>;\n    String fileDir = <mock directory>;\n    String result = OssBootUtil.upload(file, fileDir);\n    assertNotNull(result);\n}",
+        "@Test\npublic void uploadTest() {\n    // Given\n    FileItemStream file = mock(FileItemStream.class);\n    when(file.getName()).thenReturn(\"test.jpg\");\n    File fileDir = new File(\"path/to/directory\");\n\n    // When\n    String result = OssBootUtil.upload(file, fileDir);\n\n    // Then\n    assertNotNull(result);\n}",
+        "public void uploadTest() {\n    // Arrange\n    FileItemStream file = <mock file item stream>;\n    String fileDir = \"test-directory/\";\n    \n    // Act\n    String result = OssBootUtil.upload(file, fileDir);\n    \n    // Assert\n    assertNotNull(result);\n}",
+        "@Test\npublic void uploadTest() {\n    // Given\n    FileItemStream file = new FileItemStream(\"testFile.txt\", new ByteArrayInputStream(\"Test file content\".getBytes()));\n    String fileDir = \"testDirectory/\";\n\n    // When\n    String result = OssBootUtil.upload(file, fileDir);\n    \n    // Then\n    assertNotNull(result);\n    assertTrue(result.startsWith(\"https://\") || result.startsWith(\"http://\"));\n}",
+        "@Test\npublic void uploadTest() {\n    FileItemStream file = new FileItemStream();\n    String fileDir = \"test/dir\";\n    String result = OssBootUtil.upload(file, fileDir);\n    assertEquals(\"expectedFilePath\", result);\n}",
+        "@Test\npublic void uploadTest() {\n    // Create a mock FileItemStream object\n    FileItemStream file = mock(FileItemStream.class);\n    \n    // Create a mock fileDir String\n    String fileDir = \"testDirectory/\";\n    \n    // Call the upload method and store the result\n    String result = OssBootUtil.upload(file, fileDir);\n    \n    // Assert that the result is not null\n    assertNotNull(result);\n    // Add additional assertions as needed\n}",
+        "@Test\npublic void uploadTest() {\n    // Given\n    // create a FileItemStream\n    // create a fileDir\n    FileItemStream file = createFileItemStream();\n    String fileDir = \"testFileDir/\";\n    \n    // When\n    String result = OssBootUtil.upload(file, fileDir);\n    \n    // Then\n    assertNotNull(result);\n}"
+    ]
+}

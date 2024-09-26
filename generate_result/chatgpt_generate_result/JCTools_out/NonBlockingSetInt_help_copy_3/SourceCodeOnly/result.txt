@@ -1,0 +1,180 @@
+Source code: 
+
+// Help any top-level NBSI to copy until completed.
+// Always return the _new version of *this* NBSI, in case we're nested.
+private NBSI help_copy() {
+  // Pick some words to help with - but only help copy the top-level NBSI.
+  // Nested NBSI waits until the top is done before we start helping.
+  NBSI top_nbsi = _non_blocking_set_int._nbsi;
+  final int HELP = 8;       // Tuning number: how much copy pain are we willing to inflict?
+  // We "help" by forcing individual bit indices to copy.  However, bits
+  // come in lumps of 64 per word, so we just advance the bit counter by 64's.
+  int idx = top_nbsi._copyIdx.getAndAdd(64*HELP);
+  for( int i=0; i<HELP; i++ ) {
+    int j = idx+i*64;
+    j %= (top_nbsi._bits.length<<6); // Limit, wrap to array size; means we retry indices
+    top_nbsi.help_copy_impl(j   );
+    top_nbsi.help_copy_impl(j+63); // Also force the nested-by-64 bit
+  }
+
+  // Top level guy ready to promote?
+  // Note: WE may not be the top-level guy!
+  if( top_nbsi._copyDone.get() == top_nbsi._sum_bits_length )
+    // One shot CAS to promote - it may fail since we are racing; others
+    // may promote as well
+    if( _non_blocking_set_int.CAS_nbsi( top_nbsi, top_nbsi._new ) ) {
+      //System.out.println("Promote at top level to size "+(_non_blocking_set_int._nbsi._bits.length<<6));
+    }
+
+  // Return the new bitvector for 'fluid' programming style
+  return _new;
+}
+
+
+
+No.1 generated result --------------------------
+
+@Test
+public void help_copyTest() {
+  // create test object
+  NonBlockingSetInt nbsi = new NonBlockingSetInt();
+  // invoke help_copy method
+  NBSI copy = nbsi.help_copy();
+  // assert that the returned copy is not null
+  assertNotNull(copy);
+}
+
+
+No.2 generated result --------------------------
+
+@Test
+public void help_copyTest() {
+    // Create NBSI instance
+    NBSI nbsi = new NBSI();
+    // Call the help_copy method
+    NBSI result = nbsi.help_copy();
+    // Assert that the result is not null
+    assertNotNull(result);
+}
+
+
+No.3 generated result --------------------------
+
+@Test
+public void help_copyTest() {
+    // Create a NonBlockingSetInt instance
+    NonBlockingSetInt nbsi = new NonBlockingSetInt();
+    
+    // Call the help_copy method and assert the expected result
+    assertEquals(expectedResult, nbsi.help_copy());
+}
+
+
+No.4 generated result --------------------------
+
+@Test
+public void help_copyTest() {
+    // Create an instance of NBSI 
+    NBSI nbsi = new NBSI();
+    
+    // Call the help_copy method
+    NBSI result = nbsi.help_copy();
+    
+    // Assert the expected result
+    assertNotNull(result);
+}
+
+
+No.5 generated result --------------------------
+
+
+@Test
+public void help_copyTest() {
+    NonBlockingSetInt nbsi = new NonBlockingSetInt();
+    // Initialize nbsi with some values
+    // Call help_copy() method
+    // Assertions to validate the result
+}
+
+
+No.6 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NonBlockingSetIntTest {
+    @Test
+    public void help_copyTest() {
+        // Add necessary setup and assertions to complete the test case
+        // For example:
+        // NonBlockingSetInt nonBlockingSetInt = new NonBlockingSetInt();
+        // NBSI result = nonBlockingSetInt.help_copy();
+        // assertEquals(expectedResult, result);
+    }
+}
+
+
+No.7 generated result --------------------------
+
+@Test
+public void help_copyTest() {
+    // Create a NBSI object
+    NBSI nbsi = new NBSI(initialValue);
+    // Call the help_copy method
+    NBSI result = nbsi.help_copy();
+    // Assert that the result is not null
+    assertNotNull(result);
+}
+
+
+No.8 generated result --------------------------
+
+public void help_copyTest() {
+    // Create an instance of NBSI
+    NBSI nbsi = new NBSI();
+    // Set up the NBSI for testing
+    nbsi.setCopyIdx(0);
+    nbsi.setBits(new int[10]);
+    nbsi.setCopyDone(0);
+    nbsi.setSumBitsLength(64);
+    nbsi.setNew(new NBSI());
+
+    // Call the help_copy method
+    NBSI result = nbsi.help_copy();
+
+    // Perform assertions to verify the expected output
+    assertNotNull(result);
+    assertEquals(64, result.getCopyIdx());
+    // More assertions can be added as needed
+}
+
+
+
+No.9 generated result --------------------------
+
+@Test
+public void help_copyTest() {
+    // Create an instance of NonBlockingSetInt to test
+    NonBlockingSetInt nbsi = new NonBlockingSetInt();
+    // Call the help_copy method
+    NBSI result = nbsi.help_copy();
+    // Perform assertions on the result
+    assertNotNull(result);
+}
+
+
+No.10 generated result --------------------------
+
+@Test
+public void help_copyTest() {
+    // Arrange
+    NonBlockingSetInt nonBlockingSet = new NonBlockingSetInt();
+    // Act
+    // Perform the actions that would trigger the help_copy method
+    // Assert
+    // Add assertions to verify the behavior of the help_copy method
+}
+
+

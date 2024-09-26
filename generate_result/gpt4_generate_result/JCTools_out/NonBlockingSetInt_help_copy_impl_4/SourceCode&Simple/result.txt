@@ -1,0 +1,648 @@
+Source code: 
+
+// Help copy this one word.  State Machine.
+// (1) If not "made immutable" in the old array, set the sign bit to make
+//     it immutable.
+// (2) If non-zero in old array & zero in new, CAS new from 0 to copy-of-old
+// (3) If non-zero in old array & non-zero in new, CAS old to zero
+// (4) Zero in old, new is valid
+// At this point, old should be immutable-zero & new has a copy of bits
+private NBSI help_copy_impl( int i ) {
+  // Handle every 64th bit via using a nested array
+  NBSI old = this;          // The bit array being copied from
+  NBSI nnn = _new;          // The bit array being copied to
+  if( nnn == null ) return this; // Promoted already
+  int j = i;                // The bit index being added
+  while( (j&63) == 63 ) {   // Bit 64? (low 6 bits are all set)
+    old = old._nbsi64;      // Recurse
+    nnn = nnn._nbsi64;      // Recurse
+    j = j>>6;               // Strip off low 6 bits (all set)
+  }
+
+  // Transit from state 1: word is not immutable yet
+  // Immutable is in bit 63, the sign bit.
+  long bits = old._bits[j>>6];
+  while( bits >= 0 ) {      // Still in state (1)?
+    long oldbits = bits;
+    bits |= mask(63);       // Target state of bits: sign-bit means immutable
+    if( old.CAS( j>>6, oldbits, bits ) ) {
+      if( oldbits == 0 ) _copyDone.addAndGet(1);
+      break;                // Success - old array word is now immutable
+    }
+    bits = old._bits[j>>6]; // Retry if CAS failed
+  }
+
+  // Transit from state 2: non-zero in old and zero in new
+  if( bits != mask(63) ) {  // Non-zero in old?
+    long new_bits = nnn._bits[j>>6];
+    if( new_bits == 0 ) {   // New array is still zero
+      new_bits = bits & ~mask(63); // Desired new value: a mutable copy of bits
+      // One-shot CAS attempt, no loop, from 0 to non-zero.
+      // If it fails, somebody else did the copy for us
+      if( !nnn.CAS( j>>6, 0, new_bits ) )
+        new_bits = nnn._bits[j>>6]; // Since it failed, get the new value
+      assert new_bits != 0;
+    }
+
+    // Transit from state 3: non-zero in old and non-zero in new
+    // One-shot CAS attempt, no loop, from non-zero to 0 (but immutable)
+    if( old.CAS( j>>6, bits, mask(63) ) )
+      _copyDone.addAndGet(1); // One more word finished copying
+  }
+
+  // Now in state 4: zero (and immutable) in old
+
+  // Return the self bitvector for 'fluid' programming style
+  return this;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class NonBlockingSetIntTest {
+    
+    // This assumes that we have getter methods to get references for _size and _non_blocking_set_int for testing.
+    // Also, the _bits field is assumed accessible or has a method to get/set values for testing purpose.
+
+    @Test
+    public void help_copy_implTest() {
+        int i = 64; // chosen bit to work with, multiple of 64 for the given code to run without recursing
+        final AtomicInteger copyDone = new AtomicInteger(0);
+        final long[] bits = {0};
+        NonBlockingSetInt nbSet = new NonBlockingSetInt(); // assuming a constructor exists for test
+
+        NonBlockingSetInt.NBSI oldNbsi = spy(new NonBlockingSetInt.NBSI(128, new ConcurrentAutoTable(), nbSet));
+        NonBlockingSetInt.NBSI newNbsi = spy(new NonBlockingSetInt.NBSI(128, new ConcurrentAutoTable(), nbSet));
+
+        when(oldNbsi.size()).thenReturn(128);
+        doReturn(bits).when(oldNbsi)._bits; // mock internal bit representation
+        doReturn(copyDone).when(oldNbsi)._copyDone; // mock copyDone atomic integer
+        doReturn(true).when(oldNbsi).CAS(anyInt(), anyLong(), anyLong()); // mock successful CAS operation
+
+        oldNbsi._new = newNbsi;
+        newNbsi._new = null; // this means newNbsi is promoted.
+
+        // Testing state 1: old is not immutable.
+        bits[0] = 0; // not immutable
+        NonBlockingSetInt.NBSI result = oldNbsi.help_copy_impl(i);
+        verify(oldNbsi, atLeastOnce()).CAS(0, 0L, NonBlockingSetInt.NBSI.mask(63)); // Check if bit made immutable
+        assertEquals(nbSet, result._non_blocking_set_int);
+
+        // Testing state 2: non-zero in old and zero in new
+        bits[0] = 1; // arbitrary non-zero value
+        newNbsi._bits[0] = 0; // new bits are zero
+        result = oldNbsi.help_copy_impl(i);
+        verify(newNbsi, atLeastOnce()).CAS(anyInt(), eq(0L), anyLong()); // Check if copied from old to new
+
+        // Testing state 3: non-zero in old and non-zero in new
+        bits[0] = 1; // non-zero
+        newNbsi._bits[0] = 1; // new bits are also non-zero
+        result = oldNbsi.help_copy_impl(i);
+        verify(oldNbsi, atLeastOnce()).CAS(anyInt(), anyLong(), eq(NonBlockingSetInt.NBSI.mask(63))); // old to zero
+
+        assertEquals(NonBlockingSetInt.NBSI.mask(63), bits[0]); // Should be immutable-zero in the end
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.jctools.util.UnsafeAccess.UNSAFE;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class NonBlockingSetIntTest {
+
+    // Inner class stubs to avoid compilation error due to incomplete dependencies
+    static class NBSI {
+        NBSI _nbsi64;
+        NBSI _new;
+        long _bits[];
+        AtomicInteger _copyDone = new AtomicInteger(0);
+        
+        boolean CAS(int idx, long old, long nnn) {
+            // Dummy CAS function for testing purposes
+            boolean success = (_bits[idx] == old);
+            if (success) _bits[idx] = nnn;
+            return success;
+        }
+        // Dummy constructor
+        NBSI() {
+            _bits = new long[1];
+        }
+    }
+
+    @Test
+    public void help_copy_implTest() {
+        NonBlockingSetInt outer = new NonBlockingSetInt();
+        NBSI nbsi = outer.new NBSI(); // Assumes NBSI is part of NonBlockingSetInt
+
+        // Create the old and new NBSI instances
+        NBSI old = nbsi;
+        NBSI nnn = new NBSI();
+        old._new = nnn; // Set the new NBSI instance
+
+        // Set up initial conditions
+        final int index = 0;
+        old._bits[index] = 123; // Initialize old bits (non-zero)
+        nnn._bits[index] = 0; // Initialize new bits (zero)
+
+        // Call the method under test
+        NBSI result = old.help_copy_impl(index);
+
+        // Verify states
+        // Check if the old bits sign bit is set, making it immutable
+        assertTrue(old._bits[index] < 0, "Old bits should now be immutable.");
+        
+        // Check if the copy of the old bits except the sign bit is in the new
+        assertEquals(old._bits[index] & Long.MAX_VALUE, nnn._bits[index], "New bits should have a copy of the old.");
+
+        // Check if the correct NBSI instance is returned
+        assertSame(old, result, "The returned instance should be the old one.");
+
+        // Check if _copyDone was incremented
+        assertEquals(1, old._copyDone.get(), "Copy done counter should be incremented.");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NonBlockingSetIntTest {
+
+    @Test
+    public void help_copy_implTest() {
+        // Set up the test environment
+        NonBlockingSetInt nbSet = new NonBlockingSetInt();
+        NonBlockingSetInt.NBSI oldNBSI = Mockito.mock(NonBlockingSetInt.NBSI.class);
+        NonBlockingSetInt.NBSI newNBSI = Mockito.mock(NonBlockingSetInt.NBSI.class);
+        AtomicInteger copyDone = new AtomicInteger(0);
+
+        // Define behavior for mocked methods
+        when(oldNBSI.help_copy_impl(anyInt())).thenReturn(oldNBSI);
+        when(oldNBSI.CAS(anyInt(), anyLong(), anyLong())).thenReturn(true);
+        when(newNBSI.CAS(anyInt(), anyLong(), anyLong())).thenReturn(true);
+        when(oldNBSI._new).thenReturn(newNBSI);
+        when(newNBSI._new).thenReturn(null);
+        when(oldNBSI._copyDone).thenReturn(copyDone);
+        when(newNBSI._copyDone).thenReturn(copyDone);
+
+        // Define test cases for state transition scenarios.
+        long[] bits = new long[]{-1L, 0L, Long.MAX_VALUE};
+        for (long bit : bits) {
+            when(oldNBSI._bits).thenReturn(new long[]{bit});
+
+            // Test mutable to immutable transition
+            if (bit >= 0) {
+                assertEquals(0, copyDone.get());
+                nbSet.help_copy_impl(0);
+                assertTrue(bit < 0 || copyDone.get() > 0);
+                copyDone.set(0);
+            }
+
+            // Test for non-zero in the old and the new array
+            if (bit != -1L && bit != 0) {
+                when(newNBSI._bits).thenReturn(new long[]{Long.MAX_VALUE});
+                nbSet.help_copy_impl(0);
+                verify(oldNBSI, times(1)).CAS(anyInt(), eq(bit), eq(-1L));
+                copyDone.set(0);
+            }
+
+            // Test for non-zero in the old array and zero in the new array
+            if (bit != -1L) {
+                when(newNBSI._bits).thenReturn(new long[]{0L});
+                nbSet.help_copy_impl(0);
+                verify(newNBSI, times(1)).CAS(anyInt(), eq(0L), eq(bit & Long.MAX_VALUE));
+                copyDone.set(0);
+            }
+        }
+
+        // Test for recursive call on the nested array
+        when(oldNBSI._nbsi64).thenReturn(oldNBSI);
+        when(newNBSI._nbsi64).thenReturn(newNBSI);
+        NonBlockingSetInt.NBSI returnedNBSI = nbSet.help_copy_impl(64);
+        verify(oldNBSI, atLeastOnce()).help_copy_impl(anyInt());
+        assertEquals(oldNBSI, returnedNBSI);
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NonBlockingSetIntTest {
+    NonBlockingSetInt nonBlockingSetInt;
+    NonBlockingSetInt.NBSI _old;
+    NonBlockingSetInt.NBSI _new;
+
+    // Helper method to create a mask, assuming it produces a long with a 1-bit in the position indicated by 'i'
+    static long mask(int i) {
+        return 1L << i;
+    }
+
+    @BeforeEach
+    public void setUp() {
+        nonBlockingSetInt = new NonBlockingSetInt();
+        _old = nonBlockingSetInt.new NBSI();
+        _new = nonBlockingSetInt.new NBSI();
+        // Assume _old and _new have a way to set _bits array internally as well as _copyDone and _nbsi64 references
+    }
+
+    @Test
+    public void help_copy_implTest() {
+        // Prepare initial state for _old and _new, set _new in _old
+        long[] oldBits = new long[]{0L}; // All zeros initially
+        long[] newBits = new long[1]; // All zeros initially
+        AtomicInteger oldCopyDone = new AtomicInteger(0);
+        _old._bits = oldBits;
+        _old._copyDone = oldCopyDone;
+        _old._new = _new; // This represents _old's "new" array
+        _new._bits = newBits;
+        
+        // Starting conditions: _old is non-immutable and _new is zero
+        // We'll test with i = 0, which affects the 0th element of the _bits array
+        int i = 0;
+        
+        // Call the method to test
+        _old.help_copy_impl(i);
+        
+        // Assert that the sign bit of _old is set, making it immutable
+        assertTrue((_old._bits[0] & mask(63)) != 0, "Old bits should have the sign bit set to be immutable.");
+        
+        // Assert that the _new bits are a copy of _old minus the immutable bit
+        assertEquals(_old._bits[0] & ~mask(63), _new._bits[0], "New bits should be a copy of old bits (minus the immutable bit).");
+        
+        // Assert _copyDone was incremented
+        assertEquals(1, _old._copyDone.get(), "CopyDone should have been incremented.");
+        
+        // Test the case when both _old and _new are non-zero and _old's CAS operation succeeds
+        // Reset for next scenario
+        _old._bits[0] = 1L; // Now _old is non-zero and should be made immutable next
+        _new._bits[0] = 1L; // _new is also non-zero
+        _old._copyDone.set(0);
+        
+        // Call the method to re-test
+        _old.help_copy_impl(i);
+        
+        // Assert _old's bits have been made immutable
+        assertTrue((_old._bits[0] & mask(63)) != 0, "Old bits should have been set to immutable.");
+        
+        // Assert _copyDone was incremented since _old was non-zero and turned immutable
+        assertEquals(1, _old._copyDone.get(), "CopyDone should have been incremented.");
+    }
+
+    // Further tests would be needed to cover more edge cases and error states.
+}
+
+
+No.5 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class NonBlockingSetIntTest {
+
+    @Test
+    public void help_copy_implTest() {
+        // Mock the NBSI and AtomicIntegers for testing
+        NonBlockingSetInt.NBSI old = org.mockito.Mockito.mock(NonBlockingSetInt.NBSI.class);
+        NonBlockingSetInt.NBSI nnn = org.mockito.Mockito.mock(NonBlockingSetInt.NBSI.class);
+        AtomicInteger copyDone = org.mockito.Mockito.mock(AtomicInteger.class);
+        
+        // Setup the initial conditions and expectations for the mocks
+        int i = 0; // Mocked bit index
+        long[] bitsArray = new long[]{0}; // Mocked bits array for old
+        
+        // Mock the old instance to return certain values in certain conditions
+        org.mockito.Mockito.when(old._bits).thenReturn(bitsArray);
+        org.mockito.Mockito.when(old._nbsi64).thenReturn(null); // Mock recursive call to return null
+        org.mockito.Mockito.when(old.CAS(org.mockito.Mockito.anyInt(), org.mockito.Mockito.anyLong(), org.mockito.Mockito.anyLong())).thenReturn(true);
+        org.mockito.Mockito.when(old._copyDone).thenReturn(copyDone);
+
+        // Mock the nnn (new) instance to return needed values
+        org.mockito.Mockito.when(nnn._bits).thenReturn(bitsArray); // Shares bits array
+        org.mockito.Mockito.when(nnn._nbsi64).thenReturn(null); // Again, recursion terminates
+        org.mockito.Mockito.when(nnn.CAS(org.mockito.Mockito.anyInt(), org.mockito.Mockito.anyLong(), org.mockito.Mockito.anyLong())).thenReturn(true);
+        
+        // Perform the actual method call
+        NonBlockingSetInt instance = new NonBlockingSetInt();
+        NonBlockingSetInt.NBSI result = instance.help_copy_impl(i);
+        
+        // Assertions - as per the instructions and expectations of the source code comments and behavior
+        // Bit 64 should be handled specially; this test does not include such a case.
+        assertNotEquals(63, i & 63); // Not handling 64th bit in this test
+        
+        // Check if the _bits value has been updated to become immutable (state 1)
+        assertTrue(bitsArray[0] < 0, "The bits should now be immutable.");
+        
+        // Verify CAS was attempted to make the old _bits immutable
+        org.mockito.Mockito.verify(old).CAS(org.mockito.Mockito.eq(0), org.mockito.Mockito.eq(0L), org.mockito.Mockito.anyLong());
+        
+        // Verify CAS was attempted to copy to new (state 2)
+        org.mockito.Mockito.verify(nnn).CAS(org.mockito.Mockito.eq(0), org.mockito.Mockito.eq(0L), org.mockito.Mockito.anyLong());
+        
+        // Verify result is the same instance for 'fluid' programming
+        assertEquals(instance, result);
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+class NonBlockingSetIntTest {
+
+    @Test
+    public void help_copy_implTest() {
+        NonBlockingSetInt set = new NonBlockingSetInt();
+        NonBlockingSetInt.NBSI oldNbsi = set.new NBSI(10, new ConcurrentAutoTable(), set);
+        NonBlockingSetInt.NBSI newNbsi = set.new NBSI(10, new ConcurrentAutoTable(), set);
+
+        oldNbsi._new = newNbsi; // Set the new bits to simulate the copying
+
+        // Ensure the new NBSI object is correct initially
+        assertEquals(0, oldNbsi.size());
+
+        // Simulate a condition where the old NBSI needs help copying
+        // For simplicity, use direct field manipulation or reflection to modify 'oldNbsi' and 'newNbsi' internals as needed
+
+        // Perform the help copying process
+        oldNbsi.help_copy_impl(0);
+
+        // Validate the outcomes. You should create specific scenarios that validate 
+        // (1) old values being made immutable, 
+        // (2) old values being copied to new when new was previously zero,
+        // (3) old values being zeroed out when new values are non-zero, and
+        // (4) new values being set correctly as per the described algorithm.
+
+        // The specific tests depend on the internal workings of NBSI
+        // Here is a pseudo-code for one of the test cases:
+        
+        // Verify (1) Making a value immutable
+        long oldBits = oldNbsi._bits[0];
+        oldNbsi._bits[0] = oldBits & ~NonBlockingSetInt.NBSI.mask(63); // Ensure old value is not already immutable
+        NonBlockingSetInt.NBSI result = oldNbsi.help_copy_impl(0);
+
+        long expectedBits = oldBits | NonBlockingSetInt.NBSI.mask(63);
+        assertEquals(expectedBits, result._bits[0], "Old value should be made mutable");
+
+        // Other scenarios should be fleshed out and the corresponding fields modified 
+        // and assertions defined in a similar manner.
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class NonBlockingSetIntTest {
+    
+    @Test
+    public void help_copy_implTest() {
+        // Create the mock for the NonBlockingSetInt's NBSI class
+        NonBlockingSetInt.NBSI mockOld = mock(NonBlockingSetInt.NBSI.class);
+        NonBlockingSetInt.NBSI mockNew = mock(NonBlockingSetInt.NBSI.class);
+        
+        // Setup the general scenario
+        when(mockOld.CAS(anyInt(), anyLong(), anyLong())).thenReturn(true);
+        when(mockNew.CAS(anyInt(), anyLong(), anyLong())).thenReturn(true);
+        
+        // Define the states of old and new bit sets
+        long oldValue = 42; // Non-immutable, non-zero as per the state we want to test
+        long newValue = 0; // New value that is zero
+        
+        // Define expected new values
+        long newExpectedValue = oldValue | NonBlockingSetInt.NBSI.mask(63); // Immutable set
+        
+        // Define the position to manipulate
+        int position = 2; // for example, 2nd bit position
+        
+        // Mock the bit values as per our scenario
+        when(mockOld._bits[position]).thenReturn(oldValue);
+        when(mockNew._bits[position]).thenReturn(newValue);
+        
+        // Mock the _new field to return our mockNew object when accessed
+        when(mockOld._new).thenReturn(mockNew);
+        
+        // Mock the help copy implementation
+        when(mockOld.help_copy_impl(anyInt())).thenCallRealMethod();
+        
+        // Invoke the help_copy_impl method with the index 'i'
+        NonBlockingSetInt.NBSI result = mockOld.help_copy_impl(position);
+
+        // Verify the CAS operations have been performed as per the state transitions
+        // State 1: Immutable bit setting
+        verify(mockOld, atLeastOnce()).CAS(position, oldValue, newExpectedValue);
+        
+        // State 2: Copy non-zero old value to new if new is zero
+        verify(mockNew, atLeastOnce()).CAS(position, newValue, oldValue & ~NonBlockingSetInt.NBSI.mask(63));
+        
+        // We cannot easily assert the internal state of a mocked object,
+        // but we can verify that the expected calls according to the logic are made.
+        
+        // Verify that the result should be the old instance itself
+        assertSame(mockOld, result);
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.jctools.util.*;
+
+public class NonBlockingSetIntTest {
+    
+    private NonBlockingSetInt nonBlockingSetInt;
+    private NonBlockingSetInt.NBSI nbsi;
+
+    @BeforeEach
+    public void setUp() {
+        nonBlockingSetInt = new NonBlockingSetInt();
+        nbsi = nonBlockingSetInt.new NBSI(1024, new ConcurrentAutoTable(), nonBlockingSetInt);
+    }
+
+    @Test
+    public void help_copy_implTest() {
+        // Assuming there is a way to access internals for testing purposes
+        NonBlockingSetInt.NBSI oldNBSI = nbsi;
+        nbsi._new = oldNBSI; // Simulate that oldNBSI is the one being copied to
+        int bitIndex = 1; // Bit position to help copy
+        
+        // Call the method to test
+        NonBlockingSetInt.NBSI resultNBSI = oldNBSI.help_copy_impl(bitIndex);
+        
+        // Check if the result is the same instance as this
+        assertSame(oldNBSI, resultNBSI, "Method should return the same instance (this).");
+        
+        // Check if a bit is copied correctly or marked as immutable
+        // Here we simulate the bit check logic using hypothetical method calls, 
+        // which need to be replaced by the actual implementation
+        long expectedBits = oldNBSI._bits[bitIndex >> 6];
+        assertTrue((expectedBits & NonBlockingSetInt.NBSI.mask(63)) != 0, "Bit should be immutable by setting the sign bit (bit 63).");
+        
+        // Check if _copyDone is incremented correctly when old bit was not zero
+        if (expectedBits != NonBlockingSetInt.NBSI.mask(63)) {
+            AtomicInteger copyDoneCounter = oldNBSI._copyDone;
+            // Assuming there is a way to access the value for the test
+            int expectedCopyDoneValue = 1; // Should be 1 if a bit was copied
+            assertEquals(expectedCopyDoneValue, copyDoneCounter.get(), "CopyDone counter should be incremented.");
+        }
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+
+public class NonBlockingSetIntTest {
+
+    @Test
+    public void help_copy_implTest() {
+        NonBlockingSetInt.NonBlockingSetInt_NBSI mockOld = Mockito.mock(NonBlockingSetInt.NonBlockingSetInt_NBSI.class);
+        NonBlockingSetInt.NonBlockingSetInt_NBSI mockNew = Mockito.mock(NonBlockingSetInt.NonBlockingSetInt_NBSI.class);
+        
+        Mockito.when(mockOld._bits).thenReturn(new long[]{0, Long.MAX_VALUE}); // mock the _bits state of mockOld
+        Mockito.when(mockNew._bits).thenReturn(new long[]{0, 0}); // mock the _bits state of mockNew
+
+        // Assuming that CAS (Compare And Set) is a method to atomically update _bits
+        Mockito.when(mockOld.CAS(anyInt(), anyLong(), anyLong())).thenReturn(true);
+        Mockito.when(mockNew.CAS(anyInt(), anyLong(), anyLong())).thenReturn(true);
+
+        // Assuming the bitmask method is correctly implemented
+        Mockito.when(mockOld.mask(63)).thenCallRealMethod();
+
+        // Create instances of AtomicInteger to simulate the _copyDone
+        AtomicInteger oldCopyDone = new AtomicInteger(0);
+        AtomicInteger newCopyDone = new AtomicInteger(0);
+
+        Mockito.when(mockOld._copyDone).thenReturn(oldCopyDone);
+        Mockito.when(mockNew._copyDone).thenReturn(newCopyDone);
+
+        NonBlockingSetInt testSet = new NonBlockingSetInt();
+        // Set up state; assume these methods set the private fields accordingly
+        testSet.CAS_nbsi(mockOld, mockNew);
+
+        NonBlockingSetInt.NonBlockingSetInt_NBSI result = testSet.help_copy_impl(1);
+
+        // Verify the state has transitioned according to the state machine rules
+        // 1. Old should be zero, because we asked it to CAS to zero in the method
+        Mockito.verify(mockOld).CAS(anyInt(), Mockito.eq(Long.MAX_VALUE), Mockito.eq(0L));
+        // 2. New should have a copy of the old bits
+        Mockito.verify(mockNew).CAS(anyInt(), Mockito.eq(0L), Mockito.eq(Long.MAX_VALUE));
+
+        // Check if the _copyDone was incremented for old and new
+        assertEquals(1, oldCopyDone.get());
+        assertEquals(1, newCopyDone.get());
+
+        // Finally, check the fluid programming style return value
+        assertSame(testSet, result);
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.jctools.util.*;
+
+public class NonBlockingSetIntTest {
+    @Test
+    public void help_copy_implTest() {
+        final NonBlockingSetInt nonBlockingSetInt = new NonBlockingSetInt();
+        final AtomicInteger copyDoneCounter = new AtomicInteger(0);
+
+        // Mock NBSI inner class for testing help_copy_impl method.
+        NonBlockingSetInt.NBSI oldNBSI = new NonBlockingSetInt.NBSI(64, new ConcurrentAutoTable(), nonBlockingSetInt) {
+            @Override
+            public boolean CAS(int idx, long old, long nnn) {
+                if (this._bits[idx] == old) {
+                    this._bits[idx] = nnn;
+                    return true;
+                }
+                return false;
+            }
+        };
+
+        NonBlockingSetInt.NBSI newNBSI = new NonBlockingSetInt.NBSI(64, new ConcurrentAutoTable(), nonBlockingSetInt) {
+            @Override
+            public boolean CAS(int idx, long old, long nnn) {
+                if (this._bits[idx] == old) {
+                    this._bits[idx] = nnn;
+                    return true;
+                }
+                return false;
+            }
+        };
+
+        oldNBSI._new = newNBSI;
+        oldNBSI._copyDone = copyDoneCounter;
+
+        int i = 0; // Index to be tested
+
+        // Test the method and validate expected transitions for state machine
+        NonBlockingSetInt.NBSI result = oldNBSI.help_copy_impl(i);
+
+        // Test return value
+        assertEquals(oldNBSI, result, "help_copy_impl should return the same NBSI object on which it was called.");
+
+        // Validate the NBSI._bits have been copied correctly and sign bit set
+        assertTrue((oldNBSI._bits[i] & NonBlockingSetInt.NBSI.mask(63)) != 0, "Sign bit should be set after execution.");
+        assertEquals(oldNBSI._bits[i] & ~NonBlockingSetInt.NBSI.mask(63), newNBSI._bits[i], "Bits should have been copied from old to new NBSI.");
+
+        // Validate that copyDoneCounter has been incremented if copying was carried out
+        assertTrue(copyDoneCounter.get() > 0, "Copy done counter should be incremented if copying was done.");
+    }
+}
+
+

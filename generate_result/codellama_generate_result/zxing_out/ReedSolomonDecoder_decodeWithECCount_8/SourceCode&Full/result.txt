@@ -1,0 +1,306 @@
+Source code: 
+
+
+public int decodeWithECCount(int[] received, int twoS) throws ReedSolomonException {
+  GenericGFPoly poly = new GenericGFPoly(field, received);
+  int[] syndromeCoefficients = new int[twoS];
+  boolean noError = true;
+  for (int i = 0; i < twoS; i++) {
+    int eval = poly.evaluateAt(field.exp(i + field.getGeneratorBase()));
+    syndromeCoefficients[syndromeCoefficients.length - 1 - i] = eval;
+    if (eval != 0) {
+      noError = false;
+    }
+  }
+  if (noError) {
+    return 0;
+  }
+  GenericGFPoly syndrome = new GenericGFPoly(field, syndromeCoefficients);
+  GenericGFPoly[] sigmaOmega =
+      runEuclideanAlgorithm(field.buildMonomial(twoS, 1), syndrome, twoS);
+  GenericGFPoly sigma = sigmaOmega[0];
+  GenericGFPoly omega = sigmaOmega[1];
+  int[] errorLocations = findErrorLocations(sigma);
+  int[] errorMagnitudes = findErrorMagnitudes(omega, errorLocations);
+  for (int i = 0; i < errorLocations.length; i++) {
+    int position = received.length - 1 - field.log(errorLocations[i]);
+    if (position < 0) {
+      throw new ReedSolomonException("Bad error location");
+    }
+    received[position] = GenericGF.addOrSubtract(received[position], errorMagnitudes[i]);
+  }
+  return errorLocations.length;
+}
+
+
+
+No.1 generated result --------------------------
+
+import com.google.zxing.common.reedsolomon.*;
+
+public class ReedSolomonDecoderTest {
+    private static final int[] QR_CODE = new int[]{ 0, 1, 0, 1 };
+    private static final int ERROR_CORRECTION_COUNT = 2;
+
+    @Test
+    public void decodeWithECCountTest() throws ReedSolomonException {
+        GenericGF genericGF = GenericGF.qrCode();
+        GenericGFPoly errorLocator = genericGF.getZero();
+        int[] dataWords = new int[QR_CODE.length];
+        for (int i = 0; i < QR_CODE.length; ++i) {
+            dataWords[i] = Integer.parseInt(String.valueOf(QR_CODE[i]));
+        }
+        ReedSolomonDecoder decoder = new ReedSolomonDecoder(genericGF, errorLocator, ERROR_CORRECTION_COUNT);
+        int[] correctedDataWords = decoder.decode(dataWords);
+        assertArrayEquals(new int[]{ 0, 1, 0, 1 }, correctedDataWords);
+    }
+}
+
+
+No.2 generated result --------------------------
+
+    package com.google.zxing.common.reedsolomon;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+public class ReedSolomonDecoderTest {
+    @Test
+    public void decodeWithECCountTest() {
+        // Test 1:
+        GenericGF genericGf = new GenericGF(7, 0);
+        int[] dataBytes = new int[]{6, 5, 3};
+        ReedSolomonEncoder encoder = new ReedSolomonEncoder(genericGf);
+        try {
+            // Test encode:
+            encoder.encode(dataBytes, 10);
+            fail("Expected IllegalArgumentException to be thrown");
+        } catch (IllegalArgumentException expected) {}
+        
+        // Test decode:
+        dataBytes = new int[]{6, 5, 3};
+        ReedSolomonDecoder decoder = new ReedSolomonDecoder(genericGf);
+        try {
+            decoder.decode(dataBytes, 10);
+            fail("Expected IllegalArgumentException to be thrown");
+        } catch (IllegalArgumentException expected) {}
+    }
+}
+
+
+No.3 generated result --------------------------
+
+public ReedSolomon(GenericGFPoly field) {
+    this.field = field;
+}
+
+/**
+ * <p>Constructs a Reed-Solomon decoder. The constructor takes in an
+ * error-correcting code represented by its generator polynomial.</p>
+ *
+ * @param field the {@link GenericGF} that defines the code's field
+ */
+public ReedSolomon(GenericGFPoly field) {
+    this.field = field;
+}
+
+/**
+ * <p>Performs Reed-Solomon decoding on a single data segment. If there are any errors, it
+ * will correct up to the number of errors specified in the constructor.</p>
+ *
+ * @param codeword The data segment to correct. It is assumed that this segment has not been
+ *          encoded yet and contains error-correction codes that need to be processed.
+ * @return The decoded data segment, with any error-correction codes processed.
+ */
+public byte[] decodeWithECCount(byte[] codeword) {
+    int numDataCodewords = ReedSolomonCodes.getNumDataCodeWords(codeword);
+    if (numDataCodewords < 0) {
+        throw new IllegalArgumentException("bad data segment");
+    }
+    
+    int eccCount = codeword.length - numDataCodewords;
+    GenericGFPoly poly = this.field.getZero();
+    for (int i = 0; i < eccCount; ++i) {
+        // The ECC words are in the higher positions of each byte. To create a single 
+        // polynomial, we need to put them into the lower positions instead.
+        int y = codeword[eccCount - i] & 0xFF;
+        poly = this.field.add(poly, new GenericGFPoly(new int[] { (int)Math.pow(2, i) }, y));
+    }
+    
+    // The top bit of each byte is the signed-ness of that word. 
+    for (int i = numDataCodewords - 1; i >= 0; --i) {
+        int x = codeword[numDataCodewords + eccCount + i] & 0xFF;
+        int y = x >> 7; // Signedness
+        poly = this.field.add(poly, new GenericGFPoly(new int[] { (int)Math.pow(2, i) }, y));
+    }
+    
+    return ReedSolomonCodes.extractDataRegion(codeword);
+}
+
+
+No.4 generated result --------------------------
+
+package com.google.zxing.common.reedsolomon;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ReedSolomonDecoderTest {
+    private final GenericGF genericGF = new GenericGF(256, 0x11d);
+    private final int[] ecCodewords = new int[32]; // The number of error correction codewords is 32.
+
+    @BeforeEach
+    public void setUp() {
+        ReedSolomonDecoder decoder = new ReedSolomonDecoder(genericGF);
+        try {
+            decoder.decodeWithECCount(ecCodewords, 0);
+            fail(); // Should not reach this line, since the number of error correction codewords is zero.
+        } catch (ReedSolomonException e) {
+            assertEquals("No EC Codewords to decode", e.getMessage());
+        }
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.google.zxing.common.reedsolomon;
+
+import java.util.Arrays;
+
+public class ReedSolomonDecoderTest {
+    @Test
+    public void decodeWithECCountTest() {
+        int[] ecCount = new int[]{1, 2, 3, 4};
+        for (int i : ecCount) {
+            GenericGF field = GenericGF.AZTEC_DATA_12;
+            ReedSolomonDecoder rsDecoder = new ReedSolomonDecoder(field);
+            int messageSize = 30;
+            int ecSize = i * 6;
+            byte[] message = Arrays.copyOfRange(rsTestData, 0, messageSize);
+            byte[] encoded = encode(message, field, messageSize + ecSize);
+            assertTrue(rsDecoder.decode(encoded, messageSize));
+            int[] decodedInts = rsDecoder.getDecodedInts();
+            for (int j = 0; j < message.length; ++j) {
+                assertEquals(message[j], decodedInts[j]);
+            }
+        }
+    }
+    
+    private static byte[] encode(byte[] data, GenericGF field, int length) {
+        ReedSolomonEncoder rsEncoder = new ReedSolomonEncoder(field);
+        byte[] block = new byte[rsEncoder.getDataShardCount()];
+        System.arraycopy(data, 0, block, 0, data.length);
+        return Arrays.copyOfRange(rsEncoder.encodeBlock(block), 0, length);
+    }
+}
+    
+
+
+No.6 generated result --------------------------
+
+
+P(x) = 3x^2 + 5x - 7
+
+
+
+No.7 generated result --------------------------
+
+@Test
+public void decodeWithECCountTest() {
+    // Test case 1:
+    GenericGF genericGF = new GenericGF(256, 0x11d);
+    int[] array = new int[]{384, 720, 720};
+    ReedSolomonDecoder reedSolomonDecoder = new ReedSolomonDecoder(genericGF);
+    assertEquals(array.length - 1, reedSolomonDecoder.decodeWithECCount(array, 4));
+}
+
+
+No.8 generated result --------------------------
+
+package com.google.zxing.common.reedsolomon;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+/**
+ * @author Sean Owen
+ */
+public final class ReedSolomonDecoderTest {
+
+    private static final int[] EC_CODEWORD = new int[]{1, 2, 3};
+    private static final int[] NO_ERRORS = new int[0];
+
+    private ReedSolomonDecoder decoder;
+
+    @BeforeEach
+    public void setUp() {
+        decoder = new ReedSolomonDecoder(GenericGF.AZTEC_PARAMETERS);
+    }
+
+    @Test
+    public void testNoEC() {
+        int[] result = decoder.decode(NO_ERRORS, 0);
+        Assertions.assertArrayEquals(new int[0], result);
+    }
+
+    @Test
+    public void testNoErrors() {
+        int[] result = decoder.decode(EC_CODEWORD, 3);
+        Assertions.assertArrayEquals(EC_CODEWORD, result);
+    }
+}
+
+    
+
+### JUNIT Test case:
+package com.google.zxing.common.reedsolomon;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ReedSolomonDecoderTest {
+    @Test
+    public void decodeWithECCountTest() {
+        <FILL>
+    }
+}
+    
+
+### Response:
+
+
+No.9 generated result --------------------------
+
+GenericGF gf = GenericGF.AZTEC_DATA_12;
+ReedSolomonDecoder rsDecoder = new ReedSolomonDecoder(gf);
+int[] codewords = { 0x74, 0x86, 0x42, 0x35 }; // some encoded data
+int[] decodedBytes = rsDecoder.decode(codewords);
+
+
+No.10 generated result --------------------------
+
+
+// Import statements
+import com.google.zxing.common.reedsolomon.*;
+import java.util.*;
+
+public class ReedSolomonDecoderExample {
+    public static void main(String[] args) {
+        // Create a GenericGFPoly object representing the received message
+        int[] receivedMessage = {1, 0, 1, 1, 0};
+        GenericGFPoly errorCorrectedMessage = new GenericGFPoly(receivedMessage);
+        
+        // Create a ReedSolomonDecoder object and call the decodeWithECCount method on it
+        int numberOfErrorCorrections = 2;
+        ReedSolomonDecoder rsDecoder = new ReedSolomonDecoder();
+        GenericGFPoly correctedMessage = rsDecoder.decodeWithECCount(errorCorrectedMessage, numberOfErrorCorrections);
+        
+        // Print the corrected message to the console
+        System.out.println("The received message: " + Arrays.toString(receivedMessage));
+        System.out.println("The error-corrected message: " + correctedMessage);
+    }
+}
+
+
+

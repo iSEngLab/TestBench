@@ -1,0 +1,27 @@
+{
+    "project_name": "commons-math",
+    "file_name": "AccurateMathCalc.java",
+    "relative_path": "commons-math/commons-math-core/src/main/java/org/apache/commons/math4/core/jdkmath/AccurateMathCalc.java",
+    "execute_path": "commons-math/commons-math-core",
+    "package": "org.apache.commons.math4.core.jdkmath",
+    "docstring": "/**\n     *  For x between 0 and pi/4 compute cosine using Talor series\n     *  cos(x) = 1 - x^2/2! + x^4/4! ...\n     * @param x number from which cosine is requested\n     * @param result placeholder where to put the result in extended precision\n     * (may be null)\n     * @return cos(x)\n     */",
+    "source_code": "\nstatic double slowCos(final double x, final double[] result) {\n\n    final double[] xs = new double[2];\n    final double[] ys = new double[2];\n    final double[] facts = new double[2];\n    final double[] as = new double[2];\n    split(x, xs);\n    ys[0] = ys[1] = 0.0;\n\n    for (int i = FACT.length - 1; i >= 0; i--) {\n        splitMult(xs, ys, as);\n        ys[0] = as[0];\n        ys[1] = as[1];\n\n        if ((i & 1) != 0) { // skip odd entries\n            continue;\n        }\n\n        split(FACT[i], as);\n        splitReciprocal(as, facts);\n\n        if ((i & 2) != 0) { // alternate terms are negative\n            facts[0] = -facts[0];\n            facts[1] = -facts[1];\n        }\n\n        splitAdd(ys, facts, as);\n        ys[0] = as[0]; ys[1] = as[1];\n    }\n\n    if (result != null) {\n        result[0] = ys[0];\n        result[1] = ys[1];\n    }\n\n    return ys[0] + ys[1];\n}\n",
+    "class_name": "AccurateMathCalc",
+    "method_name": "slowCos",
+    "arguments": [
+        "double x",
+        "double[] result"
+    ],
+    "generate_test": [
+        "@Test\npublic void slowCosTest() {\n    double x = 1.0;\n    double[] result = new double[2];\n    double output = AccurateMathCalc.slowCos(x, result);\n    assertNotNull(result);\n    assertEquals(0.5403023058681398, result[0]);\n    assertEquals(0.0, result[1]);\n    assertEquals(0.5403023058681398, output);\n}",
+        "@Test\n    public void slowCosTest() {\n        double x = 0.5;\n        double[] result = new double[2];\n        double expected = Math.cos(x);\n        double actual = AccurateMathCalc.slowCos(x, result);\n        \n        assertEquals(expected, actual, 0.0001);\n    }",
+        "@Test\npublic void slowCosTest() {\n    double x = 0.5;\n    double[] result = new double[2];\n    double expected = Math.cos(x);\n    double actual = AccurateMathCalc.slowCos(x, result);\n    assertEquals(expected, actual, 0.0001);\n}",
+        "@Test\npublic void slowCosTest() {\n    double[] result = new double[2];\n    double x = 0.5;\n    double actual = AccurateMathCalc.slowCos(x, result);\n    double expected = Math.cos(x);\n    assertEquals(expected, actual);\n    assertEquals(expected, result[0] + result[1]);\n}",
+        "@Test\n    public void slowCosTest() {\n        double x = 0.5;\n        double[] result = new double[2];\n        double actual = AccurateMathCalc.slowCos(x, result);\n        double expected = Math.cos(x);\n        assertEquals(expected, actual, 0.0001);\n    }",
+        "\n@Test\npublic void slowCosTest() {\n    double x = 1.0;\n    double[] result = new double[2];\n    double actual = AccurateMathCalc.slowCos(x, result);\n    double expected = Math.cos(x);\n    assertEquals(expected, actual);\n}",
+        "@Test\npublic void slowCosTest() {\n    double x = Math.PI / 4;\n    double[] result = new double[2];\n    double actual = AccurateMathCalc.slowCos(x, result);\n    double expected = Math.cos(x);\n    assertEquals(expected, actual);\n}",
+        "@Test\npublic void slowCosTest() {\n    double x = 0.5;\n    double[] result = new double[2];\n    double expected = Math.cos(x);\n    double actual = AccurateMathCalc.slowCos(x, result);\n    assertEquals(expected, actual);\n}",
+        "@Test\npublic void slowCosTest() {\n    double x = 0.5;\n    double[] result = new double[2];\n    double output = AccurateMathCalc.slowCos(x, result);\n    assertEquals(output, Math.cos(x));\n    assertEquals(result[0] + result[1], Math.cos(x), 0.0001);\n}",
+        "@Test\npublic void slowCosTest() {\n    double x = 0.5;\n    double[] result = new double[2];\n    double actual = AccurateMathCalc.slowCos(x, result);\n    double expected = Math.cos(x);\n    assertEquals(expected, actual);\n}"
+    ]
+}

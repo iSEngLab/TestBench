@@ -1,0 +1,148 @@
+Source code: 
+
+// Help any top-level NBSI to copy until completed.
+// Always return the _new version of *this* NBSI, in case we're nested.
+private NBSI help_copy() {
+  // Pick some words to help with - but only help copy the top-level NBSI.
+  // Nested NBSI waits until the top is done before we start helping.
+  NBSI top_nbsi = _non_blocking_set_int._nbsi;
+  final int HELP = 8;       // Tuning number: how much copy pain are we willing to inflict?
+  // We "help" by forcing individual bit indices to copy.  However, bits
+  // come in lumps of 64 per word, so we just advance the bit counter by 64's.
+  int idx = top_nbsi._copyIdx.getAndAdd(64*HELP);
+  for( int i=0; i<HELP; i++ ) {
+    int j = idx+i*64;
+    j %= (top_nbsi._bits.length<<6); // Limit, wrap to array size; means we retry indices
+    top_nbsi.help_copy_impl(j   );
+    top_nbsi.help_copy_impl(j+63); // Also force the nested-by-64 bit
+  }
+
+  // Top level guy ready to promote?
+  // Note: WE may not be the top-level guy!
+  if( top_nbsi._copyDone.get() == top_nbsi._sum_bits_length )
+    // One shot CAS to promote - it may fail since we are racing; others
+    // may promote as well
+    if( _non_blocking_set_int.CAS_nbsi( top_nbsi, top_nbsi._new ) ) {
+      //System.out.println("Promote at top level to size "+(_non_blocking_set_int._nbsi._bits.length<<6));
+    }
+
+  // Return the new bitvector for 'fluid' programming style
+  return _new;
+}
+
+
+
+No.1 generated result --------------------------
+
+@Test
+public void help_copyTest() {
+    NonBlockingSetInt.NBSI nbsi = new NonBlockingSetInt.NBSI(max_elem, ctr, nonb);
+    NonBlockingSetInt.NBSI result = nbsi.help_copy();
+    // assert statements
+    assertNotNull(result);
+}
+
+
+No.2 generated result --------------------------
+
+@Test
+public void help_copyTest() {
+    // Create a new NonBlockingSetInt object
+    NonBlockingSetInt nbsi = new NonBlockingSetInt();
+    
+    // Add some elements to the set
+    
+    // Call the help_copy() method
+    
+    // Verify the expected behavior
+}
+
+
+No.3 generated result --------------------------
+
+
+NBSI nbsi = new NBSI(10, new ConcurrentAutoTable(), new NonBlockingSetInt());
+NBSI result = nbsi.help_copy();
+assertEquals(expectedResult, result);
+
+
+
+No.4 generated result --------------------------
+
+@Test
+public void help_copyTest() {
+    // Create a NonBlockingSetInt instance
+    NonBlockingSetInt nonBlockingSetInt = new NonBlockingSetInt();
+  
+    // Add some elements to nonBlockingSetInt
+  
+    // Call the help_copy method
+  
+    // Verify the result of the help_copy method
+}
+
+
+No.5 generated result --------------------------
+
+@Test
+public void help_copyTest() {
+    // Create a new NonBlockingSetInt object
+    NonBlockingSetInt nonBlockingSetInt = new NonBlockingSetInt();
+    // Add an integer to the set
+    nonBlockingSetInt.add(5);
+    // Check if the set contains the integer
+    assertTrue(nonBlockingSetInt.contains(5));
+}
+
+
+No.6 generated result --------------------------
+
+@Test
+public void help_copyTest() {
+    NBSI nbsi = new NBSI(10, new ConcurrentAutoTable(), new NonBlockingSetInt());
+    NBSI copy = nbsi.help_copy();
+    // Add assertions here to test the functionality of the help_copy method
+}
+
+
+No.7 generated result --------------------------
+
+
+@Test
+public void help_copyTest() {
+    // Place the testing code here to complete the unit test for the help_copy method in the NBSI class
+    // Make appropriate assertions to validate the functionality of the help_copy method
+}
+
+
+
+No.8 generated result --------------------------
+
+NonBlockingSetInt nbsi = new NonBlockingSetInt();
+NBSI nbsiObj = nbsi.new NBSI(10, new ConcurrentAutoTable(), nbsi);
+nbsiObj.help_copy();
+
+
+No.9 generated result --------------------------
+
+@Test
+public void help_copyTest() {
+    // Create a new NonBlockingSetInt object
+    NonBlockingSetInt nbsi = new NonBlockingSetInt();
+    
+    // Perform the help_copy() method
+    NBSI result = nbsi._nbsi.help_copy();
+    
+    // Assert the result is not null
+    assertNotNull(result);
+}
+
+
+No.10 generated result --------------------------
+
+NonBlockingSetInt nonBlockingSetInt = new NonBlockingSetInt();
+NBSI nbsi = nonBlockingSetInt.new NBSI(10, ConcurrentAutoTable.instance(), nonBlockingSetInt);
+NBSI result = nbsi.help_copy();
+assertNotNull(result);
+
+

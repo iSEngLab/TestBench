@@ -1,0 +1,27 @@
+{
+    "project_name": "apollo",
+    "file_name": "BeanUtils.java",
+    "relative_path": "apollo/apollo-common/src/main/java/com/ctrip/framework/apollo/common/utils/BeanUtils.java",
+    "execute_path": "apollo",
+    "package": "com.ctrip.framework.apollo.common.utils",
+    "docstring": "/**\n   * \u7528\u4e8e\u5c06\u4e00\u4e2a\u5217\u8868\u8f6c\u6362\u4e3a\u5217\u8868\u4e2d\u7684\u5bf9\u8c61\u7684\u67d0\u4e2a\u5c5e\u6027\u6620\u5c04\u5230\u5217\u8868\u4e2d\u7684\u5bf9\u8c61\n   *\n   * <pre>\n   *      List<UserDTO> userList = userService.queryUsers();\n   *      Map<Integer, userDTO> userIdToUser = BeanUtil.mapByKey(\"userId\", userList);\n   * </pre>\n   *\n   * @param key \u5c5e\u6027\u540d\n   */",
+    "source_code": "\n@SuppressWarnings(\"unchecked\")\npublic static <K, V> Map<K, V> mapByKey(String key, List<?> list) {\n  Map<K, V> map = new HashMap<>();\n  if (CollectionUtils.isEmpty(list)) {\n    return map;\n  }\n  try {\n    Class<?> clazz = list.get(0).getClass();\n    Field field = deepFindField(clazz, key);\n    if (field == null) {\n        throw new IllegalArgumentException(\"Could not find the key\");\n    }\n    field.setAccessible(true);\n    for (Object o : list) {\n      map.put((K) field.get(o), (V) o);\n    }\n  } catch (Exception e) {\n    throw new BeanUtilsException(e);\n  }\n  return map;\n}\n",
+    "class_name": "BeanUtils",
+    "method_name": "mapByKey",
+    "arguments": [
+        "String key",
+        "List<> list"
+    ],
+    "generate_test": [
+        "@Test\npublic void mapByKeyTest() {\n    List<Map<Integer, UserDTO>> result = BeanUtils.mapByKey(\"userId\", userDTOList);\n    assertTrue(result.size() > 0);\n}",
+        "@Test\npublic void mapByKeyTest() {\n    List<UserDTO> userList = userService.queryUsers();\n    Map<Integer, UserDTO> userIdToUser = BeanUtil.mapByKey(\"userId\", userList);\n    assertNotNull(userIdToUser);\n    assertEquals(userList.size(), userIdToUser.size());\n}",
+        "@Test\npublic void mapByKeyTest() {\n    // Given\n    List<SomeObject> list = new ArrayList<>();\n    list.add(new SomeObject(\"key1\", \"value1\"));\n    list.add(new SomeObject(\"key2\", \"value2\"));\n    \n    // When\n    Map<String, SomeObject> result = BeanUtils.mapByKey(\"key\", list);\n    \n    // Then\n    assertEquals(\"value1\", result.get(\"key1\").getValue());\n    assertEquals(\"value2\", result.get(\"key2\").getValue());\n}",
+        "@Test\npublic void mapByKeyTest() {\n    String key = \"id\";\n    List<User> userList = new ArrayList<>();\n    userList.add(new User(1, \"Alice\"));\n    userList.add(new User(2, \"Bob\"));\n    Map<Integer, User> result = BeanUtils.mapByKey(key, userList);\n    assertEquals(1, result.get(1).getId());\n    assertEquals(\"Alice\", result.get(1).getName());\n    assertEquals(2, result.get(2).getId());\n    assertEquals(\"Bob\", result.get(2).getName());\n}",
+        "@Test\npublic void mapByKeyTest() {\n    // Arrange\n    String key = \"id\";\n    List<UserDTO> userList = userService.queryUsers(); // Assuming userService is provided\n    Map<Integer, UserDTO> userIdToUserMap = BeanUtils.mapByKey(key, userList);\n\n    // Assert\n    assertNotNull(userIdToUserMap);\n    // Add more assertions based on the expected behavior of the mapByKey method\n}",
+        "@Test\npublic void mapByKeyTest() {\n    List<Map<String, Integer>> list = new ArrayList<>();\n    Map<String, Integer> map1 = new HashMap<>();\n    map1.put(\"key1\", 1);\n    list.add(map1);\n    \n    Map<String, Integer> map2 = new HashMap<>();\n    map2.put(\"key2\", 2);\n    list.add(map2);\n    \n    Map<String, Integer> result = BeanUtils.mapByKey(\"key\", list);\n    assertEquals(1, result.get(\"key1\"));\n    assertEquals(2, result.get(\"key2\"));\n}",
+        "@Test\npublic void mapByKeyTest() {\n    List<UserDTO> userList = userService.queryUsers();\n    Map<Integer, UserDTO> userIdToUser = BeanUtil.mapByKey(\"userId\", userList);\n    assertNotNull(userIdToUser);\n    assertEquals(userList.size(), userIdToUser.size());\n}",
+        "@Test\npublic void mapByKeyTest() {\n    List<Object> list = new ArrayList<>();\n    // Add objects to the list\n    Map<String, Object> map = BeanUtils.mapByKey(\"key\", list);\n    // Assert statements for the expected output\n    assertEquals(expectedMapSize, map.size());\n    assertTrue(map.containsKey(expectedKey));\n    assertEquals(expectedValue, map.get(expectedKey));\n}",
+        "@Test\npublic void mapByKeyTest() {\n    //given\n    List<UserDTO> userList = userService.queryUsers();\n    \n    //when\n    Map<Integer, userDTO> userIdToUser = BeanUtil.mapByKey(\"userId\", userList);\n    \n    //then\n    //assert statements\n}",
+        "@Test\n    public void mapByKeyTest() {\n        List<UserDTO> userList = userService.queryUsers();\n        Map<Integer, userDTO> userIdToUser = BeanUtil.mapByKey(\"userId\", userList);\n        assertNotNull(userIdToUser);\n    }"
+    ]
+}

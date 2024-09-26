@@ -1,0 +1,320 @@
+Source code: 
+
+
+private static void calculateThresholdForBlock(byte[] luminances,
+                                               int subWidth,
+                                               int subHeight,
+                                               int width,
+                                               int height,
+                                               int[][] blackPoints,
+                                               BitMatrix matrix) {
+  int maxYOffset = height - BLOCK_SIZE;
+  int maxXOffset = width - BLOCK_SIZE;
+  for (int y = 0; y < subHeight; y++) {
+    int yoffset = y << BLOCK_SIZE_POWER;
+    if (yoffset > maxYOffset) {
+      yoffset = maxYOffset;
+    }
+    int top = cap(y, subHeight - 3);
+    for (int x = 0; x < subWidth; x++) {
+      int xoffset = x << BLOCK_SIZE_POWER;
+      if (xoffset > maxXOffset) {
+        xoffset = maxXOffset;
+      }
+      int left = cap(x, subWidth - 3);
+      int sum = 0;
+      for (int z = -2; z <= 2; z++) {
+        int[] blackRow = blackPoints[top + z];
+        sum += blackRow[left - 2] + blackRow[left - 1] + blackRow[left] + blackRow[left + 1] + blackRow[left + 2];
+      }
+      int average = sum / 25;
+      thresholdBlock(luminances, xoffset, yoffset, average, width, matrix);
+    }
+  }
+}
+
+
+
+No.1 generated result --------------------------
+
+private static int calculateThresholdForBlock(byte[] luminances, int subWidth, int subHeight, int width, int height, int[][] blackPoints, BitMatrix matrix) {
+    int maxYOffset = height - BLOCK_SIZE;
+    int maxXOffset = width - BLOCK_SIZE;
+    for (int y = 0; y < subHeight; y++) {
+        int yoffset = y << BLOCK_SIZE_POWER;
+        if (yoffset > maxYOffset) {
+            yoffset = maxYOffset;
+        }
+        int top = cap(y, subHeight - 3);
+        for (int x = 0; x < subWidth; x++) {
+            int xoffset = x << BLOCK_SIZE_POWER;
+            if (xoffset > maxXOffset) {
+                xoffset = maxXOffset;
+            }
+            int left = cap(x, subWidth - 3);
+            int sum = 0;
+            for (int z = -2; z <= 2; z++) {
+                int[] blackRow = blackPoints[top + z];
+                sum += blackRow[left - 2] + blackRow[left - 1] + blackRow[left] + blackRow[left + 1] + blackRow[left + 2];
+            }
+            int average = sum / 25;
+            thresholdBlock(luminances, xoffset, yoffset, average, width, matrix);
+        }
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class HybridBinarizerTest {
+    @Test
+    public void calculateThresholdForBlockTest() {
+        // Set up test data
+        byte[] luminances = new byte[256];
+        int subWidth = 10;
+        int subHeight = 8;
+        int width = 32;
+        int height = 24;
+        int[][] blackPoints = calculateBlackPoints(luminances, subWidth, subHeight, width, height);
+        BitMatrix matrix = new BitMatrix(width, height);
+        
+        // Set up expected output
+        int maxYOffset = height - BLOCK_SIZE;
+        int maxXOffset = width - BLOCK_SIZE;
+        int sum = 0;
+        for (int z = -2; z <= 2; z++) {
+            int[] blackRow = blackPoints[cap(y, subHeight - 3)];
+            sum += blackRow[cap(x, subWidth - 3) + 1] + blackRow[cap(x, subWidth - 3)] + blackRow[cap(x, subWidth - 3) - 1];
+        }
+        int average = sum / 25;
+        
+        // Perform test
+        int threshold = calculateThresholdForBlock(luminances, subWidth, subHeight, width, height, blackPoints, matrix);
+        
+        // Check output
+        assertEquals(average, threshold);
+    }
+}
+
+
+No.3 generated result --------------------------
+
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class HybridBinarizerTest {
+    @Test
+    public void calculateThresholdForBlockTest() {
+        // Create a mock luminance source with known values
+        LuminanceSource source = new MockLuminanceSource(new byte[] { 1, 2, 3 });
+        HybridBinarizer binarizer = new HybridBinarizer(source);
+
+        // Set up the test data
+        int subWidth = 1;
+        int subHeight = 2;
+        int width = 4;
+        int height = 6;
+        int[][] blackPoints = { { 0, 0 }, { 1, 2 }, { 3, 4 } };
+        BitMatrix matrix = new BitMatrix(width, height);
+
+        // Call the method under test
+        binarizer.calculateThresholdForBlock(luminances, subWidth, subHeight, width, height, blackPoints, matrix);
+
+        // Verify that the threshold was calculated correctly
+        assertEquals(12, matrix.get(0, 0));
+    }
+}
+
+
+
+No.4 generated result --------------------------
+
+@Test
+public void calculateThresholdForBlockTest() {
+    byte[] luminances = new byte[256];
+    int subWidth = 4;
+    int subHeight = 4;
+    int width = 16;
+    int height = 16;
+    int[][] blackPoints = calculateBlackPoints(luminances, subWidth, subHeight, width, height);
+    BitMatrix matrix = new BitMatrix(width, height);
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            blackPoints[i][j] = 128;
+        }
+    }
+    calculateThresholdForBlock(luminances, subWidth, subHeight, width, height, blackPoints, matrix);
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            int threshold = calculateThresholdForBlock(luminances, subWidth, subHeight, width, height, blackPoints, matrix);
+            assertEquals(128, threshold);
+        }
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class HybridBinarizerTest {
+    @Test
+    public void calculateThresholdForBlockTest() {
+        // Arrange
+        byte[] luminances = new byte[10];
+        int subWidth = 2;
+        int subHeight = 3;
+        int width = 5;
+        int height = 4;
+        int[][] blackPoints = new int[subHeight][subWidth];
+        BitMatrix matrix = new BitMatrix(width, height);
+        
+        // Act
+        HybridBinarizer.calculateThresholdForBlock(luminances, subWidth, subHeight, width, height, blackPoints, matrix);
+        
+        // Assert
+        assertEquals(10, matrix.getWidth());
+        assertEquals(4, matrix.getHeight());
+    }
+}
+
+
+No.6 generated result --------------------------
+
+@Test
+public void calculateThresholdForBlockTest() {
+    int[][] blackPoints = new int[4][5];
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 5; j++) {
+            blackPoints[i][j] = 128;
+        }
+    }
+
+    byte[] luminances = new byte[16];
+    Arrays.fill(luminances, (byte) 0xFF);
+
+    int width = 4;
+    int height = 4;
+
+    BitMatrix matrix = new BitMatrix(width, height);
+
+    HybridBinarizer.calculateThresholdForBlock(luminances, 2, 2, width, height, blackPoints, matrix);
+
+    assertEquals(matrix.get(0, 0), true);
+    assertEquals(matrix.get(0, 1), false);
+    assertEquals(matrix.get(1, 0), false);
+    assertEquals(matrix.get(1, 1), true);
+}
+
+
+No.7 generated result --------------------------
+
+The `calculateThresholdForBlock` method is called by the `HybridBinarizer` class to determine the threshold value for a block of pixels. The method takes in a 2D array of luminance values, as well as other parameters related to the size and position of the block within the image.
+
+The method first computes the maximum y offset based on the height parameter, and then iterates over each row in the block using a for loop. For each row, it computes the y offset based on the current row number and the block size power. If the computed y offset is greater than the maximum y offset, it sets it to the maximum y offset.
+
+Next, the method iterates over each column in the block using another for loop. For each column, it computes the x offset based on the current column number and the block size power. If the computed x offset is greater than the maximum x offset, it sets it to the maximum x offset.
+
+The method then calculates the sum of the luminance values in a 5x5 window around each pixel in the block using a nested for loop. It first initializes an array of 10 elements to store the luminance values in the horizontal direction, and then iterates over each row in the window using another for loop. For each row, it computes the luminance value at that position by adding up the values of the pixels in that row.
+
+Finally, the method calculates the average luminance value for the block using the `calculateAverage` method and the sum of the luminance values. It then calls the `thresholdBlock` method to apply the threshold value to the block.
+
+Overall, this method is used to determine the threshold value for a block of pixels in an image, which is necessary for binary image processing tasks such as barcode scanning.
+
+
+No.8 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class HybridBinarizerTest {
+    @Test
+    public void calculateThresholdForBlockTest() {
+        byte[] luminances = new byte[25];
+        int subWidth = 3;
+        int subHeight = 4;
+        int width = 10;
+        int height = 8;
+        int[][] blackPoints = calculateBlackPoints(luminances, subWidth, subHeight, width, height);
+        BitMatrix matrix = new BitMatrix(width, height);
+        
+        // Test for normal case with no offset
+        assertEquals(375, calculateThresholdForBlock(luminances, 0, 0, subWidth, subHeight, blackPoints, matrix));
+        
+        // Test for case with x-axis offset
+        assertEquals(294, calculateThresholdForBlock(luminances, 1, 0, subWidth, subHeight, blackPoints, matrix));
+        
+        // Test for case with y-axis offset
+        assertEquals(352, calculateThresholdForBlock(luminances, 0, 1, subWidth, subHeight, blackPoints, matrix));
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class HybridBinarizerTest {
+    @Test
+    public void calculateThresholdForBlockTest() {
+        // Arrange
+        byte[] luminances = new byte[100];
+        int subWidth = 10;
+        int subHeight = 20;
+        int width = 30;
+        int height = 40;
+        int[][] blackPoints = new int[subHeight][subWidth];
+        BitMatrix matrix = new BitMatrix(width, height);
+        
+        // Act
+        HybridBinarizer.calculateThresholdForBlock(luminances, subWidth, subHeight, width, height, blackPoints, matrix);
+        
+        // Assert
+        assertEquals(30, matrix.getWidth());
+        assertEquals(40, matrix.getHeight());
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.google.zxing.common;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+public class HybridBinarizerTest {
+    @Test
+    public void calculateThresholdForBlockTest() {
+        // Arrange
+        byte[] luminances = new byte[256];
+        int subWidth = 8;
+        int subHeight = 4;
+        int width = 32;
+        int height = 16;
+        int[][] blackPoints = new int[subHeight][subWidth];
+        BitMatrix matrix = new BitMatrix(width, height);
+        
+        // Act
+        calculateThresholdForBlock(luminances, subWidth, subHeight, width, height, blackPoints, matrix);
+        
+        // Assert
+        assertEquals(32768, luminances[0]);
+    }
+}
+
+

@@ -1,0 +1,737 @@
+Source code: 
+
+
+public static String upload(FileItemStream file, String fileDir) {
+    String filePath = null;
+    initOss(endPoint, accessKeyId, accessKeySecret);
+    StringBuilder fileUrl = new StringBuilder();
+    try {
+        String suffix = file.getName().substring(file.getName().lastIndexOf('.'));
+        String fileName = UUID.randomUUID().toString().replace("-", "") + suffix;
+        if (!fileDir.endsWith(SymbolConstant.SINGLE_SLASH)) {
+            fileDir = fileDir.concat(SymbolConstant.SINGLE_SLASH);
+        }
+        fileDir = StrAttackFilter.filter(fileDir);
+        fileUrl = fileUrl.append(fileDir + fileName);
+        if (oConvertUtils.isNotEmpty(staticDomain) && staticDomain.toLowerCase().startsWith(CommonConstant.STR_HTTP)) {
+            filePath = staticDomain + SymbolConstant.SINGLE_SLASH + fileUrl;
+        } else {
+            filePath = "https://" + bucketName + "." + endPoint + SymbolConstant.SINGLE_SLASH + fileUrl;
+        }
+        PutObjectResult result = ossClient.putObject(bucketName, fileUrl.toString(), file.openStream());
+        // 设置权限(公开读)
+        ossClient.setBucketAcl(bucketName, CannedAccessControlList.PublicRead);
+        if (result != null) {
+            log.info("------OSS文件上传成功------" + fileUrl);
+        }
+    } catch (IOException e) {
+        e.printStackTrace();
+        return null;
+    }
+    return filePath;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jeecg.common.util.oss;
+
+import org.apache.commons.fileupload.FileItemStream;
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class OssBootUtilTest {
+
+    @Test
+    public void uploadTest() throws Exception {
+        String expectedEndpoint = "oss-endpoint";
+        String expectedAccessKeyId = "access-key-id";
+        String expectedAccessKeySecret = "access-key-secret";
+        String expectedBucketName = "bucket-name";
+        String expectedStaticDomain = null; // Assume there is no static domain configured.
+        String fileDir = "test-directory/";
+        String fileName = "test.txt";
+        String fileContent = "This is a test file content";
+
+        // Set up the OSS client and other static fields
+        OssBootUtil.setEndPoint(expectedEndpoint);
+        OssBootUtil.setAccessKeyId(expectedAccessKeyId);
+        OssBootUtil.setAccessKeySecret(expectedAccessKeySecret);
+        OssBootUtil.setBucketName(expectedBucketName);
+        OssBootUtil.setStaticDomain(expectedStaticDomain);
+        
+        // Mock the FileItemStream
+        FileItemStream fileItemStream = Mockito.mock(FileItemStream.class);
+        Mockito.when(fileItemStream.getName()).thenReturn(fileName);
+        Mockito.when(fileItemStream.openStream()).thenReturn(new ByteArrayInputStream(fileContent.getBytes()));
+
+        // Mock the OSS client and PutObjectResult
+        OSSClient mockOssClient = Mockito.mock(OSSClient.class);
+        PutObjectResult mockPutObjectResult = Mockito.mock(PutObjectResult.class);
+
+        // Assuming putObject returns a non-null result for a successful upload.
+        Mockito.when(mockPutObjectResult.getETag()).thenReturn("mockETag");
+        Mockito.when(mockOssClient.putObject(eq(expectedBucketName), any(String.class), any(InputStream.class)))
+                .thenReturn(mockPutObjectResult);
+
+        // Replace the static ossClient in the OssBootUtil with the mock
+        ReflectionTestUtils.setField(OssBootUtil.class, "ossClient", mockOssClient);
+
+        // Perform the upload
+        String resultPath = OssBootUtil.upload(fileItemStream, fileDir);
+
+        // Verify results and interactions
+        assertNotNull(resultPath);
+        assertTrue(resultPath.contains(expectedBucketName));
+        assertTrue(resultPath.contains(expectedEndpoint));
+        assertTrue(resultPath.contains(fileDir));
+
+        // Verify that the object was put to the OSS
+        Mockito.verify(mockOssClient).putObject(eq(expectedBucketName), any(String.class), any(InputStream.class));
+
+        // Verify that the file URL is using HTTPS protocol
+        assertTrue(resultPath.startsWith("https://"));
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jeecg.common.util.oss;
+
+import org.apache.commons.fileupload.FileItemStream;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import static org.mockito.Mockito.*;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
+public class OssBootUtilTest {
+
+    // Make sure to have the required static values initialized if needed
+    static {
+        OssBootUtil.setEndPoint("example-endpoint");
+        OssBootUtil.setAccessKeyId("example-access-key-id");
+        OssBootUtil.setAccessKeySecret("example-access-key-secret");
+        OssBootUtil.setBucketName("example-bucket-name");
+        OssBootUtil.setStaticDomain("example-static-domain");
+    }
+
+    @Mock
+    private FileItemStream fileItemStream;
+    @Mock
+    private OssBootUtil ossBootUtil;
+    
+    @BeforeEach
+    public void setUp() throws Exception {
+        MockitoAnnotations.initMocks(this);
+        
+        when(fileItemStream.getName()).thenReturn("test.txt");
+        when(fileItemStream.openStream()).thenReturn(new ByteArrayInputStream("Test Content".getBytes()));
+        
+        // Mocking the static methods if needed using the relevant mocking framework like Mockito
+    }
+    
+    @Test
+    public void uploadTest() throws Exception {
+        // Assuming that the upload method has been mocked and is returning a valid result
+        String fileDir = "test-dir/";
+        String expectedPath = "https://" + OssBootUtil.getBucketName() + "." +  OssBootUtil.getEndPoint() + "/" + fileDir + "test-file-name";
+        
+        when(OssBootUtil.upload(fileItemStream, fileDir)).thenReturn(expectedPath);
+        
+        String resultPath = OssBootUtil.upload(fileItemStream, fileDir);
+        
+        assertNotNull(resultPath, "The upload should return a non-null file path");
+        assertTrue(resultPath.startsWith("https://"), "The upload should return a URL starting with https://");
+        assertEquals(expectedPath, resultPath, "The uploaded file path does not match the expected path");
+        
+        // Verify interaction with the mock if required
+        verify(fileItemStream).getName();
+        verify(fileItemStream).openStream();
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jeecg.common.util.oss;
+
+import org.apache.commons.fileupload.FileItemStream;
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+import static org.junit.jupiter.api.Assertions.*;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+
+public class OssBootUtilTest {
+
+    private static final String TEST_FILE_DIR = "testDir/";
+    private static final String TEST_FILE_NAME = "test.txt";
+    private static final String TEST_FILE_CONTENT = "Test content";
+    private static final String TEST_BUCKET_NAME = "test-bucket";
+    private static final String TEST_END_POINT = "oss-test.aliyuncs.com";
+    
+    // Mocks
+    private static OSSClient mockOssClient;
+    private static FileItemStream mockFileItemStream;
+
+    @BeforeAll
+    public static void setUpClass() {
+        // Mock initialization
+        mockOssClient = Mockito.mock(OSSClient.class);
+        mockFileItemStream = Mockito.mock(FileItemStream.class);
+        
+        // Set static fields
+        OssBootUtil.setEndPoint(TEST_END_POINT);
+        OssBootUtil.setBucketName(TEST_BUCKET_NAME);
+        
+        // Assume the initOss method sets the internal OSSClient
+        OssBootUtil.initOss(TEST_END_POINT, "accessKeyId", "accessKeySecret");
+    }
+
+    @BeforeEach
+    public void setUp() throws Exception {
+        // Configure the mock FileItemStream
+        Mockito.when(mockFileItemStream.openStream()).thenReturn(new ByteArrayInputStream(TEST_FILE_CONTENT.getBytes(StandardCharsets.UTF_8)));
+        Mockito.when(mockFileItemStream.getName()).thenReturn(TEST_FILE_NAME);
+    }
+
+    @Test
+    public void uploadTest() {
+        // Prepare return objects for the mock
+        PutObjectResult mockResult = Mockito.mock(PutObjectResult.class);
+        
+        // Define behavior of the OSS client
+        Mockito.when(mockOssClient.putObject(Mockito.eq(TEST_BUCKET_NAME), Mockito.anyString(), Mockito.any(ByteArrayInputStream.class))).thenReturn(mockResult);
+        
+        // Test the upload method
+        String result = OssBootUtil.upload(mockFileItemStream, TEST_FILE_DIR);
+        
+        // Verify the result
+        assertNotNull(result, "The result should not be null");
+        assertTrue(result.contains(TEST_FILE_DIR), "The result should contain the file directory");
+        assertTrue(result.contains(TEST_END_POINT), "The result should contain the endpoint");
+        assertTrue(result.contains(TEST_FILE_NAME.substring(TEST_FILE_NAME.lastIndexOf('.'))), "The result should contain the generated file extension");
+        assertTrue(result.startsWith("https://"), "The result should start with https://");
+        
+        // Verify interactions
+        Mockito.verify(mockOssClient).putObject(Mockito.anyString(), Mockito.anyString(), Mockito.any());
+    }
+
+    @AfterEach
+    public void tearDown() {
+        // Clean up after each test
+        Mockito.reset(mockOssClient);
+        Mockito.reset(mockFileItemStream);
+    }
+
+    @AfterAll
+    public static void tearDownClass() {
+        // Clean up after all tests are complete
+        OssBootUtil.setOssClient(null);
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jeecg.common.util.oss;
+
+import org.apache.commons.fileupload.FileItemStream;
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+import com.aliyun.oss.OSSClient;
+import com.aliyun.oss.model.PutObjectResult;
+import java.io.InputStream;
+import java.util.UUID;
+
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class OssBootUtilTest {
+
+    private static OSSClient mockOssClient;
+    private static PutObjectResult mockPutObjectResult;
+    private static FileItemStream mockFileItemStream;
+    private static InputStream mockInputStream;
+
+    @BeforeAll
+    public static void setUp() {
+        mockOssClient = mock(OSSClient.class);
+        mockPutObjectResult = mock(PutObjectResult.class);
+        mockFileItemStream = mock(FileItemStream.class);
+        mockInputStream = mock(InputStream.class);
+
+        // Assume these static values are properly set for test
+        OssBootUtil.setEndPoint("oss-test-endpoint");
+        OssBootUtil.setAccessKeyId("testAccessKeyId");
+        OssBootUtil.setAccessKeySecret("testAccessKeySecret");
+        OssBootUtil.setBucketName("test-bucket");
+        OssBootUtil.setStaticDomain("https://test-static-domain.com");
+
+        when(OssBootUtil.getOssClient()).thenReturn(mockOssClient);
+        when(mockFileItemStream.getName()).thenReturn("testfile.txt");
+        when(mockFileItemStream.openStream()).thenReturn(mockInputStream);
+        when(mockOssClient.putObject(anyString(), anyString(), any(InputStream.class))).thenReturn(mockPutObjectResult);
+    }
+
+    @Test
+    public void uploadTest() {
+        String fileDir = "/test/dir/";
+        String expectedFileDir = StrAttackFilter.filter(fileDir);
+        String expectedFileName = UUID.randomUUID().toString().replace("-", "") + ".txt";
+        String expectedFileUrl = expectedFileDir + expectedFileName;
+        String expectedResult = "https://test-static-domain.com" + SymbolConstant.SINGLE_SLASH + expectedFileUrl;
+
+        String result = OssBootUtil.upload(mockFileItemStream, fileDir);
+
+        assertNotNull(result);
+        assertEquals(expectedResult, result);
+
+        // Verify that the OSSClient is used to put the object as expected
+        Mockito.verify(mockOssClient).putObject("test-bucket", expectedFileUrl, mockInputStream);
+    }
+
+    @AfterAll
+    public static void tearDown() {
+        // Cleanup resources if necessary
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jeecg.common.util.oss;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import com.aliyun.oss.*;
+import com.aliyun.oss.model.*;
+import org.apache.commons.fileupload.FileItemStream;
+import java.io.*;
+
+public class OssBootUtilTest {
+    private static final String END_POINT = "test-endpoint";
+    private static final String ACCESS_KEY_ID = "test-access-key-id";
+    private static final String ACCESS_KEY_SECRET = "test-access-key-secret";
+    private static final String BUCKET_NAME = "test-bucket";
+    private static final String STATIC_DOMAIN = "http://test-static-domain.com";
+    private static final String FILE_DIR = "test-dir/";
+    private static final String FILE_NAME = "test.txt";
+    private static final String MIME_TYPE = "text/plain";
+
+    private OSSClient ossClient;
+    private FileItemStream fileItemStream;
+    private InputStream inputStream;
+    private PutObjectResult putObjectResult;
+
+    @BeforeEach
+    public void setUp() throws IOException {
+        ossClient = mock(OSSClient.class);
+        fileItemStream = mock(FileItemStream.class);
+        inputStream = new ByteArrayInputStream("test content".getBytes());
+        putObjectResult = mock(PutObjectResult.class);
+
+        OssBootUtil.setEndPoint(END_POINT);
+        OssBootUtil.setAccessKeyId(ACCESS_KEY_ID);
+        OssBootUtil.setAccessKeySecret(ACCESS_KEY_SECRET);
+        OssBootUtil.setBucketName(BUCKET_NAME);
+        OssBootUtil.setStaticDomain(STATIC_DOMAIN);
+
+        when(fileItemStream.getName()).thenReturn(FILE_NAME);
+        when(fileItemStream.openStream()).thenReturn(inputStream);
+        when(ossClient.putObject(eq(BUCKET_NAME), anyString(), any(InputStream.class))).thenReturn(putObjectResult);
+        
+        // Set the ossClient in your OssBootUtil to use the mock
+        // Ideally, we would have a method or a way to inject this mock into OssBootUtil,
+        // such as OssBootUtil.setOssClient(ossClient); otherwise, reflection will be needed.
+    }
+
+    @Test
+    public void uploadTest() {
+        String expectedUrl = STATIC_DOMAIN + "/" + FILE_DIR + "generated-file-name.txt";
+        // We need to simulate the generation of the UUID, so let's assume the generated UUID is
+        // "123e4567-e89b-12d3-a456-426614174000" and after replacing the hyphens it will be "123e4567e89b12d3a456426614174000".
+        // The actual implementation would use UUID.randomUUID().
+        String generatedFileName = "123e4567e89b12d3a456426614174000.txt";
+
+        try {
+            String resultPath = OssBootUtil.upload(fileItemStream, FILE_DIR);
+
+            assertNotNull(resultPath, "The result path should not be null");
+            assertTrue(resultPath.endsWith(generatedFileName), "The result path should end with the generated file name");
+            assertEquals(expectedUrl, resultPath, "The expected URL should match the result path");
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail("IOException should not be thrown during the test");
+        }
+
+        verify(ossClient, times(1)).putObject(eq(BUCKET_NAME), endsWith(generatedFileName), any(InputStream.class));
+    }
+
+    @AfterEach
+    void tearDown() throws IOException {
+        inputStream.close();
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jeecg.common.util.oss;
+
+import org.apache.commons.fileupload.FileItemStream;
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+
+public class OssBootUtilTest {
+
+    private static final String TEST_DIR = "test_directory/";
+    private static final String TEST_FILE_NAME = "test.txt";
+    private static final String TEST_BUCKET_NAME = "test-bucket";
+
+    @BeforeAll
+    public static void setup() {
+        OssBootUtil.setEndPoint("endpoint.example.com");
+        OssBootUtil.setAccessKeyId("testAccessKeyId");
+        OssBootUtil.setAccessKeySecret("testAccessKeySecret");
+        OssBootUtil.setBucketName(TEST_BUCKET_NAME);
+        OssBootUtil.setStaticDomain("https://static.example.com");
+    }
+
+    @Test
+    public void uploadTest() throws Exception {
+        // Mock FileItemStream and OSSClient
+        FileItemStream fileItemStream = mock(FileItemStream.class);
+        OSSClient ossClient = mock(OSSClient.class);
+
+        // Setup FileItemStream to return a known file name and a ByteArrayInputStream (representing file data)
+        when(fileItemStream.getName()).thenReturn(TEST_FILE_NAME);
+        when(fileItemStream.openStream()).thenReturn(new ByteArrayInputStream("File content".getBytes(StandardCharsets.UTF_8)));
+
+        // Mock the static OSSClient inside OssBootUtil
+        OssBootUtil.initOss(OssBootUtil.getEndPoint(), OssBootUtil.getAccessKeyId(), 
+            OssBootUtil.getAccessKeySecret());
+        OssBootUtil.ossClient = ossClient;
+
+        // Mock successful putObject call
+        PutObjectResult result = new PutObjectResult();
+        when(ossClient.putObject(eq(TEST_BUCKET_NAME), anyString(), any())).thenReturn(result);
+
+        // Perform the upload
+        String filePath = OssBootUtil.upload(fileItemStream, TEST_DIR);
+
+        // Assertions
+        assertNotNull(filePath);
+        assertFalse(filePath.isEmpty());
+        if (OssBootUtil.getStaticDomain() != null && OssBootUtil.getStaticDomain().toLowerCase().startsWith(CommonConstant.STR_HTTP)) {
+            assertTrue(filePath.startsWith(OssBootUtil.getStaticDomain() + SymbolConstant.SINGLE_SLASH));
+        } else {
+            assertTrue(filePath.startsWith("https://" + OssBootUtil.getBucketName() + "." + OssBootUtil.getEndPoint() + SymbolConstant.SINGLE_SLASH));
+        }
+
+        // Verify that the file was put into the bucket
+        verify(ossClient).putObject(eq(TEST_BUCKET_NAME), anyString(), any());
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jeecg.common.util.oss;
+
+import org.apache.commons.fileupload.FileItemStream;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import static org.mockito.Mockito.*;
+
+import com.aliyun.oss.OSSClient;
+import com.aliyun.oss.model.PutObjectResult;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
+public class OssBootUtilTest {
+
+    @Mock
+    private OSSClient mockOssClient;
+
+    @Mock
+    private FileItemStream mockFileItemStream;
+
+    @Mock
+    private PutObjectResult mockPutObjectResult;
+
+    // Initialize mocks before each test
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void uploadTest() throws Exception {
+        // Prepare test data
+        String fileDir = "test-dir/";
+        String fileName = "test-file.txt";
+        String fileContent = "Test file content";
+        String expectedFilePath = "https://" + OssBootUtil.getBucketName() + "." + OssBootUtil.getEndPoint() + "/" + fileDir + "testfile.txt";
+
+        // Set up the mock behavior
+        when(mockFileItemStream.getName()).thenReturn(fileName);
+        when(mockFileItemStream.openStream()).thenReturn(new ByteArrayInputStream(fileContent.getBytes()));
+        when(mockOssClient.putObject(anyString(), anyString(), any(InputStream.class))).thenReturn(mockPutObjectResult);
+
+        // Use reflection to inject the mocked OSSClient into the static OssBootUtil class
+        ReflectionTestUtils.setField(OssBootUtil.class, "ossClient", mockOssClient);
+
+        // Call the method under test
+        String result = OssBootUtil.upload(mockFileItemStream, fileDir);
+
+        // Verify the interaction with the mocked OSSClient
+        verify(mockOssClient, times(1)).putObject(eq(OssBootUtil.getBucketName()), anyString(), any(InputStream.class));
+        verify(mockOssClient, times(1)).setBucketAcl(eq(OssBootUtil.getBucketName()), eq(CannedAccessControlList.PublicRead));
+
+        // Assert that the result is as expected
+        assertNotNull(result);
+        assertEquals(expectedFilePath, result);
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.jeecg.common.util.oss;
+
+import org.apache.commons.fileupload.FileItemStream;
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
+class MockFileItemStream implements FileItemStream {
+    @Override
+    public InputStream openStream() {
+        // Mock InputStream.
+        return new ByteArrayInputStream("Mock Content".getBytes());
+    }
+    // Other required overrides would go here.
+    // Implementations can be left empty or mock behavior added as needed for the test.
+    @Override
+    public String getContentType() {
+        return null;
+    }
+    @Override
+    public String getName() {
+        return "test.txt";
+    }
+    @Override
+    public String getFieldName() {
+        return null;
+    }
+    @Override
+    public boolean isFormField() {
+        return false;
+    }
+    @Override
+    public java.io.OutputStream getOutputStream() {
+        return null;
+    }
+}
+
+public class OssBootUtilTest {
+    private static final String FAKE_ENDPOINT = "oss-fake-endpoint.aliyuncs.com";
+    private static final String FAKE_ACCESS_KEY_ID = "fakeAccessKeyId";
+    private static final String FAKE_ACCESS_KEY_SECRET = "fakeAccessKeySecret";
+    private static final String FAKE_BUCKET_NAME = "fake-bucket-name";
+    private static final String STATIC_DOMAIN = "https://fake-static-domain.com";
+    private static final String FILE_DIR = "directory/";
+
+    private OSSClient mockedOssClient;
+
+    @BeforeEach
+    public void setup() {
+        // Assuming static setters are public as the context does not define it clearly
+        OssBootUtil.setEndPoint(FAKE_ENDPOINT);
+        OssBootUtil.setAccessKeyId(FAKE_ACCESS_KEY_ID);
+        OssBootUtil.setAccessKeySecret(FAKE_ACCESS_KEY_SECRET);
+        OssBootUtil.setBucketName(FAKE_BUCKET_NAME);
+        OssBootUtil.setStaticDomain(STATIC_DOMAIN);
+
+        mockedOssClient = Mockito.mock(OSSClient.class);
+        // Assuming there is a public static setter or alternative method to set the internal ossClient instance
+        OssBootUtil.setOssClient(mockedOssClient);
+    }
+
+    @Test
+    public void uploadTest() throws Exception {
+        // Arrange
+        FileItemStream fileItemStream = new MockFileItemStream();
+
+        PutObjectResult putObjectResult = Mockito.mock(PutObjectResult.class);
+        when(mockedOssClient.putObject(eq(FAKE_BUCKET_NAME), anyString(), any(InputStream.class))).thenReturn(putObjectResult);
+
+        // Act
+        String result = OssBootUtil.upload(fileItemStream, FILE_DIR);
+
+        // Assert
+        assertNotNull(result, "The result should not be null.");
+        assertTrue(result.startsWith(STATIC_DOMAIN), "The result should start with the static domain.");
+        assertTrue(result.contains(FILE_DIR), "The result should contain the file directory.");
+        verify(mockedOssClient, times(1)).putObject(eq(FAKE_BUCKET_NAME), anyString(), any(InputStream.class));
+        verify(mockedOssClient, times(1)).setBucketAcl(eq(FAKE_BUCKET_NAME), eq(CannedAccessControlList.PublicRead));
+    }
+
+    @AfterEach
+    public void tearDown() {
+        // Do any necessary cleanup after tests
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jeecg.common.util.oss;
+
+import org.apache.commons.fileupload.FileItemStream;
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+import static org.mockito.Mockito.*;
+
+import com.aliyun.oss.model.PutObjectResult;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class OssBootUtilTest {
+
+    private static final String TEST_FILE_DIR = "test_directory/";
+    private static final String TEST_FILE_NAME = "example.txt";
+
+    @Test
+    public void uploadTest() throws Exception {
+        // Prepare a test file input stream and its name
+        FileItemStream fileItemStream = Mockito.mock(FileItemStream.class);
+        InputStream fileContentStream = new ByteArrayInputStream("Test content".getBytes(StandardCharsets.UTF_8));
+        
+        when(fileItemStream.getName()).thenReturn(TEST_FILE_NAME);
+        when(fileItemStream.openStream()).thenReturn(fileContentStream);
+
+        // Mock the static methods in OssBootUtil that are used in the upload method
+        OssBootUtil.setEndPoint("oss-test.example.com");
+        OssBootUtil.setAccessKeyId("testAccessKeyId");
+        OssBootUtil.setAccessKeySecret("testAccessKeySecret");
+        OssBootUtil.setBucketName("testBucket");
+        OssBootUtil.setStaticDomain("https://static.example.com");
+
+        OSSClient mockOssClient = Mockito.mock(OSSClient.class);
+        OssBootUtil.ossClient = mockOssClient; // Assuming ossClient can be accessed directly for testing purposes
+
+        PutObjectResult mockPutObjectResult = Mockito.mock(PutObjectResult.class);
+        when(mockOssClient.putObject(anyString(), anyString(), any(InputStream.class))).thenReturn(mockPutObjectResult);
+
+        // Call the method under test
+        String resultFilePath = OssBootUtil.upload(fileItemStream, TEST_FILE_DIR);
+
+        assertNotNull(resultFilePath, "The result file path should not be null");
+
+        // Verify that the putObject was called with the correct bucket name and file stream
+        verify(mockOssClient).putObject(eq(OssBootUtil.getBucketName()), anyString(), eq(fileContentStream));
+
+        // Check if the file path is correctly constructed
+        assertTrue(resultFilePath.startsWith("https://static.example.com/test_directory/"), "The file path should start with the static domain followed by the directory");
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.common.util.oss;
+
+import org.junit.jupiter.api.*;
+import org.apache.commons.fileupload.FileItemStream;
+import org.mockito.Mockito;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class OssBootUtilTest {
+
+    @Test
+    public void uploadTest() {
+        // Arrange
+        String expectedSuffix = ".txt"; // This would be read from the FileItemStream in reality
+        String fileDir = "uploads";
+        String staticDomain = "https://example.com";
+        String endpoint = "oss-endpoint";
+        String bucketName = "my-bucket";
+
+        // Mock UUID and suffix extraction from file name
+        UUID mockUUID = UUID.randomUUID();
+        String expectedFileName = mockUUID.toString().replace("-", "") + expectedSuffix;
+        try (MockedStatic<UUID> mockedUuid = Mockito.mockStatic(UUID.class)) {
+            mockedUuid.when(UUID::randomUUID).thenReturn(mockUUID);
+
+            // Mock initOss to set the static variables of the utility class
+            OssBootUtil.setBucketName(bucketName);
+            OssBootUtil.setEndPoint(endpoint);
+            OssBootUtil.setStaticDomain(staticDomain);
+
+            // Mock the creation of the file URL
+            FileItemStream fileItemStream = Mockito.mock(FileItemStream.class);
+            when(fileItemStream.getName()).thenReturn("file" + expectedSuffix);
+            when(fileItemStream.openStream()).thenReturn(new InputStream() {
+                public int read() {
+                    return -1; // End of stream
+                }
+            });
+
+            // Act
+            String result = OssBootUtil.upload(fileItemStream, fileDir);
+
+            // Assert
+            String expectedPath = staticDomain + "/" + fileDir + "/" + expectedFileName;
+            assertEquals(expectedPath, result, "The resulting file path should match the expected one.");
+        } catch (Exception e) {
+            fail("Exception should not be thrown in test");
+        }
+    }
+}
+
+

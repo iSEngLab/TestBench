@@ -1,0 +1,370 @@
+Source code: 
+
+
+static double slowCos(final double x, final double[] result) {
+
+    final double[] xs = new double[2];
+    final double[] ys = new double[2];
+    final double[] facts = new double[2];
+    final double[] as = new double[2];
+    split(x, xs);
+    ys[0] = ys[1] = 0.0;
+
+    for (int i = FACT.length - 1; i >= 0; i--) {
+        splitMult(xs, ys, as);
+        ys[0] = as[0];
+        ys[1] = as[1];
+
+        if ((i & 1) != 0) { // skip odd entries
+            continue;
+        }
+
+        split(FACT[i], as);
+        splitReciprocal(as, facts);
+
+        if ((i & 2) != 0) { // alternate terms are negative
+            facts[0] = -facts[0];
+            facts[1] = -facts[1];
+        }
+
+        splitAdd(ys, facts, as);
+        ys[0] = as[0]; ys[1] = as[1];
+    }
+
+    if (result != null) {
+        result[0] = ys[0];
+        result[1] = ys[1];
+    }
+
+    return ys[0] + ys[1];
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    private static final double DELTA = 1e-15;
+
+    @Test
+    public void slowCosTest() {
+        // Test values within the range -2π to 2π
+        double[] testValues = {-2 * Math.PI, -3 * Math.PI / 2, -Math.PI, -Math.PI / 2, -Math.PI / 4, 0, Math.PI / 4, Math.PI / 2, Math.PI, 3 * Math.PI / 2, 2 * Math.PI};
+        double[] result = new double[2];
+
+        for (double value : testValues) {
+            double expected = Math.cos(value);
+            double actual = AccurateMathCalc.slowCos(value, result);
+
+            // The result should be close to the value from Math.cos
+            assertEquals(expected, actual, DELTA, "slowCos should approximate Math.cos for " + value);
+
+            // Check if the extended precision result array (result) also matches the expectations (optional)
+            // This part of the test assumes the implementation of slowCos intends to return a high-precision result as its second return value
+            // We're not doing this part due to the lack of information regarding the split method's handling of extended precision results
+        }
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+
+    @Test
+    public void slowCosTest() {
+        // Test for zero input
+        double[] result = new double[2];
+        double ans = AccurateMathCalc.slowCos(0.0, result);
+        assertEquals(1.0, ans, "The cosine of 0 should be 1");
+
+        // Compare against java.lang.Math.cos for a set of inputs
+        double[] inputs = {Math.PI / 6, Math.PI / 4, Math.PI / 3, Math.PI / 2, Math.PI};
+        for (double input : inputs) {
+            double expected = Math.cos(input);
+            ans = AccurateMathCalc.slowCos(input, null);
+            assertEquals(expected, ans, 1e-15, "The cosine of " + input + " should be close to " + expected);
+        }
+        
+        // Test if the result array is filled correctly when not null
+        ans = AccurateMathCalc.slowCos(Math.PI / 4, result);
+        assertNotNull(result, "Result array should be filled");
+        assertEquals(ans, result[0] + result[1], "The result array should contain the split components of cos value for " + (Math.PI / 4));
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+
+    private static final double EPSILON = 1e-14;
+
+    @Test
+    public void slowCosTest() {
+        // Test using a known cosine value.
+        final double angle = Math.PI / 3; // 60 degrees
+        final double expectedResult = 0.5; // cos(60 degrees) = cos(pi/3) = 0.5
+        double[] result = new double[2];
+        
+        // Call the method under test
+        double actualResult = AccurateMathCalc.slowCos(angle, result);
+        
+        // Use an epsilon value for comparison of floating points
+        assertEquals(expectedResult, actualResult, EPSILON, "The cosine value did not match the expected result");
+        
+        // Testing edge case close to zero
+        double actualCosZero = AccurateMathCalc.slowCos(0.0, null);
+        assertEquals(1.0, actualCosZero, EPSILON, "The cosine of 0 should be 1");
+
+        // Testing edge case close to pi/2
+        double actualCosPiOverTwo = AccurateMathCalc.slowCos(Math.PI / 2, null);
+        assertEquals(0.0, actualCosPiOverTwo, EPSILON, "The cosine of pi/2 should be 0");
+
+        // Ensure that the extended result is also correct if provided
+        assertNotNull(result, "The result array should not be null when passed to the method");
+        assertEquals(expectedResult, result[0] + result[1], EPSILON, "The extended precision result did not match expected result");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    
+    private static final double TOLERANCE = 1e-10;
+    
+    @Test
+    public void slowCosTest() {
+        // Test around zero
+        double[] result = new double[2];
+        assertEquals(Math.cos(0.0), AccurateMathCalc.slowCos(0.0, result), TOLERANCE, "slowCos should be close to Math.cos for 0.0");
+        assertEquals(Math.cos(0.0), result[0] + result[1], TOLERANCE, "Result array should sum up to slowCos for 0.0");
+
+        // Test around Pi/2
+        result = new double[2];
+        assertEquals(Math.cos(Math.PI / 2), AccurateMathCalc.slowCos(Math.PI / 2, result), TOLERANCE, "slowCos should be close to Math.cos for Pi/2");
+        assertEquals(Math.cos(Math.PI / 2), result[0] + result[1], TOLERANCE, "Result array should sum up to slowCos for Pi/2");
+
+        // Test around Pi
+        result = new double[2];
+        assertEquals(Math.cos(Math.PI), AccurateMathCalc.slowCos(Math.PI, result), TOLERANCE, "slowCos should be close to Math.cos for Pi");
+        assertEquals(Math.cos(Math.PI), result[0] + result[1], TOLERANCE, "Result array should sum up to slowCos for Pi");
+
+        // Test around 3*Pi/2
+        result = new double[2];
+        assertEquals(Math.cos(3 * Math.PI / 2), AccurateMathCalc.slowCos(3 * Math.PI / 2, result), TOLERANCE, "slowCos should be close to Math.cos for 3*Pi/2");
+        assertEquals(Math.cos(3 * Math.PI / 2), result[0] + result[1], TOLERANCE, "Result array should sum up to slowCos for 3*Pi/2");
+
+        // Test null result array does not cause an exception
+        assertDoesNotThrow(() -> AccurateMathCalc.slowCos(Math.PI, null), "Passing null result array should not throw an exception");
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    @Test
+    public void slowCosTest() {
+        // Angle close to 0
+        double result = AccurateMathCalc.slowCos(0.0, null);
+        assertEquals(Math.cos(0.0), result, 1e-9, "Cosine of 0 should be 1");
+
+        // Angle is PI / 2
+        result = AccurateMathCalc.slowCos(Math.PI / 2, null);
+        assertEquals(Math.cos(Math.PI / 2), result, 1e-9, "Cosine of PI / 2 should be close to 0");
+
+        // Angle is PI
+        result = AccurateMathCalc.slowCos(Math.PI, null);
+        assertEquals(Math.cos(Math.PI), result, 1e-9, "Cosine of PI should be -1");
+
+        // Test with supplied result array to check extended precision
+        double[] extendedResult = new double[2];
+        result = AccurateMathCalc.slowCos(Math.PI / 4, extendedResult);
+        double expected = Math.cos(Math.PI / 4);
+        double actualExtended = extendedResult[0] + extendedResult[1];
+        assertEquals(expected, result, 1e-9, "Cosine of PI / 4 should be sqrt(2)/2");
+        assertEquals(expected, actualExtended, 1e-9, "Extended precision result of PI / 4 should be close to sqrt(2)/2");
+
+        // Test for negative angle
+        result = AccurateMathCalc.slowCos(-Math.PI / 3, null);
+        assertEquals(Math.cos(-Math.PI / 3), result, 1e-9, "Cosine of -PI / 3 should be 0.5");
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    @Test
+    public void slowCosTest() {
+        double x = 0.5; // Test value in radians, within range for which the Taylor series is accurate
+        double delta = 1e-9; // Acceptable delta error for the approximation vs. Math.cos
+        double[] result = new double[2];
+        double slowCosResult = AccurateMathCalc.slowCos(x, result);
+
+        // Check the slowCos against Math.cos for accuracy
+        assertEquals(Math.cos(x), slowCosResult, delta);
+
+        // We can also verify the result array for extended precision
+        double expectedHighPrecisionResult = result[0] + result[1];
+        assertEquals(Math.cos(x), expectedHighPrecisionResult, delta,
+                     "Extended precision result not close enough to Math.cos");
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+
+    private static final double TOLERANCE = 1e-9;
+
+    @Test
+    public void slowCosTest() {
+        // Test values around zero, pi/2, pi, and 3*pi/2
+        double testValues[] = {0, Math.PI / 2, Math.PI, 3 * Math.PI / 2};
+
+        for (double angle : testValues) {
+            double expectedCos = Math.cos(angle);
+            double[] result = new double[2];
+            double slowCos = AccurateMathCalc.slowCos(angle, result);
+
+            assertEquals(expectedCos, slowCos, TOLERANCE, "Incorrect cosine value for angle: " + angle);
+        }
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+
+    private static final double TOLERANCE = 1e-12;
+
+    @Test
+    public void slowCosTest() {
+        double[] testValues = {0.0, Math.PI / 6, Math.PI / 4, Math.PI / 3, Math.PI / 2};
+        double[] expectedResult = {1.0, Math.sqrt(3) / 2, Math.sqrt(2) / 2, 0.5, 0.0};
+        double[] resultContainer = new double[2];
+
+        for (int i = 0; i < testValues.length; i++) {
+            double result = AccurateMathCalc.slowCos(testValues[i], resultContainer);
+            double expected = expectedResult[i];
+            assertEquals(expected, result, TOLERANCE, "SlowCos does not match standard Math.cos for angle " + testValues[i]);
+        }
+
+        // Test that resultContainer returns the same result
+        for (int i = 0; i < testValues.length; i++) {
+            AccurateMathCalc.slowCos(testValues[i], resultContainer);
+            double combinedResult = resultContainer[0] + resultContainer[1];
+            assertEquals(expectedResult[i], combinedResult, TOLERANCE, "Result container does not match expected result for angle " + testValues[i]);
+        }
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    @Test
+    public void slowCosTest() {
+        final double delta = 1e-9;
+        double x = Math.PI / 4; // Test input for cosine
+        double expectedCos = Math.cos(x); // Expected value using Math.cos
+        double[] result = new double[2];
+        double actualCos = AccurateMathCalc.slowCos(x, result);
+
+        // Check the main result is close to the expected value
+        assertEquals(expectedCos, actualCos, delta, "slowCos result differs from Math.cos");
+
+        // Check the split parts when added give the correct result
+        double splitCos = result[0] + result[1];
+        assertEquals(expectedCos, splitCos, delta, "The sum of split parts of slowCos does not match expected value.");
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+
+    private static final double TOLERANCE = 1e-15;
+
+    @Test
+    public void slowCosTest() {
+        // Test for angle 0
+        assertEquals(Math.cos(0.0), AccurateMathCalc.slowCos(0.0, null), TOLERANCE);
+
+        // Test for angle PI/4
+        assertEquals(Math.cos(Math.PI / 4), AccurateMathCalc.slowCos(Math.PI / 4, null), TOLERANCE);
+        
+        // Test for angle PI/2
+        assertEquals(Math.cos(Math.PI / 2), AccurateMathCalc.slowCos(Math.PI / 2, null), TOLERANCE);
+
+        // Test for negative angle -PI/4
+        assertEquals(Math.cos(-Math.PI / 4), AccurateMathCalc.slowCos(-Math.PI / 4, null), TOLERANCE);
+
+        // Test with result array
+        double[] result = new double[2];
+        double expected = Math.cos(Math.PI / 3);
+        double actual = AccurateMathCalc.slowCos(Math.PI / 3, result);
+        double highPrecisionResult = result[0] + result[1];
+
+        assertEquals(expected, actual, TOLERANCE, "Regular precision result mismatch");
+        assertEquals(expected, highPrecisionResult, TOLERANCE, "High precision result mismatch");
+    }
+}
+
+

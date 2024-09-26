@@ -1,0 +1,24 @@
+{
+    "project_name": "JCTools",
+    "file_name": "FixedSizeStripedLongCounter.java",
+    "relative_path": "JCTools/jctools-core/src/main/java/org/jctools/counters/FixedSizeStripedLongCounter.java",
+    "execute_path": "JCTools",
+    "package": "org.jctools.counters",
+    "docstring": "/**\n     * Returns the probe value for the current thread.\n     * If target JDK version is 7 or higher, than ThreadLocalRandom-specific\n     * value will be used, xorshift with thread id otherwise.\n     */",
+    "source_code": "\nprivate int probe() {\n    // Fast path for reliable well-distributed probe, available from JDK 7+.\n    // As long as PROBE is final static this branch will be constant folded\n    // (i.e removed).\n    if (PROBE != -1) {\n        int probe;\n        if ((probe = UNSAFE.getInt(Thread.currentThread(), PROBE)) == 0) {\n            ThreadLocalRandom.current(); // force initialization\n            probe = UNSAFE.getInt(Thread.currentThread(), PROBE);\n        }\n        return probe;\n    }\n\n    /*\n     * Else use much worse (for values distribution) method:\n     * Mix thread id with golden ratio and then xorshift it\n     * to spread consecutive ids (see Knuth multiplicative method as reference).\n     */\n    int probe = (int) ((Thread.currentThread().getId() * 0x9e3779b9) & Integer.MAX_VALUE);\n    // xorshift\n    probe ^= probe << 13;\n    probe ^= probe >>> 17;\n    probe ^= probe << 5;\n    return probe;\n}\n\n",
+    "class_name": "FixedSizeStripedLongCounterPrePad",
+    "method_name": "probe",
+    "arguments": [],
+    "generate_test": [
+        "@Test\npublic void probeTest() {\n    int result = probe();\n    assertEquals(expected, result);\n}",
+        "@Test\npublic void probeTest() {\n    assertEquals(expectedProbeValue, probe());\n}",
+        "@Test\npublic void probeTest() {\n    FixedSizeStripedLongCounterPrePad counter = new FixedSizeStripedLongCounterPrePad();\n    int result = counter.probe();\n    assertNotNull(result);\n}",
+        "@Test\npublic void probeTest() {\n    assertEquals(12345, probe());\n}",
+        "@Test\npublic void probeTest() {\n    int result = probe();\n    assertNotNull(result);\n    assertEquals(expectedResult, result);\n}",
+        "@Test\npublic void probeTest() {\n    FixedSizeStripedLongCounterPrePad counter = new FixedSizeStripedLongCounterPrePad();\n    int result = counter.probe();\n    assertNotNull(result);\n}",
+        "@Test\npublic void probeTest() {\n    FixedSizeStripedLongCounterPrePad counter = new FixedSizeStripedLongCounterPrePad();\n    int expected = counter.probe();\n    int actual = probe();\n    assertEquals(expected, actual);\n}",
+        "@Test\npublic void probeTest() {\n    // Given\n    FixedSizeStripedLongCounterPrePad counter = new FixedSizeStripedLongCounterPrePad();\n    \n    // When\n    int result = counter.probe();\n    \n    // Then\n    assertNotNull(result);\n}",
+        "@Test\npublic void probeTest() {\n    FixedSizeStripedLongCounterPrePad counter = new FixedSizeStripedLongCounterPrePad();\n    int result = counter.probe();\n    assertNotNull(result);\n}",
+        "@Test\npublic void probeTest() {\n    FixedSizeStripedLongCounterPrePad counter = new FixedSizeStripedLongCounterPrePad();\n    int result = counter.probe();\n    assertNotNull(result);\n}"
+    ]
+}

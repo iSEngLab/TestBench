@@ -1,0 +1,760 @@
+Source code: 
+
+
+Node mergeKList(Node[] a, int N) {
+    // Min Heap
+    PriorityQueue<Node> min = new PriorityQueue<>(Comparator.comparingInt(x -> x.data));
+
+    // adding head of all linkedList in min heap
+    min.addAll(Arrays.asList(a).subList(0, N));
+
+    // Make new head among smallest heads in K linkedList
+    Node head = min.poll();
+    min.add(head.next);
+    Node curr = head;
+
+    // merging LinkedList
+    while (!min.isEmpty()) {
+        Node temp = min.poll();
+        curr.next = temp;
+        curr = temp;
+
+        // Add Node in min Heap only if temp.next is not null
+        if (temp.next != null) {
+            min.add(temp.next);
+        }
+    }
+
+    return head;
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.thealgorithms.datastructures.lists;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+class Node implements Comparable<Node> {
+    int data;
+    Node next;
+
+    Node(int data) {
+        this.data = data;
+        this.next = null;
+    }
+
+    @Override
+    public int compareTo(Node o) {
+        return this.data - o.data;
+    }
+}
+
+public class Merge_K_SortedLinkedlistTest {
+
+    private Node[] createTestLists() {
+        // Create test linked lists:
+        // List 1: 1 -> 4 -> 5
+        Node n11 = new Node(1);
+        Node n12 = new Node(4);
+        Node n13 = new Node(5);
+        n11.next = n12;
+        n12.next = n13;
+
+        // List 2: 1 -> 3 -> 4
+        Node n21 = new Node(1);
+        Node n22 = new Node(3);
+        Node n23 = new Node(4);
+        n21.next = n22;
+        n22.next = n23;
+
+        // List 3: 2 -> 6
+        Node n31 = new Node(2);
+        Node n32 = new Node(6);
+        n31.next = n32;
+
+        return new Node[] { n11, n21, n31 };
+    }
+
+    @Test
+    public void mergeKListTest() {
+        // Implement test by completing <FILL> tag
+        Node[] lists = createTestLists();
+        Merge_K_SortedLinkedlist algo = new Merge_K_SortedLinkedlist();
+        
+        Node mergedHead = algo.mergeKList(lists, lists.length);
+        
+        // Expected merged list = 1 -> 1 -> 2 -> 3 -> 4 -> 4 -> 5 -> 6
+        int[] expectedData = {1, 1, 2, 3, 4, 4, 5, 6};
+        int index = 0;
+        
+        while (mergedHead != null && index < expectedData.length) {
+            assertEquals(expectedData[index], mergedHead.data);
+            mergedHead = mergedHead.next;
+            index++;
+        }
+        
+        // Check that we have reached the end of the merged list
+        assertNull(mergedHead);
+        // Check that we have seen all expected elements
+        assertEquals(expectedData.length, index);
+    }
+}
+
+class Merge_K_SortedLinkedlist {
+    // Assuming this is the method supplied in the JAVA Source Code you need to test.
+    Node mergeKList(Node[] a, int N) {
+        PriorityQueue<Node> min = new PriorityQueue<>(Comparator.comparingInt(x -> x.data));
+        min.addAll(Arrays.asList(a).subList(0, N));
+
+        Node head = min.poll();
+        if (head.next != null) {
+            min.add(head.next);
+        }
+        Node curr = head;
+
+        while (!min.isEmpty()) {
+            Node temp = min.poll();
+            curr.next = temp;
+            curr = temp;
+
+            if (temp.next != null) {
+                min.add(temp.next);
+            }
+        }
+
+        return head;
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package com.thealgorithms.datastructures.lists;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+class Node implements Comparable<Node> {
+    int data;
+    Node next;
+
+    Node(int data) {
+        this.data = data;
+        this.next = null;
+    }
+
+    @Override
+    public int compareTo(Node o) {
+        return Integer.compare(this.data, o.data);
+    }
+}
+
+public class Merge_K_SortedLinkedlistTest {
+
+    @Test
+    public void mergeKListTest() {
+        // Create linked lists
+        Node list1 = new Node(1);
+        list1.next = new Node(4);
+        list1.next.next = new Node(5);
+
+        Node list2 = new Node(1);
+        list2.next = new Node(3);
+        list2.next.next = new Node(4);
+
+        Node list3 = new Node(2);
+        list3.next = new Node(6);
+
+        // Array of linked list heads
+        Node[] arr = {list1, list2, list3};
+
+        // Merge K sorted linked lists
+        Merge_K_SortedLinkedlist mergeKSortedLinkedList = new Merge_K_SortedLinkedlist();
+        Node result = mergeKSortedLinkedList.mergeKList(arr, arr.length);
+
+        // Verify the merged linked list
+        assertNotNull(result);
+
+        // Expected sorted order in a flat array for easy verification
+        int[] expected = {1, 1, 2, 3, 4, 4, 5, 6};
+        int i = 0;
+        while (result != null) {
+            assertEquals(expected[i++], result.data);
+            result = result.next;
+        }
+
+        // Make sure every expected element was checked
+        assertEquals(expected.length, i);
+    }
+}
+
+class Merge_K_SortedLinkedlist {
+    Node mergeKList(Node[] a, int N) {
+        // Min Heap
+        PriorityQueue<Node> min = new PriorityQueue<>(Comparator.comparingInt(x -> x.data));
+
+        // adding head of all linkedList in min heap
+        min.addAll(Arrays.asList(a).subList(0, N));
+
+        // Make new head among smallest heads in K linkedList
+        Node head = min.poll();
+        if (head != null && head.next != null) {
+            min.add(head.next);
+        }
+        Node curr = head;
+
+        // merging LinkedList
+        while (!min.isEmpty()) {
+            Node temp = min.poll();
+            curr.next = temp;
+            curr = temp;
+
+            // Add Node in min Heap only if temp.next is not null
+            if (temp.next != null) {
+                min.add(temp.next);
+            }
+        }
+
+        return head;
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.thealgorithms.datastructures.lists;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+class Node implements Comparable<Node> {
+    int data;
+    Node next;
+
+    public Node(int data) {
+        this.data = data;
+        this.next = null;
+    }
+
+    @Override
+    public int compareTo(Node other) {
+        return Integer.compare(this.data, other.data);
+    }
+}
+
+public class Merge_K_SortedLinkedlistTest {
+    
+    private Node[] createLists() {
+        // Creating 3 linked lists for the test
+        // List 1: 1->3->5
+        Node l1 = new Node(1);
+        l1.next = new Node(3);
+        l1.next.next = new Node(5);
+
+        // List 2: 2->4->6
+        Node l2 = new Node(2);
+        l2.next = new Node(4);
+        l2.next.next = new Node(6);
+
+        // List 3: 0->7->8
+        Node l3 = new Node(0);
+        l3.next = new Node(7);
+        l3.next.next = new Node(8);
+        
+        return new Node[] { l1, l2, l3 };
+    }
+    
+    private String listToString(Node head) {
+        StringBuilder sb = new StringBuilder();
+        while (head != null) {
+            sb.append(head.data);
+            if (head.next != null) {
+                sb.append("->");
+            }
+            head = head.next;
+        }
+        return sb.toString();
+    }
+
+    @Test
+    public void mergeKListTest() {
+        // SETUP
+        Node[] lists = createLists();
+        Merge_K_SortedLinkedlist merger = new Merge_K_SortedLinkedlist();
+
+        // EXECUTION
+        Node mergedHead = merger.mergeKList(lists, lists.length);
+        String resultAsString = listToString(mergedHead);
+
+        // VERIFICATION
+        assertEquals("0->1->2->3->4->5->6->7->8", resultAsString, "The merged list should be sorted from 0 to 8");
+    }
+    
+    // INNER CLASS TO TEST
+    private class Merge_K_SortedLinkedlist {
+        Node mergeKList(Node[] a, int N) {
+            PriorityQueue<Node> min = new PriorityQueue<>(Comparator.comparingInt(x -> x.data));
+            min.addAll(Arrays.asList(a).subList(0, N));
+            Node head = min.poll();
+            if(head != null && head.next != null) {
+                min.add(head.next);
+            }
+            Node curr = head;
+            while (!min.isEmpty()) {
+                Node temp = min.poll();
+                curr.next = temp;
+                curr = temp;
+                if (temp.next != null) {
+                    min.add(temp.next);
+                }
+            }
+            return head;
+        }
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.thealgorithms.datastructures.lists;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class Merge_K_SortedLinkedlistTest {
+
+    class Node implements Comparable<Node> {
+        int data;
+        Node next;
+
+        Node(int data) {
+            this.data = data;
+            this.next = null;
+        }
+
+        @Override
+        public int compareTo(Node node) {
+            return Integer.compare(this.data, node.data);
+        }
+    }
+
+    @Test
+    public void mergeKListTest() {
+        // Prepare test data: create sorted linked lists
+        Node list1 = new Node(1);
+        list1.next = new Node(4);
+        list1.next.next = new Node(5);
+
+        Node list2 = new Node(1);
+        list2.next = new Node(3);
+        list2.next.next = new Node(4);
+
+        Node list3 = new Node(2);
+        list3.next = new Node(6);
+
+        // Array of linked list heads
+        Node[] lists = new Node[]{list1, list2, list3};
+
+        // Merge k sorted linked lists
+        Merge_K_SortedLinkedlistTest test = new Merge_K_SortedLinkedlistTest();
+        Node mergedHead = test.mergeKList(lists, lists.length);
+
+        // Verify the merged linked list is sorted
+        int[] expectedData = {1, 1, 2, 3, 4, 4, 5, 6};
+        Node current = mergedHead;
+
+        for (int expectedValue : expectedData) {
+            assertNotNull(current, "Node should not be null");
+            assertEquals(expectedValue, current.data, "Node data should be in ascending order");
+            current = current.next;
+        }
+
+        assertNull(current, "The merged list should be finished");
+    }
+    
+    Node mergeKList(Node[] a, int N) {
+        // Min Heap
+        PriorityQueue<Node> min = new PriorityQueue<>(Comparator.comparingInt(x -> x.data));
+    
+        // adding head of all linkedList in min heap
+        min.addAll(Arrays.asList(a).subList(0, N));
+    
+        // Make new head among smallest heads in K linkedList
+        Node head = min.poll();
+        if (head != null && head.next != null) {
+            min.add(head.next);
+        }
+    
+        Node curr = head;
+    
+        // merging LinkedList
+        while (!min.isEmpty()) {
+            Node temp = min.poll();
+            curr.next = temp;
+            curr = temp;
+    
+            // Add Node in min Heap only if temp.next is not null
+            if (temp.next != null) {
+                min.add(temp.next);
+            }
+        }
+    
+        return head;
+    }
+}
+
+
+No.5 generated result --------------------------
+
+class Node implements Comparable<Node> {
+    int data;
+    Node next;
+
+    public Node(int data) {
+        this.data = data;
+    }
+
+    @Override
+    public int compareTo(Node other) {
+        return Integer.compare(this.data, other.data);
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package com.thealgorithms.datastructures.lists;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class Merge_K_SortedLinkedlistTest {
+
+    private Node[] createTestLists() {
+        // Assume Node class has two fields: int data and Node next;
+        // and Node constructor takes data as parameter.
+
+        // List 1: 1 -> 4 -> 7
+        Node l1 = new Node(1);
+        l1.next = new Node(4);
+        l1.next.next = new Node(7);
+        
+        // List 2: 2 -> 5 -> 8
+        Node l2 = new Node(2);
+        l2.next = new Node(5);
+        l2.next.next = new Node(8);
+        
+        // List 3: 3 -> 6 -> 9
+        Node l3 = new Node(3);
+        l3.next = new Node(6);
+        l3.next.next = new Node(9);
+        
+        return new Node[]{ l1, l2, l3 };
+    }
+
+    @Test
+    public void mergeKListTest() {
+        Merge_K_SortedLinkedlist solution = new Merge_K_SortedLinkedlist();
+        Node[] testLists = createTestLists();
+        Node mergedList = solution.mergeKList(testLists, testLists.length);
+
+        // Verify the merged list is: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
+        int[] expectedData = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+        Node current = mergedList;
+        for (int data : expectedData) {
+            assertNotNull(current, "Node should not be null");
+            assertEquals(data, current.data, "Node data should match expected value");
+            current = current.next;
+        }
+        assertNull(current, "The merged list should end with null");
+    }
+}
+
+class Node implements Comparable<Node> {
+    int data;
+    Node next;
+
+    Node(int data){
+        this.data = data;
+    }
+
+    @Override
+    public int compareTo(Node other) {
+        return Integer.compare(this.data, other.data);
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.thealgorithms.datastructures.lists;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+class Node implements Comparable<Node> {
+    int data;
+    Node next;
+
+    Node(int data) {
+        this.data = data;
+        this.next = null;
+    }
+
+    @Override
+    public int compareTo(Node o) {
+        return this.data - o.data;
+    }
+}
+
+public class Merge_K_SortedLinkedlistTest {
+    Merge_K_SortedLinkedlist mergeKLists;
+
+    @BeforeEach
+    public void setUp() {
+        mergeKLists = new Merge_K_SortedLinkedlist();
+    }
+
+    @Test
+    public void mergeKListTest() {
+        // Assuming the Merge_K_SortedLinkedlist class has a method called mergeKList
+        Node n1 = new Node(1);
+        n1.next = new Node(4);
+        n1.next.next = new Node(5);
+        
+        Node n2 = new Node(1);
+        n2.next = new Node(3);
+        n2.next.next = new Node(4);
+
+        Node n3 = new Node(2);
+        n3.next = new Node(6);
+
+        Node[] lists = new Node[]{n1, n2, n3};
+
+        Node result = mergeKLists.mergeKList(lists, lists.length);
+        
+        assertNotNull(result, "The result should not be null");
+        
+        int[] expectedData = {1, 1, 2, 3, 4, 4, 5, 6};
+        for (int data: expectedData) {
+            assertEquals(data, result.data, "The node data should match the expected value");
+            result = result.next;
+        }
+        
+        assertNull(result, "The result should be null after iterating through all the nodes");
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package com.thealgorithms.datastructures.lists;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+class Node implements Comparable<Node> {
+    int data;
+    Node next;
+    
+    Node(int data) {
+        this.data = data;
+        this.next = null;
+    }
+    
+    @Override
+    public int compareTo(Node other) {
+        return Integer.compare(this.data, other.data);
+    }
+}
+
+public class Merge_K_SortedLinkedlistTest {
+
+    @Test
+    public void mergeKListTest() {
+        // Initialize nodes for list 1 (1 -> 4 -> 7)
+        Node head1 = new Node(1);
+        head1.next = new Node(4);
+        head1.next.next = new Node(7);
+        
+        // Initialize nodes for list 2 (2 -> 5 -> 8)
+        Node head2 = new Node(2);
+        head2.next = new Node(5);
+        head2.next.next = new Node(8);
+
+        // Initialize nodes for list 3 (3 -> 6 -> 9)
+        Node head3 = new Node(3);
+        head3.next = new Node(6);
+        head3.next.next = new Node(9);
+
+        // Create an array of the starting nodes of each list
+        Node[] startNodes = { head1, head2, head3 };
+
+        // Instance of the class containing mergeKList method
+        Merge_K_SortedLinkedlist solution = new Merge_K_SortedLinkedlist();
+        
+        // Merge all lists
+        Node mergedHead = solution.mergeKList(startNodes, startNodes.length);
+
+        // Check the merged list for correctness
+        Node current = mergedHead;
+        int[] expectedData = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+        for (int expected : expectedData) {
+            assertNotNull(current, "Node should not be null");
+            assertEquals(expected, current.data, "Data should match the expected value");
+            current = current.next;
+        }
+        assertNull(current, "The merged list should end with null");
+    }
+    
+    // Assuming Node and Merge_K_SortedLinkedlist are defined elsewhere within the same package
+}
+
+
+No.9 generated result --------------------------
+
+package com.thealgorithms.datastructures.lists;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class Merge_K_SortedLinkedlistTest {
+
+    public static class Node implements Comparable<Node> {
+        int data;
+        Node next;
+
+        Node(int data) {
+            this.data = data;
+            this.next = null;
+        }
+
+        @Override
+        public int compareTo(Node node) {
+            return Integer.compare(this.data, node.data);
+        }
+    }
+
+    private Node[] createTestLists() {
+        // Create 3 sorted linked lists
+        Node list1 = new Node(1);
+        list1.next = new Node(4);
+        list1.next.next = new Node(5);
+
+        Node list2 = new Node(1);
+        list2.next = new Node(3);
+        list2.next.next = new Node(4);
+
+        Node list3 = new Node(2);
+        list3.next = new Node(6);
+
+        return new Node[] { list1, list2, list3 };
+    }
+
+    private String linkedListToString(Node head) {
+        StringBuilder sb = new StringBuilder();
+        Node current = head;
+        while (current != null) {
+            sb.append(current.data);
+            if (current.next != null) {
+                sb.append("->");
+            }
+            current = current.next;
+        }
+        return sb.toString();
+    }
+
+    @Test
+    public void mergeKListTest() {
+        Merge_K_SortedLinkedlistTest testClass = new Merge_K_SortedLinkedlistTest();
+        Node[] lists = testClass.createTestLists();
+        Merge_K_SortedLinkedlist problemInstance = new Merge_K_SortedLinkedlist();
+
+        Node mergedList = problemInstance.mergeKList(lists, lists.length);
+        String result = testClass.linkedListToString(mergedList);
+        String expected = "1->1->2->3->4->4->5->6";
+        
+        assertEquals(expected, result);
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.thealgorithms.datastructures.lists;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class Merge_K_SortedLinkedlistTest {
+
+    // Assuming the existence of a helper Node class and a constructor
+    // Node(int data), where 'data' is an integer value stored in the node
+    // and a 'next' pointer to the next node in the list.
+    static class Node {
+        int data;
+        Node next;
+
+        Node(int d) {
+            data = d;
+            next = null;
+        }
+    }
+
+    private Node[] createLists() {
+        // Creating 3 sorted linked lists
+        Node list1 = new Node(1);
+        list1.next = new Node(4);
+        list1.next.next = new Node(5);
+
+        Node list2 = new Node(1);
+        list2.next = new Node(3);
+        list2.next.next = new Node(4);
+
+        Node list3 = new Node(2);
+        list3.next = new Node(6);
+
+        Node[] lists = new Node[3];
+        lists[0] = list1;
+        lists[1] = list2;
+        lists[2] = list3;
+
+        return lists;
+    }
+
+    private String printList(Node head) {
+        StringBuilder builder = new StringBuilder();
+        while (head != null) {
+            builder.append(head.data);
+            if (head.next != null) {
+                builder.append("->");
+            }
+            head = head.next;
+        }
+        return builder.toString();
+    }
+
+    // The actual MergeKSortedLinkedList class would need to be implemented
+    // and imported for this test to run
+    private MergeKSortedLinkedList mergeKSortedLinkedList = new MergeKSortedLinkedList();
+
+    @Test
+    public void mergeKListTest() {
+        // Prepare the input
+        Node[] lists = createLists();
+
+        // Perform the merge operation
+        Node mergedListHead = mergeKSortedLinkedList.mergeKList(lists, lists.length);
+
+        // Use the `printList` method to convert the linked list to a string.
+        String mergedListStr = printList(mergedListHead);
+
+        // Assert the result with expected output
+        assertEquals("1->1->2->3->4->4->5->6", mergedListStr);
+    }
+}
+
+

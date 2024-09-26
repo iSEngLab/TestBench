@@ -1,0 +1,423 @@
+Source code: 
+
+
+private static String getEncodedData(boolean[] correctedBits) throws FormatException {
+  int endIndex = correctedBits.length;
+  Table latchTable = Table.UPPER; // table most recently latched to
+  Table shiftTable = Table.UPPER; // table to use for the next read
+
+  // Final decoded string result
+  // (correctedBits-5) / 4 is an upper bound on the size (all-digit result)
+  StringBuilder result = new StringBuilder((correctedBits.length - 5) / 4);
+
+  // Intermediary buffer of decoded bytes, which is decoded into a string and flushed
+  // when character encoding changes (ECI) or input ends.
+  ByteArrayOutputStream decodedBytes = new ByteArrayOutputStream();
+  Charset encoding = DEFAULT_ENCODING;
+
+  int index = 0;
+  while (index < endIndex) {
+    if (shiftTable == Table.BINARY) {
+      if (endIndex - index < 5) {
+        break;
+      }
+      int length = readCode(correctedBits, index, 5);
+      index += 5;
+      if (length == 0) {
+        if (endIndex - index < 11) {
+          break;
+        }
+        length = readCode(correctedBits, index, 11) + 31;
+        index += 11;
+      }
+      for (int charCount = 0; charCount < length; charCount++) {
+        if (endIndex - index < 8) {
+          index = endIndex;  // Force outer loop to exit
+          break;
+        }
+        int code = readCode(correctedBits, index, 8);
+        decodedBytes.write((byte) code);
+        index += 8;
+      }
+      // Go back to whatever mode we had been in
+      shiftTable = latchTable;
+    } else {
+      int size = shiftTable == Table.DIGIT ? 4 : 5;
+      if (endIndex - index < size) {
+        break;
+      }
+      int code = readCode(correctedBits, index, size);
+      index += size;
+      String str = getCharacter(shiftTable, code);
+      if ("FLG(n)".equals(str)) {
+        if (endIndex - index < 3) {
+          break;
+        }
+        int n = readCode(correctedBits, index, 3);
+        index += 3;
+        //  flush bytes, FLG changes state
+        try {
+          result.append(decodedBytes.toString(encoding.name()));
+        } catch (UnsupportedEncodingException uee) {
+          throw new IllegalStateException(uee);
+        }
+        decodedBytes.reset();
+        switch (n) {
+          case 0:
+            result.append((char) 29);  // translate FNC1 as ASCII 29
+            break;
+          case 7:
+            throw FormatException.getFormatInstance(); // FLG(7) is reserved and illegal
+          default:
+            // ECI is decimal integer encoded as 1-6 codes in DIGIT mode
+            int eci = 0;
+            if (endIndex - index < 4 * n) {
+              break;
+            }
+            while (n-- > 0) {
+              int nextDigit = readCode(correctedBits, index, 4);
+              index += 4;
+              if (nextDigit < 2 || nextDigit > 11) {
+                throw FormatException.getFormatInstance(); // Not a decimal digit
+              }
+              eci = eci * 10 + (nextDigit - 2);
+            }
+            CharacterSetECI charsetECI = CharacterSetECI.getCharacterSetECIByValue(eci);
+            if (charsetECI == null) {
+              throw FormatException.getFormatInstance();
+            }
+            encoding = charsetECI.getCharset();
+        }
+        // Go back to whatever mode we had been in
+        shiftTable = latchTable;
+      } else if (str.startsWith("CTRL_")) {
+        // Table changes
+        // ISO/IEC 24778:2008 prescribes ending a shift sequence in the mode from which it was invoked.
+        // That's including when that mode is a shift.
+        // Our test case dlusbs.png for issue #642 exercises that.
+        latchTable = shiftTable;  // Latch the current mode, so as to return to Upper after U/S B/S
+        shiftTable = getTable(str.charAt(5));
+        if (str.charAt(6) == 'L') {
+          latchTable = shiftTable;
+        }
+      } else {
+        // Though stored as a table of strings for convenience, codes actually represent 1 or 2 *bytes*.
+        byte[] b = str.getBytes(StandardCharsets.US_ASCII);
+        decodedBytes.write(b, 0, b.length);
+        // Go back to whatever mode we had been in
+        shiftTable = latchTable;
+      }
+    }
+  }
+  try {
+    result.append(decodedBytes.toString(encoding.name()));
+  } catch (UnsupportedEncodingException uee) {
+    // can't happen
+    throw new IllegalStateException(uee);
+  }
+  return result.toString();
+}
+
+
+
+No.1 generated result --------------------------
+
+@Given("I have some code")
+def given_code(context):
+    pass
+
+
+@When("I decode it with the decoder")
+def when_decode(context):
+    context.actual = aztec_decoder.Decoder()
+
+
+@Then("I get {int} errors corrected")
+def then_get_errors_corrected(context, expected):
+    assert context.actual == expected
+
+
+
+No.2 generated result --------------------------
+
+
+private static String getEncodedData(boolean[] correctedBits) {
+  // Create a StringBuilder to store the decoded data
+  StringBuilder result = new StringBuilder();
+  
+  // Get the length of the corrected bits array
+  int size = correctedBits.length;
+  
+  // Iterate through the corrected bits array
+  for (int i = 0; i < size; i += 8) {
+    // Get the next 8 corrected bits as a byte
+    byte b = readByte(correctedBits, i);
+    
+    // Append the corresponding character to the result string builder
+    result.append((char)b);
+  }
+  
+  return result.toString();
+}
+
+
+
+No.3 generated result --------------------------
+
+package com.google.zxing.aztec;
+
+import com.google.zxing.BarcodeFormat;
+
+import com.google.zxing.BinaryBitmap;
+
+import com.google.zxing.ChecksumException;
+
+import com.google.zxing.DecodeHintType;
+
+import com.google.zxing.FormatException;
+
+import com.google.zxing.NotFoundException;
+
+import com.google.zxing.Reader;
+
+import com.google.zxing.Result;
+
+import com.google.zxing.common.BitMatrix;
+
+import java.util.Map;
+
+public final class AztecReader implements Reader {
+    @Override
+    public Result decode(BinaryBitmap image) throws NotFoundException, ChecksumException, FormatException {
+        return decode(image, null);
+    }
+    @Override
+    public void reset() {}
+    private static DecoderResult getDecoderResult(BitMatrix matrix, Map<DecodeHintType, ?> hints) throws FormatException, ChecksumException, NotFoundException {
+      AztecDetectorResult ddata = new AztecDetector(matrix).detect();
+      boolean compact = ddata.isCompact();
+      int layers = ddata.getLayers();
+      if (hints != null && hints.containsKey(DecodeHintType.PURE_BARCODE)) {
+        // Look for a split-up, version info in the data of the barcode.
+        // No point in this for normal Aztec code since it will be read by
+        // the detector anyway.
+        if (compact) {
+          return Decoder.decode(matrix);
+        } else {
+          String raw;
+          try {
+            raw = new com.google.zxing.aztec.detector.Detector(matrix).detect().getDataRaw();
+          } catch (NotFoundException nfe) {
+            return Decoder.decode(matrix);
+          }
+          // Version info is between the end of the data and the start of the error correction code
+          int iVersion = raw.length() / 2;
+          if ((raw.charAt(iVersion - 1) != '+' || raw.charAt(iVersion + 1) != '-') && (raw.charAt(iVersion - 1) != '%' || raw.charAt(iVersion + 1) != '*')) {
+            return Decoder.decode(matrix);
+          } else if (iVersion <= 6) {
+            layers = iVersion;
+          } else if (iVersion == 9) {
+            compact = true;
+          } else {
+            throw NotFoundException.getNotFoundInstance();
+          }
+        }
+      }
+      return Decoder.decode(ddata, hints);
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.google.zxing.aztec.decoder;
+
+import java.util.ArrayList;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+public class DecoderTest {
+    @Test
+    public void getEncodedDataTest() {
+        String expected = "CTRL_PS:Table A\n";
+        StringBuilder result = new StringBuilder();
+        int index = 0;
+        boolean compact = false;
+        while (index < 32) {
+            char[] characters = {'U', 'L'};
+            CharacterSetECI eci;
+            try {
+                eci = CharacterSetECI.getCharacterSetECIByValue(characters[index % 2]);
+            } catch (UnsupportedEncodingException uee) {
+                throw new RuntimeException("No mapping for " + characters[index % 2] + ": " + uee);
+            }
+            if (eci != null) {
+                result.append(Decoder.getEncodedData(expected, compact));
+            } else {
+                break;
+            }
+        }
+        assertEquals(result.toString(), expected);
+    }
+}
+
+
+No.5 generated result --------------------------
+
+private static String getEncodedData(boolean[] correctedBits) throws FormatException {
+  int length = correctedBits.length;
+  StringBuilder result = new StringBuilder((length * 10 / 8) + 1); // 10 bits per character, 0.5 characters per byte
+  for (int i = 0; i < length; i += 8) {
+    int word = getWord(correctedBits, i);
+    if (word >= 32768) {
+      result.append((char) ((word - 32768) % 95 + 33)); // 95 printable ASCII characters
+    } else if (word > 127) {
+      result.append((char) (word - 128)); // 128-255
+    } else {
+      throw FormatException.getFormatInstance();
+    }
+  }
+  return result.toString();
+}
+
+private static int getWord(boolean[] correctedBits, int i) throws FormatException {
+  if (correctedBits[i] != true) {
+    return -1;
+  }
+  int word = 0;
+  for (int j = 0; j < 4; j++) {
+    word <<= 1;
+    boolean b = correctedBits[i + j];
+    if (b == true) {
+      throw FormatException.getFormatInstance();
+    } else if (b == false) {
+      word++;
+    }
+  }
+  return word;
+}
+
+
+No.6 generated result --------------------------
+
+package com.google.zxing.aztec;
+
+import com.google.zxing.*;
+
+import java.util.List;
+
+public class AztecReader extends Reader {
+  private static final ResultPoint[] NO_POINTS = new ResultPoint[0];
+  private final Decoder decoder = new Decoder();
+
+  @Override
+  public Result decode(BinaryBitmap image) throws NotFoundException, ChecksumException, FormatException {
+    return decode(image, null);
+  }
+
+  @Override
+  public Result decode(BinaryBitmap image, java.util.Map<DecodeHintType,?> hints) throws NotFoundException, ChecksumException, FormatException {
+    List<AztecCode> codes = AztecCodeFinder.findAztecCodes(image);
+    if (codes == null || codes.isEmpty()) {
+      throw NotFoundException.getNotFoundInstance();
+    }
+
+    // Decode only the code with the smallest bounding box, which should be the most stable
+    AztecCode smallest = null;
+    int minSize = Integer.MAX_VALUE;
+    for (AztecCode code : codes) {
+      if (code.getBoundingBox().width < minSize && code.getBoundingBox().height < minSize) {
+        smallest = code;
+        minSize = Math.min(code.getBoundingBox().width, code.getBoundingBox().height);
+      }
+    }
+
+    // Decode the code
+    DecoderResult result = decoder.decode(smallest.getMatrix(), hints);
+    return new Result(result.getText(), result.getRawBytes(), NO_POINTS, BarcodeFormat.AZTEC);
+  }
+}
+
+
+No.7 generated result --------------------------
+
+package com.google.zxing.aztec.decoder;
+
+import org.junit.jupiter.api.Test;
+
+public class DecoderTest {
+  @Test
+  public void getEncodedDataTest() {
+    // Arrange
+    String correctEncoding = "ABC";
+    int dataBits = 100;
+    BitMatrix matrix = new BitMatrix(dataBits, dataBits);
+    for (int i = 0; i < dataBits; i++) {
+      matrix.set(i, i);
+    }
+    AztecDetectorResult detectorResult = new AztecDetectorResult(matrix);
+    
+    // Act
+    String result = Decoder.getEncodedData(detectorResult.getBits());
+    
+    // Assert
+    assertEquals(correctEncoding, result);
+  }
+}
+
+
+
+No.8 generated result --------------------------
+
+The method `getEncodedData` returns the data encoded in the Aztec symbol, given its representation as a boolean array.
+
+First, it converts the boolean array into a string of binary digits using the following steps:
+
+1. It initializes an empty string `result`.
+2. It iterates over each element of the input boolean array. For each element, it appends to `result` either `"0"` or `"1"`, depending on whether the element is `false` or `true`.
+3. After all elements have been processed, `result` contains a binary representation of the input array.
+
+Then, this method converts the resulting string into a character sequence using the encoding specified in the symbol's encoding mode (UPPER, LOWER, MIXED, DIGIT, PUNCT, or BINARY). The encoding is defined by the `getCharacter` function, which takes an integer code representing the position of a character in the relevant table and returns the corresponding character.
+
+Finally, this method applies error correction to the character sequence and returns it as a `String`.
+
+You can use [this JUnit test case](https://github.com/zxing/zxing/blob/master/core/src/test/java/com/google/zxing/aztec/decoder/DecoderTestCase.java) as a reference to see how the method can be used in practice.
+
+Note that `getEncodedData` is a private method, and it's not meant to be called from outside of this class. It's only intended to be used by the other methods in this class.
+
+
+No.9 generated result --------------------------
+
+package com.google.zxing.aztec.decoder;
+
+import java.util.ArrayList;
+
+import org.junit.jupiter.api.Assertions;
+
+import org.junit.jupiter.api.Test;
+
+public class DecoderTest {
+    @Test
+    public void getEncodedDataTest() {
+        String correctText = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        Assertions.assertEquals(correctText, Decoder.getEncodedData(correctText));
+        
+        String inputWithNoSpaces = "HelloWorld";
+        String expectedOutput = "HELLO WORLD";
+        Assertions.assertEquals(expectedOutput, Decoder.getEncodedData(inputWithNoSpaces));
+    }
+}
+    
+
+### Response:
+
+
+No.10 generated result --------------------------
+
+
+// Assuming `rawBits` contains the raw binary data from an Aztec 2D barcode
+String encodedData = Decoder.getEncodedData(rawBits);
+System.out.println("Decoded message: " + encodedData);
+
+
+

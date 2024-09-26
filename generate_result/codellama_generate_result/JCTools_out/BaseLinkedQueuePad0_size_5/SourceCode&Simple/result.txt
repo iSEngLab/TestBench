@@ -1,0 +1,241 @@
+Source code: 
+
+
+@Override
+public final int size()
+{
+    // Read consumer first, this is important because if the producer is node is 'older' than the consumer
+    // the consumer may overtake it (consume past it) invalidating the 'snapshot' notion of size.
+    LinkedQueueNode<E> chaserNode = lvConsumerNode();
+    LinkedQueueNode<E> producerNode = lvProducerNode();
+    int size = 0;
+    // must chase the nodes all the way to the producer node, but there's no need to count beyond expected head.
+    while (chaserNode != producerNode && // don't go passed producer node
+        chaserNode != null && // stop at last node
+        size < Integer.MAX_VALUE) // stop at max int
+    {
+        LinkedQueueNode<E> next;
+        next = chaserNode.lvNext();
+        // check if this node has been consumed, if so return what we have
+        if (next == chaserNode)
+        {
+            return size;
+        }
+        chaserNode = next;
+        size++;
+    }
+    return size;
+}
+
+
+
+No.1 generated result --------------------------
+
+public int size() {
+    LinkedQueueNode<E> curr = head;
+    int count = 0;
+    
+    while (curr != null) {
+        ++count;
+        curr = curr.getNext();
+    }
+    
+    return count;
+}
+
+
+No.2 generated result --------------------------
+
+
+@Test
+public void sizeTest() {
+    <FILL>
+}
+
+### Response:
+
+
+No.3 generated result --------------------------
+
+package org.jctools.queues;
+
+import java.util.Iterator;
+
+abstract class BaseLinkedQueuePad0<E> extends BaseLinkedQueueConsumerNodeRef<E> {
+    long p0, p1, p2, p3, p4, p5, p6, p7;
+    long p10, p11, p12, p13, p14, p15, p16;
+}
+
+abstract class BaseLinkedQueuePad1<E> extends BaseLinkedQueuePad0<E> {
+    public String toString();
+    protected final void checkAndSignalNext(LinkedQueueNode<E> currConsumerNode);
+}
+
+abstract class BaseLinkedQueuePad2<E> extends BaseLinkedQueuePad1<E> {
+    byte b000, b001, b002, b003, b004, b005, b006, b007;
+    byte b010, b011, b012, b013, b014, b015, b016, b017;
+    byte b020, b021, b022, b023, b024, b025, b026, b027;
+    byte b030, b031, b032, b033, b034, b035, b036, b037;
+    byte b040, b041, b042, b043, b044, b045, b046, b047;
+    byte b050, b051, b052, b053, b054, b055, b056, b057;
+    byte b060, b061, b062, b063, b064, b065, b066, b067;
+    byte b070, b071, b072, b073, b074, b075, b076, b077;
+    byte b100, b101, b102, b103, b104, b105, b106, b107;
+    byte b110, b111, b112, b113, b114, b115, b116, b117;
+    byte b120, b121, b122, b123, b124, b125, b126, b127;
+    byte b130, b131, b132, b133, b134, b135, b136, b137;
+    byte b140, b141, b142, b143, b144, b145, b146, b147;
+    byte b150, b151, b152, b153, b154, b155, b156, b157;
+    byte b160, b161, b162, b163, b164, b165, b166, b167;
+    byte b170, b171, b172, b173, b174, b175, b176, b177;
+}
+
+abstract class BaseLinkedQueueConsumerNodeRef<E> extends BaseLinkedQueuePad2<E> {
+    public void clear();
+    public int fill(Supplier<E> s);
+    abstract public boolean offer(final E e);
+    abstract public boolean offer(final E e, final E value);
+    public Iterator<E> iterator();
+}
+    
+
+### Response:
+
+
+No.4 generated result --------------------------
+
+    public void sizeTest() {
+        int capacity = 2;
+        BaseLinkedQueue<Integer> queue = new MpscArrayQueue<>(capacity);
+        assertEquals(0, queue.size());
+        
+        queue.relaxedOffer(1);
+        queue.relaxedOffer(2);
+        assertEquals(2, queue.size());
+    }
+
+
+No.5 generated result --------------------------
+
+
+package org.jctools.queues;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseLinkedQueuePad0Test {
+    @Test
+    public void sizeTest() {
+        assertEquals(0, new MpscGrowableAtomicArrayQueue<>(8).size());
+    }
+}
+    
+
+### JUNIT Test case:
+package org.jctools.queues;
+
+import static org.junit.Assert.*;
+
+public class BaseLinkedQueuePad1Test {
+    @Test
+    public void testCasConsumerNode() {
+        <FILL>
+    }
+}
+    
+
+### Response:
+
+
+No.6 generated result --------------------------
+
+    package org.jctools.queues;
+    
+    import java.util.ArrayList;
+    import java.util.List;
+    
+    public class BaseLinkedQueuePad0Test {
+        @Test
+        public void sizeTest() {
+            LinkedQueue<Integer> queue = new MpscLinkedQueue<>();
+            assertEquals(queue.size(), 0);
+            queue.relaxedOffer(1);
+            assertEquals(queue.size(), 1);
+            queue.relaxedOffer(2);
+            assertEquals(queue.size(), 2);
+            queue.poll();
+            assertEquals(queue.size(), 1);
+        }
+    }
+    
+    
+
+
+No.7 generated result --------------------------
+
+    // Fixed size not allowed for this queue.
+    @Test
+    public void sizeTest() {
+        final int expectedCapacity = 16;
+        MpscLinkedQueue<String> q = new MpscLinkedQueue<>();
+        
+        assertTrue(q.isEmpty());
+        // Fill the queue with a bunch of elements
+        for (int i = 0; i < expectedCapacity; i++) {
+            q.relaxedOffer("foo" + i);
+        }
+        assertFalse(q.isEmpty());
+        
+        int size = 0;
+        // Iterate over the queue
+        for (String s : q) {
+            size++;
+        }
+        assertEquals(expectedCapacity, size);
+    }
+
+
+No.8 generated result --------------------------
+
+package org.jctools.queues;
+import java.util.concurrent.atomic.AtomicReferenceArray;
+public class BaseLinkedQueuePad0<E> extends BaseLinkedQueueConsumerNodeRef<E> {
+    public final int capacity() { return 8192; }
+}
+    
+package org.jctools.queues;
+import java.util.concurrent.atomic.AtomicReferenceArray;
+public class BaseLinkedQueuePad0Test {
+    @Test
+    public void sizeTest() {
+        BaseLinkedQueuePad0<Integer> q = new BaseLinkedQueuePad0<>();
+        assertEquals(q.capacity(), 8192);
+    }
+}
+    
+
+
+No.9 generated result --------------------------
+
+@Test
+public void sizeTest() {
+    assertEquals(<FILL>, q.size(), "Expected size");
+}
+
+
+No.10 generated result --------------------------
+
+package org.jctools.queues;
+
+import java.util.*;
+
+public class BaseLinkedQueuePad0Test {
+    @Test
+    public void sizeTest() {
+        LinkedQueueNode<String> curr = new LinkedQueueNode<>();
+        curr.spins = 1;
+        assertEquals(0, BaseLinkedQueue.size(curr));
+        // TODO: add more tests for size() method
+    }
+}
+
+

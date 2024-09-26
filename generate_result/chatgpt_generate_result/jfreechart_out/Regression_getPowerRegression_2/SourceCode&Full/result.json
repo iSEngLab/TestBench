@@ -1,0 +1,26 @@
+{
+    "project_name": "jfreechart",
+    "file_name": "Regression.java",
+    "relative_path": "jfreechart/src/main/java/org/jfree/data/statistics/Regression.java",
+    "execute_path": "jfreechart",
+    "package": "org.jfree.data.statistics",
+    "docstring": "/**\n     * Returns the parameters 'a' and 'b' for an equation y = ax^b, fitted to\n     * the data using a power regression equation.  The result is returned as\n     * an array, where double[0] --&gt; a, and double[1] --&gt; b.\n     *\n     * @param data  the data.\n     *\n     * @return The parameters.\n     */",
+    "source_code": "\npublic static double[] getPowerRegression(double[][] data) {\n\n    int n = data.length;\n    if (n < 2) {\n        throw new IllegalArgumentException(\"Not enough data.\");\n    }\n\n    double sumX = 0;\n    double sumY = 0;\n    double sumXX = 0;\n    double sumXY = 0;\n    for (int i = 0; i < n; i++) {\n        double x = Math.log(data[i][0]);\n        double y = Math.log(data[i][1]);\n        sumX += x;\n        sumY += y;\n        double xx = x * x;\n        sumXX += xx;\n        double xy = x * y;\n        sumXY += xy;\n    }\n    double sxx = sumXX - (sumX * sumX) / n;\n    double sxy = sumXY - (sumX * sumY) / n;\n    double xbar = sumX / n;\n    double ybar = sumY / n;\n\n    double[] result = new double[2];\n    result[1] = sxy / sxx;\n    result[0] = Math.pow(Math.exp(1.0), ybar - result[1] * xbar);\n\n    return result;\n\n}\n",
+    "class_name": "Regression",
+    "method_name": "getPowerRegression",
+    "arguments": [
+        "double[][] data"
+    ],
+    "generate_test": [
+        "@Test\npublic void getPowerRegressionTest() {\n    double[][] data = {{1, 2}, {3, 4}, {5, 6}};\n    double[] expected = {2.0, 12.0};\n    assertArrayEquals(expected, Regression.getPowerRegression(data));\n}",
+        "public void getPowerRegressionTest() {\n    double[][] data = {{2, 4}, {3, 5}, {4, 6}};\n    double[] expected = {1.000, 1.000};\n    double[] result = Regression.getPowerRegression(data);\n    assertArrayEquals(expected, result, 0.001);\n}",
+        "\n    @Test\n    public void getPowerRegressionTest() {\n        double[][] data = {{1, 2}, {3, 4}, {5, 6}};\n        double[] expected = {1.0, 2.0}; // Expected result based on the input data\n        double[] result = Regression.getPowerRegression(data);\n        assertArrayEquals(expected, result, 0.001);\n    }\n",
+        "\n@Test\npublic void getPowerRegressionTest() {\n    double[][] data = {{2, 3}, {4, 6}, {6, 9}};\n    double[] expectedResult = {2.0, 1.0};\n    double[] actualResult = Regression.getPowerRegression(data);\n    assertArrayEquals(expectedResult, actualResult);\n}",
+        "@Test\npublic void getPowerRegressionTest() {\n    double[][] data = {{1, 1}, {2, 4}, {3, 9}, {4, 16}, {5, 25}};\n    double[] expected = {1.0, 2.0};\n    double[] result = Regression.getPowerRegression(data);\n    assertArrayEquals(expected, result, 0.0001);\n}",
+        "@Test\npublic void getPowerRegressionTest() {\n    double[][] data = {{2, 4}, {3, 9}, {4, 16}, {5, 25}, {6, 36}};\n    double[] expected = {4.0, 2.0};\n    assertArrayEquals(expected, Regression.getPowerRegression(data));\n}",
+        "@Test\npublic void getPowerRegressionTest() {\n    double[][] data = {{2, 4}, {3, 9}, {4, 16}, {5, 25}};\n    double[] expected = {1.0, 2.0};\n    double[] result = Regression.getPowerRegression(data);\n    assertArrayEquals(expected, result, 0.0001);\n}",
+        "\n        // Given\n        double[][] data = {{2, 4}, {3, 9}, {5, 25}, {7, 49}, {9, 81}};\n\n        // When\n        double[] result = Regression.getPowerRegression(data);\n\n        // Then\n        assertEquals(2.000, result[0], 0.001);\n        assertEquals(2.000, result[1], 0.001);\n    ",
+        "@Test\npublic void getPowerRegressionTest() {\n    double[][] data = {{1, 2}, {3, 4}, {5, 6}};\n    double[] expected = {1.0, 2.0};\n    double[] result = Regression.getPowerRegression(data);\n    assertArrayEquals(expected, result, 0.001);\n}",
+        "\n@Test\npublic void getPowerRegressionTest() {\n    double[][] data = {{1, 2}, {3, 4}, {5, 6}};\n    double[] expected = {0.6596198718794729, 1.9521867898109857};\n    double[] result = Regression.getPowerRegression(data);\n    assertArrayEquals(expected, result, 0.0001);\n}"
+    ]
+}

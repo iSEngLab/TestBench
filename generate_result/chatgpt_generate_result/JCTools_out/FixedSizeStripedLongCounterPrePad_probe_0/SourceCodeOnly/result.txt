@@ -1,0 +1,133 @@
+Source code: 
+
+
+private int probe() {
+    // Fast path for reliable well-distributed probe, available from JDK 7+.
+    // As long as PROBE is final static this branch will be constant folded
+    // (i.e removed).
+    if (PROBE != -1) {
+        int probe;
+        if ((probe = UNSAFE.getInt(Thread.currentThread(), PROBE)) == 0) {
+            ThreadLocalRandom.current(); // force initialization
+            probe = UNSAFE.getInt(Thread.currentThread(), PROBE);
+        }
+        return probe;
+    }
+
+    /*
+     * Else use much worse (for values distribution) method:
+     * Mix thread id with golden ratio and then xorshift it
+     * to spread consecutive ids (see Knuth multiplicative method as reference).
+     */
+    int probe = (int) ((Thread.currentThread().getId() * 0x9e3779b9) & Integer.MAX_VALUE);
+    // xorshift
+    probe ^= probe << 13;
+    probe ^= probe >>> 17;
+    probe ^= probe << 5;
+    return probe;
+}
+
+
+
+
+No.1 generated result --------------------------
+
+@Test
+public void probeTest() {
+    int result = probe();
+    assertEquals(expected, result);
+}
+
+
+No.2 generated result --------------------------
+
+@Test
+public void probeTest() {
+    assertEquals(expectedProbeValue, probe());
+}
+
+
+No.3 generated result --------------------------
+
+@Test
+public void probeTest() {
+    FixedSizeStripedLongCounterPrePad counter = new FixedSizeStripedLongCounterPrePad();
+    int result = counter.probe();
+    assertNotNull(result);
+}
+
+
+No.4 generated result --------------------------
+
+@Test
+public void probeTest() {
+    assertEquals(12345, probe());
+}
+
+
+No.5 generated result --------------------------
+
+@Test
+public void probeTest() {
+    int result = probe();
+    assertNotNull(result);
+    assertEquals(expectedResult, result);
+}
+
+
+No.6 generated result --------------------------
+
+@Test
+public void probeTest() {
+    FixedSizeStripedLongCounterPrePad counter = new FixedSizeStripedLongCounterPrePad();
+    int result = counter.probe();
+    assertNotNull(result);
+}
+
+
+No.7 generated result --------------------------
+
+@Test
+public void probeTest() {
+    FixedSizeStripedLongCounterPrePad counter = new FixedSizeStripedLongCounterPrePad();
+    int expected = counter.probe();
+    int actual = probe();
+    assertEquals(expected, actual);
+}
+
+
+No.8 generated result --------------------------
+
+@Test
+public void probeTest() {
+    // Given
+    FixedSizeStripedLongCounterPrePad counter = new FixedSizeStripedLongCounterPrePad();
+    
+    // When
+    int result = counter.probe();
+    
+    // Then
+    assertNotNull(result);
+}
+
+
+No.9 generated result --------------------------
+
+@Test
+public void probeTest() {
+    FixedSizeStripedLongCounterPrePad counter = new FixedSizeStripedLongCounterPrePad();
+    int result = counter.probe();
+    assertNotNull(result);
+}
+
+
+No.10 generated result --------------------------
+
+@Test
+public void probeTest() {
+    FixedSizeStripedLongCounterPrePad counter = new FixedSizeStripedLongCounterPrePad();
+    int result = counter.probe();
+    assertNotNull(result);
+}
+
+

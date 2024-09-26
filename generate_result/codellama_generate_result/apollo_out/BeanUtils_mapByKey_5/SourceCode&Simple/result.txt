@@ -1,0 +1,297 @@
+Source code: 
+
+
+@SuppressWarnings("unchecked")
+public static <K, V> Map<K, V> mapByKey(String key, List<?> list) {
+  Map<K, V> map = new HashMap<>();
+  if (CollectionUtils.isEmpty(list)) {
+    return map;
+  }
+  try {
+    Class<?> clazz = list.get(0).getClass();
+    Field field = deepFindField(clazz, key);
+    if (field == null) {
+        throw new IllegalArgumentException("Could not find the key");
+    }
+    field.setAccessible(true);
+    for (Object o : list) {
+      map.put((K) field.get(o), (V) o);
+    }
+  } catch (Exception e) {
+    throw new BeanUtilsException(e);
+  }
+  return map;
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.utils;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BeanUtilsTest {
+    @Test
+    public void mapByKeyTest() {
+        // Test 1: Null list
+        assertThrows(IllegalArgumentException.class, () -> BeanUtils.mapByKey("key", null));
+
+        // Test 2: Empty list
+        List<Object> emptyList = new ArrayList<>();
+        assertEquals(Collections.emptyMap(), BeanUtils.mapByKey("key", emptyList));
+
+        // Test 3: List with objects that don't have the key field
+        List<String> stringList = new ArrayList<>();
+        stringList.add("string1");
+        stringList.add("string2");
+        assertEquals(Collections.emptyMap(), BeanUtils.mapByKey("key", stringList));
+
+        // Test 4: List with objects that have the key field
+        List<Person> personList = new ArrayList<>();
+        Person p1 = new Person();
+        p1.setName("John");
+        p1.setAge(25);
+        Person p2 = new Person();
+        p2.setName("Jane");
+        p2.setAge(30);
+        personList.add(p1);
+        personList.add(p2);
+        Map<String, Person> expectedMap = new HashMap<>();
+        expectedMap.put("John", p1);
+        expectedMap.put("Jane", p2);
+        assertEquals(expectedMap, BeanUtils.mapByKey("name", personList));
+    }
+}
+
+
+No.2 generated result --------------------------
+
+@Test
+public void mapByKeyTest() {
+    String key = "key";
+    List<String> list = new ArrayList<>();
+    Map<String, Object> expectedMap = new HashMap<>();
+    expectedMap.put(key, "value");
+    assertEquals(expectedMap, BeanUtils.mapByKey(key, list));
+}
+
+
+No.3 generated result --------------------------
+
+@Test
+public void mapByKeyTest() {
+  String key = "key";
+  List<Object> list = new ArrayList<>();
+  Map<String, Object> expectedMap = new HashMap<>();
+  expectedMap.put(key, "value1");
+  expectedMap.put(key, "value2");
+  Map<String, Object> actualMap = BeanUtils.mapByKey(key, list);
+  assertEquals(expectedMap, actualMap);
+}
+
+
+No.4 generated result --------------------------
+
+
+package com.ctrip.framework.apollo.common.utils;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BeanUtilsTest {
+    @Test
+    public void mapByKeyTest() {
+        // Create a sample list of objects
+        List<Person> personList = new ArrayList<>();
+        Person p1 = new Person("John", "Smith");
+        Person p2 = new Person("Jane", "Doe");
+        Person p3 = new Person("James", "Bond");
+        personList.add(p1);
+        personList.add(p2);
+        personList.add(p3);
+
+        // Create a map with the key set to the first name of each person in the list
+        Map<String, Person> personMap = BeanUtils.mapByKey("firstName", personList);
+
+        // Verify that the map contains 3 entries
+        assertEquals(personMap.size(), 3);
+
+        // Verify that each entry in the map has a key set to the first name of the corresponding person in the list
+        for (Person p : personList) {
+            assertTrue(personMap.containsKey(p.getFirstName()));
+        }
+    }
+}
+
+In this test case, we create a sample list of Person objects and pass it to the BeanUtils.mapByKey() method with "firstName" as the key parameter. The method returns a map with the first name of each person in the list as the key, and the corresponding person object as the value.
+
+We then verify that the map contains 3 entries, and that each entry has a key set to the first name of the corresponding person in the list.
+
+
+No.5 generated result --------------------------
+
+
+package com.ctrip.framework.apollo.common.utils;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BeanUtilsTest {
+    @Test
+    public void mapByKeyTest() {
+        // Sample input list
+        List<Person> personList = new ArrayList<>();
+        personList.add(new Person("John", "Doe"));
+        personList.add(new Person("Jane", "Doe"));
+        personList.add(new Person("Jack", "Smith"));
+
+        // Expected output map
+        Map<String, Person> expectedMap = new HashMap<>();
+        expectedMap.put("John", new Person("John", "Doe"));
+        expectedMap.put("Jane", new Person("Jane", "Doe"));
+        expectedMap.put("Jack", new Person("Jack", "Smith"));
+
+        // Call the method under test
+        Map<String, Object> actualMap = BeanUtils.mapByKey("name", personList);
+
+        // Verify that the output map has the expected structure
+        assertEquals(expectedMap, actualMap);
+    }
+}
+
+
+
+No.6 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.utils;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BeanUtilsTest {
+    @Test
+    public void mapByKeyTest() {
+        // Create a sample list of objects with the specified key field
+        List<SampleObject> list = new ArrayList<>();
+        SampleObject obj1 = new SampleObject();
+        obj1.setId(1);
+        obj1.setName("obj1");
+        list.add(obj1);
+        SampleObject obj2 = new SampleObject();
+        obj2.setId(2);
+        obj2.setName("obj2");
+        list.add(obj2);
+        SampleObject obj3 = new SampleObject();
+        obj3.setId(3);
+        obj3.setName("obj3");
+        list.add(obj3);
+
+        // Call the mapByKey method with the sample list and key field
+        Map<Integer, SampleObject> map = BeanUtils.mapByKey("id", list);
+
+        // Check that the resulting map contains the correct values for each object
+        assertEquals(map.get(1), obj1);
+        assertEquals(map.get(2), obj2);
+        assertEquals(map.get(3), obj3);
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.utils;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BeanUtilsTest {
+    @Test
+    public void mapByKeyTest() {
+        // Empty list test case
+        List<String> emptyList = Collections.emptyList();
+        Map<String, String> actualMap = BeanUtils.mapByKey("key", emptyList);
+        assertTrue(actualMap.isEmpty());
+
+        // Valid list test case
+        List<String> validList = Arrays.asList("A", "B", "C");
+        Map<String, String> expectedMap = new HashMap<>();
+        expectedMap.put("key", "A");
+        expectedMap.put("key", "B");
+        expectedMap.put("key", "C");
+        Map<String, String> actualMap = BeanUtils.mapByKey("key", validList);
+        assertEquals(expectedMap, actualMap);
+    }
+}
+
+
+No.8 generated result --------------------------
+
+
+@Test
+public void mapByKeyTest() {
+    String key = "id";
+    List<Object> list = new ArrayList<>();
+    Map<String, Object> expectedMap = new HashMap<>();
+
+    assertEquals(expectedMap, BeanUtils.mapByKey(key, list));
+
+    Object o1 = new Object();
+    Object o2 = new Object();
+    list.add(o1);
+    list.add(o2);
+
+    expectedMap.put("id", o1);
+    expectedMap.put("id", o2);
+
+    assertEquals(expectedMap, BeanUtils.mapByKey(key, list));
+}
+
+
+No.9 generated result --------------------------
+
+
+@Test
+public void mapByKeyTest() {
+    String key = "id";
+    List<Integer> list = new ArrayList<>();
+    list.add(1);
+    list.add(2);
+    Map<Integer, Integer> expectedMap = new HashMap<>();
+    expectedMap.put(1, 1);
+    expectedMap.put(2, 2);
+    assertEquals(expectedMap, BeanUtils.mapByKey(key, list));
+}
+
+
+No.10 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.utils;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BeanUtilsTest {
+    @Test
+    public void mapByKeyTest() {
+        // Create a list of objects with the "key" property set to different values
+        List<Object> list = new ArrayList<>();
+        Object obj1 = new Object();
+        ((BeanWrapper)obj1).setPropertyValue("key", "value1");
+        list.add(obj1);
+        Object obj2 = new Object();
+        ((BeanWrapper)obj2).setPropertyValue("key", "value2");
+        list.add(obj2);
+
+        // Call the mapByKey method with the key and list parameters
+        Map<String, Object> result = BeanUtils.mapByKey("key", list);
+
+        // Assert that the resulting map contains two entries, one for each object in the list
+        assertEquals(2, result.size());
+        assertTrue(result.containsKey("value1"));
+        assertTrue(result.containsKey("value2"));
+    }
+}
+
+

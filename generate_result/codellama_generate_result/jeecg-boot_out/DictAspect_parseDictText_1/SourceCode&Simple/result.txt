@@ -1,0 +1,600 @@
+Source code: 
+
+
+private Object parseDictText(Object result) {
+    if (result instanceof Result) {
+        if (((Result) result).getResult() instanceof IPage) {
+            List<JSONObject> items = new ArrayList<>();
+
+            //step.1 筛选出加了 Dict 注解的字段列表
+            List<Field> dictFieldList = new ArrayList<>();
+            // 字典数据列表， key = 字典code，value=数据列表
+            Map<String, List<String>> dataListMap = new HashMap<>(5);
+            //取出结果集
+            List<Object> records=((IPage) ((Result) result).getResult()).getRecords();
+            //update-begin--Author:zyf -- Date:20220606 ----for：【VUEN-1230】 判断是否含有字典注解,没有注解返回-----
+            Boolean hasDict= checkHasDict(records);
+            if(!hasDict){
+                return result;
+            }
+
+            log.debug(" __ 进入字典翻译切面 DictAspect —— " );
+            //update-end--Author:zyf -- Date:20220606 ----for：【VUEN-1230】 判断是否含有字典注解,没有注解返回-----
+            for (Object record : records) {
+                String json="{}";
+                try {
+                    //update-begin--Author:zyf -- Date:20220531 ----for：【issues/#3629】 DictAspect Jackson序列化报错-----
+                    //解决@JsonFormat注解解析不了的问题详见SysAnnouncement类的@JsonFormat
+                     json = objectMapper.writeValueAsString(record);
+                    //update-end--Author:zyf -- Date:20220531 ----for：【issues/#3629】 DictAspect Jackson序列化报错-----
+                } catch (JsonProcessingException e) {
+                    log.error("json解析失败"+e.getMessage(),e);
+                }
+                //update-begin--Author:scott -- Date:20211223 ----for：【issues/3303】restcontroller返回json数据后key顺序错乱 -----
+                JSONObject item = JSONObject.parseObject(json, Feature.OrderedField);
+                //update-end--Author:scott -- Date:20211223 ----for：【issues/3303】restcontroller返回json数据后key顺序错乱 -----
+
+                //update-begin--Author:scott -- Date:20190603 ----for：解决继承实体字段无法翻译问题------
+                //for (Field field : record.getClass().getDeclaredFields()) {
+                // 遍历所有字段，把字典Code取出来，放到 map 里
+                for (Field field : oConvertUtils.getAllFields(record)) {
+                    String value = item.getString(field.getName());
+                    if (oConvertUtils.isEmpty(value)) {
+                        continue;
+                    }
+                //update-end--Author:scott  -- Date:20190603 ----for：解决继承实体字段无法翻译问题------
+                    if (field.getAnnotation(Dict.class) != null) {
+                        if (!dictFieldList.contains(field)) {
+                            dictFieldList.add(field);
+                        }
+                        String code = field.getAnnotation(Dict.class).dicCode();
+                        String text = field.getAnnotation(Dict.class).dicText();
+                        String table = field.getAnnotation(Dict.class).dictTable();
+
+                        List<String> dataList;
+                        String dictCode = code;
+                        if (!StringUtils.isEmpty(table)) {
+                            dictCode = String.format("%s,%s,%s", table, text, code);
+                        }
+                        dataList = dataListMap.computeIfAbsent(dictCode, k -> new ArrayList<>());
+                        this.listAddAllDeduplicate(dataList, Arrays.asList(value.split(",")));
+                    }
+                    //date类型默认转换string格式化日期
+                    //update-begin--Author:zyf -- Date:20220531 ----for：【issues/#3629】 DictAspect Jackson序列化报错-----
+                    //if (JAVA_UTIL_DATE.equals(field.getType().getName())&&field.getAnnotation(JsonFormat.class)==null&&item.get(field.getName())!=null){
+                        //SimpleDateFormat aDate=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                        // item.put(field.getName(), aDate.format(new Date((Long) item.get(field.getName()))));
+                    //}
+                    //update-end--Author:zyf -- Date:20220531 ----for：【issues/#3629】 DictAspect Jackson序列化报错-----
+                }
+                items.add(item);
+            }
+
+            //step.2 调用翻译方法，一次性翻译
+            Map<String, List<DictModel>> translText = this.translateAllDict(dataListMap);
+
+            //step.3 将翻译结果填充到返回结果里
+            for (JSONObject record : items) {
+                for (Field field : dictFieldList) {
+                    String code = field.getAnnotation(Dict.class).dicCode();
+                    String text = field.getAnnotation(Dict.class).dicText();
+                    String table = field.getAnnotation(Dict.class).dictTable();
+
+                    String fieldDictCode = code;
+                    if (!StringUtils.isEmpty(table)) {
+                        fieldDictCode = String.format("%s,%s,%s", table, text, code);
+                    }
+
+                    String value = record.getString(field.getName());
+                    if (oConvertUtils.isNotEmpty(value)) {
+                        List<DictModel> dictModels = translText.get(fieldDictCode);
+                        if(dictModels==null || dictModels.size()==0){
+                            continue;
+                        }
+
+                        String textValue = this.translDictText(dictModels, value);
+                        log.debug(" 字典Val : " + textValue);
+                        log.debug(" __翻译字典字段__ " + field.getName() + CommonConstant.DICT_TEXT_SUFFIX + "： " + textValue);
+
+                        // TODO-sun 测试输出，待删
+                        log.debug(" ---- dictCode: " + fieldDictCode);
+                        log.debug(" ---- value: " + value);
+                        log.debug(" ----- text: " + textValue);
+                        log.debug(" ---- dictModels: " + JSON.toJSONString(dictModels));
+
+                        record.put(field.getName() + CommonConstant.DICT_TEXT_SUFFIX, textValue);
+                    }
+                }
+            }
+
+            ((IPage) ((Result) result).getResult()).setRecords(items);
+        }
+
+    }
+    return result;
+}
+
+
+
+No.1 generated result --------------------------
+
+@Around("pointcut()")
+public Object doAround(ProceedingJoinPoint pjp) throws Throwable {
+    // 执行方法
+    Object result = pjp.proceed();
+
+    // step.1 针对返回结果进行转换，只支持 List<Map> 格式数据的转换
+    if (result instanceof Result) {
+        // 封装返回值
+        result = parseDictText(result);
+    }
+    return result;
+}
+private Object parseDictText(Object result) {
+    if (result instanceof Result && ((Result) result).getResult() instanceof IPage) {
+        <FILL>
+    }
+    return null;
+}
+    
+
+### Context:
+package org.jeecg.common.aspect;
+
+import com.alibaba.fastjson.JSON;
+
+import com.alibaba.fastjson.JSONObject;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.extern.slf4j.Slf4j;
+
+import org.aspectj.lang.ProceedingJoinPoint;
+
+import org.aspectj.lang.annotation.Around;
+
+import org.aspectj.lang.annotation.Aspect;
+
+import org.aspectj.lang.annotation.Pointcut;
+
+import org.jeecg.common.api.CommonAPI;
+
+import org.jeecg.common.api.vo.Result;
+
+import org.jeecg.common.aspect.annotation.Dict;
+
+import org.jeecg.common.constant.CommonConstant;
+
+import org.jeecg.common.util.oConvertUtils;
+
+import java.lang.reflect.Field;
+
+import java.util.*;
+
+@Slf4j
+@Aspect
+public class DictAspect {
+    @Pointcut("execution(* com.jeecg.p3.controller.*.*(..))")
+    public void before() {}
+}
+
+
+
+No.2 generated result --------------------------
+
+package org.jeecg.common.util;
+
+import java.io.*;
+
+@Slf4j(topic = "JeeCG")
+public class oConvertUtils {
+    public static String getCatalog(String url) {
+        return "";
+    }
+}
+    
+
+
+
+No.3 generated result --------------------------
+
+package io.kyligence.notebook.console.bean.dto;
+
+import lombok.Data;
+
+import java.util.List;
+
+@Data
+public class DictInfo {
+    private String code;
+    private String text;
+    private String table;
+}
+    
+
+### Response:
+
+
+No.4 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import com.alibaba.fastjson.JSONObject;
+
+import com.baomidou.mybatisplus.core.metadata.IPage;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.extern.slf4j.Slf4j;
+
+import org.aspectj.lang.ProceedingJoinPoint;
+
+import org.jeecg.common.api.CommonAPI;
+
+import org.jeecg.common.api.vo.Result;
+
+import org.jeecg.common.aspect.annotation.Dict;
+
+import org.jeecg.common.constant.CommonConstant;
+
+import org.jeecg.common.system.vo.DictModel;
+
+import org.jeecg.common.util.oConvertUtils;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+import org.springframework.context.annotation.Lazy;
+
+import org.springframework.data.redis.core.RedisTemplate;
+
+import org.springframework.stereotype.Component;
+
+@Slf4j
+public class DictAspect {
+    private CommonAPI commonApi;
+    public RedisTemplate redisTemplate;
+    private ObjectMapper objectMapper;
+    private final static String JAVA_UTIL_DATE;
+    public  excudeService();
+    public Object doAround(ProceedingJoinPoint pjp)throws Throwable {
+        <FILL>
+    }
+    private Object parseDictText(Object result);
+    private List<String> listAddAllDeduplicate(List<String> dataList, List<String> addList);
+    private Map<String, List<DictModel>> translateAllDict(Map<String, List<String>> dataListMap);
+    private String translDictValue(String code, String text, String table, String key);
+    private Boolean checkHasDict(List<Object> records);
+}
+    
+
+### Response:
+
+
+No.5 generated result --------------------------
+
+package $package;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RestController;
+import java.util.*;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import $servicePackage.$entityServiceName;
+import $mapperPackage.$entityMapperName;
+@RestController
+@RequestMapping("/")
+public class $controllerClassName {
+  @Autowired
+  private $entityServiceName $fieldName;
+  @GetMapping("")
+  public List list(){
+    return this.$fieldName.list(new QueryWrapper<>());
+  }
+}
+    
+
+
+No.6 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import com.alibaba.fastjson.JSONObject;
+
+import com.baomidou.mybatisplus.core.metadata.IPage;
+
+import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Field;
+
+import java.util.*;
+
+/**
+ * 字典aop测试用例
+ */
+@Slf4j
+public class DictAspectTest {
+    @Test
+    public void parseDictTextTest() {
+        //初始化测试数据
+        List<DictModel> dictModels = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            DictModel dictModel = new DictModel();
+            dictModel.setCode(i + "");
+            dictModel.setText("字典" + i);
+            dictModel.setValue(i * 2 + "");
+            dictModels.add(dictModel);
+        }
+
+        //初始化测试数据
+        List<Object> records = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("status", 1);
+            jsonObject.put("code", i + "");
+            //测试数据字典码为"dictCode1"
+            String dictCode1 = "dictCode1";
+            if (i < 3) {
+                jsonObject.put(dictCode1, i + "");
+            } else {
+                jsonObject.put(dictCode1, -1);
+            }
+            //测试数据字典码为"dictCode2"
+            String dictCode2 = "dictCode2";
+            if (i < 3) {
+                jsonObject.put(dictCode2, i * 2 + "");
+            } else {
+                jsonObject.put(dictCode2, -1);
+            }
+            records.add(jsonObject);
+        }
+        //调用方法
+        DictAspect dictAspect = new DictAspect();
+        Object result = dictAspect.parseDictText(records);
+
+        assertNotNull(result);
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jeecg.common.system.vo;
+
+import lombok.Data;
+
+/**
+ * 字典模型
+ */
+@Data
+public class DictModel {
+    /**
+     * 字典value
+     */
+    private String value;
+
+    /**
+     * 字典文本
+     */
+    private String text;
+}
+
+
+No.8 generated result --------------------------
+
+Timeout
+
+
+No.9 generated result --------------------------
+
+@Around("@annotation(com.demo.common.aop.annotation.DataScope)")
+public Object around(ProceedingJoinPoint pjp) throws Throwable {
+    // 拦截的方法名称
+    String methodName = pjp.getSignature().getName();
+    if ("queryPageList".equals(methodName)) {
+        return parseDictText(pjp.proceed());
+    }
+    return pjp.proceed();
+}
+
+private Object parseDictText(Object result) throws JsonProcessingException {
+    if (result instanceof Result && ((Result<?>) result).getResult() != null) {
+        Object page = ((Result<?>) result).getResult();
+        List<JSONObject> items = new ArrayList<>();
+        if (page instanceof IPage) {
+            List<Object> records = ((IPage) page).getRecords();
+            // 获取字典字段信息
+            Field[] fields = records.get(0).getClass().getDeclaredFields();
+            Map<String, List<String>> dataListMap = new HashMap<>();
+            List<Field> dictFieldList = new ArrayList<>();
+            for (Field field : fields) {
+                // 判断是否包含 Dict 注解，如果包含则为需要进行字典翻译的字段
+                if (field.getAnnotation(Dict.class) != null) {
+                    dictFieldList.add(field);
+                    String code = field.getAnnotation(Dict.class).dicCode();
+                    String text = field.getAnnotation(Dict.class).dicText();
+                    String table = field.getAnnotation(Dict.class).dictTable();
+                    String key = translateDictValue(code, text, table, dictKey);
+                    List<String> list = redisTemplate.opsForList(key);
+                    if (list != null && !list.isEmpty()) {
+                        dataListMap.put(field.getName(), list);
+                    } else {
+                        String dictDataJsonStr = redisTemplate.opsForValue(CommonConstant.DICT_DATA_JSON_KEY);
+                        // 字典数据为空，则从数据库中获取字典数据并写入到缓存中
+                        if (dictDataJsonStr == null) {
+                            List<DictModel> dictList = commonApi.queryAllDict();
+                            for (DictModel dict : dictList) {
+                                redisTemplate.opsForValue(CommonConstant.DICT_DATA_JSON_KEY, objectMapper.writeValueAsString(dict));
+                                if (!org.apache.commons.lang3.StringUtils.equals(dict.getParentCode(), "")) {
+                                    // 如果当前字典有父级，则需要递归解析父级的code值
+                                    String parentDictKey = translateDictValue(dict.getParentCode(), null, null);
+                                    // 查询父字典的数据
+                                    List<DictModel> parentDictList = redisTemplate.opsForList(parentDictKey);
+                                    for (DictModel parentDict : parentDictList) {
+                                        redisTemplate.opsForValue(parentDict.getCode(), objectMapper.writeValueAsString(parentDict));
+                                        // 递归解析父级的数据
+                                        List<DictModel> childrenDictList = commonApi.queryAllDictByParentCode(dict.getParentCode());
+                                        for (DictModel childrenDict : childrenDictList) {
+                                            redisTemplate.opsForValue(childrenDict.getCode(), objectMapper.writeValueAsString(childrenDict));
+                                        }
+                                    } else {
+                                        List<DictModel> childrenDictList = commonApi.queryAllDictByParentCode(dict.getCode());
+                                        for (DictModel childrenDict : childrenDictList) {
+                                            redisTemplate.opsForValue(childrenDict.getCode(), objectMapper.writeValueAsString(childrenDict));
+                                        }
+                                    }
+                                } else {
+                                    // 当前字典没有父级，则需要查询所有的字典数据
+                                    List<DictModel> allDictList = commonApi.queryAllDict();
+                                    for (DictModel dict : allDictList) {
+                                        redisTemplate.opsForValue(dict.getCode(), objectMapper.writeValueAsString(dict));
+                                    }
+                                }
+                            } else {
+                                List<JSONObject> jsonObj = JSONUtil.parseArray((String) dictDataJsonStr);
+                                for (JSONObject json : jsonObj) {
+                                    redisTemplate.opsForValue(json.getStr("code"), objectMapper.writeValueAsString(json));
+                                }
+                            }
+                        }
+                    } else {
+                        // 查询当前字典的数据
+                        String dictDataKey = translateDictValue(code, text, table, dictKey);
+                        List<DictModel> dictList = redisTemplate.opsForList(dictDataKey);
+                        if (dictList != null && !dictList.isEmpty()) {
+                            for (DictModel dict : dictList) {
+                                redisTemplate.opsForValue(dict.getCode(), objectMapper.writeValueAsString(dict));
+                            }
+                        }
+                    }
+                } else if (field.getName().equals("parentIds")) {
+                    // 将parentIds字段的值设置为空数组
+                    dictFieldMap.put("parentIds", new ArrayList());
+                }
+            }
+
+            List<String> addList = new ArrayList<>();
+            for (JSONObject json : jsonObj) {
+                if (!org.apache.commons.lang3.StringUtils.equals(json.getStr("pid"), "")) {
+                    // 如果当前字典的父编号不为空，则需要将当前字典的父编号添加到集合中
+                    addList.add(json.getStr("pid"));
+                }
+            }
+
+            if (!org.apache.commons.lang3.StringUtils.equals(parentId, "")) {
+                // 如果当前字典的父编号不为空，则需要将当前字典的父编号添加到集合中
+                addList.add(parentId);
+            }
+        } catch (Exception e) {
+            log.error("查询所有字典信息异常：{}", e);
+            throw new DictServerException(DictResponseCode.DICT_SERVER_ERROR, "查询所有字典信息异常");
+        }
+    }
+
+    /**
+     * 获取指定父节点下的全部字典数据
+     * @param parentId 父节点编号
+     * @return java.util.List<com.ruoyi.system.dict.domain.DictModel>
+     */
+    public List<JSONObject> selectDictTree(String parentId) {
+        //  判断当前父节点下是否还有子节点，如果没有则直接返回空集合
+        String sql = "SELECT * FROM sys_dict WHERE pid = '" + parentId + "' ORDER BY dict_order ASC";
+        try {
+            List<DictModel> list = commonApi.selectListBySql(sql, new DictModel());
+            if (list != null && !list.isEmpty()) {
+                for (DictModel model : list) {
+                    jsonObj.add(JSONUtil.parse(model));
+                }
+            }
+        } catch (Exception e) {
+            log.error("获取指定父节点下的全部字典数据异常：{}", e);
+            throw new DictServerException(DictResponseCode.DICT_SERVER_ERROR, "查询所有字典信息异常");
+        }
+        return jsonObj;
+    }
+
+    /**
+     * 根据字典类型获取对应的字典数据列表
+     * @param dictType 字典类型
+     * @return java.util.List<com.ruoyi.system.dict.domain.DictModel>
+     */
+    public List<JSONObject> selectDictTreeByType(String dictType) {
+        JSONObject jsonObj = new JSONObject();
+        String sql = "SELECT * FROM sys_dict WHERE dict_type = '" + dictType + "' ORDER BY dict_order ASC";
+        try {
+            List<DictModel> list = commonApi.selectListBySql(sql, new DictModel());
+            if (list != null && !list.isEmpty()) {
+                for (DictModel model : list) {
+                    jsonObj.add(JSONUtil.parse(model));
+                }
+            }
+        } catch (Exception e) {
+            log.error("根据字典类型获取对应的字典数据列表异常：{}", e);
+            throw new DictServerException(DictResponseCode.DICT_SERVER_ERROR, "查询所有字典信息异常");
+        }
+        return jsonObj;
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Component;
+
+/**
+ * redis 缓存service
+ */
+@Slf4j
+@Component
+public class RedisService {
+    private RedisTemplate<String, Object> redisTemplate;
+
+    @Autowired
+    public void setRedisTemplate(RedisTemplate<String, Object> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
+}
+    
+
+### Context:
+package org.jeecg.common.aspect;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
+
+/**
+ * redis 缓存service
+ */
+@Slf4j
+@Component
+public class RedisService {
+    private RedisTemplate<String, Object> redisTemplate;
+
+    @Autowired
+    public void setRedisTemplate(RedisTemplate<String, Object> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
+}
+    
+
+### JUNIT Test case:
+package org.jeecg.common.aspect;
+
+import org.junit.jupiter.api.*;
+public class RedisServiceTest {
+    @BeforeAll
+    public static void setUp() {
+        <FILL>
+    }
+}
+
+

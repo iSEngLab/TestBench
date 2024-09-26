@@ -1,0 +1,26 @@
+{
+    "project_name": "zxing",
+    "file_name": "State.java",
+    "relative_path": "zxing/core/src/main/java/com/google/zxing/aztec/encoder/State.java",
+    "execute_path": "zxing",
+    "package": "com.google.zxing.aztec.encoder",
+    "docstring": null,
+    "source_code": "// Create a new state representing this state, but an additional character\n// output in Binary Shift mode.\nState addBinaryShiftChar(int index) {\n  Token token = this.token;\n  int mode = this.mode;\n  int bitCount = this.bitCount;\n  if (this.mode == HighLevelEncoder.MODE_PUNCT || this.mode == HighLevelEncoder.MODE_DIGIT) {\n    int latch = HighLevelEncoder.LATCH_TABLE[mode][HighLevelEncoder.MODE_UPPER];\n    token = token.add(latch & 0xFFFF, latch >> 16);\n    bitCount += latch >> 16;\n    mode = HighLevelEncoder.MODE_UPPER;\n  }\n  int deltaBitCount =\n      (binaryShiftByteCount == 0 || binaryShiftByteCount == 31) ? 18 :\n      (binaryShiftByteCount == 62) ? 9 : 8;\n  State result = new State(token, mode, binaryShiftByteCount + 1, bitCount + deltaBitCount);\n  if (result.binaryShiftByteCount == 2047 + 31) {\n    // The string is as long as it's allowed to be.  We should end it.\n    result = result.endBinaryShift(index + 1);\n  }\n  return result;\n}\n",
+    "class_name": "State",
+    "method_name": "addBinaryShiftChar",
+    "arguments": [
+        "int index"
+    ],
+    "generate_test": [
+        "@Test\npublic void addBinaryShiftCharTest() {\n    Token token = new Token();\n    int mode = HighLevelEncoder.MODE_UPPER;\n    int binaryShiftByteCount = 31;\n    int bitCount = 56;\n\n    State state = new State(token, mode, binaryShiftByteCount, bitCount);\n    State result = state.addBinaryShiftChar(2);\n\n    assertNotNull(result);\n    // Add more assertions here based on the expected behavior of the method\n}",
+        "@Test\npublic void addBinaryShiftCharTest() {\n    Token token = new Token(12345, 67890);\n    int mode = 2;\n    int binaryShiftByteCount = 4;\n    int bitCount = 10;\n    State state = new State(token, mode, binaryShiftByteCount, bitCount);\n    State result = state.addBinaryShiftChar(5);\n\n    // Assert statements for the expected output\n    assertEquals(12345, result.getToken().getBinaryShift(), \"Token binary shift not added correctly\");\n    assertEquals(2, result.getMode(), \"Mode not set correctly\");\n    assertEquals(5, result.getBinaryShiftByteCount(), \"Binary shift byte count not incremented correctly\");\n    assertEquals(18, result.getBitCount(), \"Bit count not incremented correctly\");\n}",
+        "@Test\npublic void addBinaryShiftCharTest() {\n    State state = new State();\n    State result = state.addBinaryShiftChar(5);\n    // Add assertion statements here to validate the result\n}",
+        "@Test\npublic void addBinaryShiftCharTest() {\n    State state = new State(INITIAL_STATE.getToken(), INITIAL_STATE.getMode(), 0, 0);\n    State result = state.addBinaryShiftChar(5);\n    // Add assertions here to validate the result\n    ...\n}",
+        "\nState initialState = State.INITIAL_STATE;\nToken token = new Token(0, 0);\nState newState = new State(token, 1, 1, 1);\nassertEquals(1, newState.getBinaryShiftByteCount());\nassertEquals(1, newState.getBitCount());",
+        "@Test\npublic void addBinaryShiftCharTest() {\n  Token token = new Token(0, 0);\n  int mode = 3;\n  int binaryShiftByteCount = 0;\n  int bitCount = 20;\n  State state = new State(token, mode, binaryShiftByteCount, bitCount);\n  int index = 1;\n  \n  State result = state.addBinaryShiftChar(index);\n  \n  // Add assertions for the expected behavior of addBinaryShiftChar method\n  // For example:\n  assertEquals(1, result.getBinaryShiftByteCount());\n}",
+        "@Test\npublic void addBinaryShiftCharTest() {\n    Token token = new Token();\n    State state = new State(token, 0, 0, 0);\n    \n    State result = state.addBinaryShiftChar(0);\n    \n    // Perform assertions here to validate the functionality of the addBinaryShiftChar method\n    // For example:\n    // assertEquals(expectedToken, result.getToken());\n    // assertEquals(expectedMode, result.getMode());\n    // assertEquals(expectedBinaryShiftByteCount, result.getBinaryShiftByteCount());\n    // assertEquals(expectedBitCount, result.getBitCount());\n}",
+        "@Test\npublic void addBinaryShiftCharTest() {\n    State state = new State(new Token(), HighLevelEncoder.MODE_DIGIT, 3, 8);\n    State result = state.addBinaryShiftChar(1);\n    assertEquals(3, result.getBinaryShiftByteCount());\n    assertEquals(21, result.getBitCount());\n}",
+        "@Test\npublic void addBinaryShiftCharTest() {\n    State state = new State(token, mode, binaryShiftByteCount, bitCount);\n    int index = 0;\n  \n    State result = state.addBinaryShiftChar(index);\n  \n    assertEquals(expectedResult, result);\n}",
+        "@Test\npublic void addBinaryShiftCharTest() {\n    State state = State.INITIAL_STATE;\n    State newState = state.addBinaryShiftChar(0);\n    // verify the new state is as expected\n    assertEquals(newState.getMode(), 0);\n    assertEquals(newState.getToken(), null); // Replace with the expected token\n    assertEquals(newState.getBinaryShiftByteCount(), 0);\n    assertEquals(newState.getBitCount(), 0);\n}"
+    ]
+}

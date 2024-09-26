@@ -1,0 +1,26 @@
+{
+    "project_name": "JCTools",
+    "file_name": "BaseSpscLinkedArrayQueue.java",
+    "relative_path": "JCTools/jctools-core/src/main/java/org/jctools/queues/BaseSpscLinkedArrayQueue.java",
+    "execute_path": "JCTools",
+    "package": "org.jctools.queues",
+    "docstring": "/**\n     * {@inheritDoc}\n     * <p>\n     * This implementation is correct for single producer thread use only.\n     */",
+    "source_code": "\n@Override\npublic boolean offer(final E e)\n{\n    // Objects.requireNonNull(e);\n    if (null == e)\n    {\n        throw new NullPointerException();\n    }\n    // local load of field to avoid repeated loads after volatile reads\n    final E[] buffer = producerBuffer;\n    final long index = lpProducerIndex();\n    final long mask = producerMask;\n    final long offset = calcCircularRefElementOffset(index, mask);\n    // expected hot path\n    if (index < producerBufferLimit)\n    {\n        writeToQueue(buffer, e, index, offset);\n        return true;\n    }\n    return offerColdPath(buffer, mask, index, offset, e, null);\n}\n",
+    "class_name": "BaseSpscLinkedArrayQueuePrePad",
+    "method_name": "offer",
+    "arguments": [
+        "E e"
+    ],
+    "generate_test": [
+        "@Test\npublic void offerTest() {\n    BaseSpscLinkedArrayQueuePrePad<String> queue = new BaseSpscLinkedArrayQueuePrePad<>();\n    boolean result = queue.offer(\"test\");\n    assertTrue(result);\n}",
+        "@Test\npublic void offerTest() {\n    BaseSpscLinkedArrayQueuePrePadTest queue = new BaseSpscLinkedArrayQueuePrePadTest();\n    boolean result = queue.offer(\"test\");\n    assertTrue(result);\n}",
+        "@Test\npublic void offerTest() {\n    BaseSpscLinkedArrayQueuePrePad queue = new BaseSpscLinkedArrayQueuePrePad();\n    boolean result = queue.offer(\"test\");\n    assertTrue(result);\n}",
+        "@Test\npublic void offerTest() {\n    // Arrange\n    String element = \"Test Element\";\n    \n    // Act\n    boolean result = queue.offer(element);\n    \n    // Assert\n    assertTrue(result);\n}",
+        "@Test\npublic void offerTest() {\n    BaseSpscLinkedArrayQueuePrePad<String> queue = new BaseSpscLinkedArrayQueuePrePad<>();\n    assertTrue(queue.offer(\"Test\"));\n}",
+        "@Test\npublic void offerTest() {\n    BaseSpscLinkedArrayQueuePrePad<Integer> queue = new BaseSpscLinkedArrayQueuePrePad<>(16);\n    assertTrue(queue.offer(5));\n}",
+        "@Test\npublic void offerTest() {\n    BaseSpscLinkedArrayQueuePrePad<Integer> queue = new BaseSpscLinkedArrayQueuePrePad<>();\n    assertTrue(queue.offer(5));\n}",
+        "@Test\npublic void offerTest() {\n    BaseSpscLinkedArrayQueuePrePad queue = new BaseSpscLinkedArrayQueuePrePad();\n    boolean result = queue.offer(\"Test\");\n    assertTrue(result);\n}",
+        "@Test\npublic void offerTest() {\n    BaseSpscLinkedArrayQueuePrePad queue = new BaseSpscLinkedArrayQueuePrePad();\n\n    boolean result = queue.offer(\"test\");\n\n    assertFalse(result);\n}",
+        "@Test\npublic void offerTest() {\n    E testElement = // create test element\n    boolean result = queue.offer(testElement);\n    assertTrue(result);\n}"
+    ]
+}

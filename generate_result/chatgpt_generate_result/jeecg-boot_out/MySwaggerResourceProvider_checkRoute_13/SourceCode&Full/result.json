@@ -1,0 +1,26 @@
+{
+    "project_name": "jeecg-boot",
+    "file_name": "MySwaggerResourceProvider.java",
+    "relative_path": "jeecg-boot/jeecg-server-cloud/jeecg-cloud-gateway/src/main/java/org/jeecg/handler/swagger/MySwaggerResourceProvider.java",
+    "execute_path": "jeecg-boot/jeecg-server-cloud",
+    "package": "org.jeecg.handler.swagger",
+    "docstring": "/**\n     * \u68c0\u6d4bnacos\u4e2d\u662f\u5426\u6709\u5065\u5eb7\u5b9e\u4f8b\n     * @param routeId\n     * @return\n     */",
+    "source_code": "\nprivate Boolean checkRoute(String routeId) {\n    Boolean hasRoute = false;\n    try {\n        //\u4fee\u590d\u4f7f\u7528\u5e26\u547d\u540d\u7a7a\u95f4\u542f\u52a8\u7f51\u5173swagger\u770b\u4e0d\u5230\u63a5\u53e3\u6587\u6863\u7684\u95ee\u9898\n        Properties properties=new Properties();\n        properties.setProperty(\"serverAddr\",serverAddr);\n        if(namespace!=null && !\"\".equals(namespace)){\n            log.info(\"nacos.discovery.namespace = {}\", namespace);\n            properties.setProperty(\"namespace\",namespace);\n        }\n        if(username!=null && !\"\".equals(username)){\n            properties.setProperty(\"username\",username);\n        }\n        if(password!=null && !\"\".equals(password)){\n            properties.setProperty(\"password\",password);\n        }\n        //\u3010issues/5115\u3011\u56e0swagger\u6587\u6863\u5bfc\u81f4gateway\u5185\u5b58\u6ea2\u51fa\n        if (this.naming == null) {\n            this.naming = NamingFactory.createNamingService(properties);\n        }\n        log.info(\" config.group : {}\", group);\n        List<Instance> list = this.naming.selectInstances(routeId, group , true);\n        if (ObjectUtil.isNotEmpty(list)) {\n            hasRoute = true;\n        }\n    } catch (Exception e) {\n        e.printStackTrace();\n    }\n    return hasRoute;\n}\n",
+    "class_name": "MySwaggerResourceProvider",
+    "method_name": "checkRoute",
+    "arguments": [
+        "String routeId"
+    ],
+    "generate_test": [
+        "@Test\n    public void checkRouteTest() {\n        MySwaggerResourceProvider mySwaggerResourceProvider = new MySwaggerResourceProvider(routeLocator);\n        Boolean result = mySwaggerResourceProvider.checkRoute(\"testRouteId\");\n        assertTrue(result);\n    }",
+        "private MySwaggerResourceProvider mySwaggerResourceProvider;\n\n@BeforeEach\nvoid setUp() {\n    mySwaggerResourceProvider = new MySwaggerResourceProvider();\n}\n\n@Test\npublic void checkRouteTest() {\n    Boolean result = mySwaggerResourceProvider.checkRoute(\"testRouteId\");\n    assertTrue(result);\n}",
+        "@Test\npublic void checkRouteTest() {\n    MySwaggerResourceProvider mySwaggerResourceProvider = new MySwaggerResourceProvider(null);\n    Boolean result = mySwaggerResourceProvider.checkRoute(\"testRouteId\");\n    assertTrue(result);\n}",
+        "@RunWith(MockitoJUnitRunner.class)\npublic class MySwaggerResourceProviderTest {\n    @Mock\n    private NamingService namingService;\n\n    @InjectMocks\n    private MySwaggerResourceProvider mySwaggerResourceProvider;\n\n    @Test\n    public void checkRouteTest() {\n        when(namingService.selectInstances(anyString(), anyString(), anyBoolean())).thenReturn(Collections.singletonList(new Instance()));\n        Boolean result = mySwaggerResourceProvider.checkRoute(\"routeId\");\n        assertTrue(result);\n    }\n}\n",
+        "@Test\npublic void checkRouteTest() {\n    MySwaggerResourceProvider provider = new MySwaggerResourceProvider(null);\n    Boolean result = provider.checkRoute(\"exampleRouteId\");\n    assertTrue(result);\n}",
+        "import static org.junit.jupiter.api.Assertions.assertTrue;\n\n@Test\npublic void checkRouteTest() {\n    MySwaggerResourceProvider mySwaggerResourceProvider = new MySwaggerResourceProvider(null);\n    Boolean result = mySwaggerResourceProvider.checkRoute(\"testRouteId\");\n    assertTrue(result);\n}",
+        "@Test\npublic void checkRouteTest() {\n    Boolean result = new MySwaggerResourceProvider().checkRoute(\"routeId\");\n    assertTrue(result);\n}",
+        "@Test\npublic void checkRouteTest() {\n    MySwaggerResourceProvider provider = new MySwaggerResourceProvider(new RouteLocator());\n    Boolean result = provider.checkRoute(\"testRouteId\");\n    assertTrue(result);\n}",
+        "private Boolean result = new MySwaggerResourceProvider().checkRoute(\"routeId\");\nassertTrue(result);\nassertFalse(result = new MySwaggerResourceProvider().checkRoute(\"invalidRouteId\"));",
+        "@Autowired MySwaggerResourceProvider mySwaggerResourceProvider;\n\n@Test\npublic void checkRouteTest() {\n    Boolean result = mySwaggerResourceProvider.checkRoute(\"testRouteId\");\n    assertTrue(result);\n}"
+    ]
+}

@@ -1,0 +1,26 @@
+{
+    "project_name": "jfreechart",
+    "file_name": "Regression.java",
+    "relative_path": "jfreechart/src/main/java/org/jfree/data/statistics/Regression.java",
+    "execute_path": "jfreechart",
+    "package": "org.jfree.data.statistics",
+    "docstring": "/**\n     * Returns a matrix with the following features: (1) the number of rows\n     * and columns is 1 less than that of the original matrix; (2)the matrix\n     * is triangular, i.e. all elements a (row, column) with column &gt; row are\n     * zero.  This method is used for calculating a polynomial regression.\n     * \n     * @param matrix  the start matrix.\n     *\n     * @return The new matrix.\n     */",
+    "source_code": "\nprivate static double[][] calculateSubMatrix(double[][] matrix){\n    int equations = matrix.length;\n    int coefficients = matrix[0].length;\n    double[][] result = new double[equations - 1][coefficients - 1];\n    for (int eq = 1; eq < equations; eq++) {\n        double factor = matrix[0][0] / matrix[eq][0];\n        for (int coe = 1; coe < coefficients; coe++) {\n            result[eq - 1][coe -1] = matrix[0][coe] - matrix[eq][coe]\n                    * factor;\n        }\n    }\n    if (equations == 1) {\n        return result;\n    }\n    // check for zero pivot element\n    if (result[0][0] == 0) {\n        boolean found = false;\n        for (int i = 0; i < result.length; i ++) {\n            if (result[i][0] != 0) {\n                found = true;\n                double[] temp = result[0];\n                System.arraycopy(result[i], 0, result[0], 0, \n                        result[i].length);\n                System.arraycopy(temp, 0, result[i], 0, temp.length);\n                break;\n            }\n        }\n        if (!found) {\n            //System.out.println(\"Equation has no solution!\");\n            return new double[equations - 1][coefficients - 1];\n        }\n    }\n    double[][] subMatrix = calculateSubMatrix(result);\n    for (int eq = 1; eq < equations -  1; eq++) {\n        result[eq][0] = 0;\n        if (coefficients - 1 - 1 >= 0) System.arraycopy(subMatrix[eq - 1], 0, result[eq], 1, coefficients - 1 - 1);\n    }\n    return result;\n}\n",
+    "class_name": "Regression",
+    "method_name": "calculateSubMatrix",
+    "arguments": [
+        "double[][] matrix"
+    ],
+    "generate_test": [
+        "public void calculateSubMatrixTest() {\n        double[][] matrix = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};\n        double[][] expected = {{0, 0}, {1, 2}};\n        double[][] actual = Regression.calculateSubMatrix(matrix);\n        assertArrayEquals(expected, actual);\n    }",
+        "double[][] matrix = {\n    {1, 2},\n    {3, 4}\n};\n\ndouble[][] result = Regression.calculateSubMatrix(matrix);\n\ndouble[][] expected = {\n    {3}\n};\n\nassertArrayEquals(expected, result);",
+        "public void calculateSubMatrixTest() {\n    double[][] matrix = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};\n    double[][] expected = {{5, 6}, {8, 9}};\n    double[][] actual = Regression.calculateSubMatrix(matrix);\n    assertArrayEquals(expected, actual, 0.0001);\n}",
+        "@Test\npublic void calculateSubMatrixTest() {\n    double[][] matrix = {{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, {7.0, 8.0, 9.0}};\n    double[][] expectedResult = {{-3.0, -3.0}, {0.0, 0.0}};\n    double[][] result = Regression.calculateSubMatrix(matrix);\n    assertArrayEquals(expectedResult, result);\n}",
+        "double[][] matrix = {{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, {7.0, 8.0, 9.0}};\ndouble[][] expectedResult = {{-3.0, -3.0}, {-6.0, -6.0}};\ndouble[][] actualResult = Regression.calculateSubMatrix(matrix);\nassertArrayEquals(expectedResult, actualResult);",
+        "double[][] testMatrix = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};\ndouble[][] expectedResult = {{5, 6}, {8, 9}};\ndouble[][] result = Regression.calculateSubMatrix(testMatrix);\nassertArrayEquals(expectedResult, result);",
+        "@Test\npublic void calculateSubMatrixTest() {\n    double[][] matrix = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};\n    double[][] expected = {{5, 6}, {8, 9}};\n    double[][] result = Regression.calculateSubMatrix(matrix);\n    assertArrayEquals(expected, result);\n}",
+        "double[][] matrix = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};\ndouble[][] expectedResult = {{5, 4}, {8, 7}};\ndouble[][] actualResult = Regression.calculateSubMatrix(matrix);\nassertArrayEquals(expectedResult, actualResult);",
+        "\npublic void calculateSubMatrixTest() {\n    double[][] inputMatrix = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};\n    double[][] expectedSubMatrix = {{5, 6}, {8, 9}};\n\n    double[][] actualSubMatrix = Regression.calculateSubMatrix(inputMatrix);\n\n    assertArrayEquals(expectedSubMatrix, actualSubMatrix);\n}",
+        "double[][] inputMatrix = {{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, {7.0, 8.0, 9.0}};\ndouble[][] expectedResult = {{-3.0, -5.0}, {-6.0, -8.0}};\ndouble[][] actualResult = Regression.calculateSubMatrix(inputMatrix);\nassertArrayEquals(expectedResult, actualResult);"
+    ]
+}

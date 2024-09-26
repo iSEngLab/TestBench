@@ -1,0 +1,477 @@
+Source code: 
+
+/* A function to get the sum of the elements from index l to index r. This will be called
+ * internally*/
+private int getSumTree(int start, int end, int q_start, int q_end, int seg_index) {
+    if (q_start <= start && q_end >= end) {
+        return this.seg_t[seg_index];
+    }
+
+    if (q_start > end || q_end < start) {
+        return 0;
+    }
+
+    int mid = start + (end - start) / 2;
+    return (getSumTree(start, mid, q_start, q_end, seg_index * 2 + 1) + getSumTree(mid + 1, end, q_start, q_end, seg_index * 2 + 2));
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SegmentTreeTest {
+    private SegmentTree segmentTree;
+    private static final int SIZE = 6;
+    private static final int[] INPUT_ARRAY = {1, 3, 5, 7, 9, 11};
+
+    @BeforeEach
+    void setup() {
+        // Initialize Segment Tree with predefined array
+        segmentTree = new SegmentTree(SIZE, INPUT_ARRAY);
+    }
+
+    @Test
+    public void getSumTreeTest() {
+        // Test for sum of the full array
+        assertEquals(1 + 3 + 5 + 7 + 9 + 11, segmentTree.getSum(0, 5),
+            "The sum of the full array should be equal to the sum of its elements.");
+
+        // Test for sum of the first half of the array
+        assertEquals(1 + 3 + 5, segmentTree.getSum(0, 2),
+            "The sum of the first half of the array should be equal to the sum of its first three elements.");
+
+        // Test for sum of the second half of the array
+        assertEquals(7 + 9 + 11, segmentTree.getSum(3, 5),
+            "The sum of the second half of the array should be equal to the sum of its last three elements.");
+
+        // Test for sum of a single element
+        assertEquals(5, segmentTree.getSum(2, 2),
+            "The sum of one element should be equal to the element itself.");
+
+        // Test for sum of a non-existent subarray
+        assertEquals(0, segmentTree.getSum(1, -1),
+            "The sum of a non-existent subarray should be zero.");
+
+        // Test for sum with start index greater than the end index
+        assertEquals(0, segmentTree.getSum(4, 2),
+            "The sum should be zero if the start index is greater than the end index.");
+
+        // Test for sum with indexes outside of the array bounds
+        assertEquals(0, segmentTree.getSum(-1, SIZE),
+            "The sum should be zero if the indexes are outside of the array bounds.");
+        
+        // Update an element and test for sum again
+        segmentTree.update(2, 10); // Now the array should be {1, 3, 10, 7, 9, 11}
+        assertEquals(1 + 3 + 10 + 7 + 9 + 11, segmentTree.getSum(0, 5),
+            "The sum of the full array should reflect the updated value.");
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SegmentTreeTest {
+    @Test
+    public void getSumTreeTest() {
+        int[] arr = {1, 3, 5, 7, 9, 11};
+        int n = arr.length;
+        SegmentTree segmentTree = new SegmentTree(n, arr);
+        
+        // Test case: sum of the entire array
+        int totalSum = segmentTree.getSum(0, n - 1);
+        assertEquals(36, totalSum); // 1 + 3 + 5 + 7 + 9 + 11 = 36
+        
+        // Test case: sum of the first three elements
+        int sumFirstThree = segmentTree.getSum(0, 2);
+        assertEquals(9, sumFirstThree); // 1 + 3 + 5 = 9
+
+        // Test case: sum of the elements from index 1 to 4
+        int sumFromOneToFour = segmentTree.getSum(1, 4);
+        assertEquals(24, sumFromOneToFour); // 3 + 5 + 7 + 9 = 24
+
+        // Test case: sum of the last two elements
+        int sumLastTwo = segmentTree.getSum(n - 2, n - 1);
+        assertEquals(20, sumLastTwo); // 9 + 11 = 20
+
+        // Update the tree and test
+        segmentTree.update(2, 10); // Update element at index 2 to be 10
+
+        // New expected sum of the first three elements after the update
+        int updatedSumFirstThree = segmentTree.getSum(0, 2);
+        assertEquals(14, updatedSumFirstThree); // 1 + 3 + 10 = 14
+
+        // New expected sum of the entire array after the update
+        int updatedTotalSum = segmentTree.getSum(0, n - 1);
+        assertEquals(41, updatedTotalSum); // 1 + 3 + 10 + 7 + 9 + 11 = 41
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SegmentTreeTest {
+    private SegmentTree segmentTree;
+
+    @BeforeEach
+    void setUp() {
+        int[] arr = {1, 3, 5, 7, 9, 11};
+        segmentTree = new SegmentTree(arr.length, arr);
+    }
+
+    @Test
+    public void getSumTreeTest() {
+        // Test the sum on different range queries
+        assertEquals(15, segmentTree.getSum(1, 3), "Sum of elements from index 1 to 3 should be 15");
+        assertEquals(9, segmentTree.getSum(0, 2), "Sum of elements from index 0 to 2 should be 9");
+        assertEquals(35, segmentTree.getSum(2, 5), "Sum of elements from index 2 to 5 should be 35");
+
+        // Test for an updated value
+        segmentTree.update(2, 6); // Update index 2 value from 5 to 6
+        assertEquals(16, segmentTree.getSum(1, 3), "Sum of elements from index 1 to 3 after update should be 16");
+
+        // Edge cases
+        assertEquals(0, segmentTree.getSum(6, 6), "Querying out of bounds should return 0");
+        assertEquals(0, segmentTree.getSum(-1, 0), "Query with negative start index should return 0");
+        assertEquals(0, segmentTree.getSum(4, 3), "Query with start index greater than end index should return 0");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SegmentTreeTest {
+
+    private SegmentTree segmentTree;
+
+    @BeforeEach
+    public void setUp() {
+        // Initialize segment tree with example values
+        int[] arr = {1, 3, 5, 7, 9, 11};
+        int n = arr.length;
+        segmentTree = new SegmentTree(n, arr);
+    }
+
+    @Test
+    public void getSumTreeTest_ValidRange_ReturnsCorrectSum() {
+        int startRange = 1;
+        int endRange = 3;
+        int expectedSum = 3 + 5 + 7; // Sum of elements from index 1 to 3 in the array [1, 3, 5, 7, 9, 11]
+
+        assertEquals(expectedSum, segmentTree.getSum(startRange, endRange), "The sum calculated by getSum does not match the expected sum.");
+    }
+
+    @Test
+    public void getSumTreeTest_SingleElementRange_ReturnsElementValue() {
+        int index = 4;
+        int expectedValue = 9; // The value at index 4 in the array [1, 3, 5, 7, 9, 11]
+
+        assertEquals(expectedValue, segmentTree.getSum(index, index), "The sum for a single element range should be the element itself.");
+    }
+
+    @Test
+    public void getSumTreeTest_InvalidRange_ReturnsZero() {
+        int invalidStart = 5;
+        int invalidEnd = 3;
+
+        assertEquals(0, segmentTree.getSum(invalidStart, invalidEnd), "The sum for an invalid range should be zero.");
+    }
+
+    @Test
+    public void getSumTreeTest_OutOfBoundsRange_ReturnsZero() {
+        int outOfBoundsStart = -1;
+        int outOfBoundsEnd = 10;
+
+        assertEquals(0, segmentTree.getSum(outOfBoundsStart, outOfBoundsEnd), "The sum for an out-of-bounds range should be zero.");
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SegmentTreeTest {
+    
+    private SegmentTree segmentTree;
+    
+    @BeforeEach
+    public void setUp() {
+        int[] arr = {1, 3, 5, 7, 9, 11};
+        int n = arr.length;
+        segmentTree = new SegmentTree(n, arr);
+    }
+
+    @Test
+    public void getSumTreeTest() {
+        // Test sum of the full array
+        assertEquals(36, segmentTree.getSum(0, 5));
+
+        // Test sum of a subarray
+        assertEquals(15, segmentTree.getSum(1, 3));
+
+        // Test sum with single element
+        assertEquals(9, segmentTree.getSum(4, 4));
+
+        // Test sum with invalid indices
+        assertEquals(0, segmentTree.getSum(-1, 2));
+        assertEquals(0, segmentTree.getSum(2, 6));
+        assertEquals(0, segmentTree.getSum(3, 2));
+
+        // Test sum after an update
+        segmentTree.update(2, 10); // update index 2 (value 5) to 10
+        assertEquals(41, segmentTree.getSum(0, 5)); // New sum including updated value
+        assertEquals(20, segmentTree.getSum(1, 3)); // Subarray sum including updated value        
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SegmentTreeTest {
+
+    private SegmentTree segmentTree;
+    
+    @BeforeEach
+    public void setUp() {
+        int arr[] = {1, 3, 5, 7, 9, 11};
+        int n = arr.length;
+        segmentTree = new SegmentTree(n, arr);
+    }
+    
+    @Test
+    public void getSumTreeTest() {
+        assertEquals(16, segmentTree.getSum(1, 3), "Sum of values in range 1 to 3");
+        assertEquals(15, segmentTree.getSum(0, 2), "Sum of values in range 0 to 2");
+        assertEquals(9, segmentTree.getSum(3, 3), "Sum of single element range");
+        assertEquals(0, segmentTree.getSum(5, 4), "Invalid range should return 0");
+        assertEquals(0, segmentTree.getSum(-1, 2), "Range starting with invalid negative index");
+        assertEquals(0, segmentTree.getSum(2, 6), "Range ending with index out of bound");
+        
+        segmentTree.update(1, 10);
+        assertEquals(23, segmentTree.getSum(1, 3), "Sum after update of values in range 1 to 3");
+    }
+    
+    @AfterEach
+    public void tearDown() {
+        segmentTree = null;
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SegmentTreeTest {
+    private SegmentTree segmentTree;
+
+    @BeforeEach
+    public void setUp() {
+        int[] arr = {1, 3, 5, 7, 9, 11};
+        int n = arr.length;
+        segmentTree = new SegmentTree(n, arr);
+    }
+
+    @Test
+    public void getSumTreeTest() {
+        assertEquals(9, segmentTree.getSum(0, 2), "Sum of the first three elements should be 9");
+        assertEquals(16, segmentTree.getSum(1, 3), "Sum from index 1 to 3 should be 16");
+        assertEquals(20, segmentTree.getSum(2, 4), "Sum from index 2 to 4 should be 20");
+        assertEquals(36, segmentTree.getSum(0, 5), "Sum of the whole array should be 36");
+
+        // Testing out of bounds scenarios
+        assertEquals(0, segmentTree.getSum(-1, 2), "Query with negative start index should return 0");
+        assertEquals(0, segmentTree.getSum(1, 6), "Query with end index out of bounds should return 0");
+        assertEquals(0, segmentTree.getSum(4, 3), "Query with end index less than start index should return 0");
+
+        // Testing update and sum retrieval
+        segmentTree.update(2, 6); // Update index 2 from 5 to 6
+        assertEquals(10, segmentTree.getSum(0, 2), "Sum after updating index 2 to 6 should be 10");
+
+        // Undo the update for consistent test environment
+        segmentTree.update(2, 5); // Change back to original value
+    }
+
+    @AfterEach
+    public void tearDown() {
+        segmentTree = null;
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SegmentTreeTest {
+    private SegmentTree segmentTree;
+
+    @BeforeEach
+    public void setUp() {
+        int[] arr = {1, 3, 5, 7, 9, 11};
+        int n = arr.length;
+        segmentTree = new SegmentTree(n, arr);
+    }
+
+    @Test
+    public void getSumTreeTest() {
+        // Testing the sum from index 0 to 5 (entire array)
+        assertEquals(36, segmentTree.getSum(0, 5), "Sum of the entire array should be 36.");
+
+        // Testing the sum from index 1 to 3
+        assertEquals(15, segmentTree.getSum(1, 3), "Sum of elements from index 1 to 3 should be 15.");
+
+        // Testing the sum for a single element at index 2
+        assertEquals(5, segmentTree.getSum(2, 2),"Sum for a single element at index 2 should be 5.");
+
+        // Testing the sum from index 4 to 5
+        assertEquals(20, segmentTree.getSum(4, 5), "Sum of elements from index 4 to 5 should be 20.");
+
+        // Testing the sum with invalid range (start > end)
+        assertEquals(0, segmentTree.getSum(3, 2), "Sum should be 0 when start index is greater than end index.");
+
+        // Testing the sum with index out of range
+        assertEquals(0, segmentTree.getSum(-1, 6), "Sum should be 0 when indices are out of bounds.");
+    }
+    
+    // This test could be added to evaluate the update functionality as well
+    @Test
+    public void updateAndQuerySumTest() {
+        segmentTree.update(2, 10); // Updating array[2] from 5 to 10
+        assertEquals(41, segmentTree.getSum(0, 5), "After updating, sum of the entire array should be 41.");
+        assertEquals(20, segmentTree.getSum(1, 3), "After updating, sum of elements from index 1 to 3 should be 20.");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SegmentTreeTest {
+    @Test
+    public void getSumTreeTest() {
+        int[] inputArray = {1, 3, 5, 7, 9, 11};
+        int size = inputArray.length;
+        SegmentTree segmentTree = new SegmentTree(size, inputArray);
+
+        // Test the sum of the entire array
+        assertEquals(36, segmentTree.getSum(0, size - 1), "Sum of the entire array should be 36");
+
+        // Test a subrange sum
+        assertEquals(9, segmentTree.getSum(1, 2), "Sum of elements from index 1 to 2 should be 9");
+
+        // Test update and subsequent sum
+        segmentTree.update(2, 6); // Update index 2 to value 6
+        assertEquals(37, segmentTree.getSum(0, size - 1), "Sum after update should be 37");
+        assertEquals(10, segmentTree.getSum(1, 2), "Sum of elements from index 1 to 2 after update should be 10");
+        
+        // Test invalid range sum
+        assertEquals(0, segmentTree.getSum(5, 4), "Sum of an invalid range should be 0");
+        
+        // Test single element sum
+        assertEquals(7, segmentTree.getSum(3, 3), "Sum of a single element at index 3 should be 7");
+        
+        // Test out of bound queries
+        assertEquals(0, segmentTree.getSum(-1, 2), "Sum with start index out of bounds should be 0");
+        assertEquals(0, segmentTree.getSum(1, size), "Sum with end index out of bounds should be 0");
+        
+        // Test query after multiple updates
+        segmentTree.update(0, 10); // Update index 0 to value 10
+        segmentTree.update(5, 14); // Update index 5 to value 14
+        assertEquals(52, segmentTree.getSum(0, size - 1), "Sum after multiple updates should be 52");
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.thealgorithms.datastructures.trees;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SegmentTreeTest {
+
+    private SegmentTree segmentTree;
+
+    @BeforeEach
+    public void setup() {
+        int[] arr = {1, 3, 5, 7, 9, 11};
+        segmentTree = new SegmentTree(arr.length, arr);
+    }
+
+    @Test
+    public void getSumTreeTest() {
+        // Test for sum of the first three elements - indexes 0 to 2
+        assertEquals(9, segmentTree.getSum(0, 2));
+
+        // Test the sum of all elements - indexes 0 to 5
+        assertEquals(36, segmentTree.getSum(0, 5));
+
+        // Test individual element (element at index 4) - indexes 4 to 4
+        assertEquals(9, segmentTree.getSum(4, 4));
+
+        // Test for a sub-range sum - indexes 2 to 4
+        assertEquals(21, segmentTree.getSum(2, 4));
+
+        // Test for out-of-bound indices, these should return 0
+        assertEquals(0, segmentTree.getSum(-1, 2));
+        assertEquals(0, segmentTree.getSum(2, 6));
+ 
+        // Test for invalid range (start > end), should return 0
+        assertEquals(0, segmentTree.getSum(4, 3));
+    }
+    
+    // Additional Test for update function
+    @Test
+    public void updateTreeTest() {
+        // The current sum of elements from index 2 to 3 is 5 + 7 = 12
+        assertEquals(12, segmentTree.getSum(2, 3));
+        
+        // Update the element at index 3 to 10
+        segmentTree.update(3, 10);
+        
+        // The updated sum of elements from index 2 to 3 is now 5 + 10 = 15
+        assertEquals(15, segmentTree.getSum(2, 3));
+    }
+}
+
+

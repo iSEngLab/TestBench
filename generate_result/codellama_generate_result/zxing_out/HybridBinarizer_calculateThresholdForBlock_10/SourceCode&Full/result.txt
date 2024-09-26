@@ -1,0 +1,413 @@
+Source code: 
+
+
+private static void calculateThresholdForBlock(byte[] luminances,
+                                               int subWidth,
+                                               int subHeight,
+                                               int width,
+                                               int height,
+                                               int[][] blackPoints,
+                                               BitMatrix matrix) {
+  int maxYOffset = height - BLOCK_SIZE;
+  int maxXOffset = width - BLOCK_SIZE;
+  for (int y = 0; y < subHeight; y++) {
+    int yoffset = y << BLOCK_SIZE_POWER;
+    if (yoffset > maxYOffset) {
+      yoffset = maxYOffset;
+    }
+    int top = cap(y, subHeight - 3);
+    for (int x = 0; x < subWidth; x++) {
+      int xoffset = x << BLOCK_SIZE_POWER;
+      if (xoffset > maxXOffset) {
+        xoffset = maxXOffset;
+      }
+      int left = cap(x, subWidth - 3);
+      int sum = 0;
+      for (int z = -2; z <= 2; z++) {
+        int[] blackRow = blackPoints[top + z];
+        sum += blackRow[left - 2] + blackRow[left - 1] + blackRow[left] + blackRow[left + 1] + blackRow[left + 2];
+      }
+      int average = sum / 25;
+      thresholdBlock(luminances, xoffset, yoffset, average, width, matrix);
+    }
+  }
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.google.zxing;
+
+import org.junit.jupiter.api.*;
+
+public class HybridBinarizerTest {
+    @Test
+    public void calculateThresholdForBlockTest() {
+        byte[] luminances = new byte[5 * 5];
+        for (int y = 0; y < 5; y++) {
+            for (int x = 0; x < 5; x++) {
+                luminances[(y * 5) + x] = (byte) ((x % 2 == 0 ? 1 : -1) * (y % 3 == 0 ? 1 : -1));
+            }
+        }
+        
+        HybridBinarizer binarizer = new HybridBinarizer(new GlobalHistogramBinarizer(luminances, 5, 5));
+        int threshold = binarizer.calculateThresholdForBlock(0, 0, luminances);
+    
+        assertEquals(128, threshold);
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package com.google.zxing.common;
+import java.util.Arrays;
+public class HybridBinarizerTest {
+    @Test
+    public void calculateThresholdForBlockTest() {
+        byte[] luminances = new byte[25];
+        Arrays.fill(luminances, (byte)0xFF);
+        assertEquals(0, HybridBinarizer.calculateThresholdForBlock(luminances, 1, 3), "All white");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.google.zxing;
+
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.FileOutputStream;
+
+/**
+ * This class is used to perform binarization of images based on the Hybrid binarization algorithm
+ */
+public final class HybridBinarizer extends Binarizer {
+    private static final int PIXEL_GRAY_LEVEL = 0xFF;
+
+    public HybridBinarizer(BufferedImage image) {
+        super(image);
+    }
+
+    @Override
+    public BitMatrix toBinary() {
+        // Get the BufferedImage matrix as an array of ints
+        var luminances = new int[width * height];
+        var pixelReader = image.getData().getPixelReader();
+        for (var y = 0; y < height; y++) {
+            for (var x = 0; x < width; x++) {
+                // Use the setRGB function to extract the luminance from the RGB pixels and store it in the array
+                var pixelColor = pixelReader.getArgb(x, y);
+                var grayLevel = (int) ((pixelColor >> 16 & 0xFF) * 0.299 + (pixelColor >> 8 & 0xFF) * 0.587 + (pixelColor & 0xFF) * 0.114);
+                luminances[y * width + x] = grayLevel;
+            }
+        }
+
+        var blackPoints = calculateThresholdForBlock(luminances, subWidth, subHeight, width, height);
+        var matrix = new BitMatrix(width, height);
+
+        // Iterate through the luminance values and assign a bit value for each pixel based on whether it is above or below the calculated threshold
+        for (var y = 0; y < height; y++) {
+            for (var x = 0; x < width; x++) {
+                if ((luminances[y * width + x] & 0xFF) <= blackPoints[y / BLOCK_SIZE][x / BLOCK_SIZE]) {
+                    matrix.set(x, y);
+                }
+            }
+        }
+
+        return matrix;
+    }
+
+    /**
+     * Calculates a single threshold for a block of pixels based on the Hybrid binarization algorithm
+     */
+    private static int[] calculateThresholdForBlock(int[] luminances,
+                                                    int subWidth,
+                                                    int subHeight,
+                                                    int width,
+                                                    int height) {
+        var maxYOffset = height - BLOCK_SIZE;
+        var maxXOffset = width - BLOCK_SIZE;
+        var blackPoints = new int[subHeight][subWidth];
+        for (var y = 0; y < subHeight; y++) {
+            var yoffset = y << BLOCK_SIZE_POWER;
+            if (yoffset > maxYOffset) {
+                continue;
+            }
+
+            for (var x = 0; x < subWidth; x++) {
+                var xoffset = x << BLOCK_SIZE_POWER;
+                if (xoffset > maxXOffset) {
+                    break;
+                }
+
+                var sum = 0;
+                var numSamples = 0;
+                for (var iy = yoffset; iy < yoffset + BLOCK_SIZE && iy < height - 1; iy++) {
+                    if ((iy & 1) == 0) {
+                        // Every second line, sample the luminance value and add to sum
+                        for (var ix = xoffset; ix < xoffset + BLOCK_SIZE && ix < width - 1; ix++) {
+                            if ((ix & 1) == 0) {
+                                // Add the luminance value to sum and increment numSamples
+                                sum += (luminances[iy * width + ix] & PIXEL_GRAY_LEVEL);
+                                numSamples++;
+                            }
+                        }
+                    } else {
+                        // Sample the luminance value and add to sum without incrementing numSamples
+                        for (var ix = xoffset; ix < xoffset + BLOCK_SIZE && ix < width - 1; ix++) {
+                            if ((ix & 1) == 0) {
+                                // Add the luminance value to sum
+                                sum += (luminances[iy * width + ix] & PIXEL_GRAY_LEVEL);
+                            }
+                        }
+                    }
+                }
+
+                var average = sum / numSamples;
+
+                // Calculate the threshold value using the average luminance value
+                blackPoints[y][x] = calculateThreshold(average, 250);
+            }
+        }
+
+        return blackPoints;
+    }
+
+    /**
+     * Calculates a single threshold value based on the input parameters
+     */
+    private static int calculateThreshold(int averageLuminanceValue, int minThreshold) {
+        var threshold = (averageLuminanceValue >> 8); // shift right 8 bits to divide by 256
+        if (threshold < minThreshold) {
+            threshold = minThreshold;
+        } else if (threshold > MAX_THRESHOLD) {
+            threshold = MAX_THRESHOLD;
+        }
+
+        return threshold;
+    }
+}
+
+
+No.4 generated result --------------------------
+
+
+public static int calculateThresholdForBlock(byte[] luminances,
+                                             int xoffset,
+                                             int yoffset,
+                                             BitMatrix matrix) {
+    // Calculate the sum of the pixels in the 3x3 area around this pixel.
+    int sum = 0;
+    for (int dy = -1; dy <= 1; dy++) {
+        int iy = yoffset + dy;
+        if (iy < 0 || iy >= matrix.getHeight()) {
+            continue;
+        }
+        for (int dx = -1; dx <= 1; dx++) {
+            int ix = xoffset + dx;
+            if (ix < 0 || ix >= matrix.getWidth()) {
+                continue;
+            }
+            sum += luminances[iy * matrix.getWidth() + ix];
+        }
+    }
+    
+    // Calculate the average and standard deviation of the pixel values in this block.
+    int average = sum / 9;
+    int stDev = (int) Math.sqrt((sum - 9 * average) / 81);
+    
+    // The threshold for a block is based on the average, plus or minus three times the standard
+    // deviation. This is needed to catch 1D barcodes that do not have well-defined black and white
+    // pixels. See JIRA issue ZXING-324 for details.
+    return average + (stDev * 3);
+}
+
+
+
+No.5 generated result --------------------------
+
+import org.junit.jupiter.api.*;
+
+class HybridBinarizerTest {
+  @Test
+  public void calculateThresholdForBlock() {
+    int[] luminances = new int[10]; // Initialize with your test values
+    int xoffset = 0; // Set to the horizontal coordinate of the block in the image
+    int yoffset = 0; // Set to the vertical coordinate of the block in the image
+    int width = 10; // Set to the width of the image
+    int height = 5; // Set to the height of the image
+    
+    int[] expectedThreshold = new int[2]; // Initialize with your expected output
+    
+    int[] actualThreshold = HybridBinarizer.calculateThresholdForBlock(luminances, xoffset, yoffset, width, height);
+    Assertions.assertArrayEquals(expectedThreshold, actualThreshold);
+  }
+}
+
+
+No.6 generated result --------------------------
+
+
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class HybridBinarizerTest {
+    @Test
+    public void calculateThresholdForBlockTest() {
+        HybridBinarizer binarizer = new HybridBinarizer(null);
+        int width = 20;
+        int height = 15;
+        byte[] matrix = {<FILL>};
+        int subWidth = width / BLOCK_SIZE;
+        int subHeight = height / BLOCK_SIZE;
+        int top = 0;
+        int left = 0;
+        int bottom = (subHeight * BLOCK_SIZE) + 1;
+        int right = (subWidth * BLOCK_SIZE) + 1;
+        int matrixY = height - 1;
+        int matrixX = width - 1;
+        
+        // Test case 1: top-left corner, white block
+        for (int y = 0; y < BLOCK_SIZE; y++) {
+            for (int x = 0; x < BLOCK_SIZE; x++) {
+                matrix[y * width + x] = 255; // Fill top-left corner with white pixels
+            }
+        }
+        
+        int threshold = binarizer.calculateThresholdForBlock(matrix, subWidth, subHeight, left, right, top, bottom, matrixY, matrixX);
+        assertEquals(255, threshold); // Expected: White block with highest luminance value 255
+        
+        // Test case 2: middle of image, black block
+        for (int y = 0; y < BLOCK_SIZE; y++) {
+            for (int x = 0; x < BLOCK_SIZE; x++) {
+                matrix[y * width + x] = 0; // Fill middle with black pixels
+            }
+        }
+        
+        threshold = binarizer.calculateThresholdForBlock(matrix, subWidth, subHeight, left, right, top, bottom, matrixY, matrixX);
+        assertEquals(0, threshold); // Expected: Black block with lowest luminance value 0
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.google.zxing.common;
+
+import java.util.Arrays;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class HybridBinarizerTest {
+    private HybridBinarizer binarizer = new HybridBinarizer(null);
+    
+    @Test
+    public void calculateThresholdForBlockTest() {
+        byte[] matrix = new byte[25];
+        Arrays.fill(matrix, (byte) 100);
+        assertEquals(100, binarizer.calculateThresholdForBlock(matrix, 0, 0));
+        
+        matrix = new byte[] { 1 };
+        assertEquals(1, binarizer.calculateThresholdForBlock(matrix, 0, 0));
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package com.google.zxing.common;
+
+import org.junit.jupiter.api.*;
+
+public class HybridBinarizerTest {
+
+  @Test
+  public void calculateThresholdForBlockTest() {
+    byte[] luminances = new byte[256]; // 1 byte per pixel
+    int subWidth = 10;   // Number of pixels in a block horizontally.
+    int subHeight = 10;  // Number of pixels in a block vertically.
+    int width = 100;     // Total number of pixels in the image.
+    int height = 100;    // Total number of pixels in the image.
+
+    HybridBinarizer binarizer = new HybridBinarizer(luminances);
+    int[][] blackPoints = binarizer.calculateBlackPoints(subWidth, subHeight, width, height);
+
+    assertEquals(10, blackPoints.length); // Number of blocks vertically.
+    for (int y = 0; y < blackPoints.length; y++) {
+      assertEquals(10, blackPoints[y].length); // Number of blocks horizontally.
+    }
+
+    int[] histogram = new int[256]; // 256 possible pixel values.
+    for (int i = 0; i < luminances.length; i++) {
+      histogram[luminances[i] & 0xFF]++;
+    }
+
+    int average = calculateAverage(histogram); // Average of all pixel values in the image.
+    for (int y = 0; y < blackPoints.length; y++) {
+      for (int x = 0; x < blackPoints[y].length; x++) {
+        int threshold = binarizer.calculateThresholdForBlock(luminances, subWidth, subHeight, width, height, x, y);
+        assertTrue(threshold > average / 2 && threshold < average * 2); // Threshold should be close to the average of all pixel values in the image.
+      }
+    }
+  }
+}
+
+
+No.9 generated result --------------------------
+
+<#assign threshold = 255 - (2 * average) + min>
+return cap(${threshold}, max);
+
+
+
+No.10 generated result --------------------------
+
+package com.google.zxing;
+
+import java.nio.charset.StandardCharsets;
+
+/**
+ * Common string-related functions.
+ */
+public final class StringUtils {
+
+  private static final String SHIFT_JIS_CHARSET = "SJIS";
+  private static final String EUC_JP_CHARSET = "EUC_JP";
+
+  /**
+   * See "Character Set Identification" by David Morton:
+   * http://www.autosoftpro.com/cBloGS/blog/post/2007/10/Character-Set-Identification.aspx
+   */
+  public static String guessEncoding(byte[] bytes) {
+    // First two bytes should be ASCII, which encodes to ISO-8859-1. Check if this is true, and if
+    // the characters are within a valid ASCII range.
+    if (bytes[0] < 0x20 || bytes[0] > 0x7F) {
+      return null;
+    }
+    int length = bytes.length;
+    for (int i = 1; i < length && i <= 5 && bytes[i] >= 0; i++) {
+      if ((bytes[i] & 0x80) != 0) { // not ASCII
+        return SHIFT_JIS_CHARSET;
+      } else if (bytes[i] < 0x20 || bytes[i] > 0x7F) {
+        break;
+      }
+    }
+    int lengthMinusOne = length - 1;
+    for (int i = 1; i < lengthMinusOne && i <= 3 && bytes[i] >= 0; i++) {
+      if ((bytes[i] & 0x80) != 0 || (bytes[i + 1] & 0x80) != 0) { // not ASCII
+        return EUC_JP_CHARSET;
+      } else if (bytes[i] < 0x20 || bytes[i] > 0x7F) {
+        break;
+      }
+    }
+    return StandardCharsets.ISO_8859_1;
+  }
+}
+
+

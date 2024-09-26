@@ -1,0 +1,867 @@
+Source code: 
+
+
+public Map<String, SelectSqlInfo> parse() throws JSQLParserException {
+    // 1. 创建解析器
+    CCJSqlParserManager mgr = new CCJSqlParserManager();
+    // 2. 使用解析器解析sql生成具有层次结构的java类
+    Statement stmt = mgr.parse(new StringReader(this.sql));
+    if (stmt instanceof Select) {
+        Select selectStatement = (Select) stmt;
+        SelectBody selectBody = selectStatement.getSelectBody();
+        this.parsedSql = selectBody.toString();
+        // 3. 解析select查询sql的信息
+        if (selectBody instanceof PlainSelect) {
+            PlainSelect plainSelect = (PlainSelect) selectBody;
+            // 4. 合并 fromItems
+            List<FromItem> fromItems = new ArrayList<>();
+            fromItems.add(plainSelect.getFromItem());
+            // 4.1 处理join的表
+            List<Join> joins = plainSelect.getJoins();
+            if (joins != null) {
+                joins.forEach(join -> fromItems.add(join.getRightItem()));
+            }
+            // 5. 处理 fromItems
+            for (FromItem fromItem : fromItems) {
+                // 5.1 通过表名的方式from
+                if (fromItem instanceof Table) {
+                    this.addSqlInfoByTable((Table) fromItem);
+                }
+                // 5.2 通过子查询的方式from
+                else if (fromItem instanceof SubSelect) {
+                    this.handleSubSelect((SubSelect) fromItem);
+                }
+            }
+            // 6. 解析 selectFields
+            List<SelectItem> selectItems = plainSelect.getSelectItems();
+            for (SelectItem selectItem : selectItems) {
+                // 6.1 查询的是全部字段
+                if (selectItem instanceof AllColumns) {
+                    // 当 selectItem 为 AllColumns 时，fromItem 必定为 Table
+                    String tableName = plainSelect.getFromItem(Table.class).getName();
+                    // 此处必定不为空，因为在解析 fromItem 时，已经将表名添加到 allTableMap 中
+                    SelectSqlInfo sqlInfo = this.allTableMap.get(tableName);
+                    assert sqlInfo != null;
+                    // 设置为查询全部字段
+                    sqlInfo.setSelectAll(true);
+                    sqlInfo.setSelectFields(null);
+                    sqlInfo.setRealSelectFields(null);
+                }
+                // 6.2 查询的是带表别名（ u.* )的全部字段
+                else if (selectItem instanceof AllTableColumns) {
+                    AllTableColumns allTableColumns = (AllTableColumns) selectItem;
+                    String aliasName = allTableColumns.getTable().getName();
+                    // 通过别名获取表名
+                    String tableName = this.tableAliasMap.get(aliasName);
+                    if (tableName == null) {
+                        tableName = aliasName;
+                    }
+                    SelectSqlInfo sqlInfo = this.allTableMap.get(tableName);
+                    // 如果此处为空，则说明该字段是通过子查询获取的，所以可以不处理，只有实际表才需要处理
+                    if (sqlInfo != null) {
+                        // 设置为查询全部字段
+                        sqlInfo.setSelectAll(true);
+                        sqlInfo.setSelectFields(null);
+                        sqlInfo.setRealSelectFields(null);
+                    }
+                }
+                // 6.3 各种字段表达式处理
+                else if (selectItem instanceof SelectExpressionItem) {
+                    SelectExpressionItem selectExpressionItem = (SelectExpressionItem) selectItem;
+                    Expression expression = selectExpressionItem.getExpression();
+                    Alias alias = selectExpressionItem.getAlias();
+                    this.handleExpression(expression, alias, plainSelect.getFromItem());
+                }
+            }
+        } else {
+            log.warn("暂时尚未处理该类型的 SelectBody: {}", selectBody.getClass().getName());
+            throw new JeecgBootException("暂时尚未处理该类型的 SelectBody");
+        }
+    } else {
+        // 非 select 查询sql，不做处理
+        throw new JeecgBootException("非 select 查询sql，不做处理");
+    }
+    return this.allTableMap;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jeecg.common.util.sqlparse;
+
+import net.sf.jsqlparser.expression.*;
+import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.statement.select.FromItem;
+import net.sf.jsqlparser.statement.select.Join;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.SelectBody;
+import net.sf.jsqlparser.statement.select.SubJoin;
+import org.junit.jupiter.api.Test;
+
+import java.util.*;
+
+public class JSqlParserAllTableManagerTest {
+    @Test
+    public void parseTest() throws Exception {
+        String sql = "SELECT 1 FROM (SELECT * FROM T WHERE ID > 0) AS A";
+        SelectBody selectBody = JSqlParserUtils.parseSelectBody(sql);
+        if (!(selectBody instanceof PlainSelect)) {
+            throw new RuntimeException("Not supported SQL type");
+        }
+        PlainSelect plainSelect = (PlainSelect) selectBody;
+        FromItem fromItem = plainSelect.getFromItem();
+        JSqlParserAllTableManager allTableManager = new JSqlParserAllTableManager(sql);
+        if (!(fromItem instanceof SubJoin)) {
+            throw new RuntimeException("Not supported SQL type");
+        }
+        SubJoin subJoin = (SubJoin) fromItem;
+        FromItem left = subJoin.getLeft();
+        if (!(left instanceof Table)) {
+            throw new RuntimeException("Not supported SQL type");
+        }
+        allTableManager.addSqlInfoByTable((Table) left);
+    }
+}
+
+
+No.2 generated result --------------------------
+
+
+
+
+
+No.3 generated result --------------------------
+
+@Slf4j(topic = "easy_code")
+public class JSqlParserAllTableManager {
+
+    private static final String SELECT_TABLE_KEY = "select";
+    private static final String FROM_TABLE_KEY = "from";
+
+    /**
+     * 解析sql，获取需要的表名信息
+     *
+     * @param sql
+     */
+    public JSqlParserAllTableManager(String sql) {
+        this.sql = sql;
+    }
+
+    private String sql;
+
+    /**
+     * 所有表信息
+     */
+    private Map<String, SelectSqlInfo> allTableMap = new HashMap<>();
+
+    /**
+     * 解析
+     */
+    public void parser() {
+        // 解析sql
+        CCJSqlParserManager parserManager = new CCJSqlParserManager();
+        Statement statement;
+        try {
+            statement = parserManager.parse(new StringReader(this.sql));
+        } catch (JSQLParserException e) {
+            log.error("easy code error:", e);
+            return;
+        }
+        // 分析statement
+        this.parserStatement(statement);
+    }
+
+    /**
+     * 根据sql语句解析出需要的表信息，并存入 allTableMap中
+     */
+    private void parserStatement(Statement statement) {
+        // 处理 select
+        this.parserSelectBody((SelectBody) ((PlainSelect) ((Select) statement).getSelectBody()).getFrom());
+    }
+
+    /**
+     * 解析select body中的表信息
+     */
+    private void parserSelectBody(SelectBody selectBody) {
+        if (selectBody instanceof SetOperationList) {
+            SetOperationList setOperationList = (SetOperationList) selectBody;
+            List<SelectBody> selectBodys = setOperationList.getSelects();
+            for (SelectBody item : selectBodys) {
+                this.parserSelectBody(item);
+            }
+        } else if (selectBody instanceof PlainSelect) {
+            // 处理 fromItem
+            List<Join> joins = ((PlainSelect) selectBody).getJoins();
+            this.handleFromItem(((PlainSelect) selectBody).getFromItem(), joins);
+        }
+    }
+
+    /**
+     * 根据从Item和joins处理表信息，并存入 allTableMap中
+     */
+    private void handleFromItem(FromItem fromItem, List<Join> joins) {
+        if (fromItem instanceof SubJoin) {
+            return;
+        } else if (fromItem instanceof SubSelect) {
+            this.handleSubSelect((SubSelect) fromItem);
+        } else if (fromItem instanceof ValuesList) {
+            return;
+        } else if (fromItem instanceof LateralSubSelect) {
+            return;
+        }
+        // 获取表名
+        String tableName = this.getTableName(fromItem);
+        if (tableName == null || "".equals(tableName)) {
+            return;
+        }
+        SelectSqlInfo sqlInfo = new SelectSqlInfo();
+        sqlInfo.setFromTableName(tableName);
+        // 处理 joins
+        this.handleJoinTable(joins, tableName);
+        // 加入 allTableMap
+        if (this.allTableMap == null) {
+            return;
+        }
+        this.allTableMap.put(sqlInfo.getFromTableName(), sqlInfo);
+    }
+
+    /**
+     * 根据joins处理其他表信息，并存入 allTableMap中
+     */
+    private void handleJoinTable(List<Join> joins, String tableName) {
+        if (joins == null || joins.size() <= 0) {
+            return;
+        }
+        for (Join join : joins) {
+            // 获取表名
+            String joinTableName = this.getTableName(join.getRightItem());
+            if (joinTableName != null && !"".equals(joinTableName)) {
+                SelectSqlInfo sqlInfo = new SelectSqlInfo();
+                sqlInfo.setSelectTableKey(tableName);
+                sqlInfo.setJoinTableKey(joinTableName);
+                // 加入 allTableMap
+            } else if (joinTableName == null || "".equals(joinTableName)) {
+                log.warn("easy code warn: get join table name is empty");
+                return;
+            }
+        }
+    }
+
+    /**
+     * 获取表名
+     */
+    private String getTableName(FromItem fromItem) {
+        if (fromItem instanceof Table) {
+            return ((Table) fromItem).getName();
+        } else if (fromItem instanceof SubSelect) {
+            return this.getTableName(((SubSelect) fromItem).getSelectBody());
+        } else {
+            log.warn("easy code warn: get table name fail, from item type is not support");
+            return null;
+        }
+    }
+
+    /**
+     * 处理子查询语句
+     */
+    private void handleSubSelect(SelectBody selectBody) {
+        if (selectBody instanceof PlainSelect) {
+            this.handleFromItem(((PlainSelect) selectBody).getFromItem(), ((PlainSelect) selectBody).getJoins());
+            return;
+        } else if (selectBody instanceof SetOperationList) {
+            List<SelectBody> selectBodys = ((SetOperationList) selectBody).getSelects();
+            for (SelectBody item : selectBodys) {
+                this.handleSubSelect(item);
+            }
+        } else if (selectBody instanceof WithItem) {
+            return;
+        } else if (selectBody instanceof ValuesList) {
+            //todo
+        }
+    }
+}
+    
+
+
+No.4 generated result --------------------------
+
+package org.jeecg.common.util.sqlparse;
+import java.util.*;
+public class JSqlParserAllTableManager extends JSqlParserAbstract implements SqlInfoParser {
+    /**
+     * 所有的表信息
+     */
+    private Map<String, SelectSqlInfo> allTableMap = new LinkedHashMap<>();
+
+    public JSqlParserAllTableManager() {}
+
+    @Override
+    public String getSqlType() {
+        return SqlTypeEnum.ALL_TABLE.getValue();
+    }
+
+    /**
+     * 解析sql，提取出 select 语句中的表信息
+     */
+    public void parse() throws JSQLParserException {
+        // 1. 解析 SelectBody
+        PlainSelect plainSelect = (PlainSelect) this.parsedSql.getSelectBody();
+
+        // 2. 处理 FromItem
+        List<FromItem> fromItems = plainSelect.getFromItem().getFromItems();
+        if (fromItems != null && !fromItems.isEmpty()) {
+            for (FromItem fromItem : fromItems) {
+                this.handleFromItem(fromItem);
+            }
+        }
+    }
+
+    /**
+     * 处理 FromItem，并添加到 allTableMap 中
+     */
+    private void handleFromItem(FromItem fromItem) throws JSQLParserException {
+        // 处理 Join
+        if (fromItem instanceof Table) {
+            this.addSqlInfoByTable((Table) fromItem);
+        } else if (fromItem instanceof SubJoin) {
+            SubJoin subJoin = (SubJoin) fromItem;
+            FromItem left = subJoin.getLeft();
+            this.handleFromItem(left);
+        } else if (fromItem instanceof LateralSubSelect) {
+            // todo 处理LateralSubSelect
+        }
+    }
+
+    /**
+     * 根据 Table 添加 sqlInfo
+     */
+    private void addSqlInfoByTable(Table table) {
+        String tableName = table.getName();
+        SelectSqlInfo sqlInfo = new SelectSqlInfo(this.parsedSql);
+        sqlInfo.setFromTableName(table.getName());
+        this.allTableMap.put(sqlInfo.getFromTableName(), sqlInfo);
+    }
+}
+    
+
+### Response:
+
+
+No.5 generated result --------------------------
+
+package org.jeecg.common.util.sqlparse;
+
+import net.sf.jsqlparser.expression.*;
+import net.sf.jsqlparser.schema.Table;
+import net.sf.jsqlparser.statement.select.*;
+import net.sf.jsqlparser.util.deparser.SelectDeParser;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JSqlParserAllTableManagerTest {
+    @Test
+    public void parseTest() {
+        String sql = "<FILL>";
+        PlainSelect plainSelect = (PlainSelect) SQLParserUtil.parseSqlStatement(sql);
+        
+        AllTableManager allTableManager = new AllTableManager();
+        Map<String, SelectSqlInfo> tableMap = allTableManager.getAllTableMap(plainSelect);
+        
+        // 打印结果
+        System.out.println("打印全表名及字段：");
+        for (Map.Entry<String, SelectSqlInfo> entry : tableMap.entrySet()) {
+            String key = entry.getKey();
+            System.out.print(key + ": ");
+            
+            List<SelectFieldItem> selectFields = entry.getValue().getSelectFields();
+            if (selectFields != null) {
+                for (SelectFieldItem field : selectFields) {
+                    System.out.print(field.getAliasName() + ",");
+                }
+            }
+            System.out.println("");
+        }
+        
+        // 打印简化字段名
+        System.out.println("\n打印简化后的字段：");
+        for (Map.Entry<String, SelectSqlInfo> entry : tableMap.entrySet()) {
+            String key = entry.getKey();
+            System.out.print(key + ": ");
+            
+            List<SelectFieldItem> selectFields = entry.getValue().getRealSelectFields();
+            if (selectFields != null) {
+                for (SelectFieldItem field : selectFields) {
+                    System.out.print(field.getAliasName() + ",");
+                }
+            }
+            System.out.println("");
+        }
+        
+        // 打印 sqlInfo，仅供参考，实际情况复杂
+        System.out.println("\n打印 SqlInfo：");
+        for (Map.Entry<String, SelectSqlInfo> entry : tableMap.entrySet()) {
+            String key = entry.getKey();
+            System.out.print(key + ": ");
+            
+            List<SelectFieldItem> selectFields = entry.getValue().getRealSelectFields();
+            if (selectFields != null) {
+                for (SelectFieldItem field : selectFields) {
+                    System.out.println("fieldName: " + field.getFieldName() + ", aliasName: " + field.getAliasName());
+                }
+            }
+        }
+    }
+}
+
+
+No.6 generated result --------------------------
+
+Timeout
+
+
+No.7 generated result --------------------------
+
+package org.jeecg.common.util;
+import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.expression.*;
+import net.sf.jsqlparser.schema.*;
+import net.sf.jsqlparser.statement.select.*;
+import org.jeecg.common.util.sqlparse.JSqlParserAllTableManager;
+
+public class JSqlUtils {
+    /**
+     * 通过SQL解析出所有的表名
+     */
+    public static Map<String, String> getTablesBySql(String sql) throws JSQLParserException {
+        return new JSqlParserAllTableManager().parse(sql);
+    }
+}
+
+    
+
+### JUNIT Test case:
+package org.jeecg.common.util;
+
+import java.util.*;
+
+public class JSqlUtilsTest {
+    @Test
+    public void getTablesBySqlTest() throws Exception {
+        <FILL>
+    }
+}
+    
+
+### Response:
+
+
+No.8 generated result --------------------------
+
+package org.jeecg.common.util.sqlparse;
+
+import java.io.Serializable;
+import java.util.*;
+import lombok.Data;
+
+@Data
+public class SelectSqlInfo implements Serializable {
+    private static final long serialVersionUID = 1L;
+    /**
+     * 来源表名称
+     */
+    private String fromTableName;
+    /**
+     * 查询字段，可能包含函数和子查询等复杂情况
+     */
+    private List<String> selectFields;
+    /**
+     * 真实查询字段名称列表
+     * <p>
+     * 例如 select `name` as `aliasName`, `age` from table_a where id = ?
+     * <p>
+     * 这里的 aliasName 就是真正的字段名称
+     */
+    private List<String> realSelectFields;
+
+    public SelectSqlInfo() {
+        this.selectFields = new ArrayList<>();
+        this.realSelectFields = new ArrayList<>();
+    }
+}
+
+package org.jeecg.common.util.sqlparse;
+
+import net.sf.jsqlparser.expression.Alias;
+import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.statement.select.*;
+import java.io.Serializable;
+import java.util.*;
+
+/**
+ * 用于管理多个表的查询结果
+ */
+public class JSqlParserAllTableManager implements Serializable {
+    private static final long serialVersionUID = 1L;
+    /**
+     * 解析后的 sql 语句
+     */
+    private String parsedSql;
+    /**
+     * 查询结果信息，表名为 key，SelectSqlInfo 为 value
+     */
+    private Map<String, SelectSqlInfo> allTableMap = new HashMap<>();
+    /**
+     * 表别名与真实表名的映射关系
+     */
+    private Map<String, String> tableAliasMap = new HashMap<>();
+
+    public JSqlParserAllTableManager(String originalSql) {
+        this.parsedSql = parseSql(originalSql);
+    }
+
+    /**
+     * 解析SQL，获取所有的表名
+     *
+     * @param originalSql
+     * @return
+     */
+    public String parseSql(String originalSql) {
+        PlainSelect plainSelect = getPlainSelectFromSql(originalSql);
+        // 处理 fromItem
+        List<Table> tables = new ArrayList<>();
+        this.getAllTablesByFromItem(plainSelect.getFromItem(), tables);
+        String tableName;
+        for (Table table : tables) {
+            if (table != null) {
+                tableName = table.getName();
+                // 解析 aliasName
+                if (table.getAlias() != null) {
+                    this.tableAliasMap.put(table.getAlias().getName(), tableName);
+                }
+            } else {
+                log.warn("{} 中不包含任何表，无法解析。", originalSql);
+                return null;
+            }
+        }
+        return plainSelect.toString();
+    }
+
+    /**
+     * 递归处理 FromItem
+     *
+     * @param fromItem
+     * @return
+     */
+    private void getAllTablesByFromItem(net.sf.jsqlparser.schema.Table table) {
+        if (table == null) {
+            return;
+        }
+        this.addSqlInfoByTable((Table) table);
+        // 处理 joins
+        if (table.getJoins() != null && !table.getJoins().isEmpty()) {
+            for (Join join : table.getJoins()) {
+                getAllTablesByFromItem(join.getRightItem());
+            }
+        }
+    }
+
+    /**
+     * 解析 SQL，获取 PlainSelect
+     *
+     * @param originalSql
+     */
+    public PlainSelect getPlainSelectFromSql(String originalSql) {
+        SelectBody selectBody = getSelectBodyFromSql(originalSql);
+        if (selectBody == null) {
+            return null;
+        }
+        try {
+            // 这里偷了，selectBody.getSelects() 是一个 List<net.sf.jsqlparser.schema.Table> 类型的对象
+            // 可以直接向 PlainSelect 对象进行转换
+            return (PlainSelect) selectBody;
+        } catch (Exception e) {
+            log.error(e);
+            return null;
+        }
+    }
+
+    /**
+     * 解析 SQL，获取 SelectBody
+     *
+     * @param originalSql
+     */
+    public SelectBody getSelectBodyFromSql(String originalSql) {
+        PlainSelect plainSelect = getPlainSelectFromSql(originalSql);
+        if (plainSelect == null) {
+            return null;
+        }
+        try {
+            // 这里偷了，plainSelect.getSelectBody() 是一个 SelectBody 类型的对象
+            // 可以直接向 PlainSelect 对象进行转换
+            return plainSelect.getSelectBody();
+        } catch (Exception e) {
+            log.error(e);
+            return null;
+        }
+    }
+
+    /**
+     * 递� <?php
+
+namespace App\Http\Controllers;
+use Illuminate\Support\Facades\DB;
+use App\Pasajero;
+use App\Reserva;
+use App\Habitacion;
+use Illuminate\Http\Request;
+
+class ReservasController extends Controller
+{
+    public function __construct()
+    {
+        $this->middleware('auth');//Verificar la autenticación
+     }
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
+    {
+       // return DB::select('SELECT  FROM reserva');//Obtener todos los registros de la tabla
+        $reservas = Reserva::all();//Obtener todos los registros de la tabla
+        return view('/Reservas/index',compact("reservas"));//Mostrar vista con la lista de reservas
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
+    {
+        $pasajeros = Pasajero::all();//Obtener todos los registros de la tabla
+        return view('/Reservas/create',compact("pasajeros"));//Mostrar vista con formulario para crear una nueva reserva
+       // return "Aqui se mostrara el formulario";
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {//Se guarda en la base de datos el registro nuevo
+       // return DB::insert('INSERT INTO reservas (fecha_ingreso,fecha_salida,cantidad_habitacion,estado_reserva,fk_pasajero) VALUES ($request->input("input-1"),$request->input("input-2"),$request->input("input-3"),$request->input("input-4"),$request->input("select"))');//Insertar en la tabla un nuevo registro
+        Reserva::create([//Crear un objeto de tipo reserva a partir de los datos ingresados en el formulario
+            'fecha_ingreso' => $request->input('input-1'),
+            'fecha_salida' => $request->input('input-2'),
+            'cantidad_habitacion' => $request->input('input-3'),
+            'estado_reserva' => "0",//Estado de la reserva por defecto es "0"
+            'fk_pasajero' => $request->input('select')
+        ]);
+        return redirect()->route('Reservas.index'); //Redirigir a la pagina de inicio donde se muestra la lista de los registros guardados anteriormente 
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)//Obtener el objeto de la clase pasajero con id ingresado y mostrar sus datos en una vista
+    {
+        return DB::select('SELECT * FROM reserva WHERE fk_pasajero = ' . $id);//Mostrar vista con los datos del pasajero ingresado
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($id)//Obtener el objeto de la clase pasajero con id ingresado y mostrar sus datos en un formulario para ser editados
+    {
+        //return "Aqui se mostrara el formulario para editar el registro ingresado";
+       $reservas = Reserva::find($id);//Obtener los datos del objeto de la clase reserva con id ingresado
+       return view('/Reservas/edit',compact('reservas')); //Mostrar vista con el formulario para editar el registro ingresado
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)//Actualizar los datos del objeto de la clase reserva con id ingresado a partir de los datos obtenidos del formulario
+    {
+        //return DB::update('UPDATE reservas SET fecha_ingreso = ' .$request->input("fecha_ingreso").', fecha_salida = '. $request->input("fecha_salida") . ', cantidad_habitacion =' .  $request->input("cantidad_habitacion") . ', estado_reserva =' .  $request->input("estado_reserva") . ', fk_pasajero = ' .$request->input("fk_pasajero").' WHERE id= '.$id);
+        Reserva::where('id',$id)->update([//Buscar el objeto de la clase reservas con el id ingresado y actualizar sus datos a partir de los datos ingresados en el formulario
+            'fecha_ingreso' => $request->input('input-1'),
+            'fecha_salida' => $request->input('input-2'),
+            'cantidad_habitacion' => $request->input('input-3'),
+            'estado_reserva' => "0",//Estado de la reserva por defecto es "0"
+            'fk_pasajero' => $request->input('select')
+        ]);
+       return redirect()->route('Reservas.index'); //Redirigir a la pagina de inicio donde se muestra la lista de los registros guardados anteriormente 
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)//Eliminar el objeto de la clase reserva con id ingresado
+    {
+        //return DB::delete('DELETE FROM reservas WHERE id = '.$id);
+       $reservas = Reserva::find($id)->delete();//Buscar el objeto de la clase reservas con el id ingresado y eliminarlo
+        return redirect()->route('Reservas.index'); //Redirigir a la pagina de inicio donde se muestra la lista de los registros guardados anteriormente 
+    }
+}
+
+
+
+No.9 generated result --------------------------
+
+package org.jeecg.common.util;
+
+import java.util.*;
+
+public class JSqlParserAllTableManager {
+    private final Map<String, SelectSqlInfo> allTableMap = new HashMap<>();
+    private final Map<String, String> tableAliasMap = new HashMap<>();
+    private StringBuilder parsedSql = new StringBuilder();
+    
+    /**
+     * 解析sql，返回表名与sqlInfo的map对象
+     */
+    public Map<String, SelectSqlInfo> parse(String sql) {
+        // 生成parser
+        net.sf.jsqlparser.parser.CCJSqlParserManager parser = new CCJSqlParserUtil();
+        try {
+            // 抽取语句
+            Statement statement = parser.parse(new StringReader(sql));
+            
+            // 遍历所有的selectItems，处理字段名和表名
+            SelectBody selectBody = (statement instanceof Select) ? ((Select) statement).getSelectBody() : null;
+            if (!(statement instanceof Select)) {
+                return allTableMap;
+            }
+            
+            // 解析 selectItems
+            this.handleSelectItems((selectBody instanceof PlainSelect) ? (PlainSelect) selectBody : null);
+    
+            // 处理表名
+            FromItem from = selectBody.getFromItem();
+            if (from == null || from instanceof Table) {
+                return allTableMap;
+            }
+            
+            // 遍历所有的表，查询字段和表名
+            this.handleTables(((SubJoin) from).getLeft(), true);
+    
+            // 处理连接查询 join
+            List<Join> joins = ((SubJoin) from).getJoins();
+            for (Join join : joins) {
+                if (!join.isSimple()) {
+                    continue;
+                }
+                this.handleTables(((Table) join.getRightItem()), false);
+    
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return allTableMap;
+    }
+    
+    /**
+     * 解析字段名
+     */
+    private void handleSelectItems(PlainSelect plainSelect) {
+        List<SelectItem> selectItems = plainSelect.getSelectItems();
+        for (int i = 0; i < selectItems.size(); ++i) {
+            SelectItem item = selectItems.get(i);
+            
+            // 处理 * 选择器
+            if (item instanceof AllColumns) {
+                this.handleAllColumnsSelectItem(plainSelect, ((AllColumns) item));
+            } else if (item instanceof AllTableColumns) {
+                this.handleAllTableColumns(((AllTableColumns) item).getTable());
+            } else if (item instanceof SelectExpressionItem) {
+                // 处理函数式字段  CONCAT(name,'(',age,')')
+                
+                // 不处理字面量
+                
+                // 处理子查询
+                
+                // 处理字段
+            } else {
+                log.warn("未找到类型为 {} 的 SelectItem", item.getClass());
+            }
+        }
+    }
+    
+    /**
+     * 解析子查询
+     */
+    private void handleSubSelect(SubSelect subSelect) {
+        
+    }
+    
+    /**
+     * 处理连接表
+     */
+    private void handleTables(net.sf.jsqlparser.schema.Table table, boolean isLeft) {
+        // 处理子查询
+        if (table instanceof SubSelect) {
+            this.handleSubSelect((SubSelect) table);
+        } else {
+            
+            String tableName = table.getName();
+            SelectSqlInfo sqlInfo = new SelectSqlInfo(this.parsedSql);
+            sqlInfo.setFromTableName(tableName);
+            this.allTableMap.put(tableName, sqlInfo);
+    
+        }
+    }
+}
+
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.common.util.sqlparse;
+
+import java.util.*;
+
+public class JSqlParserAllTableManager {
+    private Map<String, SelectSqlInfo> allTableMap = new HashMap<>();
+    private String parsedSql;
+
+    public void setParsedSql(String sql) {
+        this.parsedSql = sql;
+    }
+
+    public List<SelectSqlInfo> getSelectSqlInfos() {
+        return new ArrayList<>(this.allTableMap.values());
+    }
+    
+    @Test
+    void test() throws Exception{
+        String sql="select id as aid,name,sex from user where name='xxx'";
+        SelectSqlInfoManager sqlInfoManager = new SelectSqlInfoManager();
+        List<SelectSqlInfo> selectSqlInfos = sqlInfoManager.parse(sql);
+        
+    }
+}
+    
+
+### Response:
+
+

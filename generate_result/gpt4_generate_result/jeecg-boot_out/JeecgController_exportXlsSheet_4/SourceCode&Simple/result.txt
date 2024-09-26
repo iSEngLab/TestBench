@@ -1,0 +1,688 @@
+Source code: 
+
+
+protected ModelAndView exportXlsSheet(HttpServletRequest request, T object, Class<T> clazz, String title,String exportFields,Integer pageNum) {
+    // Step.1 组装查询条件
+    QueryWrapper<T> queryWrapper = QueryGenerator.initQueryWrapper(object, request.getParameterMap());
+    LoginUser sysUser = (LoginUser) SecurityUtils.getSubject().getPrincipal();
+    // Step.2 计算分页sheet数据
+    double total = service.count();
+    int count = (int)Math.ceil(total/pageNum);
+    //update-begin-author:liusq---date:20220629--for: 多sheet导出根据选择导出写法调整 ---
+    // Step.3  过滤选中数据
+    String selections = request.getParameter("selections");
+    if (oConvertUtils.isNotEmpty(selections)) {
+        List<String> selectionList = Arrays.asList(selections.split(","));
+        queryWrapper.in("id",selectionList);
+    }
+    //update-end-author:liusq---date:20220629--for: 多sheet导出根据选择导出写法调整 ---
+    // Step.4 多sheet处理
+    List<Map<String, Object>> listMap = new ArrayList<Map<String, Object>>();
+    for (int i = 1; i <=count ; i++) {
+        Page<T> page = new Page<T>(i, pageNum);
+        IPage<T> pageList = service.page(page, queryWrapper);
+        List<T> exportList = pageList.getRecords();
+        Map<String, Object> map = new HashMap<>(5);
+        ExportParams exportParams=new ExportParams(title + "报表", "导出人:" + sysUser.getRealname(), title+i,jeecgBaseConfig.getPath().getUpload());
+        exportParams.setType(ExcelType.XSSF);
+        //map.put("title",exportParams);
+        //表格Title
+        map.put(NormalExcelConstants.PARAMS,exportParams);
+        //表格对应实体
+        map.put(NormalExcelConstants.CLASS,clazz);
+        //数据集合
+        map.put(NormalExcelConstants.DATA_LIST, exportList);
+        listMap.add(map);
+    }
+    // Step.4 AutoPoi 导出Excel
+    ModelAndView mv = new ModelAndView(new JeecgEntityExcelView());
+    //此处设置的filename无效 ,前端会重更新设置一下
+    mv.addObject(NormalExcelConstants.FILE_NAME, title);
+    mv.addObject(NormalExcelConstants.MAP_LIST, listMap);
+    return mv;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jeecg.common.system.base.controller;
+
+import org.junit.jupiter.api.*;
+import org.jeecg.common.system.vo.LoginUser;
+import org.jeecgframework.poi.excel.entity.ExportParams;
+import org.springframework.web.servlet.ModelAndView;
+import javax.servlet.http.HttpServletRequest;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JeecgControllerTest {
+
+    @Test
+    public void exportXlsSheetTest() {
+        // Arrange - Set up the environment
+        JeecgController jeecgController = spy(new JeecgController());
+        HttpServletRequest mockRequest = mock(HttpServletRequest.class);
+        Object mockObject = mock(Object.class); // Replace with actual object type if necessary
+        Class mockClass = Object.class; // Replace with actual class if necessary
+        String title = "TestTitle";
+        String exportFields = "id,name";
+        Integer pageNum = 100;
+
+        // Assuming service, jeecgBaseConfig and other dependencies are properly set in JeecgController
+        when(jeecgController.exportXlsSheet(mockRequest, mockObject, mockClass, title, exportFields, pageNum))
+                .thenReturn(new ModelAndView());
+
+        // Act - Call the method to test
+        ModelAndView result = jeecgController.exportXlsSheet(mockRequest, mockObject, mockClass, title, exportFields, pageNum);
+
+        // Assert - Verify the results
+        assertNotNull(result, "The result should not be null");
+        // Additional assertions can be added to verify ModelAndView contents
+        assertTrue(result.getModel().containsKey(NormalExcelConstants.MAP_LIST), "Model should contain attribute 'MAP_LIST'");
+        assertFalse(result.getViewName().isEmpty(), "ViewName should not be empty");
+
+        // Assuming the expected Excel view class name is JeecgEntityExcelView, modify if needed
+        assertEquals("JeecgEntityExcelView", result.getView().getClass().getSimpleName(), "View should be of type JeecgEntityExcelView");
+
+        // Assuming the method initializes the file name, verify this is correctly populated in the result
+        assertEquals(title, result.getModel().get(NormalExcelConstants.FILE_NAME), "Model should contain the correct file name");
+
+        // Add additional assert statements to verify the correct data is present in the result
+        // based on the specific business logic and expected outcome of the method
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jeecg.common.system.base.controller;
+
+import org.junit.jupiter.api.*;
+import org.mockito.*;
+import org.springframework.web.servlet.ModelAndView;
+import java.util.*;
+import javax.servlet.http.HttpServletRequest;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class JeecgControllerTest {
+
+    @Test
+    public void exportXlsSheetTest() {
+        // Create mock objects
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        IService service = mock(IService.class);
+        JeecgBaseConfig jeecgBaseConfig = mock(JeecgBaseConfig.class);
+        LoginUser loginUser = mock(LoginUser.class);
+        Map<String, String[]> parameterMap = new HashMap<>();
+        
+        // Define return values for methods
+        when(request.getParameterMap()).thenReturn(parameterMap);
+        when(service.count()).thenReturn(100L); // Example total count
+        Integer pageNum = 10; // Example page number
+		
+        // Mocking SecurityUtils.getSubject().getPrincipal()
+        org.apache.shiro.subject.Subject subject = mock(org.apache.shiro.subject.Subject.class);
+        Mockito.mockStatic(SecurityUtils.class);
+        when(SecurityUtils.getSubject()).thenReturn(subject);
+        when(subject.getPrincipal()).thenReturn(loginUser);
+        
+        // Mocking configurations 
+        when(jeecgBaseConfig.getPath()).thenReturn(mock(JeecgBaseConfig.PathConfig.class));
+        when(jeecgBaseConfig.getPath().getUpload()).thenReturn("uploadPath");
+
+        // Creating a JeecgController instance and invoking the method to test
+        JeecgController jeecgController = new JeecgController();
+        jeecgController.service = service;
+        jeecgController.jeecgBaseConfig = jeecgBaseConfig;
+        
+        // Mock the getId call to satisfy the generic T type
+        jeecgController = Mockito.spy(jeecgController);
+        doReturn("testId").when(jeecgController).getId(any());
+
+        // Perform the test
+        ModelAndView result = jeecgController.exportXlsSheet(request, new Object(), Object.class, "TestTitle", "exportFields", pageNum);
+        
+        // Assertions and verifications
+        assertNotNull(result, "The ModelAndView should not be null");
+        assertEquals("TestTitle", result.getModel().get(NormalExcelConstants.FILE_NAME), "The file name should match the title");
+        assertNotNull(result.getModel().get(NormalExcelConstants.MAP_LIST), "There should be a MAP_LIST in the model");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jeecg.common.system.base.controller;
+
+import org.junit.jupiter.api.*;
+import org.mockito.*;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.servlet.http.HttpServletRequest;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.BDDMockito.*;
+
+public class JeecgControllerTest {
+
+    @Mock
+    private JeecgController jeecgController;
+
+    @Mock
+    private HttpServletRequest request;
+
+    @Mock
+    private IService service;
+
+    @Mock
+    private JeecgBaseConfig jeecgBaseConfig;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+        when(jeecgBaseConfig.getPath()).thenReturn(new JeecgBaseConfig.PathConfig());
+        when(service.count()).thenReturn(100L); // assume 100 entities
+        when(request.getParameterMap()).thenReturn(new HashMap<>());
+        when(request.getParameter("selections")).thenReturn(null);
+        SecurityUtils.setSecurityManager(new org.apache.shiro.mgt.DefaultSecurityManager());
+    }
+
+    @Test
+    public void exportXlsSheetTest() {
+        Class clazz = Object.class;
+        String title = "TestSheet";
+        String exportFields = "id,name";
+        Integer pageNum = 10;
+
+        when(request.getParameter("pageNum")).thenReturn(pageNum.toString());
+
+        ModelAndView modelAndView = jeecgController.exportXlsSheet(request, new Object(), clazz, title, exportFields, pageNum);
+
+        verify(service).page(any(Page.class), any(QueryWrapper.class));
+
+        assertNotNull(modelAndView, "The ModelAndView should not be null");
+        assertEquals("JeecgEntityExcelView", modelAndView.getViewName(), "The ViewName should be 'JeecgEntityExcelView'");
+
+        // Additional assertions to check the contents of modelAndView could be added here
+    }
+
+}
+
+
+
+No.4 generated result --------------------------
+
+package org.jeecg.common.system.base.controller;
+
+import org.junit.jupiter.api.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.web.servlet.ModelAndView;
+import static org.mockito.Mockito.*;
+import static org.mockito.MockitoAnnotations.openMocks;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JeecgControllerTest {
+
+    @Mock
+    private HttpServletRequest request;
+    @Mock
+    private IService service;
+    @Mock
+    private JeecgBaseConfig jeecgBaseConfig;
+    @Mock
+    private SecurityUtils securityUtils;
+    @InjectMocks
+    private JeecgController jeecgController;
+
+    @BeforeEach
+    public void setUp() {
+        openMocks(this);
+    }
+
+    @Test
+    public void exportXlsSheetTest() {
+        // Arrange
+        String title = "TestTitle";
+        String exportFields = "field1,field2,field3";
+        Integer pageNum = 10;
+        Class clazz = Object.class;
+        Object object = new Object();
+        when(request.getParameterMap()).thenReturn(new HashMap<String, String[]>());
+        when(request.getParameter("selections")).thenReturn("1,2,3");
+        LoginUser sysUser = new LoginUser();
+        sysUser.setRealname("John Doe");
+        when(securityUtils.getSubject().getPrincipal()).thenReturn(sysUser);
+        when(jeecgBaseConfig.getPath().getUpload()).thenReturn("testPath");
+
+        Page mockPage = new Page<>(1, pageNum);
+        IPage<Object> mockPageList = mock(IPage.class);
+        when(mockPageList.getRecords()).thenReturn(Arrays.asList(new Object(), new Object()));
+        when(service.page(any(Page.class), any(QueryWrapper.class))).thenReturn(mockPageList);
+        when(service.count()).thenReturn(30L);
+
+        // Act
+        ModelAndView mv = jeecgController.exportXlsSheet(request, object, clazz, title, exportFields, pageNum);
+
+        // Assert
+        assertNotNull(mv);
+        assertEquals(JeecgEntityExcelView.class, mv.getView().getClass());
+        assertEquals(title, mv.getModel().get(NormalExcelConstants.FILE_NAME));
+        assertTrue(mv.getModel().containsKey(NormalExcelConstants.MAP_LIST));
+
+        List<Map<String, Object>> listMap = (List<Map<String, Object>>) mv.getModel().get(NormalExcelConstants.MAP_LIST);
+        assertNotNull(listMap);
+        assertFalse(listMap.isEmpty());
+        assertEquals(3, listMap.size());
+        for(int i = 0; i < listMap.size(); i++) {
+            assertEquals(clazz, listMap.get(i).get(NormalExcelConstants.CLASS));
+            assertNotNull(listMap.get(i).get(NormalExcelConstants.DATA_LIST));
+            ExportParams exportParams = (ExportParams) listMap.get(i).get(NormalExcelConstants.PARAMS);
+            assertNotNull(exportParams);
+            assertEquals(title + "报表", exportParams.getTitle());
+            assertEquals("导出人:" + sysUser.getRealname(), exportParams.getSecondTitle());
+            assertEquals(title + (i + 1), exportParams.getSheetName());
+            assertEquals(ExcelType.XSSF, exportParams.getType());
+        }
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jeecg.common.system.base.controller;
+
+import org.junit.jupiter.api.*;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.servlet.http.HttpServletRequest;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+public class JeecgControllerTest {
+
+    private JeecgController controller;
+
+    @Mock
+    private IService service;
+
+    @Mock
+    private JeecgBaseConfig jeecgBaseConfig;
+
+    @Mock
+    private HttpServletRequest request;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+        controller = new JeecgController() {
+            {
+                this.service = JeecgControllerTest.this.service;
+                this.jeecgBaseConfig = JeecgControllerTest.this.jeecgBaseConfig;
+            }
+        };
+    }
+
+    @Test
+    public void exportXlsSheetTest() {
+        // Given
+        String title = "Test Report";
+        Class<?> clazz = Object.class;
+        Integer pageNum = 10;
+        when(service.count()).thenReturn(100L); // assuming service.count() returns total entries
+        when(request.getParameterMap()).thenReturn(new java.util.HashMap<>());
+        when(jeecgBaseConfig.getPath()).thenReturn(new JeecgBaseConfig.PathConfig());
+        
+        // When
+        ModelAndView modelAndView = controller.exportXlsSheet(request, new Object(), clazz, title, null, pageNum);
+
+        // Then
+        assertNotNull(modelAndView);
+        assertEquals(JeecgEntityExcelView.class, modelAndView.getView().getClass());
+        assertEquals(title, modelAndView.getModel().get(NormalExcelConstants.FILE_NAME));
+        assertNotNull(modelAndView.getModel().get(NormalExcelConstants.MAP_LIST));
+
+        // Additional assertions can be added to verify the contents of the ModelAndView
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jeecg.common.system.base.controller;
+
+import org.junit.jupiter.api.*;
+import org.mockito.*;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class JeecgControllerTest {
+
+    @Mock
+    private HttpServletRequest request;
+
+    @Mock
+    private IService service;
+
+    @InjectMocks
+    private JeecgController controller;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    public void exportXlsSheetTest() {
+        // Arrange
+        String title = "Test Title";
+        String exportFields = "field1,field2";
+        Integer pageNum = 10;
+        Class clazz = Object.class; // Replace Object.class with the actual entity class
+
+        // Assume a valid object instance of the type 'T'
+        Object object = new Object(); // Replace with the actual object type
+
+        // Mock necessary interactions
+        when(request.getParameterMap()).thenReturn(new HashMap<>());
+        when(request.getParameter("selections")).thenReturn("1,2,3");
+        when(service.count()).thenReturn(100L); // Let's say total 100 records
+
+        // Assume JeecgBaseConfig returns some valid path for uploads
+        JeecgBaseConfig jeecgBaseConfig = mock(JeecgBaseConfig.class);
+        when(jeecgBaseConfig.getPath()).thenReturn(mock(JeecgBaseConfig.PathConfig.class));
+        when(jeecgBaseConfig.getPath().getUpload()).thenReturn("uploads/");
+
+        // Assume SecurityUtils.getSubject().getPrincipal() returns a valid LoginUser
+        LoginUser sysUser = new LoginUser();
+        sysUser.setRealname("Test User");
+        PowerMockito.mockStatic(SecurityUtils.class);
+        org.apache.shiro.subject.Subject subjectMock = mock(org.apache.shiro.subject.Subject.class);
+        when(SecurityUtils.getSubject()).thenReturn(subjectMock);
+        when(subjectMock.getPrincipal()).thenReturn(sysUser);
+
+        // Insert a test case to the JeecgController class
+        controller = new JeecgController() {
+            {
+                this.service = JeecgControllerTest.this.service;
+                this.jeecgBaseConfig = jeecgBaseConfig;
+            }
+        };
+
+        // Act
+        ModelAndView mv = controller.exportXlsSheet(request, object, clazz, title, exportFields, pageNum);
+
+        // Assert
+        assertNotNull(mv);
+        assertEquals("Test Title报表", ((ExportParams) mv.getModel().get(NormalExcelConstants.PARAMS)).getTitle());
+        assertEquals("导出人:Test User", ((ExportParams) mv.getModel().get(NormalExcelConstants.PARAMS)).getSecondTitle());
+        assertEquals(clazz, mv.getModel().get(NormalExcelConstants.CLASS));
+        assertTrue(((List<?>) mv.getModel().get(NormalExcelConstants.MAP_LIST)).size() > 0);
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jeecg.common.system.base.controller;
+
+import org.junit.jupiter.api.*;
+import org.mockito.*;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.servlet.ModelAndView;
+
+import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
+
+public class JeecgControllerTest {
+
+    private JeecgController<SomeEntity> controller;
+    private IService<SomeEntity> service;
+    private JeecgBaseConfig jeecgBaseConfig;
+    private MockHttpServletRequest request;
+
+    @BeforeEach
+    public void setUp() {
+        service = mock(IService.class);
+        jeecgBaseConfig = new JeecgBaseConfig();
+        jeecgBaseConfig.setPath(new JeecgBaseConfig.UploadPath());
+        controller = new JeecgController<>();
+        controller.service = service;
+        controller.jeecgBaseConfig = jeecgBaseConfig;
+        request = new MockHttpServletRequest();
+        LoginUser loginUser = new LoginUser();
+        loginUser.setRealname("Test User");
+        Mockito.when(SecurityUtils.getSubject().getPrincipal()).thenReturn(loginUser);
+    }
+
+    @Test
+    public void exportXlsSheetTest() {
+        // Mock the request
+        request.setParameter("title", "My Exported Data");
+        request.setParameter("exportFields", "id,name,age");
+        request.setParameter("pageNum", "10");
+        
+        // Mock the dependent service method calls
+        when(service.count()).thenReturn(100L); // Let's assume the service has 100 total entries
+
+        SomeEntity entity = new SomeEntity(); // Assuming SomeEntity is the entity class related to this controller
+
+        // Call the method to test
+        ModelAndView modelAndView = controller.exportXlsSheet(request, entity, SomeEntity.class, "My Excel Report", "id,name,age", 10);
+
+        // Assertions
+        assertNotNull(modelAndView, "The ModelAndView should not be null");
+        assertEquals("My Excel Report", modelAndView.getModel().get(NormalExcelConstants.FILE_NAME), "The filename should be set as expected");
+        assertNotNull(modelAndView.getModel().get(NormalExcelConstants.MAP_LIST), "The MAP_LIST attribute should not be null");
+
+        // Here you would add additional assertions to verify the correct behavior of the method.
+        // For instance, you could check if the map contains the correct number of sheets, if they have the right data, etc.
+    }
+
+    // Please replace SomeEntity with the actual Entity class that your controller is working with.
+}
+
+
+No.8 generated result --------------------------
+
+package org.jeecg.common.system.base.controller;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.*;
+
+import org.jeecg.common.system.vo.LoginUser;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.*;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.Map;
+
+public class JeecgControllerTest {
+
+    @InjectMocks
+    private JeecgController jeecgController;
+    
+    @Mock
+    private HttpServletRequest request;
+    
+    @Mock
+    private IService service;
+    
+    @Mock
+    private JeecgBaseConfig jeecgBaseConfig;
+    
+    @Mock
+    private SecurityUtils securityUtils;
+
+    @Captor
+    private ArgumentCaptor<Map<String, Object>> captor;
+
+    private static final String TITLE = "Test Title";
+    private static final String EXPORT_FIELDS = "field1,field2,field3";
+    private static final Integer PAGE_NUM = 10;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+        when(jeecgBaseConfig.getPath()).thenReturn(new JeecgBaseConfig.PathConfig());
+        when(service.count()).thenReturn(100L); // Assuming there are 100 entries in total
+    }
+    
+    @Test
+    public void exportXlsSheetTest() throws Exception {
+        // Arrange
+        Object testObject = new Object(); // Replace with a proper instance of T
+        Class<?> testClazz = Object.class; // Replace with a proper class of T
+
+        LoginUser mockUser = new LoginUser();
+        mockUser.setRealname("Mock User");
+        when(SecurityUtils.getSubject().getPrincipal()).thenReturn(mockUser);
+
+        // Act
+        ModelAndView modelAndView = jeecgController.exportXlsSheet(request, testObject, testClazz, TITLE, EXPORT_FIELDS, PAGE_NUM);
+
+        // Assert
+        assertNotNull(modelAndView);
+        verify(request, times(1)).getParameterMap();
+        verify(service, times(1)).page(any(Page.class), any(QueryWrapper.class));
+
+        // Ensure the ModelAndView contains the expected attributes
+        assertEquals(TITLE, modelAndView.getModel().get(NormalExcelConstants.FILE_NAME));
+        assertNotNull(modelAndView.getModel().get(NormalExcelConstants.MAP_LIST));
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jeecg.common.system.base.controller;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.servlet.ModelAndView;
+
+public class JeecgControllerTest {
+
+    class MockService<T> implements IService<T> {
+        // Implement the required methods or mock the behavior for testing
+        // ...
+    }
+
+    private JeecgController jeecgController;
+    private MockService mockService;
+
+    @BeforeEach
+    public void setUp() {
+        jeecgController = new JeecgController();
+        mockService = new MockService();
+        jeecgController.service = mockService; // Assume JeecgController has a field 'service' or a setter method
+    }
+    
+    @Test
+    public void exportXlsSheetTest() {
+        // Given
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        Object object = new Object(); // Use actual object or mock
+        Class<Object> clazz = Object.class; // Use actual class or mock
+        String title = "Test Sheet";
+        String exportFields = "field1,field2";
+        Integer pageNum = 10;
+        
+        // Mock dependent components behavior if needed
+        // Example: when(mockService.count()).thenReturn(100L);
+        
+        // When
+        ModelAndView result = jeecgController.exportXlsSheet(request, object, clazz, title, exportFields, pageNum);
+        
+        // Then
+        assertNotNull(result, "ModelAndView should not be null");
+        assertEquals("JeecgEntityExcelView", result.getViewName(), "View name should match the expected Excel view");
+        assertNotNull(result.getModel().get(NormalExcelConstants.MAP_LIST), "Map list should be part of the model");
+        
+        // Additional assertions based on expected behavior
+        // ...
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.common.system.base.controller;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.servlet.ModelAndView;
+import java.util.List;
+import java.util.Map;
+
+public class JeecgControllerTest {
+
+    // Assuming JeecgController is generic, using Object here for generic type T
+    private JeecgController<Object> controller;
+
+    @BeforeEach
+    public void setUp() {
+        // Initialize the controller and any required dependencies here
+        controller = new JeecgController<>();
+        // If the controller has autowired fields like services or configs, they need to be mocked and set here
+    }
+
+    @Test
+    public void exportXlsSheetTest() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        Object object = new Object(); // Replace with actual object that should be used
+        Class<Object> clazz = Object.class; // Replace with actual class that should be used
+        String title = "TestTitle";
+        String exportFields = "field1,field2"; // Assuming the fields that need to be exported
+        Integer pageNum = 10; // Assuming this is the number of records per page
+        
+        // Set any necessary request parameters here
+        // request.setParameter("paramName", "paramValue");
+        
+        ModelAndView mv = controller.exportXlsSheet(request, object, clazz, title, exportFields, pageNum);
+
+        assertNotNull(mv, "The ModelAndView should not be null");
+        assertTrue(mv.getModel().containsKey(NormalExcelConstants.MAP_LIST), "The MAP_LIST key should be present");
+        
+        Object mapListObj = mv.getModel().get(NormalExcelConstants.MAP_LIST);
+        assertNotNull(mapListObj, "The MAP_LIST object should not be null");
+        assertTrue(mapListObj instanceof List, "The MAP_LIST object should be an instance of List");
+
+        List<?> mapList = (List<?>) mapListObj;
+        assertFalse(mapList.isEmpty(), "The MAP_LIST should not be empty");
+
+        // If further details are known, assertions could be added to verify the specific structure and data of the Excel export
+    }
+
+    @AfterEach
+    public void tearDown() {
+        // Clean up resources
+        controller = null;
+    }
+}
+
+

@@ -1,0 +1,584 @@
+Source code: 
+
+
+public static AztecCode encode(String data, int minECCPercent, int userSpecifiedLayers, Charset charset) {
+  byte[] bytes = data.getBytes(null != charset ? charset : StandardCharsets.ISO_8859_1);
+  return encode(bytes, minECCPercent, userSpecifiedLayers, charset);
+}
+
+
+
+No.1 generated result --------------------------
+
+public class Encoder {
+  private static final int PAD0 = 0xEC; // 1110110X
+  private static final int PAD1 = 0x11; // 00010001
+
+  public static BitMatrix encode(String contents, BarcodeFormat format, int width, int height) {
+    return new Encoder().encodeInternal(contents, format, width, height);
+  }
+
+  private BitMatrix encodeInternal(String contents, BarcodeFormat format, int width, int height) {
+    if (format != BarcodeFormat.AZTEC) {
+      throw new IllegalArgumentException("Can only encode AZTEC, but got " + format);
+    }
+    return renderResult(encodeAsBitMatrix(contents), width, height);
+  }
+
+  private BitMatrix encodeAsBitMatrix(String contents) {
+    int length = contents.length();
+    if (length > 32767) { // maximum size of array
+      throw new IllegalArgumentException("Requested contents should be less than 32767 characters long, but got " + length);
+    }
+
+    boolean compact;
+    int numDatablocks;
+    if (length <= 0xff) { // numeric data with no error correction
+      compact = true;
+      numDatablocks = 1;
+    } else { // text data, or mixed data (numeric + text)
+      compact = false;
+      int bytesNeededForData = (length / 8) + (length % 8 > 0 ? 1 : 0);
+      numDatablocks = Math.max(2, ((bytesNeededForData - 2) >> 2) + 1); // For numeric data, use datablocks that are smaller than for text
+    }
+    int matrixSize = compact ? (8 * numDatablocks) - 1 : (numDatablocks * 4).toInt() + 17;
+
+    BitMatrix bitmatrix = new BitMatrix(matrixSize);
+    bitmatrix.setRegion(0, 0, matrixSize, matrixSize);
+
+    // set the data bits in the matrix
+    for (int i = 0; i < length; ++i) {
+      int value = contents.charAt(i).toInt();
+      if (value >= '0' && value <= '9') {
+        value -= '0';
+      } else if (value >= 'A' && value <= 'Z') {
+        value -= ('A' - 10);
+      } else {
+        throw new IllegalArgumentException("Bad character in input: " + contents.charAt(i));
+      }
+      bitmatrix.setRegion(i * 4, 8, 4, matrixSize, compact ? PAD0 : value);
+    }
+
+    // set the error correction bits in the matrix
+    for (int i = 1; i < numDatablocks; ++i) {
+      int index = length * i - 1;
+      if (compact) {
+        bitmatrix.setRegion(index, index + 8, PAD0);
+      } else {
+        bitmatrix.setRegion(index, index + 4, PAD0);
+      }
+    }
+
+    return bitmatrix;
+  }
+}
+
+
+No.2 generated result --------------------------
+
+package com.google.zxing.aztec.encoder;
+
+import org.junit.jupiter.api.*;
+
+public class EncoderTest {
+    @Test
+    public void encodeTest() {
+        String expected = "Hello World!";
+        assertEquals(expected, new String(Encoder.encode("Hello World!")));
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.google.zxing.aztec.encoder;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class EncoderTest {
+    @Test
+    public void encodeTest() {
+        int layers = 3;
+        boolean compact = true;
+        String inputString = "hello";
+        
+        BitArray messageBits = new HighLevelEncoder().encodeHighLevel(inputString, compact, layers);
+        Encoder encoder = new Encoder();
+        String result = encoder.encode(messageBits, compact, layers);
+        assertEquals("Hello", result);
+    }
+}
+    
+
+
+No.4 generated result --------------------------
+
+
+    package com.google.zxing.aztec.encoder;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class EncoderTest {
+    
+    private static final String MESSAGE = "ABCD";
+    private static final int EXPECTED_SIZE = 25;
+    
+    @Test
+    public void testEncode() throws Exception {
+        BitArray encoded = Encoder.encode(MESSAGE);
+        
+        assertEquals(EXPECTED_SIZE, encoded.getSize());
+    }
+}
+
+
+
+No.5 generated result --------------------------
+
+public static BitMatrix encode(String contents) {
+    // Step 1: Convert input string to list of bits
+    boolean compact = false;
+    int layers = 0;
+    BitArray rawBits = new BitArray();
+    for (int i = 0; i < contents.length(); i++) {
+        char c = contents.charAt(i);
+        switch (c) {
+            case '1':
+                rawBits.appendBits(0b000, 3);
+                break;
+            case '2':
+                rawBits.appendBits(0b001, 3);
+                break;
+            // Add cases for other characters here...
+        }
+    }
+
+    // Step 2: Pad the data bits to ensure a multiple of 8 if compact representation is used
+    int rawBytes = (rawBits.getSize() + 7) / 8;
+    if (compact && rawBytes % 4 == 0) {
+        rawBits.appendBits(0b11, 2);
+    } else if (compact && rawBytes % 4 == 1) {
+        rawBits.appendBits(0b10, 2);
+    }
+
+    // Step 3: Apply error correction to the data bits
+    int dataWords = (rawBits.getSize() + 6) / 7;
+    BitArray correctedBits = rawBits.clone();
+    for (int i = 0; i < 4; i++) {
+        ReedSolomonEncoder rs = new ReedSolomonEncoder(GenericGF.AZTEC_PARAM);
+        int[] dataBytes = bitsToBytes(correctedBits, 7, correctedBits.getSize() / 8);
+        rs.encode(dataBytes, dataWords * (compact ? 4 : 2));
+        BitArray encoded = new BitArray();
+        for (int j = 0; j < dataBytes.length; j++) {
+            encoded.appendBits(dataBytes[j], 8);
+        }
+        correctedBits = encoded;
+    }
+
+    // Step 4: Generate the mode message and stuff it into the data bits
+    BitArray modeMessage = generateModeMessage(compact, layers);
+    int startPad = rawBits.getSize() - 8 * (layers + 1) * (layers + 1);
+    int endPad = 0;
+    if (compact && rawBytes % 4 == 0) {
+        endPad = 2;
+    } else if (compact && rawBytes % 4 == 1) {
+        endPad = 4;
+    } else if (!compact && rawBytes % 8 == 0) {
+        endPad = 6;
+    } else if (!compact && rawBytes % 8 == 7) {
+        endPad = 8;
+    }
+    int padLength = startPad + dataWords * (compact ? 4 : 2) + endPad;
+    correctedBits.insert(0, new BitArray(padLength));
+    correctedBits.insert(correctedBits.getSize(), new BitArray(padLength));
+    correctedBits.appendBits(modeMessage);
+
+    // Step 5: Stuff the data bits into the Aztec matrix
+    BitMatrix matrix = new BitMatrix(layers + 1, layers + 1);
+    for (int i = 0; i < layers + 1; i++) {
+        for (int j = 0; j < layers + 1; j++) {
+            int bitIndex = ((j + i) / 2 * layers - 1) / 2 + startPad;
+            if (bitIndex < correctedBits.getSize()) {
+                matrix.set(i, j, correctedBits.get(bitIndex));
+            }
+        }
+    }
+    return matrix;
+}
+
+
+No.6 generated result --------------------------
+
+The Aztec code is a type of 2D barcode that can encode text, numbers and other data. It was designed by Mathematicians in the late 1990s and has since been widely adopted for various applications such as tracking packages, digital money, ID cards, and more.
+
+Here are some key facts about Aztec codes:
+
+* The Aztec code is a self-checking barcode that can detect errors and correct them automatically. This means that the decoding process is robust and reliable, even in low-quality scanning environments.
+* The Aztec code supports both compact and full modes for encoding data. Compact mode encodes 20 to 30 numeric digits per symbol, while full mode can encode up to 140 numeric digits per symbol. Full mode is typically used when the barcode contains a lot of data or when it needs to be readable by hand-held scanners.
+* Aztec codes can be read at any orientation and do not require any alignment with edges. This makes them very versatile for use in various applications, such as packaging, labeling, and inventory management.
+* The Aztec code has a high error correction capability, which means that it can correct up to 30% of damaged data during decoding. This is enough to protect the barcode from most errors caused by environmental factors or human handling.
+
+Overall, the Aztec code is a robust and reliable option for encoding text, numbers, and other data in various applications. Its high error correction capability makes it suitable for use in low-quality scanning environments, while its compact and full modes allow for optimal data density and readability, respectively.
+
+
+No.7 generated result --------------------------
+
+public class Encoder {
+  public BitMatrix encode(String content) {
+    // Create a BitArray to contain the generated message
+    BitArray bitArray = new BitArray();
+    
+    // If the content is in compact mode, generate a special compact mode message
+    if (content.length() > 0 && content.charAt(0) == '!') {
+      bitArray.appendBits(Mode.COMPACT_MODE_MESSAGE.getModeIndicator(), Mode.COMPACT_MODE_MESSAGE.getBits());
+      
+      // Append the compact data string to the message (without the first exclamation point)
+      for (int i = 1; i < content.length(); i++) {
+        int indexInCompactRepresentation = CompactAztecCode.getIndex(content.charAt(i));
+        if (indexInCompactRepresentation >= 0) {
+          bitArray.appendBits(indexInCompactRepresentation, COMPACT_MODE_BITS_PER_CHARACTER);
+        } else {
+          throw new IllegalArgumentException("Bad character in compact mode string");
+        }
+      }
+    } else {
+      // Create a full symbol with the provided content and return it.
+      return generateSymbol(content, false).getMatrix();
+    }
+    
+    // If we are generating a compact symbol, place the resulting message into a BitMatrix
+    if (compact) {
+      int matrixSize = ((80 + 16 * layers) * layers) / 8;
+      BitMatrix matrix = new BitMatrix(matrixSize);
+      
+      // Place the mode message into the top-left corner of the symbol
+      for (int y = 0; y < 4 && y < matrix.getHeight(); y++) {
+        for (int x = 0; x < 4 && x < matrix.getWidth(); x++) {
+          if ((modeMessage & 1) == 1) {
+            matrix.set(x, y);
+          }
+          modeMessage >>= 1;
+        }
+      }
+      
+      // Place the compact data string into the symbol
+      for (int i = 0; i < content.length(); i++) {
+        int indexInCompactRepresentation = CompactAztecCode.getIndex(content.charAt(i));
+        if (indexInCompactRepresentation >= 0) {
+          matrix.setBulk(12 + i * 3, 4, CompactAztecCode.CHARACTER_ENCODINGS[indexInCompactRepresentation]);
+        } else {
+          throw new IllegalArgumentException("Bad character in compact mode string");
+        }
+      }
+      
+      return matrix;
+    }
+  }
+}
+
+
+No.8 generated result --------------------------
+
+java
+package com.google.zxing.aztec.encoder;
+
+import java.util.Arrays;
+
+public final class Encoder {
+  private static int[] ALPHANUMERIC_TABLE = new int[128];
+
+  // The LSB (bottom) is the "most significant" symbol in this encoding scheme, which is why we
+  // don't use a lookup table of symbol names.
+  private static final int SHIFT3_SET = 0x1;
+  private static final int LATCH_TO_LOWERCASE = 0x2;
+  private static final int SHIFT2_SET = 0x4;
+  private static final int PAD_ENCODE = 0x8;
+  private static final int BITS_IN_HALF_BYTE = 4;
+
+  static {
+    for (int i = 0; i < ALPHANUMERIC_TABLE.length; i++) {
+      ALPHANUMERIC_TABLE[i] = -1;
+    }
+    for (int i = 32; i <= 95; ++i) {
+      // Skip characters not in the tables to support full ASCII subset as specified in ISO/IEC 24778:2008.
+      ALPHANUMERIC_TABLE[i] = i - 32;
+    }
+    for (int i = 96, j = 0; i < 107; ++i, j += 2) {
+      ALPHANUMERIC_TABLE[i] = j; // Numbers use ASCII digits as a substrate.
+    }
+    ALPHANUMERIC_TABLE[43] = 10; // - -> dash
+    ALPHANUMERIC_TABLE[45] = 11; // . -> full stop
+    ALPHANUMERIC_TABLE[61] = 12; // , -> comma
+    ALPHANUMERIC_TABLE[63] = 13; // ? -> inverted question mark.
+    ALPHANUMERIC_TABLE[64] = 0; // @ -> 00
+    for (int i = 91; i < 97; ++i) {
+      ALPHANUMERIC_TABLE[i] = i - 32;
+    }
+  }
+
+  /**
+   * Encodes an Aztec code represented as a list of boolean arrays (as returned by
+   * {@link Writer#encode}) into a byte array.
+   */
+  public static void encodeToBytes(Iterable<boolean[]> encoded, int ecLevel, ByteArrayOutputStream output) {
+    BitArray bits = new BitArray();
+    for (boolean[] boolArr : encoded) {
+      bits.appendBools(boolArr);
+    }
+    byte[] bytes = encodeToByteArray(bits, ecLevel);
+  }
+
+  /**
+   * Encodes an Aztec code represented as a list of boolean arrays (as returned by
+   * {@link Writer#encode}) into a byte array.
+   */
+  public static byte[] encodeToByteArray(Iterable<boolean[]> encoded, int ecLevel) {
+    BitArray bits = new BitArray();
+    for (boolean[] boolArr : encoded) {
+      bits.appendBools(boolArr);
+    }
+    return encodeToByteArray(bits, ecLevel);
+  }
+
+  public static byte[] encodeToByteArray(BitArray bits, int ecLevel) {
+    boolean compact = (ecLevel < 2); // Latch to compact mode.
+    if (!compact && (ecLevel != 0)) {
+      throw new IllegalArgumentException("Invalid error correction level: " + ecLevel);
+    }
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    encode(bits, ecLevel, compact, outputStream);
+    return outputStream.toByteArray();
+  }
+
+  public static void encode(BitArray bits, int ecLevel, boolean compact, OutputStream output) {
+    // Compute the number of data codewords and padding code words we will need in
+    // each layer. Store the result for use below.
+    int totalInputCodeWords = bits.getSizeInWords();
+    if (compact) {
+      // compact mode has a fixed size of 25x25, so only one layer is needed.
+      int totalOutputCodeWords = 25;
+      outputLayer(bits, ecLevel, 0, 0, compact, totalInputCodeWords, totalOutputCodeWords, output);
+    } else { // normal (non-compact) mode.
+      // The lowest layer uses the provided error correction level. Otherwise, we will use
+      // a default error correction level of 3. This allows values of up to 6 to be passed into
+      // the encoder.
+      int defaultEcLevel = ecLevel == 0 ? 3 : ecLevel;
+      int totalCodeWords = (totalInputCodeWords + 2) / 3;
+      for (int i = 0; i < defaultEcLevel; ++i) {
+        int remainder = totalCodeWords % 3;
+        int thisLayerECLevel = remainder == 0 ? 0 : (3 - remainder);
+        outputLayer(bits, ecLevel, i, thisLayerECLevel, compact, totalInputCodeWords, totalCodeWords, output);
+      }
+    }
+  }
+
+  private static void outputLayer(BitArray bits, int ecLevel, int layerNumber, int layerEcLevel, boolean compact, int totalInputCodeWords, int totalOutputCodeWords, OutputStream output) {
+    // How many bits are in use in the layers we've already output?
+    long alreadyOutputBits = (layerNumber == 0 ? 0 : (long) Math.pow(3, layerNumber)) * totalInputCodeWords;
+    int remainingTotalCodeWords = (int) ((totalInputCodeWords + 2) / 3 - alreadyOutputBits); // The "-2" is for the mode shift that occurs in the last data chunk.
+    byte[] rawCodewords = bitsToRawCodewords(bits, totalInputCodeWords, alreadyOutputBits);
+
+    int wordCount = (rawCodewords.length + 2) / 3;
+    // The padding is initially created as all-zero bytes.
+    byte[] codewordBytesWithPadding = Arrays.copyOf(rawCodewords, rawCodewords.length + remainingTotalCodeWords * 3);
+
+    // Add the mode message. The mode message consists of a single data chunk with the most significant
+    // 4 bits set to the mode value. See table 2 in ISO/IEC 24728:2013 for mode values. Page 7 is a detailed explanation.
+    int modeMessageBits = (compact ? 0x9 : 0x8);
+    modeMessageBits |= layerEcLevel & 0xf;
+    codewordBytesWithPadding[codewordBytesWithPadding.length - 1] = (byte) (modeMessageBits >> BITS_IN_HALF_BYTE);
+    // Add the error correction chunk. All data chunks in a Aztec symbol have an error correction chunk immediately after them. This is why we use
+    // 'remainingTotalCodeWords - 1' above, to leave room for the mode message. See table 2 in ISO/IEC 24728:2013 for mode values. Page 7 is a detailed explanation.
+    byte[] errorCorrectionChunkBytes = new byte[remainingTotalCodeWords * 3];
+    codewordBytesWithPadding[codewordBytesWithPadding.length - remainingTotalCodeWords * 3 - 1] = errorCorrectionChunkBytes;
+    // Write the layer. All data chunks in a Aztec symbol have an error correction chunk immediately after them. This is why we use
+    // 'remainingTotalCodeWords - 1' above, to leave room for the mode message. See table 2 in ISO/IEC 24728:2013 for mode values. Page 7 is a detailed explanation.
+    output.write(codewordBytesWithPadding);
+
+    // Compute how many bits are left to write, after writing this layer.
+    int remainingBits = totalInputCodeWords * 3 - alreadyOutputBits;
+    // If there are no more bits to be written, the work here is done.
+    if (remainingBits == 0) {
+      return;
+    } else if (layerNumber != defaultEcLevel) { // Otherwise, we will have more bit layers to output.
+      int totalRemainingCodeWords = remainingTotalCodeWords - wordCount;
+      encode(bits, ecLevel, compact, totalInputCodeWords, totalRemainingCodeWords, layerNumber + 1, output);
+    } else { // Otherwise, we are in the final layer. So all that is left to be written are error correction chunks.
+      for (int i = wordCount; i < codewordBytesWithPadding.length / 3 * 3; ++i) {
+        codewordBytesWithPadding[codewordBytesWithPadding.length - i * 3 - 1] = (byte) 0x80; // Initialize the rest of the array with all-zero bytes. This is important, because the all-zero padding bytes are used to indicate when an error correction chunk should be processed or not.
+      }
+      output.write(codewordBytesWithPadding);
+    }
+  }
+
+  private static byte[] bitsToRawCodewords(BitArray bits, int totalInputCodeWords, long alreadyOutputBits) {
+    byte[] rawCodewords = new byte[totalInputCodeWords * 3]; // Initialize the array to be of the correct size. We will output a raw code word for each group of three bits in the input BitArray.
+    int bitOffset = (int) (alreadyOutputBits / 3);
+    for (int i = 0; i < totalInputCodeWords * 3; ++i, bitOffset += 3) {
+      long tripletBitValue = bits.getBits(bitOffset, 3); // Get the next group of three input bits as a number.
+      if ((tripletBitValue & (0x80)) == 0 && (i + alreadyOutputBits) % 3 != 0) { // If this is not the final chunk and it's not all zeroes, then:
+        rawCodewords[rawCodewords.length - i * 3 - 1] = (byte) ((tripletBitValue & (0x7F)) >> BITS_IN_HALF_BYTE); // Then store the lower seven bits of this group of three input bits as a number in the next available byte in the array.
+      } else {
+        rawCodewords[rawCodewords.length - i * 3 - 1] = (byte) (tripletBitValue >> BITS_IN_HALF_BYTE); // Otherwise, if this is all zeroes or it's the final chunk, then store all eight bits of this group of three input bits as a number in the next available byte in the array.
+      }
+    }
+    return rawCodewords;
+  }
+}
+\end{code}
+
+
+No.9 generated result --------------------------
+
+// TODO
+   
+
+
+No.10 generated result --------------------------
+
+java
+public final class AztecEncoder {
+  private static final int DEFAULT_ECC_PERCENT = 33; // 33%
+
+  private static void assertNoBadBits(BitArray bits, BitMatrix matrix) {
+    for (int i = 0; i < matrix.getHeight(); i++) {
+      if (!isValidRow(matrix, i)) {
+        throw new IllegalArgumentException("Not all cells in the last row are valid");
+      }
+    }
+    for (int i = 0; i < matrix.getWidth() - 1; i++) {
+      if (!isValidColumn(matrix, i)) {
+        throw new IllegalArgumentException("Not all cells in the last column are valid");
+      }
+    }
+    // Check the bottom-right cell
+    if (matrix.get(matrix.getWidth() - 1, matrix.getHeight() - 1) != bits.get(bits.getSize() - 1)) {
+      throw new IllegalArgumentException("Corner cell is not valid");
+    }
+  }
+
+  private static void assertNoHorizontalDrift(BitMatrix matrix) {
+    for (int i = 0; i < matrix.getHeight(); i++) {
+      int minX = Integer.MAX_VALUE, maxX = -1;
+      for (int j = 0; j < matrix.getWidth() && matrix.get(j, i); j++) {
+        minX = Math.min(minX, j);
+        maxX = Math.max(maxX, j);
+      }
+      if (minX == Integer.MAX_VALUE) continue; // Skip empty rows
+      if (minX != 0 && matrix.get(minX - 1, i)) {
+        throw new IllegalArgumentException("There is a black module in the corner of a white square");
+      } else if ((maxX + 1) < matrix.getWidth() && matrix.get(maxX + 1, i)) {
+        throw new IllegalArgumentException("There is a black module in the corner of a white square");
+      }
+    }
+  }
+
+  private static void assertNoVerticalDrift(BitMatrix matrix) {
+    for (int i = 0; i < matrix.getWidth(); i++) {
+      int minY = Integer.MAX_VALUE, maxY = -1;
+      for (int j = 0; j < matrix.getHeight() && matrix.get(i, j); j++) {
+        minY = Math.min(minY, j);
+        maxY = Math.max(maxY, j);
+      }
+      if (minY == Integer.MAX_VALUE) continue; // Skip empty rows
+      if (minY != 0 && matrix.get(i, minY - 1)) {
+        throw new IllegalArgumentException("There is a black module in the corner of a white square");
+      } else if ((maxY + 1) < matrix.getHeight() && matrix.get(i, maxY + 1))) {
+        throw new IllegalArgumentException("There is a black module in the corner of a white square");
+      }
+    }
+  }
+
+  private static void assertNoSquares(BitMatrix matrix) {
+    for (int i = 0; i < matrix.getHeight(); i += 2) {
+      for (int j = 0; j < matrix.getWidth() - 1; j += 2) {
+        if (!matrix.get(j, i)) continue;
+        // Found upper-left square. Search adjacent squares to make sure there is no black module in the corner of a white square.
+        for (int k = i + 1; k < matrix.getHeight(); k++) {
+          if (matrix.get(j + 1, k)) break;
+          if (k == matrix.getHeight() - 1) {
+            throw new IllegalArgumentException("There is a black module in the corner of a white square");
+          }
+        }
+        for (int k = j + 1; k < matrix.getWidth(); k++) {
+          if (matrix.get(k, i)) break;
+          if (k == matrix.getWidth() - 1) {
+            throw new IllegalArgumentException("There is a black module in the corner of a white square");
+          }
+        }
+      }
+    }
+  }
+
+  private static void assertNoInconsistentBlackSquares(BitMatrix matrix) {
+    int maxWidth = (matrix.getWidth() + 1) / 2 * 2; // round up to nearest even number
+    for (int i = 0; i < matrix.getHeight(); i++) {
+      boolean isBlackRow = false;
+      for (int j = 0; j < matrix.getWidth(); j++) {
+        if (!matrix.get(j, i)) break; // Found a white module, so stop checking this row.
+        }
+        if (j == maxWidth) isBlackRow = true;
+      }
+      if (isBlackRow) continue; // Skip rows that are entirely composed of black modules.
+      for (int j = 0; j < matrix.getHeight(); j++) {
+        if (!matrix.get(j, i)) break; // Found a white module, so stop checking this row.
+        }
+        throw new IllegalArgumentException("There is an inconsistent black square");
+      }
+    }
+  }
+
+  private static void assertNoInconsistentBlackSquares(BitMatrix matrix) {
+    for (int j = 0; j < matrix.getWidth(); j++) {
+      boolean isBlackColumn = false;
+      for (int i = 0; i < matrix.getHeight(); i++) {
+        if (!matrix.get(j, i)) break; // Found a white module, so stop checking this column.
+        }
+        if (i == matrix.getHeight() - 1) isBlackColumn = true;
+      }
+      if (isBlackColumn) continue; // Skip columns that are entirely composed of black modules.
+      for (int i = 0; i < matrix.getHeight(); i++) {
+        if (!matrix.get(j, i)) break; // Found a white module, so stop checking this column.
+        }
+        throw new IllegalArgumentException("There is an inconsistent black square");
+      }
+    }
+  }
+
+  private static void assertNoSquares(BitMatrix matrix) {
+    for (int i = 0; i < matrix.getHeight(); i += 2) {
+      int minX = Integer.MAX_VALUE, maxX = -1;
+      boolean firstRowFound = false;
+      for (int j = 0; j < matrix.getWidth() && matrix.get(j, i); j++) {
+        if (!firstRowFound) {
+          firstRowFound = true;
+          continue; // Don't check this row until we find at least one white module.
+        }
+        minX = Math.min(minX, j);
+        maxX = Math.max(maxX, j);
+      }
+      if (!firstRowFound) {
+        firstRowFound = true; // Don't check this row until we find at least one white module.
+        continue; // Skip rows that are entirely composed of black modules.
+      }
+      for (int k = i + 1; k < matrix.getHeight(); k++) {
+        if (!matrix.get(j, k)) break;
+        minX = Math.min(minX, j);
+        maxX = Math.max(maxX, j);
+      }
+    }
+    for (int i = 0; i < matrix.getHeight(); i++) {
+      if (!matrix.get(i, i)) continue; // Skip rows that are entirely composed of black modules.
+      int minX = Integer.MAX_VALUE, maxX = -1;
+      for (int j = i + 1; j < matrix.getWidth(); j++) {
+        if (!matrix.get(j, i)) break; // Found a white module, so stop checking this row.
+        minX = Math.min(minX, j);
+        maxX = Math.max(maxX, j);
+      }
+    }
+  }
+}
+
+

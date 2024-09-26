@@ -1,0 +1,260 @@
+Source code: 
+
+// Help any top-level NBSI to copy until completed.
+// Always return the _new version of *this* NBSI, in case we're nested.
+private NBSI help_copy() {
+  // Pick some words to help with - but only help copy the top-level NBSI.
+  // Nested NBSI waits until the top is done before we start helping.
+  NBSI top_nbsi = _non_blocking_set_int._nbsi;
+  final int HELP = 8;       // Tuning number: how much copy pain are we willing to inflict?
+  // We "help" by forcing individual bit indices to copy.  However, bits
+  // come in lumps of 64 per word, so we just advance the bit counter by 64's.
+  int idx = top_nbsi._copyIdx.getAndAdd(64*HELP);
+  for( int i=0; i<HELP; i++ ) {
+    int j = idx+i*64;
+    j %= (top_nbsi._bits.length<<6); // Limit, wrap to array size; means we retry indices
+    top_nbsi.help_copy_impl(j   );
+    top_nbsi.help_copy_impl(j+63); // Also force the nested-by-64 bit
+  }
+
+  // Top level guy ready to promote?
+  // Note: WE may not be the top-level guy!
+  if( top_nbsi._copyDone.get() == top_nbsi._sum_bits_length )
+    // One shot CAS to promote - it may fail since we are racing; others
+    // may promote as well
+    if( _non_blocking_set_int.CAS_nbsi( top_nbsi, top_nbsi._new ) ) {
+      //System.out.println("Promote at top level to size "+(_non_blocking_set_int._nbsi._bits.length<<6));
+    }
+
+  // Return the new bitvector for 'fluid' programming style
+  return _new;
+}
+
+
+
+No.1 generated result --------------------------
+
+
+public class NonBlockingSetIntTest {
+    @Test
+    public void help_copyTest() {
+        // Arrange
+        NonBlockingSetInt nbsi = new NonBlockingSetInt();
+        int HELP = 8;
+        int idx = nbsi._copyIdx.getAndAdd(64*HELP);
+        
+        // Act
+        NBSI top_nbsi = nbsi._non_blocking_set_int._nbsi;
+        for( int i=0; i<HELP; i++ ) {
+            int j = idx+i*64;
+            j %= (top_nbsi._bits.length<<6); // Limit, wrap to array size; means we retry indices
+            top_nbsi.help_copy_impl(j   );
+            top_nbsi.help_copy_impl(j+63); // Also force the nested-by-64 bit
+        }
+        
+        // Assert
+        assertEquals(nbsi._non_blocking_set_int._nbsi, top_nbsi);
+    }
+}
+
+
+No.2 generated result --------------------------
+
+
+public class NonBlockingSetIntTest {
+    @Test
+    public void help_copyTest() {
+        // Arrange
+        NonBlockingSetInt nbsi = new NonBlockingSetInt();
+        
+        // Act
+        NBSI top_nbsi = nbsi.help_copy();
+        
+        // Assert
+        assertEquals(top_nbsi._new, nbsi);
+    }
+}
+
+
+No.3 generated result --------------------------
+
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NonBlockingSetIntTest {
+    @Test
+    public void help_copyTest() {
+        // Arrange
+        int HELP = 8;
+        int idx = top_nbsi._copyIdx.getAndAdd(64*HELP);
+        for (int i = 0; i < HELP; i++) {
+            int j = idx + i * 64;
+            j %= (top_nbsi._bits.length << 6); // Limit, wrap to array size; means we retry indices
+            top_nbsi.help_copy_impl(j);
+            top_nbsi.help_copy_impl(j + 63); // Also force the nested-by-64 bit
+        }
+
+        // Act
+        boolean isTopLevel = _non_blocking_set_int.CAS_nbsi(top_nbsi, top_nbsi._new);
+
+        // Assert
+        assertTrue(isTopLevel);
+    }
+}
+
+
+No.4 generated result --------------------------
+
+@Test
+public void help_copyTest() {
+    // Initialize the NonBlockingSetInt class
+    NonBlockingSetInt nbsi = new NonBlockingSetInt();
+    
+    // Create a helper method to call the "help" method on the NBSI instance
+    private void helpCopy(int idx) {
+        nbsi.help_copy(idx);
+    }
+    
+    // Test that the "help" method correctly copies bits from one index to another
+    int startIdx = 12;
+    int endIdx = 34;
+    for (int i = startIdx; i <= endIdx; i++) {
+        helpCopy(i);
+        assertTrue(nbsi._bits[i] == nbsi._new._bits[i]);
+    }
+    
+    // Test that the "help" method correctly promotes an NBSI to a new one when the copy is done
+    boolean promoted = false;
+    if (nbsi._copyDone.get() == nbsi._sum_bits_length) {
+        if (_nonBlockingSetInt.CAS_nbsi(top_nbsi, top_nbsi._new)) {
+            promoted = true;
+        }
+    }
+    
+    assertTrue(promoted);
+}
+
+
+No.5 generated result --------------------------
+
+The `help_copy` method appears to be a helper method for the `NonBlockingSetInt` class, which is responsible for copying data between two instances of this class. The method is annotated as `private`, indicating that it is not intended to be used outside of the `NonBlockingSetInt` class.
+
+The method takes no arguments and returns a new instance of the `NonBlockingSetInt` class. It appears to be used to help other instances of this class copy their data, but I'm not sure what exactly it does without seeing more context.
+
+It looks like the method is part of a larger system for managing sets of non-blocking integers, and I would need to see more of the code to fully understand its purpose and how it fits into that system.
+
+
+No.6 generated result --------------------------
+
+I have filled in the `<FILL>` tag with a sample test case for the `help_copy` method. However, I must point out that this is not a complete or comprehensive unit test for the method. The test only checks one specific scenario and does not cover all possible edge cases. Additionally, the test is not well-structured and does not follow any particular testing framework or convention.
+
+To improve the quality of the test, I would recommend the following:
+
+1. Use a more comprehensive and systematic approach to testing, such as boundary value analysis (BVA) or equivalence partitioning.
+2. Use a well-defined testing framework or convention, such as TestNG or JUnit, to structure the test cases and ensure consistency in naming and organization.
+3. Add more detailed assertions to cover different aspects of the method's behavior, such as checking the return value, state changes, and exceptions thrown.
+4. Consider adding negative tests to verify that the method fails gracefully when given invalid inputs or unexpected conditions.
+5. Finally, ensure that the test cases are well-documented and easy to understand, so that other developers can quickly grasp the intent of each test case and make informed changes if needed.
+
+
+No.7 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NonBlockingSetIntTest {
+    @Test
+    public void help_copyTest() {
+        // Create two instances of the NonBlockingSetInt class with different sizes
+        NonBlockingSetInt nbsi1 = new NonBlockingSetInt(5);
+        NonBlockingSetInt nbsi2 = new NonBlockingSetInt(10);
+
+        // Add elements to the first instance of the class
+        nbsi1.add(1);
+        nbsi1.add(3);
+        nbsi1.add(5);
+
+        // Use the help_copy method to copy all elements from the first instance to the second instance
+        nbsi2.help_copy();
+
+        // Verify that all elements have been copied correctly
+        assertEquals(nbsi1._bits, nbsi2._bits);
+    }
+}
+
+
+No.8 generated result --------------------------
+
+// Create a new instance of NonBlockingSetInt
+NonBlockingSetInt nonBlockingSetInt = new NonBlockingSetInt();
+
+// Invoke the help_copy method to copy until completed
+NBSI nbsi = nonBlockingSetInt.help_copy();
+
+
+No.9 generated result --------------------------
+
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NonBlockingSetIntTest {
+    @Test
+    public void help_copyTest() {
+        NBSI top_nbsi = new NBSI(); // Create a new NBSI object
+        final int HELP = 8; // Tuning number: how much copy pain are we willing to inflict?
+        int idx = top_nbsi._copyIdx.getAndAdd(64*HELP); // Pick some words to help with - but only help copy the top-level NBSI
+        for( int i=0; i<HELP; i++ ) {
+            int j = idx+i*64;
+            j %= (top_nbsi._bits.length<<6); // Limit, wrap to array size; means we retry indices
+            top_nbsi.help_copy_impl(j   );
+            top_nbsi.help_copy_impl(j+63); // Also force the nested-by-64 bit
+        }
+        
+        // Top level guy ready to promote?
+        if( top_nbsi._copyDone.get() == top_nbsi._sum_bits_length ) {
+            _non_blocking_set_int = new NonBlockingSetInt(); // Create a new NonBlockingSetInt object
+            _non_blocking_set_int._nbsi = top_nbsi; // Set the NBSI field of the NonBlockingSetInt object to the created NBSI object
+            
+            // One shot CAS to promote - it may fail since we are racing; others
+            // may promote as well
+            if( _non_blocking_set_int.CAS_nbsi( top_nbsi, top_nbsi._new ) ) {
+                //System.out.println("Promote at top level to size "+(_non_blocking_set_int._nbsi._bits.length<<6));
+            }
+        }
+        
+        // Return the new bitvector for 'fluid' programming style
+        return _new;
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NonBlockingSetIntTest {
+    @Test
+    public void help_copyTest() {
+        // Test case 1: No nested NBSI and top-level NBSI ready to promote
+        NonBlockingSetInt top_nbsi = new NonBlockingSetInt(0, 8); // 8 bits in the bitvector
+        top_nbsi._copyDone.set(top_nbsi._sum_bits_length); // Top-level NBSI is ready to promote
+        assertEquals(top_nbsi, help_copy()); // Expected: top_nbsi because it's already promoted
+
+        // Test case 2: No nested NBSI and top-level NBSI not ready to promote
+        NonBlockingSetInt top_nbsi2 = new NonBlockingSetInt(0, 8); // 8 bits in the bitvector
+        assertNotEquals(top_nbsi2, help_copy()); // Expected: top_nbsi because it's not promoted yet
+    }
+}
+
+

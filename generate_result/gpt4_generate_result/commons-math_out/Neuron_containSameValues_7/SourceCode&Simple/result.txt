@@ -1,0 +1,541 @@
+Source code: 
+
+
+private boolean containSameValues(double[] current,
+                                  double[] expect) {
+    if (expect.length != size) {
+        throw new NeuralNetException(NeuralNetException.SIZE_MISMATCH,
+                                     expect.length, size);
+    }
+
+    for (int i = 0; i < size; i++) {
+        if (!Precision.equals(current[i], expect[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
+
+
+No.1 generated result --------------------------
+
+package org.apache.commons.math4.neuralnet;
+
+import org.apache.commons.math4.neuralnet.internal.NeuralNetException;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.apache.commons.numbers.core.Precision;
+
+public class NeuronTest {
+
+    @Test
+    public void containSameValuesTest() {
+        // Instantiate a Neuron object with a specific size.
+        int size = 3;
+        double[] initialFeatures = new double[]{1.0, 2.0, 3.0};
+        Neuron neuron = new Neuron(1L, initialFeatures);
+
+        // Case where both arrays contain the same values.
+        double[] current = new double[]{1.0, 2.0, 3.0};
+        double[] expect = new double[]{1.0, 2.0, 3.0};
+        assertTrue(neuron.containSameValues(current, expect), "Arrays with the same values should return true.");
+
+        // Case where the arrays contain different values.
+        double[] differentExpect = new double[]{1.0, 2.0, 4.0};
+        assertFalse(neuron.containSameValues(current, differentExpect), "Arrays with different values should return false.");
+
+        // Case where expect array has a different size, expecting an exception.
+        double[] wrongSizeExpect = new double[]{1.0, 2.0};
+        Exception exception = assertThrows(NeuralNetException.class, () -> neuron.containSameValues(current, wrongSizeExpect),
+                                           "Size mismatch should throw a NeuralNetException.");
+
+        String expectedMessage = "SIZE_MISMATCH";
+        String actualMessage = exception.getMessage();
+
+        assertTrue(actualMessage.contains(expectedMessage), "Exception message should contain " + expectedMessage);
+    }
+
+    // The class below is a stub needed for compilation of the test above
+    // and should be replaced with the actual implementation of Neuron.
+    public class Neuron {
+        final private long identifier;
+        final private int size;
+        final private AtomicReference<double[]> features;
+        final private AtomicLong numberOfAttemptedUpdates;
+        final private AtomicLong numberOfSuccessfulUpdates;
+
+        public Neuron(long identifier, double[] features) {
+            this.size = features.length;
+            this.identifier = identifier;
+            this.features = new AtomicReference<>(features);
+            this.numberOfAttemptedUpdates = new AtomicLong(0);
+            this.numberOfSuccessfulUpdates = new AtomicLong(0);
+        }
+
+        public synchronized Neuron copy() {
+            return new Neuron(this.identifier, this.features.get());
+        }
+
+        public long getIdentifier() {
+            return this.identifier;
+        }
+
+        public int getSize() {
+            return this.size;
+        }
+
+        public double[] getFeatures() {
+            return this.features.get();
+        }
+
+        public boolean compareAndSetFeatures(double[] expect, double[] update) {
+            // Dummy implementation
+            return true;
+        }
+
+        public long getNumberOfAttemptedUpdates() {
+            return this.numberOfAttemptedUpdates.get();
+        }
+
+        public long getNumberOfSuccessfulUpdates() {
+            return this.numberOfSuccessfulUpdates.get();
+        }
+
+        private boolean containSameValues(double[] current, double[] expect) {
+            if (expect.length != size) {
+                throw new NeuralNetException(NeuralNetException.SIZE_MISMATCH,
+                                             expect.length, size);
+            }
+
+            for (int i = 0; i < size; i++) {
+                if (!Precision.equals(current[i], expect[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.apache.commons.math4.neuralnet;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.apache.commons.numbers.core.Precision;
+import org.apache.commons.math4.neuralnet.internal.NeuralNetException;
+
+public class NeuronTest {
+    @Test
+    public void containSameValuesTest() {
+        // Create a neuron with an identifier and initial feature set
+        long identifier = 1L;
+        double[] initialFeatures = {0.1, 0.2, 0.3};
+        Neuron neuron = new Neuron(identifier, initialFeatures);
+
+        // Test for matching arrays
+        double[] matchingFeatures = {0.1, 0.2, 0.3};
+        assertTrue(neuron.containSameValues(initialFeatures, matchingFeatures),
+                "The arrays should be reported as having the same values.");
+
+        // Test for non-matching arrays
+        double[] nonMatchingFeatures = {0.1, 0.2, 0.4};
+        assertFalse(neuron.containSameValues(initialFeatures, nonMatchingFeatures),
+                "The arrays should be reported as not having the same values.");
+
+        // Test for size mismatch exception
+        double[] differentSizeFeatures = {0.1, 0.2};
+
+        Exception exception = assertThrows(NeuralNetException.class, () -> {
+            neuron.containSameValues(initialFeatures, differentSizeFeatures);
+        });
+
+        String expectedMessage = NeuralNetException.SIZE_MISMATCH;
+        String actualMessage = exception.getMessage();
+        assertTrue(actualMessage.contains(expectedMessage),
+                "NeuralNetException should be thrown with SIZE_MISMATCH error.");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.apache.commons.math4.neuralnet;
+
+import org.junit.jupiter.api.Test;
+import org.apache.commons.numbers.core.Precision;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NeuronTest {
+
+    @Test
+    public void containSameValuesTest() {
+        // Given
+        long identifier = 1L;
+        double[] initialFeatures = {1.0, 2.0, 3.0};
+        Neuron neuron = new Neuron(identifier, initialFeatures);
+
+        double[] current = {1.0, 2.0, 3.0};
+        double[] expectSame = {1.0, 2.0, 3.0};
+        double[] expectDiff = {3.0, 2.0, 1.0};
+        double[] expectSizeMismatch = {1.0, 2.0};
+
+        // When and Then
+        assertTrue(neuron.containSameValues(current, expectSame), "Arrays with the same values should result in true");
+        assertFalse(neuron.containSameValues(current, expectDiff), "Arrays with different values should result in false");
+        
+        // Testing the size mismatch exception
+        Exception exception = assertThrows(NeuralNetException.class, () -> {
+            neuron.containSameValues(current, expectSizeMismatch);
+        });
+
+        String expectedMessage = "Size mismatch";
+        String actualMessage = exception.getMessage();
+
+        assertTrue(actualMessage.contains(expectedMessage), "Exception message should contain 'Size mismatch'");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.apache.commons.math4.neuralnet;
+
+import org.apache.commons.numbers.core.Precision;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NeuronTest {
+    
+    private Neuron neuron;
+    
+    @BeforeEach
+    public void setUp() {
+        neuron = new Neuron(1L, new double[]{1.0, 2.0, 3.0});
+    }
+    
+    @Test
+    public void containSameValuesTest_ValuesMatch() {
+        assertDoesNotThrow(() -> {
+            assertTrue(neuron.containSameValues(new double[]{1.0, 2.0, 3.0}, new double[]{1.0, 2.0, 3.0}));
+        });
+    }
+
+    @Test
+    public void containSameValuesTest_ValuesDontMatch() {
+        assertDoesNotThrow(() -> {
+            assertFalse(neuron.containSameValues(new double[]{1.0, 2.0, 3.0}, new double[]{1.0, 2.1, 3.0}));
+        });
+    }
+
+    @Test
+    public void containSameValuesTest_ExceptionThrown() {
+        Exception exception = assertThrows(NeuralNetException.class, () -> {
+            neuron.containSameValues(new double[]{1.0, 2.0, 3.0}, new double[]{1.0, 2.0});
+        });
+        assertTrue(exception.getMessage().contains("SIZE_MISMATCH"));
+    }
+
+    @Test
+    public void containSameValuesTest_PrecisionMismatchWithinThreshold() {
+        assertDoesNotThrow(() -> {
+            double delta = 1e-5;
+            Precision.setEqualityThreshold(delta);
+            assertTrue(neuron.containSameValues(new double[]{1.0, 2.0, 3.0}, new double[]{1.0 + delta/2, 2.0, 3.0}));
+        });
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.apache.commons.math4.neuralnet;
+
+import org.apache.commons.math4.neuralnet.internal.NeuralNetException;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NeuronTest {
+    private Neuron neuron;
+    private double[] testFeatures = new double[]{1.0, 2.0, 3.0};
+
+    @BeforeEach
+    public void setup() {
+        neuron = new Neuron(1L, testFeatures);
+    }
+
+    @Test
+    public void containSameValuesTestDifferentLength() {
+        double[] current = {1.0, 2.0, 3.0};
+        double[] expect = {1.0, 2.0};
+
+        Exception exception = assertThrows(NeuralNetException.class, () -> {
+            neuron.compareAndSetFeatures(current, expect);
+        });
+
+        String expectedMessage = "SIZE_MISMATCH";
+        String actualMessage = exception.getMessage();
+
+        assertTrue(actualMessage.contains(expectedMessage));
+    }
+
+    @Test
+    public void containSameValuesTestDifferentValues() {
+        double[] current = {1.0, 2.0, 3.0};
+        double[] expect = {1.0, 2.0, 4.0}; // Different value on purpose
+
+        assertFalse(neuron.compareAndSetFeatures(current, expect));
+    }
+
+    @Test
+    public void containSameValuesTestSameValues() {
+        double[] current = {1.0, 2.0, 3.0};
+        double[] expect = {1.0, 2.0, 3.0};
+
+        assertTrue(neuron.compareAndSetFeatures(current, expect));
+    }
+
+    @Test
+    public void containSameValuesTestPrecision() {
+        // Assuming Precision.equals is true for very close values
+        double[] current = {1.0, 2.0, 3.0};
+        double[] expect = {1.0 + 1e-10, 2.0 - 1e-10, 3.0 + 1e-10};
+
+        assertTrue(neuron.compareAndSetFeatures(current, expect));
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.apache.commons.math4.neuralnet;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.apache.commons.numbers.core.Precision;
+import org.mockito.Mockito;
+
+public class NeuronTest {
+    // The size and identifier used to create a test Neuron instance
+    private final int size = 5;
+    private final long identifier = 1L;
+
+    @Test
+    public void containSameValuesTest() {
+        // Create a Neuron instance with a given size and identifier
+        double[] initialFeatures = new double[] {0.5, 1.5, 2.5, 3.5, 4.5};
+        Neuron neuron = new Neuron(identifier, initialFeatures);
+
+        // Test case where both arrays have the same values
+        double[] current = new double[] {0.5, 1.5, 2.5, 3.5, 4.5};
+        double[] expect = new double[] {0.5, 1.5, 2.5, 3.5, 4.5};
+        boolean result = neuron.compareAndSetFeatures(current, expect);
+        assertTrue(result, "The arrays have the same values but were not recognized as such");
+
+        // Test case where arrays have different values
+        current = new double[] {0.5, 1.5, 2.5, 3.5, 4.5};
+        expect = new double[] {0.5, 1.6, 2.6, 3.5, 4.5};
+        result = neuron.compareAndSetFeatures(current, expect);
+        assertFalse(result, "The arrays have different values but were incorrectly recognized as the same");
+
+        // Test case for throwing an exception due to different sizes
+        current = new double[] {0.5, 1.5, 2.5, 3.5, 4.5};
+        expect = new double[] {0.5, 1.5, 2.5};
+        Exception exception = assertThrows(NeuralNetException.class, () -> {
+            neuron.compareAndSetFeatures(current, expect);
+        });
+        String expectedMessage = "Size mismatch: expected length "
+                                 + expect.length + " but was " + size;
+        String actualMessage = exception.getMessage();
+        assertTrue(actualMessage.contains(expectedMessage), "Expected size mismatch NeuralNetException was not thrown");
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.apache.commons.math4.neuralnet;
+
+import org.apache.commons.numbers.core.Precision;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NeuronTest {
+
+    private static Neuron neuron;
+    private static double[] features;
+
+    @BeforeAll
+    public static void setUp() {
+        features = new double[] {1.0, 2.0, 3.0};
+        neuron = new Neuron(1L, features);
+    }
+
+    @Test
+    public void containSameValuesTest_ValuesAreEqual() throws Exception {
+        double[] expectedFeatures = new double[] {1.0, 2.0, 3.0};
+        assertTrue(invokeContainSameValues(neuron.getFeatures(), expectedFeatures), 
+                   "The arrays contain the same values, but were not recognized as such.");
+    }
+
+    @Test
+    public void containSameValuesTest_ValuesAreNotEqual() throws Exception {
+        double[] expectedFeatures = new double[] {1.0, 2.1, 3.0};
+        assertFalse(invokeContainSameValues(neuron.getFeatures(), expectedFeatures),
+                    "The arrays do not contain the same values, but were incorrectly recognized as matching.");
+    }
+
+    @Test
+    public void containSameValuesTest_SizeMismatch() throws Exception {
+        double[] expectedFeatures = new double[] {1.0, 2.0};
+        Exception exception = assertThrows(NeuralNetException.class, () -> {
+            invokeContainSameValues(neuron.getFeatures(), expectedFeatures);
+        });
+        String expectedMessage = "Size mismatch: expected " + expectedFeatures.length + " but was " + neuron.getSize();
+        assertTrue(exception.getMessage().contains(expectedMessage));
+    }
+
+    // Private helper method to invoke the private method containSameValues using reflection
+    private boolean invokeContainSameValues(double[] current, double[] expect) throws Exception {
+        var method = Neuron.class.getDeclaredMethod("containSameValues", double[].class, double[].class);
+        method.setAccessible(true);
+        return (boolean) method.invoke(neuron, current, expect);
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.apache.commons.math4.neuralnet;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NeuronTest {
+
+    @Test
+    public void containSameValuesTest() {
+        long identifier = 1L;
+        double[] initialFeatures = {1.0, 2.0, 3.0};
+        Neuron neuron = new Neuron(identifier, initialFeatures);
+
+        double[] sameAsInitial = {1.0, 2.0, 3.0};
+        double[] differentFromInitial = {1.1, 2.2, 3.3};
+        double[] differentSize = {1.0, 2.0};
+
+        // Case 1: Arrays with same values
+        assertTrue(neuron.containSameValues(initialFeatures, sameAsInitial), "Should return true for arrays with same values");
+
+        // Case 2: Arrays with different values
+        assertFalse(neuron.containSameValues(initialFeatures, differentFromInitial), "Should return false for arrays with different values");
+
+        // Case 3: Arrays of different sizes
+        NeuralNetException exception = assertThrows(NeuralNetException.class, () -> neuron.containSameValues(initialFeatures, differentSize),
+                "Should throw NeuralNetException for size mismatch");
+
+        assertEquals(NeuralNetException.SIZE_MISMATCH, exception.getCode());
+        assertEquals(differentSize.length, exception.getArgument());
+        assertEquals(initialFeatures.length, neuron.getSize());
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.apache.commons.math4.neuralnet;
+
+import org.junit.jupiter.api.Test;
+import org.apache.commons.math4.neuralnet.internal.NeuralNetException;
+import org.apache.commons.numbers.core.Precision;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NeuronTest {
+    private class NeuronMock extends Neuron {
+        public NeuronMock(long identifier, double[] features) {
+            super(identifier, features);
+        }
+        
+        public boolean containSameValuesMock(double[] current, double[] expect) {
+            return containSameValues(current, expect);
+        }
+    }
+    
+    @Test
+    public void containSameValuesTest() {
+        NeuronMock neuron = new NeuronMock(1L, new double[]{0.5, 1.5, 2.5});
+        double[] currentValues = {0.5, 1.5, 2.5};
+        double[] expectedValues = {0.5, 1.5, 2.5};
+        
+        // Test for equality with same values
+        assertTrue(neuron.containSameValuesMock(currentValues, expectedValues), "Arrays should contain the same values");
+        
+        // Test for inequality with different values
+        expectedValues[2] = 3.5;
+        assertFalse(neuron.containSameValuesMock(currentValues, expectedValues), "Arrays should not contain the same values");
+        
+        // Test for throwing exception with different sizes
+        expectedValues = new double[]{0.5, 1.5}; // short one element
+        NeuralNetException thrown = assertThrows(
+            NeuralNetException.class, 
+            () -> neuron.containSameValuesMock(currentValues, expectedValues), 
+            "Exception should be thrown due to size mismatch"
+        );
+        
+        assertTrue(thrown.getMessage().contains("SIZE_MISMATCH"));
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.apache.commons.math4.neuralnet;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.apache.commons.math4.neuralnet.internal.NeuralNetException;
+import org.apache.commons.numbers.core.Precision;
+
+import java.lang.reflect.Method;
+
+public class NeuronTest {
+
+    @Test
+    public void containSameValuesTest() {
+        try {
+            // Obtain the method containSameValues, which is private, using reflection
+            Method method = Neuron.class.getDeclaredMethod("containSameValues", double[].class, double[].class);
+            method.setAccessible(true);
+
+            // Create a neuron with dummy identifier and expected features
+            long dummyIdentifier = 123L;
+            double[] features = {1.0, 2.0, 3.0};
+            Neuron neuron = new Neuron(dummyIdentifier, features);
+
+            // Test case for equal size and equal values
+            double[] currentValues = {1.0, 2.0, 3.0};
+            double[] expectedValues = {1.0, 2.0, 3.0};
+            assertTrue((boolean) method.invoke(neuron, currentValues, expectedValues),
+                       "Arrays with identical values should return true");
+
+            // Test case for equal size but different values
+            double[] differentValues = {1.1, 2.0, 3.0};
+            assertFalse((boolean) method.invoke(neuron, currentValues, differentValues),
+                        "Arrays with different values should return false");
+
+            // Test case for size mismatch
+            double[] mismatchedSize = {1.0, 2.0};
+            assertThrows(NeuralNetException.class, 
+                         () -> method.invoke(neuron, currentValues, mismatchedSize),
+                         "Size mismatch should throw NeuralNetException");
+
+        } catch (Exception e) {
+            fail("Reflective method access failed: " + e.getMessage());
+        }
+    }
+}
+
+

@@ -1,0 +1,570 @@
+Source code: 
+
+
+public static double calculatePieDatasetTotal(PieDataset dataset) {
+    Args.nullNotPermitted(dataset, "dataset");
+    List keys = dataset.getKeys();
+    double totalValue = 0;
+    Iterator iterator = keys.iterator();
+    while (iterator.hasNext()) {
+        Comparable current = (Comparable) iterator.next();
+        if (current != null) {
+            Number value = dataset.getValue(current);
+            double v = 0.0;
+            if (value != null) {
+                v = value.doubleValue();
+            }
+            if (v > 0) {
+                totalValue = totalValue + v;
+            }
+        }
+    }
+    return totalValue;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jfree.data.general;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.jfree.data.KeyedValues;
+import org.jfree.data.DefaultKeyedValues;
+
+public class DatasetUtilsTest {
+
+    @Test
+    public void calculatePieDatasetTotalTest() {
+        DefaultKeyedValues data = new DefaultKeyedValues();
+        data.addValue("A", 1.0);
+        data.addValue("B", 2.0);
+        data.addValue("C", 3.0);
+        data.addValue("D", 4.0);
+        data.addValue("E", null);
+        data.addValue("F", -1.0);
+        data.addValue("G", Double.NaN);
+
+        PieDataset dataset = new DefaultPieDataset(data);
+        double total = DatasetUtils.calculatePieDatasetTotal(dataset);
+
+        assertEquals(10.0, total, "The total should be 10.0, ignoring null, negative, and NaN values.");
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jfree.data.general;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.jfree.data.KeyedValues;
+import java.util.Arrays;
+
+class MockPieDataset implements PieDataset {
+    private KeyedValues values;
+
+    public MockPieDataset(KeyedValues values) {
+        this.values = values;
+    }
+
+    @Override
+    public Comparable getKey(int index) {
+        return values.getKey(index);
+    }
+
+    @Override
+    public int getIndex(Comparable key) {
+        return values.getIndex(key);
+    }
+
+    @Override
+    public List getKeys() {
+        return values.getKeys();
+    }
+
+    @Override
+    public Number getValue(Comparable key) {
+        return values.getValue(key);
+    }
+
+    @Override
+    public int getItemCount() {
+        return values.getItemCount();
+    }
+
+    @Override
+    public Number getValue(int item) {
+        return values.getValue(item);
+    }
+    
+    // Other methods are not used for this test so they can throw 
+    // UnsupportedOperationException
+    // ...
+}
+
+public class DatasetUtilsTest {
+    @Test
+    public void calculatePieDatasetTotalTest() {
+        // Create a mock KeyedValues dataset for testing
+        KeyedValues values = new KeyedValues() {
+            private Double[] data = new Double[] { 5.0, 3.0, -1.0, 7.0, null };
+            private String[] keys = {"A", "B", "C", "D", "E"};
+            
+            @Override
+            public Comparable getKey(int index) {
+                return keys[index];
+            }
+            
+            @Override
+            public int getIndex(Comparable key) {
+                return Arrays.asList(keys).indexOf(key);
+            }
+            
+            @Override
+            public List getKeys() {
+                return Arrays.asList(keys);
+            }
+            
+            @Override
+            public Number getValue(Comparable key) {
+                int index = getIndex(key);
+                return index >= 0 ? getValue(index) : null;
+            }
+            
+            @Override
+            public Number getValue(int item) {
+                return data[item];
+            }
+            
+            @Override
+            public int getItemCount() {
+                return data.length;
+            }
+        };
+        PieDataset dataset = new MockPieDataset(values);
+        
+        double expectedTotal = 15.0; // 5.0 + 3.0 + 7.0 (ignoring -1.0 and null)
+        double calculatedTotal = DatasetUtils.calculatePieDatasetTotal(dataset);
+        assertEquals(expectedTotal, calculatedTotal, 0.0000001, 
+                "The total pie dataset value should be calculated correctly.");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jfree.data.general;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.jfree.data.general.DefaultPieDataset;
+
+public class DatasetUtilsTest {
+
+    @Test
+    public void calculatePieDatasetTotalTest() {
+        DefaultPieDataset dataset = new DefaultPieDataset();
+        dataset.setValue("Category 1", 5.0);
+        dataset.setValue("Category 2", 9.0);
+        dataset.setValue("Category 3", null);
+        dataset.setValue("Category 4", 3.0);
+
+        double total = DatasetUtils.calculatePieDatasetTotal(dataset);
+        assertEquals(17.0, total, 0.0000001d, "The total should be 17.0");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jfree.data.general;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DatasetUtilsTest {
+
+    @Test
+    public void calculatePieDatasetTotalTest() {
+        DefaultPieDataset dataset = new DefaultPieDataset();
+        dataset.setValue("Category 1", 10.0);
+        dataset.setValue("Category 2", 20.0);
+        dataset.setValue("Category 3", 30.0);
+        dataset.setValue("Category 4", 40.0);
+
+        double total = DatasetUtils.calculatePieDatasetTotal(dataset);
+        assertEquals(100.0, total, 0.0000001,
+            "The total of the pie dataset values should be 100.0.");
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jfree.data.general;
+
+import org.jfree.data.KeyedValues;
+import org.jfree.data.DefaultKeyedValues;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DatasetUtilsTest {
+
+    static class MockPieDataset implements PieDataset {
+        DefaultKeyedValues data;
+
+        public MockPieDataset(DefaultKeyedValues data) {
+            this.data = data;
+        }
+
+        @Override
+        public Comparable getKey(int index) {
+            return this.data.getKey(index);
+        }
+
+        @Override
+        public int getItemCount() {
+            return this.data.getItemCount();
+        }
+
+        @Override
+        public Number getValue(Comparable key) {
+            return this.data.getValue(key);
+        }
+
+        @Override
+        public int getIndex(Comparable key) {
+            return this.data.getIndex(key);
+        }
+
+        @Override
+        public List getKeys() {
+            return this.data.getKeys();
+        }
+
+        @Override
+        public Number getValue(int item) {
+            return this.data.getValue(item);
+        }
+    }
+
+    @Test
+    public void calculatePieDatasetTotalTest() {
+        DefaultKeyedValues dataValues = new DefaultKeyedValues();
+        dataValues.addValue("Category 1", 5.0);
+        dataValues.addValue("Category 2", 9.0);
+        dataValues.addValue("Category 3", null); // Should be ignored in the total
+        dataValues.addValue("Category 4", 3.0);
+        dataValues.addValue("Category 5", -1.0); // Negative, should be ignored
+
+        MockPieDataset dataset = new MockPieDataset(dataValues);
+        double total = DatasetUtils.calculatePieDatasetTotal(dataset);
+
+        assertEquals(5.0 + 9.0 + 3.0, total, 1.0e-10, 
+                     "The total should ignore null and negative values");
+    }
+} 
+
+
+No.6 generated result --------------------------
+
+package org.jfree.data.general;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.jfree.data.KeyedValues;
+import java.util.Arrays;
+import java.util.List;
+
+class MockPieDataset implements PieDataset {
+    private List<Comparable> keys;
+    private List<Number> values;
+
+    public MockPieDataset(Comparable[] keys, Number[] values) {
+        this.keys = Arrays.asList(keys);
+        this.values = Arrays.asList(values);
+    }
+
+    @Override
+    public int getItemCount() {
+        return keys.size();
+    }
+
+    @Override
+    public Number getValue(int item) {
+        return values.get(item);
+    }
+
+    @Override
+    public Comparable getKey(int item) {
+        return keys.get(item);
+    }
+
+    @Override
+    public int getIndex(Comparable key) {
+        return keys.indexOf(key);
+    }
+
+    @Override
+    public List getKeys() {
+        return keys;
+    }
+
+    @Override
+    public Number getValue(Comparable key) {
+        int index = getIndex(key);
+        if (index < 0) {
+            return null;
+        }
+        return getValue(index);
+    }
+}
+
+public class DatasetUtilsTest {
+
+    @Test
+    public void calculatePieDatasetTotalTest() {
+        MockPieDataset dataset = new MockPieDataset(
+            new Comparable[] {"Category 1", "Category 2", "Category 3"},
+            new Number[] {10.0, 5.0, 15.0}
+        );
+
+        double total = DatasetUtils.calculatePieDatasetTotal(dataset);
+        assertEquals(30.0, total, "The total should be 30.0");
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jfree.data.general;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.jfree.data.*;
+
+class DatasetUtilsTest {
+
+    @Test
+    public void calculatePieDatasetTotalTest() {
+        DefaultPieDataset dataset = new DefaultPieDataset();
+        dataset.setValue("Category A", 1.0);
+        dataset.setValue("Category B", 3.0);
+        dataset.setValue("Category C", 5.0);
+
+        double total = DatasetUtils.calculatePieDatasetTotal(dataset);
+        assertEquals(9.0, total, "The total of all the values in the PieDataset should be 9.0");
+
+        // Test with a null value
+        dataset.setValue("Category D", null);
+        total = DatasetUtils.calculatePieDatasetTotal(dataset);
+        assertEquals(9.0, total, "The total should ignore null values and remain 9.0");
+
+        // Test with a negative value
+        dataset.setValue("Category E", -1.0);
+        total = DatasetUtils.calculatePieDatasetTotal(dataset);
+        assertEquals(9.0, total, "The total should ignore negative values and remain 9.0");
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.jfree.data.general;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.jfree.data.general.DefaultPieDataset;
+import org.jfree.data.general.PieDataset;
+
+public class DatasetUtilsTest {
+
+    @Test
+    public void calculatePieDatasetTotalTest() {
+        DefaultPieDataset dataset = new DefaultPieDataset();
+        dataset.setValue("Category 1", 5.0);
+        dataset.setValue("Category 2", 4.0);
+        dataset.setValue("Category 3", 3.0);
+        double total = DatasetUtils.calculatePieDatasetTotal(dataset);
+        assertEquals(12.0, total, 0.0000001);
+    }
+
+    @Test
+    public void calculatePieDatasetTotalWithNullsTest() {
+        DefaultPieDataset dataset = new DefaultPieDataset();
+        dataset.setValue("Category 1", 5.0);
+        dataset.setValue("Category 2", null);
+        dataset.setValue("Category 3", 3.0);
+        double total = DatasetUtils.calculatePieDatasetTotal(dataset);
+        assertEquals(8.0, total, 0.0000001);
+    }
+
+    @Test
+    public void calculatePieDatasetTotalWithNegativesTest() {
+        DefaultPieDataset dataset = new DefaultPieDataset();
+        dataset.setValue("Category 1", -5.0);
+        dataset.setValue("Category 2", 4.0);
+        dataset.setValue("Category 3", -3.0);
+        dataset.setValue("Category 4", 2.0);
+        double total = DatasetUtils.calculatePieDatasetTotal(dataset);
+        assertEquals(6.0, total, 0.0000001);
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jfree.data.general;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.jfree.data.KeyedValues;
+import org.jfree.data.DefaultKeyedValues;
+
+public class DatasetUtilsTest {
+
+    @Test
+    public void calculatePieDatasetTotalTest() {
+        // Create a sample pie dataset
+        DefaultKeyedValues keyedValues = new DefaultKeyedValues();
+        keyedValues.addValue("Category 1", 10.0);
+        keyedValues.addValue("Category 2", 20.0);
+        keyedValues.addValue("Category 3", 30.0);
+        keyedValues.addValue("Category 4", null); // this value should be ignored
+        keyedValues.addValue("Category 5", -5.0); // negative value should be ignored
+
+        // Create a pie dataset with the sample values
+        DefaultPieDataset pieDataset = new DefaultPieDataset(keyedValues);
+
+        // Call the method under test
+        double total = DatasetUtils.calculatePieDatasetTotal(pieDataset);
+
+        // Verify the result
+        assertEquals(60.0, total, "The total should sum up positive values only.");
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jfree.data.general;
+
+import org.junit.jupiter.api.*;
+import org.jfree.data.KeyedValues;
+import org.jfree.data.UnknownKeyException;
+import org.mockito.Mockito;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
+
+public class DatasetUtilsTest {
+
+    @Test
+    public void calculatePieDatasetTotalTest() {
+        // Create a mock PieDataset
+        PieDataset mockDataset = Mockito.mock(PieDataset.class);
+
+        // Define the behavior of the getKeys() method
+        List<Comparable> keys = Arrays.asList("A", "B", "C");
+        when(mockDataset.getKeys()).thenReturn(keys);
+
+        // Define the behavior of the getValue() method
+        when(mockDataset.getValue("A")).thenReturn(1);
+        when(mockDataset.getValue("B")).thenReturn(2);
+        when(mockDataset.getValue("C")).thenReturn(3);
+
+        // Test the calculatePieDatasetTotal() method
+        double total = DatasetUtils.calculatePieDatasetTotal(mockDataset);
+
+        // Assert that the total is calculated correctly
+        assertEquals(6.0, total, 0.000001);
+    }
+
+    @Test
+    public void calculatePieDatasetTotalWithNullValue() {
+        // Create a mock PieDataset
+        PieDataset mockDataset = Mockito.mock(PieDataset.class);
+
+        // Define the behavior of the getKeys() method
+        List<Comparable> keys = Arrays.asList("A", "B", "C");
+        when(mockDataset.getKeys()).thenReturn(keys);
+
+        // Define the behavior of the getValue() method
+        when(mockDataset.getValue("A")).thenReturn(1);
+        when(mockDataset.getValue("B")).thenReturn(null);
+        when(mockDataset.getValue("C")).thenReturn(3);
+
+        // Test the calculatePieDatasetTotal() method
+        double total = DatasetUtils.calculatePieDatasetTotal(mockDataset);
+
+        // Assert that the total is calculated correctly
+        // the null value should be treated as zero
+        assertEquals(4.0, total, 0.000001);
+    }
+
+    @Test
+    public void calculatePieDatasetTotalWithNegativeValue() {
+        // Create a mock PieDataset
+        PieDataset mockDataset = Mockito.mock(PieDataset.class);
+
+        // Define the behavior of the getKeys() method
+        List<Comparable> keys = Arrays.asList("A", "B", "C");
+        when(mockDataset.getKeys()).thenReturn(keys);
+
+        // Define the behavior of the getValue() method
+        when(mockDataset.getValue("A")).thenReturn(1);
+        when(mockDataset.getValue("B")).thenReturn(-2); // Negative values are ignored
+        when(mockDataset.getValue("C")).thenReturn(3);
+
+        // Test the calculatePieDatasetTotal() method
+        double total = DatasetUtils.calculatePieDatasetTotal(mockDataset);
+
+        // Assert that the total is calculated correctly
+        // the negative value should be ignored
+        assertEquals(4.0, total, 0.000001);
+    }
+
+    @Test
+    public void calculatePieDatasetTotalWithEmptyDataset() {
+        // Create a mock PieDataset
+        PieDataset mockDataset = Mockito.mock(PieDataset.class);
+
+        // Define the behavior of the getKeys() method
+        when(mockDataset.getKeys()).thenReturn(Collections.emptyList());
+
+        // Test the calculatePieDatasetTotal() method
+        double total = DatasetUtils.calculatePieDatasetTotal(mockDataset);
+
+        // Assert that the total is 0.0 for an empty dataset
+        assertEquals(0.0, total, 0.000001);
+    }
+
+    @Test
+    public void calculatePieDatasetTotalWithNonExistentKey() {
+        // Create a mock PieDataset
+        PieDataset mockDataset = Mockito.mock(PieDataset.class);
+
+        // Define the behavior of the getKeys() and getValue() methods
+        List<Comparable> keys = Arrays.asList("A", "B", "C", "D");
+        when(mockDataset.getKeys()).thenReturn(keys);
+        when(mockDataset.getValue("A")).thenReturn(1);
+        when(mockDataset.getValue("B")).thenReturn(2);
+        when(mockDataset.getValue("C")).thenReturn(3);
+        when(mockDataset.getValue("D")).thenThrow(new UnknownKeyException("Key not found"));
+
+        // Test the calculatePieDatasetTotal() method
+        double total = DatasetUtils.calculatePieDatasetTotal(mockDataset);
+
+        // Assert that the total excludes the value for the non-existent key
+        assertEquals(6.0, total, 0.000001);
+    }
+}
+
+

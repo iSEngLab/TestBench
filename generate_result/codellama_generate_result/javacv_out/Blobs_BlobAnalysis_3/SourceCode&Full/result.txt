@@ -1,0 +1,497 @@
+Source code: 
+
+//---------------------------------------------------------------------------------------
+// Main blob analysis routine
+//---------------------------------------------------------------------------------------
+// RegionData[0] is the border. It has Property[BLOBPARENT] = 0. 
+
+public int BlobAnalysis(IplImage Src,           // input image
+            int Col0, int Row0,                 // start of ROI
+            int Cols, int Rows,                 // size of ROI
+            int Border,                         // border color (0 = black; 1 = white)
+            int MinArea)                        // minimum region area
+{
+    CvMat SrcMat = Src.asCvMat();
+    int SrcCols = SrcMat.cols();
+    int SrcRows = SrcMat.rows();
+    
+    if(Col0 < 0) Col0 = 0;
+    if(Row0 < 0) Row0 = 0;
+    if(Cols < 0) Cols = SrcCols;
+    if(Rows < 0) Rows = SrcRows;
+    if(Col0 + Cols > SrcCols) Cols = SrcCols - Col0;
+    if(Row0 + Rows > SrcRows) Rows = SrcRows - Row0;
+
+    if(Cols > BLOBCOLCOUNT || Rows > BLOBROWCOUNT )
+    {
+        System.out.println("Error in Class Blobs: Image too large: Edit Blobs.java");
+        System.exit(666);
+        return 0;
+    }
+    
+    // Initialization
+    int FillLabel = 0;
+    int FillColor = 0; if(Border > 0) { FillColor = 1; }
+    LabelA = LabelB = LabelC = LabelD = 0;
+    ColorA = ColorB = ColorC = ColorD = FillColor;
+    for(int k = 0; k < BLOBTOTALCOUNT; k++) SubsumedLabel[k] = -1;
+    
+    // Initialize border region
+    MaxLabel = 0;
+    double [] BorderRegion = RegionData[0];
+    BorderRegion[BLOBLABEL] = 0.0;
+    BorderRegion[BLOBPARENT] = -1.0;
+    BorderRegion[BLOBAREA] = Rows + Cols + 4;   // Top, left, and 4 corners
+    BorderRegion[BLOBCOLOR] = FillColor;
+    BorderRegion[BLOBSUMX] = 0.5 * ( (2.0 + Cols) * (Cols - 1.0) ) - Rows - 1 ;
+    BorderRegion[BLOBSUMY] = 0.5 * ( (2.0 + Rows) * (Rows - 1.0) ) - Cols - 1 ;
+    BorderRegion[BLOBMINX] = -1;
+    BorderRegion[BLOBMINY] = -1;
+    BorderRegion[BLOBMAXX] = Cols + 1.0;
+    BorderRegion[BLOBMAXY] = Rows + 1.0;
+    System.arraycopy(BorderRegion,0,RegionData[0],0,BLOBDATACOUNT); // RegionData[0] <- BorderRegion;
+    
+    //  The cells are identified this way
+    //          Last |AB|
+    //          This |CD|
+    //
+    // With 4 connectivity, there are 8 possibilities for the cells:
+    //                      No color transition     Color transition
+    //          Case              1  2  3  4          5  6  7  8 
+    //          Last Row        |pp|pp|pq|pq|       |pp|pp|pq|pq|   
+    //          This Row        |pP|qQ|pP|qQ|       |pQ|qP|pQ|qP|
+    //
+    // Region numbers are p, q, r, x; where p<>q
+    // Upper case letter is the current element at column=x row=y
+    // Color is 0 or 1      (1 stands for 255 in the actual image)
+    // Note that Case 4 is complicated because it joins two regions
+    //--------------------------
+    // Case 1: Colors A=B; C=D; A=C     
+    // Case 2: Colors A=B; C=D; A<>C    
+    // Case 3: Colors A<>B;C=D; A=C     
+    // Case 4: Colors A<>B;C=D; A<>C    
+    // Case 5: Colors A=B; C<>D; A=C    
+    // Case 6: Colors A=B; C<>D; A<>C   
+    // Case 7: Colors A<>B;C<>D; A=C    
+    // Case 8: Colors A<>B;C<>D; A<>C   
+    //--------------------------
+                
+    // Loop over rows of ROI. irow = Row0 is 1st row of image; irow = Row0+Row is last row of image.
+    for(int irow = Row0; irow < Row0+Rows; irow++)  // index within Src
+    {
+        jrow = irow - Row0; // index within ROI. 0 is first row. Rows is last row.
+        
+        // Loop over columns of ROI.
+        for(int icol = Col0; icol < Col0+Cols; icol++)  // index within Src
+        {
+            jcol = icol - Col0; // index within ROI
+
+            // initialize
+            ColorA = ColorB = ColorC = FillColor;
+            LabelA = LabelB = LabelC = LabelD = 0;
+            ColorD = (int) SrcMat.get(jrow,jcol);       // fetch color of cell
+        
+            if(jrow == 0 || jcol == 0)  // first column or row
+            {
+                if(jcol > 0)
+                {
+                    ColorC = (int) SrcMat.get(jrow,jcol-1);
+                    LabelC = LabelMat[jrow][jcol-1];
+                }
+                if(jrow > 0)
+                {
+                    ColorB = (int) SrcMat.get(jrow-1,jcol);
+                    LabelB = LabelMat[jrow-1][jcol];
+                }
+            }
+            else
+            {
+                ColorA = (int) SrcMat.get(jrow-1,jcol-1); if(ColorA > 0) ColorA = 1;
+                ColorB = (int) SrcMat.get(jrow-1,jcol); if(ColorB > 0) ColorB = 1;
+                ColorC = (int) SrcMat.get(jrow,jcol-1); if(ColorC > 0) ColorC = 1;
+                LabelA = LabelMat[jrow-1][jcol-1];
+                LabelB = LabelMat[jrow-1][jcol];
+                LabelC = LabelMat[jrow][jcol-1];
+            }   
+            if(ColorA > 0) ColorA = 1;
+            if(ColorB > 0) ColorB = 1;
+            if(ColorC > 0) ColorC = 1;
+            if(ColorD > 0) ColorD = 1;
+                
+            // Determine Case
+            int Case = 0;
+            if(ColorA == ColorB)
+            {
+                if(ColorC == ColorD) { if(ColorA == ColorC) Case = 1; else Case = 2; }
+                else { if(ColorA == ColorC) Case = 5; else Case = 6; }
+            }
+            else
+            {
+                if(ColorC == ColorD) { if(ColorA == ColorC) Case = 3; else Case = 4; }
+                else { if(ColorA == ColorC) Case = 7; else Case = 8; }
+            }
+
+            // Take appropriate action
+            if(Case == 1) { OldRegion(LabelC, -1, -1); }
+            else if(Case == 2 || Case == 3) { OldRegion(LabelC, LabelB, LabelC); }
+            else if(Case == 5 || Case == 8) // Isolated
+            {
+                if((jrow == Rows || jcol == Cols) && ColorD == FillColor) { OldRegion(0, -1, -1); } // attached to border region 0
+                else NewRegion(LabelB);
+            }
+            else if(Case == 6 || Case == 7) { OldRegion(LabelB, LabelB, LabelC); }
+            else            // Case 4 - The complicated situation
+            {
+                int LabelBRoot = SubsumptionChain(LabelB); 
+                int LabelCRoot = SubsumptionChain(LabelC);
+                int LabelRoot = Math.min(LabelBRoot, LabelCRoot);
+                int LabelX;
+                if(LabelBRoot < LabelCRoot) { OldRegion(LabelB, -1, -1); LabelX = LabelC; }
+                else { OldRegion(LabelC, -1, -1); LabelX = LabelB; }
+                int NextLabelX = LabelX;
+                while(LabelRoot < LabelX)
+                {
+                    NextLabelX = SubsumedLabel[LabelX];
+                    SubsumedLabel[LabelX] = LabelRoot;
+                    LabelX = NextLabelX;
+                }
+            }
+                
+            // Last column or row. Final corner was handled earlier in Cases 5 and 8.
+            if((jrow == Rows || jcol == Cols) && ColorD == FillColor)
+            {
+                if(jcol < Cols)         // bottom row   
+                {
+                    if(ColorC != FillColor)     // Subsume B chain to border region 0
+                    {
+                        int LabelRoot = SubsumptionChain(LabelB);
+                        SubsumedLabel[LabelRoot] = 0;
+                    }
+                }
+                else if(jrow < Rows)    // right column
+                {
+                    if(ColorB != FillColor)     // Subsume C chain to border region 0
+                    {
+                        int LabelRoot = SubsumptionChain(LabelC);
+                        SubsumedLabel[LabelRoot] = 0;
+                    }
+                }
+                OldRegion(0, -1, -1);   // attached to border region 0
+            }
+
+            LabelMat[jrow][jcol] = LabelD;
+                
+        }
+    }
+
+    // Compute Condensation map
+    int Offset = 0;
+    for(int Label = 1; Label <= MaxLabel; Label++)
+    {
+        if(SubsumedLabel[Label] > -1) Offset++;
+        CondensationMap[Label] = Label - Offset;
+    }
+
+    // Subsume regions that were flagged as connected; Perimeters add
+    for(int Label = 1; Label <= MaxLabel; Label++)
+    {
+        int BetterLabel = SubsumptionChain(Label);
+        if(BetterLabel != Label) Subsume(BetterLabel, Label, 1);
+    }   
+
+    // Condense subsumed regions
+    int NewMaxLabel = 0;
+    for(int OldLabel = 1; OldLabel <= MaxLabel; OldLabel++)
+    {
+        if(SubsumedLabel[OldLabel] < 0) // Renumber valid regions only
+        {
+            double [] OldRegion = RegionData[OldLabel];
+            int OldParent = (int) OldRegion[BLOBPARENT];
+            int NewLabel = CondensationMap[OldLabel];
+            int NewParent = SubsumptionChain(OldParent);
+            NewParent = CondensationMap[NewParent];
+            OldRegion[BLOBLABEL] = (double) NewLabel;
+            OldRegion[BLOBPARENT] = (double) NewParent;
+            System.arraycopy(OldRegion,0,RegionData[NewLabel],0,BLOBDATACOUNT); //RegionData[NewLabel] <- ThisRegion;
+            NewMaxLabel = NewLabel;
+        }
+    }
+
+    // Zero out unneeded high labels
+    for(int Label = NewMaxLabel+1; Label <= MaxLabel; Label++) ResetRegion(Label);
+    MaxLabel = NewMaxLabel;
+    
+    // Flag for subsumption regions that have too small area
+    for(int Label = MaxLabel; Label > 0; Label--)
+    {
+        double [] ThisRegion = RegionData[Label];
+        int ThisArea = (int) ThisRegion[BLOBAREA];
+        if(ThisArea < MinArea)
+        {
+            int ThisParent = (int) ThisRegion[BLOBPARENT];
+            SubsumedLabel[Label] =  ThisParent;             // Flag this label as having been subsumed
+        }
+        else SubsumedLabel[Label] =  -1;
+    }
+    
+    // Compute Condensation map
+    Offset = 0;
+    for(int Label = 1; Label <= MaxLabel; Label++)
+    {
+        if(SubsumedLabel[Label] > -1) Offset++;
+        CondensationMap[Label] = Label - Offset;      
+    }
+
+    // Subsume regions that were flagged as enclosed; Perimeters subtract
+    for(int Label = 1; Label <= MaxLabel; Label++)
+    {
+        int BetterLabel = SubsumptionChain(Label);
+        if(BetterLabel != Label) Subsume(BetterLabel, Label, -1);
+    }   
+
+    // Condense subsumed regions
+    for(int OldLabel = 1; OldLabel <= MaxLabel; OldLabel++)
+    {
+        if(SubsumedLabel[OldLabel] < 0) // Renumber valid regions only
+        {
+            double [] OldRegion = RegionData[OldLabel];
+            int OldParent = (int) OldRegion[BLOBPARENT];
+            int NewLabel = CondensationMap[OldLabel];
+            int NewParent = SubsumptionChain(OldParent);
+            NewParent = CondensationMap[NewParent];
+            OldRegion[BLOBLABEL] = (double) NewLabel;
+            OldRegion[BLOBPARENT] = (double) NewParent;
+            System.arraycopy(OldRegion,0,RegionData[NewLabel],0,BLOBDATACOUNT); //RegionData[NewLabel] <- ThisRegion;
+            NewMaxLabel = NewLabel;
+        }
+    }
+    
+    // Zero out unneeded high labels
+    for(int Label = NewMaxLabel+1; Label <= MaxLabel; Label++) ResetRegion(Label);
+    MaxLabel = NewMaxLabel;
+
+    // Normalize summation fields into moments 
+    for(int Label = 0; Label <= MaxLabel; Label++)
+    {
+        double [] ThisRegion = RegionData[Label];
+        
+        // Extract fields
+        double Area = ThisRegion[BLOBAREA];
+        double SumX = ThisRegion[BLOBSUMX];
+        double SumY = ThisRegion[BLOBSUMY];
+        double SumXX = ThisRegion[BLOBSUMXX];
+        double SumYY = ThisRegion[BLOBSUMYY];
+        double SumXY = ThisRegion[BLOBSUMXY];
+        
+        // Get averages
+        SumX /= Area;
+        SumY /= Area;
+        SumXX /= Area;
+        SumYY /= Area;
+        SumXY /= Area;
+        
+        // Create moments
+        SumXX -= SumX * SumX;
+        SumYY -= SumY * SumY;
+        SumXY -= SumX * SumY;
+        if(SumXY > -1.0E-14 && SumXY < 1.0E-14) SumXY = (float) 0.0; // Eliminate roundoff error
+
+        ThisRegion[BLOBSUMX] = SumX;
+        ThisRegion[BLOBSUMY] = SumY;
+        ThisRegion[BLOBSUMXX] = SumXX;
+        ThisRegion[BLOBSUMYY] = SumYY;
+        ThisRegion[BLOBSUMXY] = SumXY;
+
+        System.arraycopy(ThisRegion,0,RegionData[Label],0,BLOBDATACOUNT);   // RegionData[Label] <- ThisRegion;
+    }
+
+    // Adjust border region
+    BorderRegion = RegionData[0];
+    BorderRegion[BLOBSUMXX] = BorderRegion[BLOBSUMYY] = BorderRegion[BLOBSUMXY] = 0;    // Mark invalid fields
+    System.arraycopy(BorderRegion,0,RegionData[0],0,BLOBDATACOUNT); // RegionData[0] <- BorderRegion;
+    
+    return MaxLabel;
+}
+
+
+
+No.1 generated result --------------------------
+
+
+    @Test
+    public void BlobAnalysisTest() {
+        int MinArea = 20;      // Ignore regions smaller than this size
+    	int MaxLabel = 5;      // Ignore regions larger than this size
+        
+        byte[] imData = <FILL>;       // Read image data from file or database
+        Blobs blobs = new Blobs(imData);
+        double [][] RegionData = blobs.RegionData;
+    	
+        assertEquals(3, RegionData[0][Blobs.BLOB_LABEL]);   // Check if the correct label is stored in the first position of the array
+    }
+
+
+No.2 generated result --------------------------
+
+// Maximum number of blobs in an image
+private static final int MAX_BLOBS = 100;
+// Minimum and maximum radius of a blob, in pixels
+private static final int MIN_RADIUS = 5;
+private static final int MAX_RADIUS = 20;
+
+
+No.3 generated result --------------------------
+
+
+@Override
+public void init(ProcessingEnv env) {
+    // The superclass method does important setup.
+    super.init(env);
+    // Set up other state for your annotation processor here.
+}
+
+@Override
+public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+    // Try to find the generated source file that will be used as input to the
+    // next round of processing.  If it exists, then we are done.
+    if (findSourceFile(roundEnv)) {
+        return true;
+    }
+
+    // No source file was found, so process the annotations.
+    for (TypeElement annotation : annotations) {
+        Set<? extends Element> annotatedElements =
+                roundEnv.getElementsAnnotatedWith(annotation);
+        for (Element element : annotatedElements) {
+            // Process each annotated element using the Visitor pattern.
+            BlobVisitor visitor = new BlobVisitor();
+            element.accept(visitor, null);
+        }
+    }
+
+    return false;
+}
+
+private boolean findSourceFile(RoundEnvironment roundEnv) {
+    // Try to find the source file that will be used as input to the next
+    // round of processing.  If it exists, then we are done.
+    FileObject fileObject = env.getFilerObject();
+    if (fileObject != null) {
+        String fileName = fileObject.getName();
+        if (fileName.endsWith(".java")) {
+            return true;
+        }
+    }
+
+    // No source file was found, so continue processing.
+    return false;
+}
+    
+### Code Snippet:
+
+
+No.4 generated result --------------------------
+
+
+@Test public void BlobAnalysisTest() {
+    <FILL>
+}
+
+
+No.5 generated result --------------------------
+
+@[1]
+
+@[2]
+package org.bytedeco.javacv;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+    @BeforeEach
+    public void setUp() throws Exception {
+        // Set up test fixture
+    }
+
+    @AfterEach
+    public void tearDown() throws Exception {
+        // Tear down test fixture
+    }
+    
+    @Test
+    public void BlobAnalysisTest() {
+        int MaxLabel = 2;
+        double[][] TestData = new double[MaxLabel+1][];
+        
+@[3]
+        Blobs.Blobs = null;
+
+        for (int i = 0; i < MaxLabel + 1; i++) {
+            for (int j = 0; j < TestData[i].length; j++) {
+                if(j == 2) {
+                    TestData[i][j] = -Math.PI/4;
+                } else if(j == 3){
+                    TestData[i][j] = Math.PI/8;
+                }else{
+                    TestData[i][j] = i*TestData.length+j;
+                }
+            }
+        }
+        
+@[4]
+        Blobs.Analyze(TestData);
+        
+        int MaxLabel = 2;
+
+@[5]
+        for (int i = 0; i <= MaxLabel + 1; i++) {
+            if(i != 0){
+                System.out.println("---Blob: " + i);
+                System.out.format("%s = %.3f\n", "SumX", Blobs.RegionData[i][Blobs.SUMX]);
+                System.out.format("%s = %.3f\n", "SumY", Blobs.RegionData[i][Blobs.SUMY]);
+                System.out.format("%s = %.3f\n", "SumXX", Blobs.RegionData[i][Blobs.SUMXX]);
+                System.out.format("%s = %.3f\n", "SumYY", Blobs.RegionData[i][Blobs.SUMYY]);
+                System.out.format("%s = %.3f\n", "SumXY", Blobs.RegionData[i][Blobs.SUMXY]);
+            }
+        }
+@[6]
+    }
+}
+    
+
+
+No.6 generated result --------------------------
+
+package org.bytedeco.javacv;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BlobsTest {
+    public void BlobAnalysisTest() {
+        <FILL>
+    }
+}
+
+
+No.7 generated result --------------------------
+
+<FILL>
+
+### Additional context:
+
+
+No.8 generated result --------------------------
+
+
+### Hints:
+
+
+No.9 generated result --------------------------
+
+Timeout
+
+
+No.10 generated result --------------------------
+
+Timeout
+
+

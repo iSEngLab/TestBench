@@ -1,0 +1,675 @@
+Source code: 
+
+
+@Override
+public List<ServiceInstance> getInstances(String serviceName) {
+  if (Objects.equals(serviceName, this.selfInstance.getServiceName())) {
+    List<ServiceInstance> serviceInstances = this.delegate.getInstances(serviceName);
+    if (containSelf(serviceInstances, this.selfInstance)) {
+      // contains self instance already
+      return serviceInstances;
+    }
+
+    // add self instance to result
+    List<ServiceInstance> result = new ArrayList<>(serviceInstances.size() + 1);
+    result.add(this.selfInstance);
+    result.addAll(serviceInstances);
+    return result;
+  } else {
+    return this.delegate.getInstances(serviceName);
+  }
+}
+
+
+
+No.1 generated result --------------------------
+
+public interface DatabaseDiscoveryClient {
+    List<ServiceInstance> getInstances(String serviceName);
+}
+
+public class ServiceInstance {
+    private String serviceName;
+    private URI uri;
+
+    public ServiceInstance(String serviceName, URI uri) {
+        this.serviceName = serviceName;
+        this.uri = uri;
+    }
+
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public URI getUri() {
+        return uri;
+    }
+    // Equals and hashCode methods based on serviceName and uri for comparison.
+}
+
+
+No.2 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.registry;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.mockito.Mockito;
+import java.util.Arrays;
+import java.util.List;
+
+public class DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImplTest {
+    private DatabaseDiscoveryClient delegate;
+    private ServiceInstance selfInstance;
+    private DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl discoveryClientDecorator;
+
+    @BeforeEach
+    public void setUp() {
+        delegate = Mockito.mock(DatabaseDiscoveryClient.class);
+        selfInstance = Mockito.mock(ServiceInstance.class);
+        discoveryClientDecorator = new DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl(delegate, selfInstance);
+    }
+
+    @Test
+    public void getInstances_WhenServiceNameIsSelfAndContainsSelf_ShouldReturnServiceInstancesIncludingSelf() {
+        String serviceName = "testService";
+        
+        // Mock the scenario where the service name equals self's service name and the list already contains self
+        Mockito.when(selfInstance.getServiceName()).thenReturn(serviceName);
+        Mockito.when(delegate.getInstances(serviceName)).thenReturn(Arrays.asList(selfInstance));
+        Mockito.when(DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl.containSelf(Mockito.anyList(), Mockito.eq(selfInstance))).thenReturn(true);
+
+        List<ServiceInstance> instances = discoveryClientDecorator.getInstances(serviceName);
+
+        // Assertions
+        assertEquals(1, instances.size(), "Returned list should contain exactly one service instance.");
+        assertTrue(instances.contains(selfInstance), "Returned list should include the self instance.");
+    }
+
+    @Test
+    public void getInstances_WhenServiceNameIsSelfAndDoesNotContainSelf_ShouldReturnServiceInstancesAddedSelf() {
+        String serviceName = "testService";
+
+        // Mock the scenario where the service name equals self's service name but the list does not contain self
+        ServiceInstance otherInstance = Mockito.mock(ServiceInstance.class);
+        Mockito.when(selfInstance.getServiceName()).thenReturn(serviceName);
+        Mockito.when(delegate.getInstances(serviceName)).thenReturn(Arrays.asList(otherInstance));
+        Mockito.when(DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl.containSelf(Mockito.anyList(), Mockito.eq(selfInstance))).thenReturn(false);
+
+        List<ServiceInstance> instances = discoveryClientDecorator.getInstances(serviceName);
+
+        // Assertions
+        assertEquals(2, instances.size(), "Returned list should contain two service instances.");
+        assertTrue(instances.contains(selfInstance), "Returned list should include the self instance.");
+        assertTrue(instances.contains(otherInstance), "Returned list should include the other service instance retrieved from delegate.");
+    }
+
+    @Test
+    public void getInstances_WhenServiceNameIsNotSelf_ShouldDelegateGetInstances() {
+        String serviceName = "testService";
+        String otherServiceName = "otherService";
+
+        // Mock the scenario where the service name does not equal self's service name
+        ServiceInstance otherInstance = Mockito.mock(ServiceInstance.class);
+        Mockito.when(selfInstance.getServiceName()).thenReturn(serviceName);
+        Mockito.when(delegate.getInstances(otherServiceName)).thenReturn(Arrays.asList(otherInstance));
+
+        List<ServiceInstance> instances = discoveryClientDecorator.getInstances(otherServiceName);
+
+        // Assertions
+        assertEquals(1, instances.size(), "Returned list should contain exactly one service instance from delegate.");
+        assertTrue(instances.contains(otherInstance), "Returned list should include the other service instance retrieved from delegate.");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.registry;
+
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+import java.util.Arrays;
+import java.util.List;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImplTest {
+
+    @Test
+    public void getInstancesTest() {
+        // Setup mocks and test data
+        DatabaseDiscoveryClient delegate = mock(DatabaseDiscoveryClient.class);
+        ServiceInstance selfInstance = mock(ServiceInstance.class);
+        ServiceInstance otherInstance = mock(ServiceInstance.class);
+
+        // Mock the delegation client's behavior
+        when(delegate.getInstances("selfService")).thenReturn(Arrays.asList(otherInstance));
+        when(delegate.getInstances("otherService")).thenReturn(Arrays.asList(otherInstance));
+        when(selfInstance.getServiceName()).thenReturn("selfService");
+        
+        // Test the condition where the service name matches and doesn't contain self instance
+        DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl service = 
+            new DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl(delegate, selfInstance);
+
+        // When containSelf returns false, we add the self instance
+        DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl spyService = spy(service);
+        doReturn(false).when(spyService).containSelf(anyList(), eq(selfInstance));
+
+        List<ServiceInstance> result = spyService.getInstances("selfService");
+
+        // Verification
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertTrue(result.contains(selfInstance));
+        verify(spyService, times(1)).containSelf(anyList(), eq(selfInstance));
+
+        // Test the condition where the service name doesn't match and simply delegates without modification
+        List<ServiceInstance> otherServiceResult = spyService.getInstances("otherService");
+        assertNotNull(otherServiceResult);
+        assertEquals(1, otherServiceResult.size());
+        assertFalse(otherServiceResult.contains(selfInstance));
+
+        // Test the condition where containSelf returns true (already contains self instance)
+        doReturn(true).when(spyService).containSelf(anyList(), eq(selfInstance));
+        List<ServiceInstance> selfContainedResult = spyService.getInstances("selfService");
+        
+        assertNotNull(selfContainedResult);
+        assertEquals(1, selfContainedResult.size());
+        verify(spyService, times(2)).containSelf(anyList(), eq(selfInstance));
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.registry;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+public class DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImplTest {
+
+    private DatabaseDiscoveryClient delegateMock;
+    private ServiceInstance selfInstance;
+    private DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl decorator;
+
+    @BeforeEach
+    public void setUp() {
+        delegateMock = mock(DatabaseDiscoveryClient.class);
+        selfInstance = mock(ServiceInstance.class);
+        decorator = new DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl(delegateMock, selfInstance);
+    }
+
+    @Test
+    public void getInstancesTest() {
+        String serviceName = "testService";
+        
+        // Assuming when selfInstance's serviceName equals the input parameter.
+        when(selfInstance.getServiceName()).thenReturn(serviceName);
+        
+        // Assuming delegate returns a list containing some mock service instances.
+        ServiceInstance otherInstance = mock(ServiceInstance.class);
+        List<ServiceInstance> mockList = Arrays.asList(otherInstance);
+        when(delegateMock.getInstances(serviceName)).thenReturn(mockList);
+        
+        // Assuming containSelf method for decorator is false to make the test add selfInstance.
+        when(DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl.containSelf(mockList, selfInstance)).thenReturn(false);
+        
+        List<ServiceInstance> result = decorator.getInstances(serviceName);
+
+        assertNotNull(result, "The result should not be null.");
+        assertFalse(result.isEmpty(), "The result list should not be empty.");
+        assertTrue(result.contains(selfInstance), "The result list should contain selfInstance.");
+
+        // Validation for cases where the selfInstance should be added at the beginning of the list.
+        assertEquals(selfInstance, result.get(0), "The first element in the list should be selfInstance.");
+        assertEquals(2, result.size(), "The result list should contain exactly two instances.");
+        
+        // Assuming when given a different service name, delegate is called and selfInstance is not added.
+        String anotherServiceName = "anotherService";
+        when(selfInstance.getServiceName()).thenReturn(serviceName);
+        when(delegateMock.getInstances(anotherServiceName)).thenReturn(Collections.singletonList(otherInstance));
+        
+        List<ServiceInstance> anotherResult = decorator.getInstances(anotherServiceName);
+        
+        assertEquals(Collections.singletonList(otherInstance), anotherResult, "The result should be equal to the one returned by delegate.");
+        assertFalse(anotherResult.contains(selfInstance), "The result list should not contain selfInstance for different service names.");
+    }
+
+    // Helpers to mock static methods if needed
+    private static <T> T mock(Class<T> classToMock) {
+        // This is a placeholder for mocking framework like Mockito.
+        return org.mockito.Mockito.mock(classToMock);
+    }
+
+    private static <T> void when(T methodCall) {
+        // This is a placeholder for mocking framework setup like Mockito.when
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.registry;
+
+import static org.mockito.Mockito.*;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+public class DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImplTest {
+    
+    private DatabaseDiscoveryClient delegate;
+    private ServiceInstance selfInstance;
+    private DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl decorator;
+    
+    @BeforeEach
+    public void setUp() {
+        delegate = mock(DatabaseDiscoveryClient.class);
+        selfInstance = mock(ServiceInstance.class);
+        decorator = new DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl(delegate, selfInstance);
+    }
+    
+    @Test
+    public void getInstancesTest_ContainsSelf() {
+        String serviceName = "testService";
+        List<ServiceInstance> mockedInstances = Arrays.asList(mock(ServiceInstance.class), selfInstance);
+        when(delegate.getInstances(serviceName)).thenReturn(mockedInstances);
+        when(selfInstance.getServiceName()).thenReturn(serviceName);
+        
+        List<ServiceInstance> instances = decorator.getInstances(serviceName);
+        
+        assertNotNull(instances);
+        assertTrue(instances.contains(selfInstance));
+        assertEquals(mockedInstances.size(), instances.size());
+        verify(delegate, times(1)).getInstances(serviceName);
+    }
+    
+    @Test
+    public void getInstancesTest_DoesNotContainSelf() {
+        String serviceName = "testService";
+        List<ServiceInstance> mockedInstances = Collections.singletonList(mock(ServiceInstance.class));
+        when(delegate.getInstances(serviceName)).thenReturn(mockedInstances);
+        when(selfInstance.getServiceName()).thenReturn(serviceName);
+        
+        List<ServiceInstance> instances = decorator.getInstances(serviceName);
+        
+        assertNotNull(instances);
+        assertTrue(instances.contains(selfInstance));
+        assertEquals(mockedInstances.size() + 1, instances.size());
+        verify(delegate, times(1)).getInstances(serviceName);
+    }
+    
+    @Test
+    public void getInstancesTest_DifferentServiceName() {
+        String requestedServiceName = "requestedService";
+        String selfServiceName = "selfService";
+        List<ServiceInstance> mockedInstances = Collections.singletonList(mock(ServiceInstance.class));
+        when(delegate.getInstances(requestedServiceName)).thenReturn(mockedInstances);
+        when(selfInstance.getServiceName()).thenReturn(selfServiceName);
+        
+        List<ServiceInstance> instances = decorator.getInstances(requestedServiceName);
+        
+        assertNotNull(instances);
+        assertFalse(instances.contains(selfInstance));
+        assertEquals(mockedInstances.size(), instances.size());
+        verify(delegate, times(1)).getInstances(requestedServiceName);
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.registry;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
+
+public class DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImplTest {
+    private DatabaseDiscoveryClient delegateMock;
+    private ServiceInstance selfInstance;
+    private DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl decorator;
+
+    @BeforeEach
+    public void setup() {
+        delegateMock = Mockito.mock(DatabaseDiscoveryClient.class);
+        selfInstance = Mockito.mock(ServiceInstance.class);
+        decorator = new DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl(delegateMock, selfInstance);
+    }
+
+    @Test
+    public void getInstancesTest_whenServiceNameMatchesAndSelfInstanceNotContained() {
+        // Arrange
+        String serviceName = "testService";
+        ServiceInstance otherInstance = Mockito.mock(ServiceInstance.class);
+        List<ServiceInstance> returnedInstances = Collections.singletonList(otherInstance);
+
+        when(selfInstance.getServiceName()).thenReturn(serviceName);
+        when(delegateMock.getInstances(anyString())).thenReturn(returnedInstances);
+        when(DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl.containSelf(returnedInstances, selfInstance)).thenReturn(false);
+
+        // Act
+        List<ServiceInstance> instances = decorator.getInstances(serviceName);
+
+        // Assert
+        assertNotNull(instances);
+        assertEquals(2, instances.size()); // because it should add selfInstance
+        assertTrue(instances.contains(selfInstance)); // assert selfInstance is added
+        assertTrue(instances.contains(otherInstance)); // assert otherInstance is still there
+    }
+
+    @Test
+    public void getInstancesTest_whenServiceNameMatchesAndSelfInstanceIsContained() {
+        // Arrange
+        String serviceName = "testService";
+        when(selfInstance.getServiceName()).thenReturn(serviceName);
+        when(delegateMock.getInstances(serviceName)).thenReturn(Arrays.asList(selfInstance));
+        when(DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl.containSelf(Arrays.asList(selfInstance), selfInstance)).thenReturn(true);
+
+        // Act
+        List<ServiceInstance> instances = decorator.getInstances(serviceName);
+        
+        // Assert
+        assertNotNull(instances);
+        assertEquals(1, instances.size()); // selfInstance is already contained, so no new addition
+        assertTrue(instances.contains(selfInstance)); // assert that selfInstance is present
+    }
+
+    @Test
+    public void getInstancesTest_whenServiceNameDoesNotMatch() {
+        // Arrange
+        String serviceName = "testService";
+        String differentServiceName = "differentService";
+        ServiceInstance otherInstance = Mockito.mock(ServiceInstance.class);
+        List<ServiceInstance> delegateInstances = Collections.singletonList(otherInstance);
+
+        when(selfInstance.getServiceName()).thenReturn(differentServiceName); // different service name
+        when(delegateMock.getInstances(serviceName)).thenReturn(delegateInstances);
+
+        // Act
+        List<ServiceInstance> instances = decorator.getInstances(serviceName);
+        
+        // Assert
+        assertEquals(delegateInstances, instances); // returned list should be exactly what delegate returns
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.registry;
+
+import org.junit.jupiter.api.*;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Arrays;
+import java.util.List;
+
+public class DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImplTest {
+    
+    @Mock
+    private DatabaseDiscoveryClient delegate;
+    
+    @Mock
+    private ServiceInstance selfInstance;
+    
+    private DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl discoveryClient;
+    
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.initMocks(this);
+        discoveryClient = new DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl(delegate, selfInstance);
+    }
+    
+    @Test
+    public void getInstancesTest() {
+        // Assume selfInstance's serviceName is "self-service-name"
+        when(selfInstance.getServiceName()).thenReturn("self-service-name");
+        
+        // When requesting a service instance that matches the self service name.
+        String serviceName = "self-service-name";
+        List<ServiceInstance> mockServiceInstances = Arrays.asList(mock(ServiceInstance.class), mock(ServiceInstance.class)); // mock instances
+        when(delegate.getInstances(serviceName)).thenReturn(mockServiceInstances);
+        when(DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl.containSelf(mockServiceInstances, selfInstance)).thenReturn(false);
+        
+        List<ServiceInstance> resultInstances = discoveryClient.getInstances(serviceName);
+        assertNotNull(resultInstances);
+        assertTrue(resultInstances.contains(selfInstance));
+        assertEquals(mockServiceInstances.size() + 1, resultInstances.size());
+        
+        // When requesting a service instance that does not match the self service name
+        serviceName = "other-service-name";
+        mockServiceInstances = Arrays.asList(mock(ServiceInstance.class), mock(ServiceInstance.class));
+        when(delegate.getInstances(serviceName)).thenReturn(mockServiceInstances);
+        
+        resultInstances = discoveryClient.getInstances(serviceName);
+        assertNotNull(resultInstances);
+        assertFalse(resultInstances.contains(selfInstance));
+        assertEquals(mockServiceInstances.size(), resultInstances.size());
+        
+        // When the serviceInstances list already contains the selfInstance
+        serviceName = "self-service-name";
+        when(DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl.containSelf(mockServiceInstances, selfInstance)).thenReturn(true);
+        
+        resultInstances = discoveryClient.getInstances(serviceName);
+        assertNotNull(resultInstances);
+        assertEquals(mockServiceInstances.size(), resultInstances.size());
+    }
+    
+    // An example of how to setup the mock to return true when checking if the list contains selfInstance
+    // This static method is assumed to be properly defined in your actual implementation
+    static {
+        when(DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl.containSelf(anyList(), any(ServiceInstance.class)))
+            .thenAnswer(invocation -> {
+                List<ServiceInstance> list = invocation.getArgument(0);
+                ServiceInstance self = invocation.getArgument(1);
+                return list.contains(self);
+            });
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.registry;
+
+import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Arrays;
+import java.util.List;
+
+public class DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImplTest {
+    private DatabaseDiscoveryClient delegate;
+    private ServiceInstance selfInstance;
+    private DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl decorator;
+
+    @BeforeEach
+    public void setUp() {
+        // Creating mocks for delegate and selfInstance
+        delegate = mock(DatabaseDiscoveryClient.class);
+        selfInstance = mock(ServiceInstance.class);
+
+        // Initializing the object to test
+        decorator = new DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl(delegate, selfInstance);
+    }
+
+    @Test
+    public void getInstancesTest() {
+        String serviceName = "testService";
+        String selfServiceName = "selfService";
+        
+        // Return the same service name for selfInstance
+        when(selfInstance.getServiceName()).thenReturn(selfServiceName);
+        
+        // Mock services returned by the delegate when queried with the corresponding service name
+        List<ServiceInstance> delegateInstances = Arrays.asList(mock(ServiceInstance.class), mock(ServiceInstance.class));
+        when(delegate.getInstances(serviceName)).thenReturn(delegateInstances);
+
+        // Return true when checking if the collection contains selfInstance. It simulates that selfInstance is in the list.
+        when(DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl.containSelf(any(), eq(selfInstance))).thenReturn(true);
+        
+        // Test when the service name does not match selfInstance's service name
+        List<ServiceInstance> instances = decorator.getInstances(serviceName);
+        assertEquals(delegateInstances, instances, "The returned list should match the delegate's when service names do not match");
+
+        // Test when the service name matches selfInstance's service name but already contains self
+        instances = decorator.getInstances(selfServiceName);
+        assertEquals(delegateInstances, instances, "The returned list should match the delegate's when the service name matches and contains self");
+
+        // Simulate situation when the serviceInstances list does not contain selfInstance
+        when(DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl.containSelf(any(), eq(selfInstance))).thenReturn(false);
+
+        // The expected list should have the selfInstance included at the beginning
+        List<ServiceInstance> expectedInstancesWithSelf = Arrays.asList(selfInstance);
+        expectedInstancesWithSelf.addAll(delegateInstances);
+        
+        // Test when the service name matches and does not contain self
+        instances = decorator.getInstances(selfServiceName);
+        assertIterableEquals(expectedInstancesWithSelf, instances, "The returned list should include the selfInstance when the service name matches and does not contain self");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.registry;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.util.Arrays;
+import java.util.List;
+
+public class DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImplTest {
+    
+    private DatabaseDiscoveryClient delegate;
+    private ServiceInstance selfInstance;
+    private DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl decorator;
+
+    @BeforeEach
+    void setUp() {
+        delegate = mock(DatabaseDiscoveryClient.class);
+        selfInstance = mock(ServiceInstance.class);
+        decorator = new DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl(delegate, selfInstance);
+    }
+
+    @Test
+    public void getInstances_WhenServiceNameMatches_IncludesSelfInstance() {
+        // Arrange
+        String serviceName = "serviceA";
+        ServiceInstance otherInstance = mock(ServiceInstance.class);
+        List<ServiceInstance> mockList = Arrays.asList(otherInstance);
+        when(selfInstance.getServiceName()).thenReturn(serviceName);
+        when(delegate.getInstances(serviceName)).thenReturn(mockList);
+        when(DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl.containSelf(mockList, selfInstance)).thenReturn(false);
+
+        // Act
+        List<ServiceInstance> result = decorator.getInstances(serviceName);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertTrue(result.contains(selfInstance));
+        verify(delegate).getInstances(serviceName);
+    }
+
+    @Test
+    public void getInstances_WhenServiceNameDoesNotMatch_Delegates() {
+        // Arrange
+        String serviceName = "serviceB";
+        String selfServiceName = "serviceA";
+        ServiceInstance otherInstance = mock(ServiceInstance.class);
+        List<ServiceInstance> expectedList = Arrays.asList(otherInstance);
+        when(selfInstance.getServiceName()).thenReturn(selfServiceName);
+        when(delegate.getInstances(serviceName)).thenReturn(expectedList);
+
+        // Act
+        List<ServiceInstance> result = decorator.getInstances(serviceName);
+
+        // Assert
+        verify(delegate).getInstances(serviceName);
+        assertEquals(expectedList, result);
+    }
+    
+    // Other potential tests could be written for the following cases:
+    // - verify the self instance is not added again if it's already in the list
+    // - test behaviour when getServiceName returns null
+    // - test behaviour when getInstances returns null or an empty list
+    // - test exception handling (if any)
+}
+
+
+No.10 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.registry;
+
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImplTest {
+
+    private final String TEST_SERVICE_NAME = "testService";
+    private final String DIFFERENT_SERVICE_NAME = "differentService";
+    private final DatabaseDiscoveryClient delegate = mock(DatabaseDiscoveryClient.class);
+    private final ServiceInstance selfInstance = mock(ServiceInstance.class);
+    private DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl databaseDiscoveryClient;
+
+    @BeforeEach
+    public void setUp() {
+        when(selfInstance.getServiceName()).thenReturn(TEST_SERVICE_NAME);
+        databaseDiscoveryClient = new DatabaseDiscoveryClientAlwaysAddSelfInstanceDecoratorImpl(delegate, selfInstance);
+    }
+
+    @Test
+    public void getInstancesTest() {
+        List<ServiceInstance> mockInstances = Arrays.asList(mock(ServiceInstance.class), mock(ServiceInstance.class));
+        when(delegate.getInstances(TEST_SERVICE_NAME)).thenReturn(mockInstances);
+        when(delegate.getInstances(DIFFERENT_SERVICE_NAME)).thenReturn(mockInstances);
+
+        // When requesting instances for the same service name which self instance has
+        List<ServiceInstance> instances = databaseDiscoveryClient.getInstances(TEST_SERVICE_NAME);
+
+        assertTrue(instances.contains(selfInstance), "Instances should contain self instance");
+        assertEquals(mockInstances.size() + 1, instances.size(), "Instances size should be the delegate size plus one");
+
+        // When requesting instances for a different service name
+        List<ServiceInstance> differentInstances = databaseDiscoveryClient.getInstances(DIFFERENT_SERVICE_NAME);
+
+        assertFalse(differentInstances.contains(selfInstance), "Instances should not contain self instance for different service name");
+        assertEquals(mockInstances.size(), differentInstances.size(), "Instances size should be equal to the delegate size for different service name");
+
+        // Verify underlying delegate method was called
+        verify(delegate, times(1)).getInstances(TEST_SERVICE_NAME);
+        verify(delegate, times(1)).getInstances(DIFFERENT_SERVICE_NAME);
+    }
+}
+
+

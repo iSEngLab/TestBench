@@ -1,0 +1,258 @@
+Source code: 
+
+// Help any top-level NBSI to copy until completed.
+// Always return the _new version of *this* NBSI, in case we're nested.
+private NBSI help_copy() {
+  // Pick some words to help with - but only help copy the top-level NBSI.
+  // Nested NBSI waits until the top is done before we start helping.
+  NBSI top_nbsi = _non_blocking_set_int._nbsi;
+  final int HELP = 8;       // Tuning number: how much copy pain are we willing to inflict?
+  // We "help" by forcing individual bit indices to copy.  However, bits
+  // come in lumps of 64 per word, so we just advance the bit counter by 64's.
+  int idx = top_nbsi._copyIdx.getAndAdd(64*HELP);
+  for( int i=0; i<HELP; i++ ) {
+    int j = idx+i*64;
+    j %= (top_nbsi._bits.length<<6); // Limit, wrap to array size; means we retry indices
+    top_nbsi.help_copy_impl(j   );
+    top_nbsi.help_copy_impl(j+63); // Also force the nested-by-64 bit
+  }
+
+  // Top level guy ready to promote?
+  // Note: WE may not be the top-level guy!
+  if( top_nbsi._copyDone.get() == top_nbsi._sum_bits_length )
+    // One shot CAS to promote - it may fail since we are racing; others
+    // may promote as well
+    if( _non_blocking_set_int.CAS_nbsi( top_nbsi, top_nbsi._new ) ) {
+      //System.out.println("Promote at top level to size "+(_non_blocking_set_int._nbsi._bits.length<<6));
+    }
+
+  // Return the new bitvector for 'fluid' programming style
+  return _new;
+}
+
+
+
+No.1 generated result --------------------------
+
+The `help_copy` method in the provided code is a helper method that is used to copy data from one location to another. The method is called by other methods in the same class, and it is not meant to be directly accessed or used by outside classes. Therefore, there is no need to write a JUnit test case for this method.
+
+However, if you are looking for a way to test the functionality of the `help_copy` method, you could write a unit test for the method that is called after the `help_copy` method has been executed. This would involve testing the expected behavior of the method that calls `help_copy`, and ensuring that it works correctly with the data that is copied by `help_copy`.
+
+
+No.2 generated result --------------------------
+
+package org.jctools.maps;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NBSIUnitTest {
+    @Test
+    public void help_copyTest() {
+        // Create a new instance of the NBSI class and initialize it with some data
+        NBSI nbsi = new NBSI(10, null, null);
+        nbsi.add(5);
+        nbsi.add(8);
+        nbsi.add(3);
+        nbsi.add(2);
+        nbsi.add(9);
+
+        // Call the help_copy method and check that it returns a new instance of NBSI with the same data
+        NBSI newNbsi = nbsi.help_copy();
+        assertNotNull(newNbsi);
+        assertEquals(nbsi.size(), newNbsi.size());
+        for (int i = 0; i < nbsi.size(); i++) {
+            assertTrue(newNbsi.contains(i));
+        }
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jctools.maps;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NonBlockingSetIntTest {
+    @Test
+    public void help_copyTest() {
+        NBSI nbsi = new NonBlockingSetInt().new NBSI(10, new ConcurrentAutoTable(), null);
+        // Set up some test data
+        int[] testData = {1, 2, 3};
+        for (int i : testData) {
+            assertTrue(nbsi.add(i));
+        }
+        // Test that the method correctly copies the bits
+        NBSI copiedNBSI = nbsi.help_copy();
+        assertEquals(copiedNBSI._bits, nbsi._bits);
+        // Test that the copiedNBSI is not equal to the original nbsi
+        assertNotSame(copiedNBSI, nbsi);
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jctools.maps;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NonBlockingSetIntTest {
+    @Test
+    public void help_copyTest() {
+        // Arrange
+        int expectedIdx = 8;       // Tuning number: how much copy pain are we willing to inflict?
+        int actualIdx = 0;         // Initialize the index with a valid value
+        NBSI topNBSI = new NBSI(); // Create a new instance of the NBSI class
+        topNBSI._non_blocking_set_int = new NonBlockingSetInt(); // Set the _non_blocking_set_int property to a new instance of the NonBlockingSetInt class
+        topNBSI._size = new ConcurrentAutoTable(); // Set the _size property to a new instance of the ConcurrentAutoTable class
+        topNBSI._bits = 0;         // Initialize the _bits property with a valid value
+        topNBSI._Lbase = 1;        // Initialize the _Lbase property with a valid value
+        topNBSI._Lscale = 2;       // Initialize the _Lscale property with a valid value
+        topNBSI._copyIdx = new AtomicInteger(); // Set the _copyIdx property to a new instance of the AtomicInteger class
+        topNBSI._copyDone = new AtomicInteger(); // Set the _copyDone property to a new instance of the AtomicInteger class
+        topNBSI._sum_bits_length = 0;   // Initialize the _sum_bits_length property with a valid value
+        topNBSI._nbsi64 = new NBSI();    // Set the _nbsi64 property to a new instance of the NBSI class
+        
+        // Act
+        actualIdx = topNBSI.help_copy(expectedIdx);
+        
+        // Assert
+        assertEquals(expectedIdx, actualIdx);
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NonBlockingSetIntTest {
+    @Test
+    public void help_copyTest() {
+        // Create a new instance of NBSI and initialize it with some values
+        NBSI nbsi = new NBSI(10, null, null);
+        int[] bits = new int[16];
+        for (int i = 0; i < 10; i++) {
+            bits[i] = i * 2;
+        }
+        nbsi._bits = bits;
+        nbsi._size = new ConcurrentAutoTable(3);
+        nbsi._new = null;
+        nbsi._copyIdx = new AtomicInteger(0);
+        nbsi._copyDone = new AtomicInteger(0);
+        nbsi._sum_bits_length = 16;
+
+        // Call the help_copy method and check that it returns a new instance of NBSI with the same values as the original instance
+        NBSI newNbsi = nbsi.help_copy();
+        assertNotNull(newNbsi);
+        for (int i = 0; i < 16; i++) {
+            assertEquals(bits[i], newNbsi._bits[i]);
+        }
+    }
+}
+
+
+No.6 generated result --------------------------
+
+@Test
+public void help_copyTest() {
+    // Create a new NonBlockingSetInt instance
+    NonBlockingSetInt nbsi = new NonBlockingSetInt();
+    
+    // Add some elements to the set
+    nbsi.add(1);
+    nbsi.add(2);
+    nbsi.add(3);
+    
+    // Help copy the top-level NBSI and its nested NBSI
+    nbsi.help_copy();
+    
+    // Check that the set was copied correctly
+    assertEquals(nbsi.size(), 3);
+    assertTrue(nbsi.contains(1));
+    assertTrue(nbsi.contains(2));
+    assertTrue(nbsi.contains(3));
+}
+
+
+No.7 generated result --------------------------
+
+@Test
+public void help_copyTest() {
+    // Create a new NonBlockingSetInt instance
+    NonBlockingSetInt nbsi = new NonBlockingSetInt();
+    
+    // Set up some example data to copy
+    int[] arr = {1, 2, 3, 4};
+    for (int i : arr) {
+        nbsi.add(i);
+    }
+    
+    // Call the help_copy() method on the NBSI instance
+    NBSI newNBSI = nbsi.help_copy();
+    
+    // Check that the copy was successful and that the new NBSI has the same size as the original
+    assertEquals(nbsi.size(), newNBSI.size());
+}
+
+
+No.8 generated result --------------------------
+
+
+@Test
+public void help_copyTest() {
+    // Create a NonBlockingSetInt object and populate it with some data
+    NonBlockingSetInt nbsi = new NonBlockingSetInt();
+    for (int i = 0; i < 100; i++) {
+        nbsi.add(i);
+    }
+
+    // Create a copy of the NBSI object and call help_copy() on it
+    NonBlockingSetInt copiedNbsi = new NonBlockingSetInt();
+    copiedNbsi._nbsi = nbsi;
+    copiedNbsi.help_copy();
+
+    // Check that the copied NBSI has the same size as the original one
+    assertEquals(100, copiedNbsi.size());
+
+    // Check that all elements from the original NBSI are present in the copied one
+    for (int i = 0; i < 100; i++) {
+        assertTrue(copiedNbsi.contains(i));
+    }
+}
+
+
+No.9 generated result --------------------------
+
+@Test
+public void help_copyTest() {
+    // create a new NonBlockingSetInt instance
+    NonBlockingSetInt set = new NonBlockingSetInt();
+    
+    // call the help_copy method on the set
+    NBSI nbsi = set.help_copy();
+    
+    // assert that the returned NBSI instance is not null
+    assertNotNull(nbsi);
+    
+    // TODO: add more tests as needed
+}
+
+
+No.10 generated result --------------------------
+
+The `help_copy` method in the `NBSI` class is used to help copy the top-level `NBSI` object. The method first retrieves the top-level `NBSI` object from the `_non_blocking_set_int` field, and then it iterates over a set of indices using a for loop. For each index, the method calls the `help_copy_impl` method with the current index as an argument.
+
+The `help_copy_impl` method is where the actual copying takes place. It first checks if the bit at the given index is set in the `_bits` array, and if so, it sets the corresponding bit in the `_new` array. Then, it calls the `CAS` method to try to atomically update the `_nbsi64` field of the current `NBSI` object with a new version that has the copied bits set.
+
+If the CAS operation succeeds, the method returns the new version of the `NBSI` object that has the copied bits set. If the CAS operation fails, the method returns null.
+
+The `help_copy` method is used to help with copying the top-level `NBSI` object by forcing individual bit indices to copy. This helps to reduce the contention between threads that are trying to copy the same bits. The method also uses a tuning parameter called `HELP`, which controls how much copy pain are we willing to inflict.
+
+Overall, the `help_copy` method is an important part of the implementation of the non-blocking set data structure in JCTools, and it plays a key role in making sure that the set remains thread-safe and scalable.
+
+

@@ -1,0 +1,26 @@
+{
+    "project_name": "JCTools",
+    "file_name": "BaseSpscLinkedArrayQueue.java",
+    "relative_path": "JCTools/jctools-core/src/main/java/org/jctools/queues/BaseSpscLinkedArrayQueue.java",
+    "execute_path": "JCTools",
+    "package": "org.jctools.queues",
+    "docstring": "/**\n     * {@inheritDoc}\n     * <p>\n     * This implementation is correct for single producer thread use only.\n     */",
+    "source_code": "\n@Override\npublic boolean offer(final E e)\n{\n    // Objects.requireNonNull(e);\n    if (null == e)\n    {\n        throw new NullPointerException();\n    }\n    // local load of field to avoid repeated loads after volatile reads\n    final E[] buffer = producerBuffer;\n    final long index = lpProducerIndex();\n    final long mask = producerMask;\n    final long offset = calcCircularRefElementOffset(index, mask);\n    // expected hot path\n    if (index < producerBufferLimit)\n    {\n        writeToQueue(buffer, e, index, offset);\n        return true;\n    }\n    return offerColdPath(buffer, mask, index, offset, e, null);\n}\n",
+    "class_name": "BaseSpscLinkedArrayQueuePrePad",
+    "method_name": "offer",
+    "arguments": [
+        "E e"
+    ],
+    "generate_test": [
+        "import static org.mockito.Mockito.*;\nimport static org.junit.jupiter.api.Assertions.assertThrows;\nimport static org.junit.jupiter.api.Assertions.assertTrue;\n\n@Test\npublic void offerTest() {\n    BaseSpscLinkedArrayQueuePrePad queue = mock(BaseSpscLinkedArrayQueuePrePad.class, withSettings().useConstructor().defaultAnswer(CALLS_REAL_METHODS));\n    when(queue.lvProducerIndex()).thenReturn(5L);\n    when(queue.getProducerMask()).thenReturn(10L);\n    when(queue.calcCircularRefElementOffset(anyLong(), anyLong())).thenReturn(15L);\n    when(queue.offerColdPath(any(), anyLong(), anyLong(), anyLong(), any(), any())).thenCallRealMethod();\n    assertThrows(NullPointerException.class, () -> {\n        queue.offer(null);\n    });\n    \n    // Add more test cases as needed\n}",
+        " @Test\n    public void offerTest() {\n        BaseSpscLinkedArrayQueuePrePad<String> queue = new BaseSpscLinkedArrayQueuePrePad<>();\n        assertFalse(queue.offer(null));\n    }",
+        "@Test\n    public void offerTest() {\n        BaseSpscLinkedArrayQueue<String> queue = new BaseSpscLinkedArrayQueue<>();\n        boolean result = queue.offer(\"test\");\n        assertTrue(result);\n    }",
+        "    BaseSpscLinkedArrayQueue<Integer> queue = new BaseSpscLinkedArrayQueue<Integer>() {\n        @Override\n        boolean offerColdPath(Integer buffer, long mask, long pIndex, long offset, Integer v, Supplier<Integer> s) {\n            return false; // replace with appropriate logic for offerColdPath\n        }\n    };\n    \n    assertTrue(queue.offer(5)); // replace with appropriate test value",
+        "@Test\npublic void offerTest() {\n    BaseSpscLinkedArrayQueuePrePad<String> queue = new BaseSpscLinkedArrayQueuePrePad<String>() {\n        @Override\n        public boolean offer(final String e)\n        {\n            // Objects.requireNonNull(e);\n            if (null == e)\n            {\n                throw new NullPointerException();\n            }\n            // local load of field to avoid repeated loads after volatile reads\n            final String[] buffer = producerBuffer;\n            final long index = lpProducerIndex();\n            final long mask = producerMask;\n            final long offset = calcCircularRefElementOffset(index, mask);\n            // expected hot path\n            if (index < producerBufferLimit)\n            {\n                writeToQueue(buffer, e, index, offset);\n                return true;\n            }\n            return offerColdPath(buffer, mask, index, offset, e, null);\n        }\n    };\n}",
+        "@Test\npublic void offerTest() {\n    BaseSpscLinkedArrayQueuePrePad queue = new BaseSpscLinkedArrayQueuePrePad();\n    assertTrue(queue.offer(new Object()));\n    assertFalse(queue.offer(null));\n}",
+        "@Test\npublic void offerTest() {\n    // Arrange\n    BaseSpscLinkedArrayQueue<Integer> queue = new BaseSpscLinkedArrayQueue<>();\n\n    // Act\n    boolean result = queue.offer(5);\n\n    // Assert\n    assertTrue(result);\n    assertEquals(5, queue.poll().intValue());\n}",
+        "@Test\npublic void offerTest() {\n    // Given\n    BaseSpscLinkedArrayQueue<Integer> queue = new BaseSpscLinkedArrayQueue<>();\n\n    // When\n    boolean result = queue.offer(5);\n\n    // Then\n    assertTrue(result);\n}",
+        "    BaseSpscLinkedArrayQueue queue = new BaseSpscLinkedArrayQueue();\n    try {\n        queue.offer(null);\n        fail(\"Should have thrown NullPointerException\");\n    } catch (NullPointerException success) {\n    }",
+        "    BaseSpscLinkedArrayQueue<Integer> queue = new BaseSpscLinkedArrayQueue<>();\n    assertTrue(queue.offer(1));"
+    ]
+}

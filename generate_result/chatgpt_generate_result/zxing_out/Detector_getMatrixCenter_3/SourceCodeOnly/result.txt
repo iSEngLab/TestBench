@@ -1,0 +1,207 @@
+Source code: 
+
+
+private Point getMatrixCenter() {
+
+  ResultPoint pointA;
+  ResultPoint pointB;
+  ResultPoint pointC;
+  ResultPoint pointD;
+
+  //Get a white rectangle that can be the border of the matrix in center bull's eye or
+  try {
+
+    ResultPoint[] cornerPoints = new WhiteRectangleDetector(image).detect();
+    pointA = cornerPoints[0];
+    pointB = cornerPoints[1];
+    pointC = cornerPoints[2];
+    pointD = cornerPoints[3];
+
+  } catch (NotFoundException e) {
+
+    // This exception can be in case the initial rectangle is white
+    // In that case, surely in the bull's eye, we try to expand the rectangle.
+    int cx = image.getWidth() / 2;
+    int cy = image.getHeight() / 2;
+    pointA = getFirstDifferent(new Point(cx + 7, cy - 7), false, 1, -1).toResultPoint();
+    pointB = getFirstDifferent(new Point(cx + 7, cy + 7), false, 1, 1).toResultPoint();
+    pointC = getFirstDifferent(new Point(cx - 7, cy + 7), false, -1, 1).toResultPoint();
+    pointD = getFirstDifferent(new Point(cx - 7, cy - 7), false, -1, -1).toResultPoint();
+
+  }
+
+  //Compute the center of the rectangle
+  int cx = MathUtils.round((pointA.getX() + pointD.getX() + pointB.getX() + pointC.getX()) / 4.0f);
+  int cy = MathUtils.round((pointA.getY() + pointD.getY() + pointB.getY() + pointC.getY()) / 4.0f);
+
+  // Redetermine the white rectangle starting from previously computed center.
+  // This will ensure that we end up with a white rectangle in center bull's eye
+  // in order to compute a more accurate center.
+  try {
+    ResultPoint[] cornerPoints = new WhiteRectangleDetector(image, 15, cx, cy).detect();
+    pointA = cornerPoints[0];
+    pointB = cornerPoints[1];
+    pointC = cornerPoints[2];
+    pointD = cornerPoints[3];
+  } catch (NotFoundException e) {
+    // This exception can be in case the initial rectangle is white
+    // In that case we try to expand the rectangle.
+    pointA = getFirstDifferent(new Point(cx + 7, cy - 7), false, 1, -1).toResultPoint();
+    pointB = getFirstDifferent(new Point(cx + 7, cy + 7), false, 1, 1).toResultPoint();
+    pointC = getFirstDifferent(new Point(cx - 7, cy + 7), false, -1, 1).toResultPoint();
+    pointD = getFirstDifferent(new Point(cx - 7, cy - 7), false, -1, -1).toResultPoint();
+  }
+
+  // Recompute the center of the rectangle
+  cx = MathUtils.round((pointA.getX() + pointD.getX() + pointB.getX() + pointC.getX()) / 4.0f);
+  cy = MathUtils.round((pointA.getY() + pointD.getY() + pointB.getY() + pointC.getY()) / 4.0f);
+
+  return new Point(cx, cy);
+}
+
+
+
+No.1 generated result --------------------------
+
+@Test
+public void getMatrixCenterTest() {
+    // Create an instance of the class where the getMatrixCenter method is located
+    // Call the getMatrixCenter method with a sample image and validate the result
+    // Use assertions to verify that the center of the matrix is correctly computed
+    // Ensure the method handles exceptions that may occur during the computation of the matrix center
+}
+
+
+No.2 generated result --------------------------
+
+@Test
+public void getMatrixCenterTest() {
+    // Create an image
+    BufferedImage image = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
+    // Fill the image with white pixels to simulate the condition
+    for (int x = 0; x < image.getWidth(); x++) {
+        for (int y = 0; y < image.getHeight(); y++) {
+            image.setRGB(x, y, Color.WHITE.getRGB());
+        }
+    }
+    // Call the getMatrixCenter method and assert the result
+    Point center = getMatrixCenter();
+    assertNotNull(center);
+    assertEquals(50, center.getX());
+    assertEquals(50, center.getY());
+}
+
+
+No.3 generated result --------------------------
+
+@Test
+public void getMatrixCenterTest() {
+  Point expectedCenter = new Point(100, 150);
+  Point actualCenter = getMatrixCenter();
+  assertEquals(expectedCenter, actualCenter, "Center of the matrix is not as expected");
+}
+
+
+No.4 generated result --------------------------
+
+@Test
+public void getMatrixCenterTest() {
+    // Create a test image
+    BufferedImage image = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
+    // Create an instance of the class containing the getMatrixCenter method
+    YourClassNameHere instance = new YourClassNameHere();
+    // Call the method and retrieve the result
+    Point result = instance.getMatrixCenter();
+    // Assert the expected result
+    assertEquals(new Point(50, 50), result);
+}
+
+
+No.5 generated result --------------------------
+
+@Test
+public void getMatrixCenterTest() {
+    // Create an image and call the method getMatrixCenter()
+    // Check the expected output against the actual output
+    // Use assertions to compare the expected output and actual output
+    // For example:
+    // Point expected = new Point(50, 50);
+    // Point actual = getMatrixCenter();
+    // assertEquals(expected, actual);
+}
+
+
+No.6 generated result --------------------------
+
+
+        Point center = getMatrixCenter();
+        assertNotNull(center);
+
+
+
+No.7 generated result --------------------------
+
+@Test
+public void getMatrixCenterTest() {
+    // Create an instance of the class
+    DetectorTest detectorTest = new DetectorTest();
+
+    // Set up the image
+    BufferedImage image = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
+    
+    // Call the method and capture the result
+    Point center = detectorTest.getMatrixCenter(image);
+    
+    // Assert the expected result
+    assertEquals(new Point(50, 50), center);
+}
+
+
+No.8 generated result --------------------------
+
+@Test
+public void getMatrixCenterTest() {
+  // Arrange
+  // Create a mock image for testing
+
+  // Act
+  // Call the getMatrixCenter() method with the mock image
+  
+  // Assert
+  // Verify that the expected center point is returned
+}
+
+
+No.9 generated result --------------------------
+
+@Test
+public void getMatrixCenterTest() {
+    // Create a mock image and corner points for testing
+    BufferedImage testImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
+    ResultPoint[] testCornerPoints = new ResultPoint[4];
+
+    // Set up the test case
+    Detector detector = new Detector(testImage);
+    Point center = detector.getMatrixCenter();
+
+    // Assert the expected center point is equal to the actual center point
+    assertEquals(new Point(50, 50), center);
+}
+
+
+No.10 generated result --------------------------
+
+@Test
+public void getMatrixCenterTest() {
+    // Create a test image
+    BufferedImage image = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
+    // Fill the image with the required data
+    Point center = new Point(50, 50);
+    // Call the getMatrixCenter method
+    Point result = getMatrixCenter();
+
+    // Check if the result matches the expected center
+    assertEquals(center, result);
+}
+
+

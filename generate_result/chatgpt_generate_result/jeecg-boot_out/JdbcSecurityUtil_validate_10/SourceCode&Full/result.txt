@@ -1,0 +1,121 @@
+Source code: 
+
+
+public static void validate(String jdbcUrl){
+    if(oConvertUtils.isEmpty(jdbcUrl)){
+        return;
+    }
+    String urlConcatChar = "?";
+    if(jdbcUrl.indexOf(urlConcatChar)<0){
+        return;
+    }
+    String argString = jdbcUrl.substring(jdbcUrl.indexOf(urlConcatChar)+1);
+    String[] keyAndValues = argString.split("&");
+    for(String temp: keyAndValues){
+        String key = temp.split("=")[0];
+        for(String prop: notAllowedProps){
+            if(prop.equalsIgnoreCase(key)){
+                throw new JeecgBootException("连接地址有安全风险，【"+key+"】");
+            }
+        }
+    }
+}
+
+
+
+No.1 generated result --------------------------
+
+@Test
+public void validateTest() {
+    assertThrows(JeecgBootException.class, () -> {
+        JdbcSecurityUtil.validate("jdbc:postgresql://localhost/test?authenticationPluginClassName=123");
+    });
+}
+
+
+No.2 generated result --------------------------
+
+@Test
+public void validateTest() {
+    assertThrows(JeecgBootException.class, () -> {
+        JdbcSecurityUtil.validate("jdbc:mysql://localhost:3306/test?authenticationPluginClassName=aaa");
+    });
+}
+
+
+No.3 generated result --------------------------
+
+@Test
+public void validateTest() {
+    assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate("jdbc:postgresql://localhost:5432/test?sslhostnameverifier=true"));
+    assertDoesNotThrow(() -> JdbcSecurityUtil.validate("jdbc:postgresql://localhost:5432/test?user=test&password=test"));
+}
+
+
+No.4 generated result --------------------------
+
+assertDoesNotThrow(() -> JdbcSecurityUtil.validate("jdbcUrl"));
+
+
+No.5 generated result --------------------------
+
+@Test
+    public void validateTest() {
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate("jdbc:postgresql://localhost/test?user=fakeUser&password=fakePassword"));
+    }
+
+
+No.6 generated result --------------------------
+
+@Test
+public void validateTest() {
+    String jdbcUrl = "jdbc:mysql://localhost:3306/test?sslhostnameverifier=xxx";
+    assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate(jdbcUrl));
+}
+
+
+No.7 generated result --------------------------
+
+@Test
+public void validateTest() {
+    String jdbcUrl = "jdbc:mysql://localhost:3306/mydb?authenticationPluginClassName=example";
+    assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate(jdbcUrl));
+    jdbcUrl = "jdbc:postgresql://localhost:3306/mydb?otherParam=value&sslhostnameverifier=someValue";
+    assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate(jdbcUrl));
+}
+
+
+No.8 generated result --------------------------
+
+@Test
+public void validateTest() {
+    try {
+        JdbcSecurityUtil.validate("jdbc:postgresql://localhost/test?authenticationPluginClassName=test&username=test&password=test");
+        fail("Expected JeecgBootException, but it didn't occur");
+    } catch (JeecgBootException e) {
+        assertEquals("连接地址有安全风险, [authenticationPluginClassName]", e.getMessage());
+    }
+}
+
+
+No.9 generated result --------------------------
+
+@Test
+public void validateTest() {
+    try {
+        JdbcSecurityUtil.validate("jdbc:postgresql://localhost/test?authenticationPluginClassName=xyz");
+        fail("Expected an JeecgBootException to be thrown");
+    } catch (JeecgBootException e) {
+        assertEquals("连接地址有安全风险，【authenticationPluginClassName】", e.getMessage());
+    }
+}
+
+
+No.10 generated result --------------------------
+
+@Test
+public void validateTest() {
+    assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate("jdbc:mysql://localhost:3306/test?sslhostnameverifier=true"));
+}
+
+

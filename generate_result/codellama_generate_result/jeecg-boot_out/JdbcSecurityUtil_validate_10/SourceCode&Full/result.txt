@@ -1,0 +1,270 @@
+Source code: 
+
+
+public static void validate(String jdbcUrl){
+    if(oConvertUtils.isEmpty(jdbcUrl)){
+        return;
+    }
+    String urlConcatChar = "?";
+    if(jdbcUrl.indexOf(urlConcatChar)<0){
+        return;
+    }
+    String argString = jdbcUrl.substring(jdbcUrl.indexOf(urlConcatChar)+1);
+    String[] keyAndValues = argString.split("&");
+    for(String temp: keyAndValues){
+        String key = temp.split("=")[0];
+        for(String prop: notAllowedProps){
+            if(prop.equalsIgnoreCase(key)){
+                throw new JeecgBootException("连接地址有安全风险，【"+key+"】");
+            }
+        }
+    }
+}
+
+
+
+No.1 generated result --------------------------
+
+@Test
+public void validateTest(){
+String jdbcUrl = "jdbc:postgresql://localhost:5432/mydb?user=postgres&password=abc123";
+JdbcSecurityUtil.validate(jdbcUrl);
+}
+
+
+No.2 generated result --------------------------
+
+
+@Test
+public void validateTest(){
+   // Arrange
+   String jdbcUrl = "jdbc:postgresql://localhost:5432/test?user=postgres&password=password123";
+   
+   // Act
+   JdbcSecurityUtil.validate(jdbcUrl);
+   
+   // Assert
+   assertThrows(JeecgBootException.class, () -> {
+       String argString = jdbcUrl.substring(jdbcUrl.indexOf("?")+1);
+       String[] keyAndValues = argString.split("&");
+        for(String temp: keyAndValues){
+            String key = temp.split("=")[0];
+            for(String prop: JdbcSecurityUtil.notAllowedProps){
+                if(prop.equalsIgnoreCase(key)){
+                    throw new JeecgBootException("Connection url has security risks, ["+key+"]");
+                }
+            }
+        }
+   });
+}
+
+
+No.3 generated result --------------------------
+
+package org.jeecg.common.util.security;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JdbcSecurityUtilTest {
+    @Test
+    public void validateTest() {
+        // Valid input - null URL
+        assertDoesNotThrow(() -> {
+            String jdbcUrl = null;
+            JdbcSecurityUtil.validate(jdbcUrl);
+        });
+
+        // Valid input - empty URL
+        assertDoesNotThrow(() -> {
+            String jdbcUrl = "";
+            JdbcSecurityUtil.validate(jdbcUrl);
+        });
+
+        // Valid input - URL with only allowed properties
+        assertDoesNotThrow(() -> {
+            String jdbcUrl = "jdbc:postgresql://localhost/mydb?user=jeecg&password=jeecg";
+            JdbcSecurityUtil.validate(jdbcUrl);
+        });
+
+        // Valid input - URL with not allowed properties (but only one)
+        assertThrowsExactly(() -> {
+            String jdbcUrl = "jdbc:postgresql://localhost/mydb?user=jeecg&password=jeecg&authenticationPluginClassName=myClass";
+            JdbcSecurityUtil.validate(jdbcUrl);
+        }, JeecgBootException.class, "连接地址有安全风险，【authenticationPluginClassName】");
+
+        // Valid input - URL with not allowed properties (but multiple)
+        assertThrowsExactly(() -> {
+            String jdbcUrl = "jdbc:postgresql://localhost/mydb?user=jeecg&password=jeecg&authenticationPluginClassName=myClass&sslhostnameverifier=myVerifier";
+            JdbcSecurityUtil.validate(jdbcUrl);
+        }, JeecgBootException.class, "连接地址有安全风险，【authenticationPluginClassName】");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jeecg.common.util.security;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JdbcSecurityUtilTest {
+    @Test
+    public void validateTest() {
+        String jdbcUrl = "jdbc:postgresql://localhost:5432/mydb?authenticationPluginClassName=org.postgresql.Driver&sslhostnameverifier=org.postgresql.Driver&socketFactory=org.postgresql.Driver&sslfactory=org.postgresql.Driver&sslpasswordcallback=org.postgresql.Driver";
+        JdbcSecurityUtil.validate(jdbcUrl);
+        
+        String expectedExceptionMessage = "连接地址有安全风险，【authenticationPluginClassName】";
+        assertThrows(JeecgBootException.class, () -> {
+            JdbcSecurityUtil.validate(jdbcUrl);
+        }, expectedExceptionMessage);
+    }
+}
+
+
+No.5 generated result --------------------------
+
+
+package org.jeecg.common.util.security;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JdbcSecurityUtilTest {
+    @Test
+    public void validateTest() {
+        String jdbcUrl = "jdbc:postgresql://localhost/mydatabase?user=dbadmin&password=dbadmin";
+        JdbcSecurityUtil.validate(jdbcUrl);
+        assertEquals(true, true); // This line should be replaced with the actual assertion that checks whether the validate method correctly validates the given jdbcUrl.
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jeecg.common.util.security;
+
+import org.junit.jupiter.api.Test;
+
+public class JdbcSecurityUtilTest {
+    @Test
+    public void validateTest() {
+        // Given a valid JDBC URL with no security risks
+        String jdbcUrl = "jdbc:postgresql://localhost/mydb?user=username&password=password";
+        
+        // When the validate method is called on the URL
+        JdbcSecurityUtil.validate(jdbcUrl);
+        
+        // Then there should be no exceptions thrown
+    }
+    
+    @Test
+    public void validateTest_withRiskyKey() {
+        // Given a valid JDBC URL with a security risk key
+        String jdbcUrl = "jdbc:postgresql://localhost/mydb?user=username&password=password&authenticationPluginClassName=org.postgreSQL.MyAuthentication";
+        
+        // When the validate method is called on the URL
+        boolean exceptionThrown = false;
+        try {
+            JdbcSecurityUtil.validate(jdbcUrl);
+        } catch (JeecgBootException e) {
+            exceptionThrown = true;
+        }
+        
+        // Then an exception should be thrown
+        assertTrue(exceptionThrown);
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jeecg.common.util.security;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JdbcSecurityUtilTest {
+    @Test
+    public void validateTest() {
+        // Test with a valid URL containing no blacklisted properties
+        String jdbcUrl = "jdbc:postgresql://localhost:5432/mydb?user=username&password=pass";
+        JdbcSecurityUtil.validate(jdbcUrl);
+        assertTrue(true, "Valid URL should not throw an exception");
+
+        // Test with a valid URL containing blacklisted properties
+        jdbcUrl = "jdbc:postgresql://localhost:5432/mydb?user=username&password=pass&authenticationPluginClassName=org.postgresql.sspi.SspiAuthPlugin";
+        JdbcSecurityUtil.validate(jdbcUrl);
+        assertTrue(true, "Valid URL with blacklisted property should not throw an exception");
+
+        // Test with a valid URL containing multiple blacklisted properties
+        jdbcUrl = "jdbc:postgresql://localhost:5432/mydb?user=username&password=pass&authenticationPluginClassName=org.postgresql.sspi.SspiAuthPlugin&sslhostnameverifier=org.postgresql.sspi.SspiAuthPlugin";
+        JdbcSecurityUtil.validate(jdbcUrl);
+        assertTrue(true, "Valid URL with multiple blacklisted properties should not throw an exception");
+
+        // Test with a invalid URL containing a blacklisted property
+        jdbcUrl = "jdbc:postgresql://localhost:5432/mydb?user=username&password=pass&authenticationPluginClassName=org.postgresql.sspi.SspiAuthPlugin";
+        JdbcSecurityUtil.validate(jdbcUrl);
+        assertThrows(JeecgBootException.class, () -> {
+            String expectedMessage = "连接地址有安全风险，【authenticationPluginClassName】";
+            String actualMessage = jeecgBootException.getMessage();
+            assertEquals(expectedMessage, actualMessage);
+        });
+    }
+}
+
+
+No.8 generated result --------------------------
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JdbcSecurityUtilTest {
+    @Test
+    public void validateTest() {
+        // Pass in a valid JDBC URL as an argument to the validate method
+        String jdbcUrl = "jdbc:postgresql://localhost/mydatabase";
+        assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate(jdbcUrl));
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jeecg.common.util.security;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JdbcSecurityUtilTest {
+    @Test
+    public void validateTest() {
+        String jdbcUrl = "jdbc:postgresql://localhost/testdb?user=postgres&password=root";
+        assertThrows(JeecgBootException.class, () -> JdbcSecurityUtil.validate(jdbcUrl));
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.common.util.security;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JdbcSecurityUtilTest {
+    @Test
+    public void validateTest() {
+        // Test with null jdbcUrl
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(null));
+
+        // Test with empty jdbcUrl
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(""));
+
+        // Test with valid jdbcUrl
+        String jdbcUrl = "jdbc:postgresql://localhost/test?user=postgres&password=mysecretpassword";
+        assertDoesNotThrow(() -> JdbcSecurityUtil.validate(jdbcUrl));
+    }
+}
+
+

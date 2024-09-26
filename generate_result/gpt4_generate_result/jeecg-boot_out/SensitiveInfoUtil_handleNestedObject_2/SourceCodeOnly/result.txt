@@ -1,0 +1,632 @@
+Source code: 
+
+
+public static void handleNestedObject(Object obj, Class entity, boolean isEncode) throws IllegalAccessException {
+    Field[] fields = obj.getClass().getDeclaredFields();
+    for (Field field : fields) {
+        if(field.getType().isPrimitive()){
+            continue;
+        }
+        if(field.getType().equals(entity)){
+            // 对象里面是实体
+            field.setAccessible(true);
+            Object nestedObject = field.get(obj);
+            handlerObject(nestedObject, isEncode);
+            break;
+        }else{
+            // 对象里面是List<实体>
+            if(field.getGenericType() instanceof ParameterizedType){
+                ParameterizedType pt = (ParameterizedType)field.getGenericType();
+                if(pt.getRawType().equals(List.class)){
+                    if(pt.getActualTypeArguments()[0].equals(entity)){
+                        field.setAccessible(true);
+                        Object nestedObject = field.get(obj);
+                        handleList(nestedObject, entity, isEncode);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import org.junit.jupiter.api.*;
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.List;
+import static org.junit.jupiter.api.Assertions.*;
+
+class Entity {
+    // Assuming Entity is a simple class with some fields
+    public String data;
+
+    // Constructor, getters, and setters are omitted for brevity
+}
+
+public class SensitiveInfoUtilTest {
+    // Helper method to create a mock object for testing
+    private Object createTestObject() throws IllegalAccessException {
+        // Define a class with fields to run the test on
+        class TestObject {
+            private Entity entity = new Entity();
+            private List<Entity> entityList = Arrays.asList(new Entity(), new Entity());
+        }
+
+        // Instantiate an object of the inner class
+        TestObject testObj = new TestObject();
+
+        // Here, we could set some values to the fields if needed for the test...
+
+        return testObj;
+    }
+
+    // The actual test method
+    @Test
+    public void handleNestedObjectTest() throws IllegalAccessException {
+        // Arrange
+        Object testObj = createTestObject();
+        Class entityClass = Entity.class;
+        boolean isEncode = true;
+
+        // Assuming handlerObject and handleList are methods that should be tested as well
+        // Since it's not included in the snippet, we cannot write a complete test that can be executed without this code
+
+        // Act
+        // The handleNestedObject method is static so we can call it directly without an instance
+        SensitiveInfoUtil.handleNestedObject(testObj, entityClass, isEncode);
+
+        // Assert
+        // Here we would check if the expected methods have been called and if the object state has changed as expected
+        // Since we don't have the implementation for 'handlerObject' or 'handleList', the assertions are examples
+        Field entityField = testObj.getClass().getDeclaredField("entity");
+        entityField.setAccessible(true);
+        Entity entity = (Entity) entityField.get(testObj);
+        // Example assertion: checking if the 'handlerObject' method has correctly set the entity data when isEncode is true
+        // assertEquals(expectedValue, entity.getData()); // expectedValue would be the expected result after encoding
+
+        Field entityListField = testObj.getClass().getDeclaredField("entityList");
+        entityListField.setAccessible(true);
+        List<Entity> entityList = (List<Entity>) entityListField.get(testObj);
+        // Example assertion: checking if the 'handleList' method processed all entities in the list
+        // assertFalse(entityList.stream().anyMatch(e -> e.getData() == null or some condition)); // Verifying that all the entities in the list have been handled
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import org.junit.jupiter.api.*;
+import java.lang.reflect.*;
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SensitiveInfoUtilTest {
+
+    // Note: Assuming handlerObject and handleList methods exist and are public in the same class
+    // for testing purposes, these methods need to be implemented or mocked
+
+    @Test
+    public void handleNestedObjectTest() throws IllegalAccessException {
+        class TestEntity {
+            public int primitiveField;
+            public NestedEntity nestedEntityField;
+            public List<NestedEntity> nestedEntityList;
+        }
+        class NestedEntity {
+            // fields and methods for NestedEntity
+        }
+
+        Object obj = new TestEntity();
+        ((TestEntity) obj).primitiveField = 10;
+        ((TestEntity) obj).nestedEntityField = new NestedEntity();
+        ((TestEntity) obj).nestedEntityList = new ArrayList<>(Collections.singletonList(new NestedEntity()));
+
+        boolean isEncode = true; // Assuming 'true' means encode and 'false' means decode
+
+        // Invoke the method to be tested
+        SensitiveInfoUtil.handleNestedObject(obj, NestedEntity.class, isEncode);
+
+        // Assertions would be dependent on the actual implementation of handlerObject and handleList.
+        // You would add assertions here to verify that the nestedEntityField and nestedEntityList have been
+        // handled (encoded/decoded) properly.
+        // For example:
+        // assertTrue(condition_that_should_be_true_after_handling);
+    }
+
+    // Placeholder methods for `handlerObject` and `handleList` assuming they are
+    // part of the same class that needs to be tested. If not, they need to be appropriately mocked.
+    public static void handlerObject(Object nestedObject, boolean isEncode) {
+        // Add logic here (possibly encode/decode the object)
+    }
+
+    public static void handleList(Object listObject, Class entity, boolean isEncode) {
+        // Add logic here (possibly iterate over the list and encode/decode each item)
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Arrays;
+import java.util.List;
+
+public class SensitiveInfoUtilTest {
+
+    private static class DummyEntity {
+        public int primitiveField;
+        public String objectField;
+        public List<DummyEntity> entitiesList;
+
+        public DummyEntity(int primitiveField, String objectField) {
+            this.primitiveField = primitiveField;
+            this.objectField = objectField;
+        }
+    }
+
+    @BeforeEach
+    public void setup() {
+        // setup resources if needed
+    }
+
+    @Test
+    public void handleNestedObjectTest() throws IllegalAccessException {
+        // Assuming we're just validating that the method does not throw an exception
+        // and calls the appropriate handling method based on field type.
+        // Further mocking could be required to test the `handlerObject` and `handleList` functionality.
+        
+        DummyEntity dummyObj = new DummyEntity(1, "test");
+        dummyObj.entitiesList = Arrays.asList(new DummyEntity(2, "nested1"), new DummyEntity(3, "nested2"));
+
+        // Since `handleNestedObject` is static, we can call it directly without an instance
+        assertDoesNotThrow(() -> SensitiveInfoUtil.handleNestedObject(dummyObj, DummyEntity.class, true));
+        
+        // Validate internal fields handling (this would typically require some sort of 
+        // mocking or spying to ensure the handlerObject and handleList are called properly, 
+        // but as those methods are not provided, it's left out).
+    }
+
+    @AfterEach
+    public void tearDown() {
+        // clean up resources if needed
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.lang.reflect.Field;
+import java.util.List;
+
+public class SensitiveInfoUtilTest {
+
+    static class TestEntity {
+        public int id;
+        public String name;
+        public List<TestEntity> children;
+        public TestEntity parent;
+    }
+
+    @Test
+    public void handleNestedObjectTest() throws IllegalAccessException {
+        // Prepare the object with nested TestEntity and List<TestEntity>
+        TestEntity parentEntity = new TestEntity();
+        parentEntity.id = 1;
+        parentEntity.name = "Parent Entity";
+
+        TestEntity childEntity = new TestEntity();
+        childEntity.id = 2;
+        childEntity.name = "Child Entity";
+        childEntity.parent = parentEntity;
+
+        parentEntity.children = List.of(childEntity);
+
+        // Call the method under test
+        DesensitizationUtil.handleNestedObject(parentEntity, TestEntity.class, true);
+
+        // Verify the fields after handling
+        // Since the handlerObject and handleList methods are not specified,
+        // assertions will be based on the desired outcome after handling.
+        
+        // assert some conditions based on your handleObject and handleList method behavior.
+        // For instance, if handlerObject is supposed to encode the object's string fields:
+        assertNotNull(parentEntity.name, "Name should not be null after handling");
+
+        // similarly, check the handled List
+        assertNotNull(parentEntity.children, "Children list should not be null after handling");
+        assertFalse(parentEntity.children.isEmpty(), "Children list should not be empty");
+
+        // Assert Child is handled as well
+        TestEntity handledChild = parentEntity.children.get(0);
+        assertNotNull(handledChild.name, "Child name should not be null after handling");
+
+        // Additional assertions to ensure the handling is done correctly
+        // For example, we could check if encoding is correct if isEncode was true
+        // assertEquals("ExpectedEncodedValue", handledChild.name);
+        // and more based on the expected behavior of handlerObject and handleList
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import org.junit.jupiter.api.*;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SensitiveInfoUtilTest {
+
+    static class MockEntity {
+        public int primitiveField;
+        public MockEntity entityField;
+        public List<MockEntity> entityListField;
+    }
+
+    @Test
+    public void handleNestedObjectTest() throws IllegalAccessException {
+        Object mockObj = new MockEntity();
+        Class entity = MockEntity.class;
+        boolean isEncode = true; // Example flag, actual use-case may vary
+
+        // Test handling of entity fields
+        assertDoesNotThrow(() -> SensitiveInfoUtil.handleNestedObject(mockObj, entity, isEncode));
+
+        // Assuming handleNestedObject modifies the fields as expected (e.g., encoding), you might
+        // want to assert the state of the fields if there is any modification made by the method
+
+        Field field = mockObj.getClass().getDeclaredField("entityField");
+        field.setAccessible(true);
+        assertNotNull(field.get(mockObj)); // Assert the field is not null after handling
+
+        // Similar assertions for list handling
+        field = mockObj.getClass().getDeclaredField("entityListField");
+        field.setAccessible(true);
+        assertNotNull(field.get(mockObj)); // Assert the list field is not null after handling
+        // If the list is expected to be modified, perform further checks on its elements
+        List<MockEntity> entityList = (List<MockEntity>) field.get(mockObj);
+        assertFalse(entityList.isEmpty()); // Assert the list is not empty
+        assertNotNull(entityList.get(0)); // Assert list elements are not null
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.lang.reflect.Field;
+import java.util.List;
+
+public class SensitiveInfoUtilTest {
+
+    static class TestEntity { // An example entity class for the test
+        public String field;
+    }
+
+    static class NestedEntity { // An example nested entity class with a List
+        public List<TestEntity> entities;
+    }
+
+    @BeforeEach
+    void setup() {
+        // Setup method here if needed
+    }
+
+    @Test
+    public void handleNestedObjectTest() throws IllegalAccessException {
+        // Set up the object to be tested
+        NestedEntity nestedObject = new NestedEntity();
+        
+        // Assume setting up a mock List of TestEntity objects here
+        // ...
+
+        // Call the method to be tested with 'isEncode' set to true or false
+        boolean isEncode = true; // or false depending on the test scenario
+
+        // The entity class we are expecting to handle
+        Class<TestEntity> entityClass = TestEntity.class;
+
+        // Now call the method
+        SensitiveInfoUtil.handleNestedObject(nestedObject, entityClass, isEncode);
+
+        // Assertions will depend on the expected outcome of handlerObject and handleList
+        // Since these methods' effects are unknown, the test case cannot be completed without assumptions
+        // Here we'll just finish the test with a simple assert statement
+        // This check is just placeholder and is not testing actual functionality
+        assertNotNull(nestedObject.entities, "Entities list should not be null after handling.");
+
+        // If the "handlerObject" and "handleList" methods modified the entity
+        // We should verify the modified state here, possibly by inspecting `nestedObject` fields
+        // If these methods provide any return value or throw exceptions, those can be tested as well
+    }
+
+    // Additional helper methods or mock classes could be defined if necessary
+}
+
+
+No.7 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import org.junit.jupiter.api.*;
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class SensitiveInfoUtilTest {
+    
+    static class DummyEntity {
+        private String field1;
+        private int primitiveField;
+        private List<DummyEntity> entityListField;
+        private DummyEntity entityField;
+
+        // Dummy getters and setters or other methods if necessary
+        public String getField1() {
+            return field1;
+        }
+
+        public void setField1(String field1) {
+            this.field1 = field1;
+        }
+
+        public List<DummyEntity> getEntityListField() {
+            return entityListField;
+        }
+
+        public void setEntityListField(List<DummyEntity> entityListField) {
+            this.entityListField = entityListField;
+        }
+
+        public DummyEntity getEntityField() {
+            return entityField;
+        }
+
+        public void setEntityField(DummyEntity entityField) {
+            this.entityField = entityField;
+        }
+    }
+
+    @Test
+    public void handleNestedObjectTest() {
+        DummyEntity testObject = new DummyEntity();
+        testObject.setField1("testValue");
+        testObject.setEntityField(new DummyEntity());
+        testObject.setEntityListField(Arrays.asList(new DummyEntity(), new DummyEntity()));
+        
+        // Assume handlerObject and handleList are methods we want to verify are called.
+        // Unfortunately, without code for these methods, we can't verify their behavior.
+        
+        // Initialize the parameters for the handleNestedObject method.
+        Object obj = testObject;
+        Class<?> entity = DummyEntity.class;
+        boolean isEncode = true;
+
+        try {
+            SensitiveInfoUtils.handleNestedObject(obj, entity, isEncode);
+            
+            // After calling handleNestedObject, we may want to verify certain behaviors on obj.
+            // Since handlerObject and handleList are not defined, we can't make specific assertions.
+            
+            // As an example, we can check if the entityField is not null after handling.
+            assertNotNull(testObject.getEntityField());
+            // We could also verify that handleList has been processed if we had a method to check it.
+            
+        } catch (IllegalAccessException e) {
+            fail("Method should not throw an IllegalAccessException.");
+        }
+    }
+    
+    // Additional tests could be written to handle other cases and exceptions.
+}
+
+
+No.8 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.util.List;
+
+class MyEntity {
+    // Just a stub entity class for testing
+}
+
+class ObjectWithNestedEntity {
+    // Assume a field that is also an entity
+    public MyEntity nestedEntity;
+    public ObjectWithNestedEntity(MyEntity nestedEntity) {
+        this.nestedEntity = nestedEntity;
+    }
+}
+
+class ObjectWithNestedList {
+    // Assume a field that is a list of entities
+    public List<MyEntity> entityList;
+    public ObjectWithNestedList(List<MyEntity> entityList) {
+        this.entityList = entityList;
+    }
+}
+
+public class SensitiveInfoUtilTest {
+    @Test
+    public void handleNestedObjectTest() throws IllegalAccessException {
+        MyEntity entity = new MyEntity();
+        ObjectWithNestedEntity objectWithNestedEntity = new ObjectWithNestedEntity(entity);
+        ObjectWithNestedList objectWithNestedList = new ObjectWithNestedList(List.of(entity));
+
+        // This is just a stub method assuming some kind of manipulation
+        SensitiveInfoUtil.handleNestedObject(objectWithNestedEntity, MyEntity.class, true);
+        SensitiveInfoUtil.handleNestedObject(objectWithNestedList, MyEntity.class, true);
+
+        // Check if field was accessed and manipulated
+        // As there are no clear side-effects described, this is a simplistic example
+        // Asserting entity within ObjectWithNestedEntity was handled
+        assertTrue(objectWithNestedEntity.nestedEntity != null);
+
+        // Asserting list within ObjectWithNestedList was handled
+        assertFalse(objectWithNestedList.entityList.isEmpty());
+        
+        // Here you would normally add assertions to verify that `handlerObject`
+        // and `handleList` have been called and modified the objects appropriately.
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import java.lang.reflect.Field;
+import java.util.List;
+import java.util.ArrayList;
+
+class SensitiveEntity {
+    // This field will be encoded/decoded as it is of type SensitiveEntity
+    public SensitiveEntity nestedEntity;
+
+    // This list will be encoded/decoded since it contains elements of type SensitiveEntity
+    public List<SensitiveEntity> entityList;
+}
+
+public class SensitiveInfoUtilTest {
+    SensitiveEntity testEntity;
+
+    @BeforeEach
+    public void setUp() {
+        testEntity = new SensitiveEntity();
+        testEntity.nestedEntity = new SensitiveEntity();
+
+        testEntity.entityList = new ArrayList<>();
+        testEntity.entityList.add(new SensitiveEntity());
+    }
+
+    @Test
+    public void handleNestedObjectTest() throws IllegalAccessException {
+        // Instantiate the object we want to test the method on
+        testEntity.nestedEntity = new SensitiveEntity(); // Nested object
+        testEntity.entityList = new ArrayList<>(); // List of nested objects
+        testEntity.entityList.add(new SensitiveEntity());
+
+        // Assume these methods would modify the fields in some way. Here we'll just check if the fields are accessible.
+        // We need to create these mock methods to simulate their existences
+        SensitiveInfoUtil.handleList = (nestedObject, entity, isEncode) -> assertEquals(true, ((List) nestedObject).get(0) instanceof SensitiveEntity);
+        SensitiveInfoUtil.handlerObject = (nestedObject, isEncode) -> assertEquals(true, nestedObject instanceof SensitiveEntity);
+
+        // Calling the method under test
+        SensitiveInfoUtil.handleNestedObject(testEntity, SensitiveEntity.class, true);
+
+        Field[] fields = testEntity.getClass().getDeclaredFields();
+        for (Field field : fields) {
+            if (field.getType().equals(SensitiveEntity.class) || "entityList".equals(field.getName())) {
+                assertTrue(field.isAccessible());
+            }
+        }
+    }
+}
+
+
+No.10 generated result --------------------------
+
+### JUNIT Test case:
+package org.jeecg.common.desensitization.util;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+
+public class SensitiveInfoUtilTest {
+    
+    private static class TestEntity {
+        public String publicField;
+        private String privateField;
+        public TestEntity childEntity;
+        public List<TestEntity> entityList;
+        
+        public String getPrivateField() {
+            return privateField;
+        }
+        
+        public void setPrivateField(String privateField) {
+            this.privateField = privateField;
+        }
+    }
+
+    private static void handleList(Object list, Class entity, boolean isEncode) {
+        // Simulate method implementation for testing purposes
+    }
+
+    private static void handlerObject(Object object, boolean isEncode) {
+        // Simulate method implementation for testing purposes
+    }
+    
+    @Test
+    public void handleNestedObjectTest() throws IllegalAccessException {
+        // Prepare a test entity with nested data
+        TestEntity parentEntity = new TestEntity();
+        parentEntity.publicField = "publicValue";
+        parentEntity.setPrivateField("privateValue");
+        
+        TestEntity childEntity = new TestEntity();
+        childEntity.publicField = "childPublic";
+        childEntity.setPrivateField("childPrivate");
+        
+        parentEntity.childEntity = childEntity;
+        
+        // Prepare a list of TestEntity objects
+        List<TestEntity> entityList = new ArrayList<>();
+        entityList.add(childEntity);
+        parentEntity.entityList = entityList;
+        
+        // Call the method to be tested
+        SensitiveInfoUtil.handleNestedObject(parentEntity, TestEntity.class, true);
+        
+        // Assertions to verify the expected outcome of the method
+        assertNotNull(parentEntity.childEntity);
+        assertEquals("childPublic", parentEntity.childEntity.publicField);
+        assertEquals("childPrivate", parentEntity.childEntity.getPrivateField());
+        assertNotNull(parentEntity.entityList);
+        assertFalse(parentEntity.entityList.isEmpty());
+        assertEquals("childPublic", parentEntity.entityList.get(0).publicField);
+        assertEquals("childPrivate", parentEntity.entityList.get(0).getPrivateField());
+        
+        // In a real scenario, we might also check if encode/decode operations were carried out correctly
+        // by mocking the handleList and handlerObject methods and verifying their invocation.
+    }
+}
+
+

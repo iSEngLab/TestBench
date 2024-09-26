@@ -1,0 +1,284 @@
+Source code: 
+
+
+@Override
+public final int size()
+{
+    // Read consumer first, this is important because if the producer is node is 'older' than the consumer
+    // the consumer may overtake it (consume past it) invalidating the 'snapshot' notion of size.
+    LinkedQueueNode<E> chaserNode = lvConsumerNode();
+    LinkedQueueNode<E> producerNode = lvProducerNode();
+    int size = 0;
+    // must chase the nodes all the way to the producer node, but there's no need to count beyond expected head.
+    while (chaserNode != producerNode && // don't go passed producer node
+        chaserNode != null && // stop at last node
+        size < Integer.MAX_VALUE) // stop at max int
+    {
+        LinkedQueueNode<E> next;
+        next = chaserNode.lvNext();
+        // check if this node has been consumed, if so return what we have
+        if (next == chaserNode)
+        {
+            return size;
+        }
+        chaserNode = next;
+        size++;
+    }
+    return size;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jctools.queues;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.util.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.stream.IntStream;
+
+/**
+ * @author Tolstopyatov Vsevolod
+ */
+public class BaseLinkedQueuePad0Test {
+    private static final int TEST_SIZE = 1024; // must be even number
+    private BlockingQueue<Integer> queue;
+
+    @BeforeEach
+    public void setup() {
+        queue = new LinkedBlockingDeque<>();
+    }
+
+    @Test
+    public void sizeTest() {
+        assertEquals(0, queue.size());
+
+        for (int i = 0; i < TEST_SIZE; i++) {
+            assertEquals(i, queue.size());
+            queue.add(i);
+        }
+
+        assertEquals(TEST_SIZE, queue.size());
+    }
+
+    @Test
+    public void drainToArrayTest() {
+        // given
+        int expectedSize = TEST_SIZE;
+        IntStream intStream = IntStream.rangeClosed(0, expectedSize);
+
+        // when
+        List<Integer> list = queue.addAll(intStream.iterator());
+
+        // then
+        assertEquals(expectedSize, list.size());
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jctools.queues;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseLinkedQueuePad0Test {
+    private final int SIZE = 1024;
+    private final int ITERATIONS = 1_000_000;
+
+    @Test
+    public void sizeTest() {
+        MpscUnboundedXaddQueue queue = new MpscUnboundedXaddQueue(SIZE);
+        for (int i = 0; i < ITERATIONS; i++) {
+            assertEquals(i, queue.size());
+            queue.offer(i); }
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jctools.queues;
+
+import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
+
+import org.junit.jupiter.api.Test;
+
+class BaseLinkedQueuePad0Test {
+    @Test
+    void sizeTest() {
+        BaseLinkedQueue q = new BaseLinkedQueue(16);
+        assertEquals(q.size(), 16);
+    }
+}
+
+
+
+No.4 generated result --------------------------
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseLinkedQueuePad0Test {
+    private final BaseLinkedQueue<String> queue = new BaseLinkedQueue<>("test-queue");
+
+    @Test
+    public void sizeTest() {
+        assertEquals(0, queue.size());
+        String item1 = "item1";
+        queue.add(item1);
+        assertEquals(1, queue.size());
+        String item2 = "item2";
+        queue.add(item2);
+        assertEquals(2, queue.size());
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.Test;
+
+public class BaseLinkedQueuePad0Test {
+    @Test
+    public void sizeTest() {
+        final int SIZE = 64;
+        for (int i = 1; i <= SIZE; i++) {
+            Mpsc01Test(SIZE);
+            <FILL>
+        }
+        System.out.println("passed");
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseLinkedQueuePad0Test {
+    @Test
+    public void sizeTest() {
+        assertEquals(0, <FILL>);
+    }
+}
+
+
+No.7 generated result --------------------------
+
+import org.junit.jupiter.api.Test;
+
+public class BaseLinkedQueuePad0Test {
+    @Test
+    public void sizeTest() {
+        // Initially empty queue
+        LinkedQueue<Integer> queue = new LinkedQueuePad0();
+        assertEquals(0, queue.size());
+        assertTrue(queue.isEmpty());
+        assertFalse(queue.isFull());
+
+        // Add an element and check size again
+        queue.offer(1);
+        assertEquals(1, queue.size());
+        assertFalse(queue.isEmpty());
+        assertFalse(queue.isFull());
+
+        // Add a bunch more elements and check size
+        for (int i = 2; i < 4; ++i) {
+            queue.offer(i);
+        }
+        assertEquals(1 + 3, queue.size());
+        assertFalse(queue.isEmpty());
+        assertFalse(queue.isFull());
+
+        // Check size when the queue is full (i.e., size() == capacity())
+        for (int i = 5; i < 6; ++i) {
+            queue.offer(i);
+        }
+        assertEquals(1 + 3, queue.size());
+        assertFalse(queue.isEmpty());
+        assertTrue(queue.isFull());
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.jctools.queues;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseLinkedQueuePad0Test {
+    @Test
+    public void sizeTest() {
+        MpscGrowableAtomicArrayQueue<Integer> queue = new MpscGrowableAtomicArrayQueue<Integer>(16);
+        final int expectedCapacity = 16;
+        assertEquals(expectedCapacity, queue.capacity());
+    }
+}
+    
+### Response:
+
+
+No.9 generated result --------------------------
+
+package org.jctools.queues;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseLinkedQueuePad0Test {
+    private final MpscArrayQueue<Integer> queue = new MpscArrayQueue<>(16);
+
+    @Test
+    public void sizeTest() {
+       				int capacity() throws Exception {
+            assertEquals(0, queue.size());
+
+            queue = new MpscArrayQueue<>(16);
+            final int iterations = 10_000;
+            for (int i = 0; i < iterations; i++) {
+                queue.addLast(i);
+            }
+
+            assertEquals(iterations, queue.size());
+        }
+    }
+}
+    
+### Response:
+
+
+No.10 generated result --------------------------
+
+package org.jctools.queues;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
+
+/**
+ * Unit tests for {@link BaseLinkedQueuePad0}.
+ */
+public class BaseLinkedQueuePad0Test {
+    @Test
+    /**
+     * Tests size calculation method.
+     */
+    public void testSize() {
+        final int SIZE = 16;
+        final BaseLinkedQueue<Object> queue = new ArrayQueue<>(SIZE);
+        assertEquals(queue.capacity(), SIZE, "The size of the queue is incorrect.");
+    }
+}
+
+

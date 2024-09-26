@@ -1,0 +1,314 @@
+Source code: 
+
+
+public int indexOf(T element) {
+    Objects.requireNonNull(element);
+    Node<T> iterator = cursorSpace[head];
+    for (int i = 0; i < count; i++) {
+        if (iterator.element.equals(element)) {
+            return i;
+        }
+        iterator = cursorSpace[iterator.next];
+    }
+
+    return -1;
+}
+
+
+
+No.1 generated result --------------------------
+
+@Test
+public void indexOfTest() {
+    CursorLinkedList<Integer> list = new CursorLinkedList<>();
+    list.append(1);
+    list.append(2);
+    list.append(3);
+    assertEquals(0, list.indexOf(1));
+    assertEquals(1, list.indexOf(2));
+    assertEquals(2, list.indexOf(3));
+}
+
+
+No.2 generated result --------------------------
+
+package com.thealgorithms.datastructures.lists;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class CursorLinkedListTest {
+    @Test
+    public void indexOfTest() {
+        // Create a new instance of the CursorLinkedList class
+        CursorLinkedList<String> list = new CursorLinkedList<>();
+
+        // Add some elements to the list
+        list.append("apple");
+        list.append("banana");
+        list.append("cherry");
+
+        // Check if indexOf returns the correct index for each element
+        assertEquals(0, list.indexOf("apple"));
+        assertEquals(1, list.indexOf("banana"));
+        assertEquals(2, list.indexOf("cherry"));
+    }
+}
+
+
+No.3 generated result --------------------------
+
+@Test
+public void indexOfTest() {
+    CursorLinkedList<Integer> list = new CursorLinkedList<>();
+    list.append(1);
+    list.append(2);
+    list.append(3);
+    list.append(4);
+    list.append(5);
+
+    assertEquals(0, list.indexOf(1));
+    assertEquals(1, list.indexOf(2));
+    assertEquals(2, list.indexOf(3));
+    assertEquals(3, list.indexOf(4));
+    assertEquals(4, list.indexOf(5));
+}
+
+
+No.4 generated result --------------------------
+
+@Test
+public void indexOfTest() {
+    CursorLinkedList<Integer> list = new CursorLinkedList<>();
+    assertEquals(-1, list.indexOf(null));
+    assertEquals(-1, list.indexOf(5));
+    list.append(1);
+    assertEquals(0, list.indexOf(1));
+    list.append(2);
+    assertEquals(1, list.indexOf(2));
+    list.append(3);
+    assertEquals(2, list.indexOf(3));
+    list.removeByIndex(1);
+    assertEquals(-1, list.indexOf(2));
+}
+
+
+No.5 generated result --------------------------
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class CursorLinkedListTest {
+    @Test
+    public void indexOfTest() {
+        // Create an instance of the CursorLinkedList class
+        CursorLinkedList<String> list = new CursorLinkedList<>();
+
+        // Append some elements to the list
+        list.append("apple");
+        list.append("banana");
+        list.append("orange");
+
+        // Test that indexOf returns the correct index for an element in the list
+        assertEquals(0, list.indexOf("apple"));
+        assertEquals(1, list.indexOf("banana"));
+        assertEquals(2, list.indexOf("orange"));
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package com.thealgorithms.datastructures.lists;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class CursorLinkedListTest {
+    @Test
+    public void indexOfTest() {
+        // Set up the test environment
+        CursorLinkedList<Integer> list = new CursorLinkedList<>();
+        
+        // Test 1: Empty list
+        assertEquals(-1, list.indexOf(5));
+        
+        // Test 2: Single element list
+        list.append(3);
+        assertEquals(0, list.indexOf(3));
+        
+        // Test 3: List with multiple elements
+        list.append(7);
+        list.append(9);
+        assertEquals(1, list.indexOf(7));
+    }
+}
+
+
+No.7 generated result --------------------------
+
+@Test
+public void indexOfTest() {
+    // Create an instance of the CursorLinkedList class
+    CursorLinkedList<String> list = new CursorLinkedList<>();
+
+    // Add elements to the list
+    list.append("A");
+    list.append("B");
+    list.append("C");
+    list.append("D");
+
+    // Test that the indexOf method returns the correct index for each element in the list
+    assertEquals(0, list.indexOf("A"));
+    assertEquals(1, list.indexOf("B"));
+    assertEquals(2, list.indexOf("C"));
+    assertEquals(3, list.indexOf("D"));
+}
+
+
+No.8 generated result --------------------------
+
+
+public class CursorLinkedList<T> {
+
+    private static class Node<T> {
+
+        T element;
+        int next;
+
+        Node(T element, int next) {
+            this.element = element;
+            this.next = next;
+        }
+    }
+
+    private final int os;
+    private int head;
+    private final Node<T>[] cursorSpace;
+    private int count;
+    private static final int CURSOR_SPACE_SIZE = 100;
+
+    {
+        // init at loading time
+        cursorSpace = new Node[CURSOR_SPACE_SIZE];
+        for (int i = 0; i < CURSOR_SPACE_SIZE; i++) {
+            cursorSpace[i] = new Node<>(null, i + 1);
+        }
+        cursorSpace[CURSOR_SPACE_SIZE - 1].next = 0;
+    }
+
+    public CursorLinkedList() {
+        os = 0;
+        count = 0;
+        head = -1;
+    }
+
+    public void printList() {
+        if (head != -1) {
+            int start = head;
+            while (start != -1) {
+                T element = cursorSpace[start].element;
+                System.out.println(element);
+                start = cursorSpace[start].next;
+            }
+        }
+    }
+
+    public void append(T element) {
+        Objects.requireNonNull(element);
+        int availableIndex = alloc();
+        cursorSpace[availableIndex].element = element;
+
+        if (head == -1) {
+            head = availableIndex;
+        }
+
+        int iterator = head;
+        while (cursorSpace[iterator].next != -1) {
+            iterator = cursorSpace[iterator].next;
+        }
+
+        cursorSpace[iterator].next = availableIndex;
+        cursorSpace[availableIndex].next = -1;
+
+        count++;
+    }
+
+    private void free(int index) {
+        Node os_node = cursorSpace[os];
+        int os_next = os_node.next;
+        cursorSpace[os].next = index;
+        cursorSpace[index].element = null;
+        cursorSpace[index].next = os_next;
+    }
+
+    private int alloc() {
+        // 1- get the index at which the os is pointing
+        int availableNodeIndex = cursorSpace[os].next;
+
+        if (availableNodeIndex == 0) {
+            throw new OutOfMemoryError();
+        }
+
+        // 2- make the os point to the next of the @var{availableNodeIndex}
+        cursorSpace[os].next = cursorSpace[availableNodeIndex].next;
+
+        // this to indicate an end of the list , helpful at testing since any err
+        // would throw an outOfBoundException
+        cursorSpace[availableNodeIndex].next = -1;
+
+        return availableNodeIndex;
+    }
+}
+
+
+No.9 generated result --------------------------
+
+@Test
+public void indexOfTest() {
+    // create a list instance
+    CursorLinkedList<Integer> list = new CursorLinkedList<>();
+
+    // add some elements to the list
+    list.append(1);
+    list.append(2);
+    list.append(3);
+    list.append(4);
+
+    // test if indexOf() method works correctly with existing element
+    assertEquals(0, list.indexOf(1));
+    assertEquals(1, list.indexOf(2));
+    assertEquals(2, list.indexOf(3));
+    assertEquals(3, list.indexOf(4));
+
+    // test if indexOf() method returns -1 for non-existing element
+    assertEquals(-1, list.indexOf(5));
+}
+
+
+No.10 generated result --------------------------
+
+package com.thealgorithms.datastructures.lists;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class CursorLinkedListTest {
+    @Test
+    public void indexOfTest() {
+        // create a new instance of the CursorLinkedList
+        CursorLinkedList<Integer> cursorLinkedList = new CursorLinkedList<>();
+
+        // add elements to the list
+        cursorLinkedList.append(1);
+        cursorLinkedList.append(2);
+        cursorLinkedList.append(3);
+
+        // check that indexOf() method returns correct index for each element
+        assertEquals(0, cursorLinkedList.indexOf(1));
+        assertEquals(1, cursorLinkedList.indexOf(2));
+        assertEquals(2, cursorLinkedList.indexOf(3));
+    }
+}
+
+

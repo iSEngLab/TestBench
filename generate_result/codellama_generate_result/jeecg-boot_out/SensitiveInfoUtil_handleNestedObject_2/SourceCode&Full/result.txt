@@ -1,0 +1,1153 @@
+Source code: 
+
+
+public static void handleNestedObject(Object obj, Class entity, boolean isEncode) throws IllegalAccessException {
+    Field[] fields = obj.getClass().getDeclaredFields();
+    for (Field field : fields) {
+        if(field.getType().isPrimitive()){
+            continue;
+        }
+        if(field.getType().equals(entity)){
+            // 对象里面是实体
+            field.setAccessible(true);
+            Object nestedObject = field.get(obj);
+            handlerObject(nestedObject, isEncode);
+            break;
+        }else{
+            // 对象里面是List<实体>
+            if(field.getGenericType() instanceof ParameterizedType){
+                ParameterizedType pt = (ParameterizedType)field.getGenericType();
+                if(pt.getRawType().equals(List.class)){
+                    if(pt.getActualTypeArguments()[0].equals(entity)){
+                        field.setAccessible(true);
+                        Object nestedObject = field.get(obj);
+                        handleList(nestedObject, entity, isEncode);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.alibaba.fastjson.serializer;
+
+import java.lang.reflect.Type;
+
+/**
+ * @Description 敏感信息掩码处理类
+ */
+public class SensitiveInfoSerializer extends JSONSerializable {
+    private static final String regex = "<REGEX>";
+    private Type fieldType;
+    private Object object;
+    
+    public SensitiveInfoSerializer(String string) {
+        this.fieldType = fieldType;
+        this.object = object;
+    }
+
+    @Override
+    public void write(JSONSerializer serializer, Object object, Type fieldType, int features) {
+        String valueStr = JSONUtil.toJson(object).toString();
+        // 将value转换为对应的敏感信息类型
+        if (fieldType == <TYPE>) {
+            // 处理<TYPE>的值，可以做一些特殊处理
+            String handle = SensitiveInfoUtil.handle(valueStr, regex);
+            serializer.write(handle);
+            return;
+        } else if (fieldType == <TYPE>) {
+            // 处理<TYPE>的值，可以做一些特殊处理
+            String handle = SensitiveInfoUtil.handle(valueStr, regex);
+            serializer.write(handle);
+            return;
+        }
+        // 其他类型可以直接使用
+        serializer.write(object);
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jeecg.common.desensitization;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
+import lombok.extern.slf4j.Slf4j;
+import org.jeecg.common.api.vo.Result;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+/**
+ * 全局异常处理器
+ */
+@Slf4j
+@ControllerAdvice
+public class JeecgBootExceptionAdvisor {
+    @ExceptionHandler(JeecgBootException.class)
+    @ResponseBody
+    public Result<String> handlerJeecgBootException(JeecgBootException e){
+        log.error("系统异常",e);
+        return Result.error(e.getMessage());
+    }
+}
+    
+
+### Response:
+
+
+No.3 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import lombok.*;
+import java.io.Serializable;
+import java.time.LocalDate;
+import java.util.List;
+
+@Getter
+@Setter
+@Builder
+public class User implements Serializable {
+    private String id;
+    private String name;
+    private int age;
+    private LocalDate birthday;
+    private List<String> addresses;
+}
+
+
+
+No.4 generated result --------------------------
+
+package com.test;
+
+import java.util.Arrays;
+
+public class SensitiveInfoUtilTest {
+
+  @Test
+  public void testHandleNestedObject() throws Exception {
+      <FILL>
+    }
+}
+    
+
+### Response:
+
+
+No.5 generated result --------------------------
+
+package org.jeecg.common.desensitization;
+
+import org.jeecg.common.util.oConvertUtils;
+
+/**
+ * 脱敏工具类
+ */
+public class SensitiveInfoUtil {
+    /**
+     * [身份证号] 显示最后四位，其他隐藏。共计18位或者15位
+     * <p>
+     * 支持32位身份证号码的处理
+     */
+    public static String idCardNum(String id) {
+        if (oConvertUtils.isEmpty(id)) {
+            return "";
+        }
+        int length = getLength(id);
+        if (length == 18) {
+            return formatRight(id, 4);
+        } else {
+            return formatRight(id, 6);
+        }
+    }
+
+    /**
+     * [银行卡号] 前六位，后四位，其他用星号隐藏，每位1个星号
+     */
+    public static String bankCard(String cardNum) {
+        if (oConvertUtils.isEmpty(cardNum)) {
+            return "";
+        }
+        return formatBetween(cardNum, 6, 4);
+    }
+
+    /**
+     * [邮箱] 只显示字符，其他隐藏为2个星号<例子: j**@163.com>
+     */
+    public static String email(String email) {
+        if (oConvertUtils.isEmpty(email)) {
+            return "";
+        }
+        int index = email.indexOf("@");
+        if (index <= 0){
+            return email;
+        }
+        String preEmail = email.substring(0, 1);
+        String postEmail = email.substring(index);
+        return preEmail + "**" + postEmail;
+    }
+
+    /**
+     * [姓名] 只显示第一个汉字，其他隐藏为2个星号<例子：**某某>
+     */
+    public static String chineseName(String name) {
+        if (oConvertUtils.isEmpty(name)) {
+            return "";
+        }
+        final char[] chars = name.toCharArray();
+        StringBuilder sb = new StringBuilder();
+        for (char c : chars) {
+            if (c > 128) {
+                sb.append("*");
+            } else {
+                sb.append(c);
+            }
+        }
+        return setLength(sb.toString(), 2, "**");
+    }
+
+    /**
+     * [中国车牌号] 只显示最后三位，其他隐藏为1个星号<例子：****某某>
+     */
+    public static String plateNum(String num) {
+        if (oConvertUtils.isEmpty(num)) {
+            return "";
+        }
+        return setLength(num, 3, "*");
+    }
+
+    /**
+     * [密码] 密码的全部字符都用*代替，比如：******
+     */
+    public static String password(String pwd) {
+        if (oConvertUtils.isEmpty(pwd)) {
+            return "";
+        }
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < pwd.length(); i++) {
+            sb.append("*");
+        }
+        return sb.toString();
+    }
+
+    /**
+     * [电话号码] 前三位，后四位，其他隐藏，比如：138******1234
+     */
+    public static String phoneNum(String num) {
+        if (oConvertUtils.isEmpty(num)) {
+            return "";
+        }
+        return formatBetween(num, 3, 4);
+    }
+
+    /**
+     * [地址] 只显示到地区，不显示详细地址；如：北京市海淀区****
+     */
+    public static String address(String addr) {
+        if (oConvertUtils.isEmpty(addr)) {
+            return "";
+        }
+        final int index = addr.indexOf(" ");
+        if (index <= 0) {
+            return addr;
+        } else {
+            return setLength(addr, index + 1, "**");
+        }
+    }
+
+    /**
+     * [IP地址] 只显示最后一个IP地址的后面几点，其他隐藏。比如：192.168*******
+     */
+    public static String ipAddr(String addr) {
+        if (oConvertUtils.isEmpty(addr)) {
+            return "";
+        }
+        final int index = addr.lastIndexOf(".");
+        return setLength(addr, index + 1, "*");
+    }
+
+    /**
+     * [银达] 只显示到地区，不显示详细地址；如：上海市*****
+     */
+    public static String zipAddr(String addr) {
+        if (oConvertUtils.isEmpty(addr)) {
+            return "";
+        }
+        final int index = addr.indexOf(" ");
+        if (index <= 0) {
+            return addr;
+        } else {
+            return setLength(addr, index + 1, "*");
+        }
+    }
+
+    /**
+     * [身份证件号] 显示最后一位，其他隐藏。如：*********
+     */
+    public static String idNum(String num) {
+        if (oConvertUtils.isEmpty(num)) {
+            return "";
+        }
+        int length = getLength(num);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < length - 1; i++) {
+            sb.append("*");
+        }
+        return num.substring(length - 1, length) + sb.toString();
+    }
+
+    /**
+     * [银达] 显示最后两位，其他隐藏。如：***********
+     */
+    public static String zipNum(String num) {
+        if (oConvertUtils.isEmpty(num)) {
+            return "";
+        }
+        int length = getLength(num);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < length - 2; i++) {
+            sb.append("*");
+        }
+        return num.substring(length - 2, length) + sb.toString();
+    }
+
+    /**
+     * [银达] 显示前两位，其他隐藏。如：13******
+     */
+    public static String frontTwoNum(String num) {
+        if (oConvertUtils.isEmpty(num)) {
+            return "";
+        }
+        int length = getLength(num);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 2; i < length; i++) {
+            sb.append("*");
+        }
+        return num.substring(0, 2) + sb.toString();
+    }
+
+    /**
+     * [银达] 显示最后三位，其他隐藏。如：*******13
+     */
+    public static String endThreeNum(String num) {
+        if (oConvertUtils.isEmpty(num)) {
+            return "";
+        }
+        int length = getLength(num);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < length - 3; i++) {
+            sb.append("*");
+        }
+        return num.substring(length - 3, length) + sb.toString();
+    }
+
+    /**
+     * [银达] 显示前四位，其他隐藏。如：1234*****
+     */
+    public static String frontFourNum(String num) {
+        if (oConvertUtils.isEmpty(num)) {
+            return "";
+        }
+        int length = getLength(num);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 4; i < length; i++) {
+            sb.append("*");
+        }
+        return num.substring(0, 4) + sb.toString();
+    }
+
+    /**
+     * [银达] 显示前五位，其他隐藏。如：12345*****
+     */
+    public static String frontFiveNum(String num) {
+        if (oConvertUtils.isEmpty(num)) {
+            return "";
+        }
+        int length = getLength(num);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 5; i < length; i++) {
+            sb.append("*");
+        }
+        return num.substring(0, 5) + sb.toString();
+    }
+
+    /**
+     * [银达] 显示前六位，其他隐藏。如：123456*****
+     */
+    public static String frontSixNum(String num) {
+        if (oConvertUtils.isEmpty(num)) {
+            return "";
+        }
+        int length = getLength(num);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 6; i < length; i++) {
+            sb.append("*");
+        }
+        return num.substring(0, 6) + sb.toString();
+    }
+
+    /**
+     * [银达] 显示前七位，其他隐藏。如：1234567*****
+     */
+    public static String frontSevenNum(String num) {
+        if (oConvertUtils.isEmpty(num)) {
+            return "";
+        }
+        int length = getLength(num);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 7; i < length; i++) {
+            sb.append("*");
+        }
+        return num.substring(0, 7) + sb.toString();
+    }
+
+    /**
+     * [银达] 显示前八位，其他隐藏。如：12345678*****
+     */
+    public static String frontEightNum(String num) {
+        if (oConvertUtils.isEmpty(num)) {
+            return "";
+        }
+        int length = getLength(num);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 8; i < length; i++) {
+            sb.append("*");
+        }
+        return num.substring(0, 8) + sb.toString();
+    }
+
+    /**
+     * [银达] 显示前九位，其他隐藏。如：123456789*****
+     */
+    public static String frontNineNum(String num) {
+        if (oConvertUtils.isEmpty(num)) {
+            return "";
+        }
+        int length = getLength(num);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 9; i < length; i++) {
+            sb.append("*");
+        }
+        return num.substring(0, 9) + sb.toString();
+    }
+
+    /**
+     * [银达] 显示前十位，其他隐藏。如：12345678******
+     */
+    public static String frontTenNum(String num) {
+        if (oConvertUtils.isEmpty(num)) {
+            return "";
+        }
+        int length = getLength(num);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 10; i < length; i++) {
+            sb.append("*");
+        }
+        return num.substring(0, 10) + sb.toString();
+    }
+
+    /**
+     * [银达] 显示前十一位，其他隐藏。如：123456789*****
+     */
+    public static String frontElevenNum(String num) {
+        if (oConvertUtils.isEmpty(num)) {
+            return "";
+        }
+        int length = getLength(num);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 11; i < length; i++) {
+            sb.append("*");
+        }
+        return num.substring(0, 11) + sb.toString();
+    }
+
+    /**
+     * [银达] 显示前十二位，其他隐藏。如：123456789*****
+     */
+    public static String frontTwelveNum(String num) {
+        if (oConvertUtils.isEmpty(num)) {
+            return "";
+        }
+        int length = getLength(num);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 12; i < length; i++) {
+            sb.append("*");
+        }
+        return num.substring(0, 12) + sb.toString();
+    }
+
+    /**
+     * [银达] 显示前十三位，其他隐藏。如：：123456789*****
+     */
+    public static String frontThirteenNum(String num) {
+        if (oConvertUtils.isEmpty(num)) {
+            return "";
+        }
+        int length = getLength(num);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 13; i < length; i++) {
+            sb.append("*");
+        }
+        return num.substring(0, 13) + sb.toString();
+    }
+
+    /**
+     * [银达] 显示前十四位，其他隐藏。如：：123456789*****
+     */
+    public static String frontFourteenNum(String num) {
+        if (oConvertUtils.isEmpty(num)) {
+            return "";
+        }
+        int length = getLength(num);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 14; i < length; i++) {
+            sb.append("*");
+        }
+        return num.substring(0, 14) + sb.toString();
+    }
+
+    /**
+     * [银达] 显示前十五位，其他隐藏。如：：123456789*****
+     */
+    public static String frontFifteenNum(String num) {
+        if (oConvertUtils.isEmpty(num)) {
+            return "";
+        }
+        int length = getLength(num);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 15; i < length; i++) {
+            sb.append("*");
+        }
+        return num.substring(0, 15) + sb.toString();
+    }
+
+    /**
+     * [银达] 显示前十六位，其他隐藏。如：：123456789*****
+     */
+    public static String frontSixteenNum(String num) {
+        if (oConvertUtils.isEmpty(num)) {
+            return "";
+        }
+        int length = getLength(num);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 16; i < length; i++) {
+            sb.append("*");
+        }
+        return num.substring(0, 16) + sb.toString();
+    }
+
+    /**
+     * [银达] 显示前十七位，其他隐藏。如：：123456789*****
+     */
+    public static String frontSeventeenNum(String num) {
+        if (oConvertUtils.isEmpty(num)) {
+            return "";
+        }
+        int length = getLength(num);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 17; i < length; i++) {
+            sb.append("*");
+        }
+        return num.substring(0, 17) + sb.toString();
+    }
+
+    /**
+     * [银达] 显示前十八位，其他隐藏。如：：123456789*****
+     */
+    public static String frontEightteenNum(String num) {
+        if (oConvertUtils.isEmpty(num)) {
+            return "";
+        }
+        int length = getLength(num);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 18; i < length; i++) {
+            sb.append("*");
+        }
+        return num.substring(0, 18) + sb.toString();
+    }
+
+    /**
+     * [银达] 显示前十九位，其他隐藏。如：：123456789*****
+     */
+    public static String frontNineteenNum(String num) {
+        if (oConvertUtils.isEmpty(num)) {
+            return "";
+        }
+        int length = getLength(num);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 19; i < length; i++) {
+            sb.append("*");
+        }
+        return num.substring(0, 19) + sb.toString();
+    }
+
+}
+
+
+No.6 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * @author luke
+ */
+@Slf4j
+public class SensitiveInfoUtil {
+    /**
+     * 处理嵌套对象,插入脱敏策略逻辑
+     * @param obj    需要被过滤的数据对象
+     * @return       返回过滤后的数据对象
+     */
+    public static <T> T handleNestedObject(T obj) {
+        return null;
+    }
+}
+
+    
+
+
+No.7 generated result --------------------------
+
+package com.test;
+
+import org.jeecg.common.desensitization.util.SensitiveInfoUtil;
+
+/**
+ * 测试类
+ */
+public class Test {
+    public static void main(String[] args) throws Exception {
+        SensitiveInfoUtil sensitive = new SensitiveInfoUtil();
+        String idCard = "430524198507056459";
+        System.out.println("原数据："+idCard);
+        String idCardSensitive = sensitive.desensitize(idCard, "");
+        System.out.println("脱敏后数据："+idCardSensitive);
+    }
+}
+
+### Response:
+
+
+No.8 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import org.springframework.beans.BeanUtils;
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.util.*;
+import java.math.BigDecimal;
+import java.sql.Date;
+
+/**
+ * 处理嵌套对象类型数据脱敏工具类（未考虑静态成员变量）
+ */
+public class NestedObjectHandler {
+    
+    private static final String[] SENSITIVE_FIELD = {"password", "cardNo", "bankCard", "phoneNumber"};
+    /**
+     * 处理嵌套对象类型数据脱敏工具方法
+     * @param sourceBean 源bean对象（未经脱敏）
+     * @return 返回脱敏后的bean对象
+     */
+    public static Object handle(Object sourceBean) {
+        if (sourceBean == null) {
+            return null;
+        }
+        // 获取源bean类型
+        Class<?> sourceClazz = sourceBean.getClass();
+        // 创建新的脱敏bean对象
+        Object targetBean = newTargetObject(sourceBean);
+        
+        // 赋值
+        copyValues(sourceBean, targetBean);
+
+        return targetBean;
+    }
+    
+    /**
+     * 创建新的脱敏bean对象
+     */
+    private static Object newTargetObject(Object sourceBean) {
+        Class<?> clazz = sourceBean.getClass();
+        
+        try {
+            // 如果是集合类型，需要获取泛型类型参数创建新的对象
+            if (Collection.class.isAssignableFrom(clazz)) {
+                Collection<?> collection = (Collection) sourceBean;
+                
+                // 判断是否存在泛型类型参数
+                ParameterizedType parameterizedType = (ParameterizedType) clazz.getGenericSuperclass();
+                if (parameterizedType != null && parameterizedType.getActualTypeArguments().length > 0) {
+                    Class<?> collectionClazz = (Class<?>) parameterizedType.getActualTypeArguments()[0];
+                    
+                    // 创建集合对象
+                    Collection targetCollection;
+                    if (List.class.isAssignableFrom(clazz)) {
+                        targetCollection = new ArrayList<>();
+                    } else if (Set.class.isAssignableFrom(clazz)) {
+                        targetCollection = new HashSet<>();
+                    } else {
+                        // 不支持的集合类型
+                        throw new UnsupportedOperationException();
+                    }
+                    
+                    // 遍历源对象，创建新的脱敏对象并赋值
+                    for (Object sourceItem : collection) {
+                        Object targetItem = newTargetObject(sourceItem);
+                        
+                        if (!targetCollection.getClass().isInstance(targetItem)) {
+                            throw new ClassCastException("泛型类型参数不匹配");
+                        }
+                        targetCollection.add(targetItem);
+                    }
+                    
+                    return targetCollection;
+                } else {
+                    // 不支持的集合类型
+                    throw new UnsupportedOperationException();
+                }
+            } else if (Map.class.isAssignableFrom(clazz)) {
+                // TODO：未完善Map类型脱敏
+                return null;
+            } else {
+                return clazz.newInstance();
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("创建新的脱敏bean对象失败", e);
+        }
+    }
+    
+    /**
+     * 赋值
+     */
+    private static void copyValues(Object sourceBean, Object targetBean) {
+        
+        // 获取源bean类型
+        Class<?> sourceClazz = sourceBean.getClass();
+        
+        Field[] fields = sourceClazz.getDeclaredFields();
+        for (Field field : fields) {
+            if (!isSensitive(field)) {
+                // 跳过不敏的字段
+                continue;
+            }
+            
+            // 获取数据类型
+            Class<?> fieldType = field.getType();
+            
+            try {
+                
+                if (isSimpleDataType(fieldType)) {
+                    Object value = BeanUtils.getFieldValue(sourceBean, field);
+                    
+                    // 赋值脱敏数据类型
+                    copyValuesForSimpleDataType(value, targetBean, field);
+                } else if (Collection.class.isAssignableFrom(fieldType)) {
+                    Collection sourceCollection = (Collection) BeanUtils.getFieldValue(sourceBean, field);
+                    
+                    // 赋值脱敏数据类型（集合）
+                    copyValuesForSimpleDataType(sourceCollection, targetBean, field);
+                } else if (Map.class.isAssignableFrom(fieldType)) {
+                    Map sourceMap = (Map) BeanUtils.getFieldValue(sourceBean, field);
+                    
+                    // 赋值脱敏数据类型（map）
+                    copyValuesForSimpleDataType(sourceMap, targetBean, field);
+                } else {
+                    Object sourceObject = BeanUtils.getFieldValue(sourceBean, field);
+                    
+                    // 如果不存在脱敏数据类型，则递交集合类型创建新对象并赋值
+                    copyValuesForObject(sourceObject, targetBean, field);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("复制值失败", e);
+            }
+        }
+    }
+    
+    /**
+     * 判断是否为敏的字段
+     */
+    private static boolean isSensitive(Field field) {
+        String fieldName = field.getName();
+        
+        for (String sensitiveField : SENSITIVE_FIELD) {
+            if (sensitiveField.equals(fieldName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * 判断是否为简单的数据类型（包括：基本数据类型、java.sql.Date）
+     */
+    private static boolean isSimpleDataType(Class<?> fieldType) {
+        return isBaseDataType(fieldType) || Date.class.isAssignableFrom(fieldType);
+    }
+    
+    /**
+     * 判断是否为基本数据类型（包括：Integer、Double、Float、Long、Byte）
+     */
+    private static boolean isBaseDataType(Class<?> fieldType) {
+        return Integer.class.isAssignableFrom(fieldType) || Double.class.isAssignableFrom(fieldType) 
+                || Float.class.isAssignableFrom(fieldType) || Long.class.isAssignableFrom(fieldType) 
+                || Byte.class.isAssignableFrom(fieldType);
+    }
+    
+    /**
+     * 复制简单数据类型（包括：基本数据类型、java.sql.Date）到脱敏对象中的字段
+     */
+    private static void copyValuesForSimpleDataType(Object value, Object targetBean, Field field) {
+        try {
+            BeanUtils.copyFieldValue(value, targetBean, field);
+        } catch (Exception e) {
+            throw new RuntimeException("复制简单数据类型失败", e);
+        }
+    }
+    
+    /**
+     * 复制集合类型到脱敏对象中的字段
+     */
+    private static void copyValuesForSimpleDataType(Collection<?> collection, Object targetBean, Field field) {
+        
+        // 判断是否可以赋值（是否存在相同类型的字段）
+        if (!hasSameFieldWithSimpleDataType(targetBean, field)) {
+            throw new RuntimeException("不支持脱敏集合类型");
+        }
+        
+        // 赋值集合数据类型
+        Collection collectionValue = (Collection) BeanUtils.getFieldValue(targetBean, field);
+        if (collection == null) {
+            try {
+                BeanUtils.setFieldValue(targetBean, field, collectionValue);
+            } catch (Exception e) {
+                throw new RuntimeException("复制集合类型失败", e);
+            }
+            
+        // 赋值单个数据类型
+        } else {
+            if (!hasSameFieldWithSimpleDataType(targetBean, field)) {
+                throw new RuntimeException("不支持单简单数据类型");
+            }
+            
+            for (Object value : collection) {
+                copyValuesForSimpleDataType(value, targetBean, field);
+            }
+        }
+    }
+    
+    /**
+     * 复制对象到脱敏对象中的字段（不支持集合类型）
+     */
+    private static void copyValuesForObject(Object sourceObject, Object targetBean, Field field) {
+        if (sourceObject == null) {
+            return;
+        }
+        
+        try {
+            
+            // 判断是否为新对象
+            boolean isNew = false;
+            Object newObject = BeanUtils.getFieldValue(targetBean, field);
+            if (newObject == null) {
+                isNew = true;
+                
+                String sourceObjectClassName = sourceObject.getClass().getName();
+                try {
+                    newObject = Class.forName(sourceObjectClassName).newInstance();
+                    
+                    // 设置新对象的属性值
+                    BeanUtils.setFieldValue(targetBean, field, newObject);
+                } catch (Exception e) {
+                    throw new RuntimeException("创建新对象失败", e);
+                }
+            }
+            
+            // 复制字段值（包括：基本数据类型、java.sql.Date）
+            copyValuesForObjectByField(sourceObject, newObject, isNew);
+        } catch (Exception e) {
+            throw new RuntimeException("复制对象失败", e);
+        }
+    }
+    
+    /**
+     * 根据字段复制字段值（包括：基本数据类型、java.sql.Date）
+     */
+    private static void copyValuesForObjectByField(Object sourceObject, Object targetObject, boolean isNew) {
+        Field[] fields = sourceObject.getClass().getDeclaredFields();
+        
+        for (Field field : fields) {
+            if (!isSensitive(field)) {
+                // 跳过不敏的字段
+                continue;
+            }
+            
+            try {
+                
+                Object value = BeanUtils.getFieldValue(sourceObject, field);
+                Class<?> type = value != null ? value.getClass() : null;
+                
+                // 判断是否为简单数据类型（包括：基本数据类型、java.sql.Date），复制时采用赋值方法
+                if (isBaseDataType(type)) {
+                    copyValuesForSimpleDataType(value, targetObject, field);
+                    
+                // 判断是否为集合类型，复制时采用赋值集合方法
+                } else if (Collection.class.isAssignableFrom(type)) {
+                    copyValuesForSimpleDataType((Collection) value, targetObject, field);
+                    
+                // 判断是否为对象类型，复制时采用赋值对象方法
+                } else if (!isNew && (value == null)) {
+                    continue;
+                    
+                // 复制字段到新对象（不支持集合类型）
+                } else {
+                    copyValuesForObjectByField(value, targetObject, field);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("复制字段失败", e);
+            }
+        }
+    }
+    
+    /**
+     * 判断是否为新对象
+     */
+    private static boolean isNew(Object targetBean, Field field) {
+        return BeanUtils.getFieldValue(targetBean, field) == null;
+    }
+    
+    /**
+     * 判断是否为单个简单数据类型（包括：基本数据类型、java.sql.Date）
+     */
+    private static boolean isSingleSimpleDataType(Class<?> type) {
+        return !Collection.class.isAssignableFrom(type);
+    }
+    
+    /**
+     * 判断是否为集合类型（不支持：基本数据类型、java.sql.Date）
+     */
+    private static boolean isCollectionSimpleDataType(Class<?> type) {
+        return Collection.class.isAssignableFrom(type);
+    }
+    
+    /**
+     * 判断是否为简单数据类型（包括：基本数据类型、java.sql.Date）
+     */
+    private static boolean isSimpleDataType(Class<?> type) {
+        return isSingleSimpleDataType(type) || isCollectionSimpleDataType(type);
+    }
+    
+    /**
+     * 判断是否为同一类型的字段（包括：基本数据类型、java.sql.Date）
+     */
+    private static boolean hasSameFieldWithSimpleDataType(Object targetBean, Field field) {
+        try {
+            Class<?> type = BeanUtils.getFieldValue(targetBean, field).getClass();
+            
+            // 判断是否为单个简单数据类型（包括：基本数据类型、java.sql.Date）
+            if (isSingleSimpleDataType(type)) {
+                return true;
+                
+            // 判断是否为集合类型（不支持：基本数据类型、java.sql.Date）
+            } else if (!Collection.class.isAssignableFrom(type))) {
+                throw new RuntimeException("不支持的简单数据类型");
+                
+            // 判断是否为集合类型（不支持：基本数据类型、java.sql.Date）
+            } else if (Collection.class.isAssignableFrom(type)) {
+                return false;
+            }
+            
+        } catch (Exception e) {
+            throw new RuntimeException("判断是否为同一类型的字段失败", e);
+        }
+        
+        return true;
+    }
+    
+}
+
+
+No.9 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import java.lang.reflect.Array;
+import java.math.BigDecimal;
+import java.time.*;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
+
+/**
+ * 脱敏工具类，提供多种规则和简单的封装方式来支持各种情景的脱敏需求。
+ * <p>
+ * 1. 通用的脱敏方法<br/>
+ * 1.1 {@link #desensitizedField(String, String)} 直接将字符串指定位置改成*，支持中英文和数字、符号的混合。
+ * <p>
+ * 2. 多种常见个人信息脱敏方法<br/>
+ * 2.1 {@link #idCard(String)} 身份证号，显示前后4位，其他隐藏。<br>
+ * 2.2 {@link #name(String)} 姓名，只显示第一个汉字，其他隐藏为2个星号，英文全部显示。<br>
+ * 2.3 {@link #mobilePhone(String)} 手机号，前三位，后4位，其他隐藏，共计7位，如138******1234。<br>
+ * 2.4 {@link #address(String, int)} 地址信息，从默认的倒数第几位开始隐藏为星号，最小长度需要大于等于2，如：广东省广州市广州大道100号
+ * <p>
+ * 3. 多种常见敏感信息脱敏方法<br/>
+ * 3.1 {@link #email(String)} 电子邮箱，只显示第一个字母，前面的隐藏为2个星号，英文全部显示。<br>
+ * 3.2 {@link #bankCard(String)} 银行卡号，前6位，后4位，其他用星号隐藏，每一位1个星号。<br>
+ * 3.3 {@link #cnapsCode(String)} 公司开户银行联行号,前两位，其他用星号隐藏，每一位1个星号。<br>
+ */
+public class SensitiveInfoUtil {
+    /**
+     * 默认的敏感信息规则，用于针对所有字符串做脱敏处理。
+     */
+    public static final String DEFAULT_RULE = "defaultRule";
+
+    /**
+     * 根据指定的规则脱敏对象
+     * @param object      对象
+     * @param ruleName    规则名称
+     */
+    public static Object desensitized(Object object, String ruleName) {
+        if (object == null) {
+            return null;
+        }
+        Class clazz = object.getClass();
+        if (!clazz.isArray() && !Iterable.class.isAssignableFrom(clazz)) {
+            throw new IllegalArgumentException("The target must be an array or collection.");
+        }
+        return desensitizedArrayOrCollection(object, ruleName);
+    }
+
+    /**
+     * 根据指定的规则脱敏字符串对象
+     * @param value     值
+     * @param ruleName  规则名称
+     */
+    public static Object desensitizedString(String value, String ruleName) {
+        if (value == null || value.length() < 1) {
+            return null;
+        }
+        if ("defaultRule".equals(ruleName)) {
+            // 默认规则只是将字符串中每一个位置改成*
+            String result = "";
+            for (int i = 0; i < value.length(); ++i) {
+                char c = value.charAt(i);
+                if (c >= 'a' && c <= 'z') { // 小写字母
+                    result += "*";
+                } else {
+                    result += String.valueOf(c);
+                }
+            }
+            return result;
+        }
+
+        throw new IllegalArgumentException("The rule name [" + ruleName + "] is not supported.");
+    }
+
+    /**
+     * 将对象或集合的每一个元素脱敏成指定的规则。
+     * @param target  对象或集合
+     * @param ruleName 规则名称
+     */
+    private static Object desensitizedArrayOrCollection(Object target, String ruleName) {
+        Class<?> clazz = target.getClass();
+        if (clazz.isArray()) { // 数组
+            int length = Array.getLength(target);
+            for (int i = 0; i < length; ++i) {
+                Object o = Array.get(target, i);
+                if (o instanceof String) {
+                    Array.set(target, i, desensitizedString((String) o, ruleName));
+                } else { // 嵌集合，直接脱敏每一个元素
+                    Array.set(target, i, desensitizedArrayOrCollection(o, ruleName));
+                }
+            }
+        } else if (Iterable.class.isAssignableFrom(clazz)) { // 集合，只需要对其中每一个元素做整脱敏
+            Iterator<?> iterator = ((Collection) target).iterator();
+            while (iterator.hasNext()) {
+                Object o = iterator.next();
+                if (o instanceof String) { // 字符串
+                    iterator.set(desensitizedString((String) o, ruleName));
+                } else { // 集合，直接脱敏每一个元素
+                    iterator.set(desensitizedArrayOrCollection(o, ruleName));
+                }
+            }
+        } else if (clazz == List.class) { // list，需要特别处理下标索引问题。
+            List<?> origin = ((List) target);
+            List<Object> desensitized = new ArrayList<>();
+            for (int i = 0; i < origin.size(); ++i) {
+                Object o = origin.get(i);
+                if (o instanceof String) { // 字符串
+                    desensitized.add(desensitizedString((String) o, ruleName));
+                } else { // 集合，直接脱敏每一个元素
+                    desensitized.add(desensitizedArrayOrCollection(o, ruleName));
+                }
+            }
+        } else if (clazz == Map.class) { // map，需要特别处理下标索引问题。
+            Map<?, ?> origin = ((Map) target);
+            Map<Object, Object> desensitized = new HashMap<>();
+            for (Map.Entry<?, ?> entry : origin.entrySet()) { // 只遍册map中的key和value
+                Object key = entry.getKey();
+                Object value = entry.getValue();
+                if (key instanceof String) { // 字符串
+                    desensitized.put(desensitizedString((String) key, ruleName),
+                            desensitizedArrayOrCollection(value, ruleName));
+                } else { // 集合，直接脱敏每一个元素
+                    desensitized.put(key,
+                            desensitizedArrayOrCollection(value, ruleName));
+                }
+            }
+        } else {
+            throw new IllegalArgumentException("The target type [" + clazz.getName() + "] is not supported.");
+        }
+        return target;
+    }
+}
+
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.common.desensitization.util;
+
+import java.lang.reflect.Field;
+import java.util.*;
+
+public class SensitiveInfoUtilTest {
+
+    @Test
+    public void handleNestedObjectTest() {
+        // 测试数据：嵌套对象的敏感信息脱敏
+        Person person = new Person();
+        person.setName("孙悟空");
+        Address address = new Address();
+        address.setDetailAddress("凉城一号");
+        person.setAddress(address);
+        Person nestedPerson = new Person();
+        nestedPerson.setName("赵敏");
+        Address nestedAddress = new Address();
+        nestedAddress.setDetailAddress("巫峡村");
+        nestedPerson.setAddress(nestedAddress);
+        person.setNestedPerson(nestedPerson);
+        
+        Person result = SensitiveInfoUtil.handleNestedObject(person, null, null);
+        assertNotNull(result.getAddress());
+        assertEquals("凉城一号", result.getAddress().getDetailAddress());
+        assertNotNull(result.getNestedPerson());
+        assertNotNull(result.getNestedPerson().getAddress());
+        assertEquals("巫峡村", person.getNestedPerson().getAddress().getDetailAddress());
+    }
+}
+    
+
+### Response:
+
+

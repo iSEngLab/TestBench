@@ -1,0 +1,710 @@
+Source code: 
+
+// Help any top-level NBSI to copy until completed.
+// Always return the _new version of *this* NBSI, in case we're nested.
+private NBSI help_copy() {
+  // Pick some words to help with - but only help copy the top-level NBSI.
+  // Nested NBSI waits until the top is done before we start helping.
+  NBSI top_nbsi = _non_blocking_set_int._nbsi;
+  final int HELP = 8;       // Tuning number: how much copy pain are we willing to inflict?
+  // We "help" by forcing individual bit indices to copy.  However, bits
+  // come in lumps of 64 per word, so we just advance the bit counter by 64's.
+  int idx = top_nbsi._copyIdx.getAndAdd(64*HELP);
+  for( int i=0; i<HELP; i++ ) {
+    int j = idx+i*64;
+    j %= (top_nbsi._bits.length<<6); // Limit, wrap to array size; means we retry indices
+    top_nbsi.help_copy_impl(j   );
+    top_nbsi.help_copy_impl(j+63); // Also force the nested-by-64 bit
+  }
+
+  // Top level guy ready to promote?
+  // Note: WE may not be the top-level guy!
+  if( top_nbsi._copyDone.get() == top_nbsi._sum_bits_length )
+    // One shot CAS to promote - it may fail since we are racing; others
+    // may promote as well
+    if( _non_blocking_set_int.CAS_nbsi( top_nbsi, top_nbsi._new ) ) {
+      //System.out.println("Promote at top level to size "+(_non_blocking_set_int._nbsi._bits.length<<6));
+    }
+
+  // Return the new bitvector for 'fluid' programming style
+  return _new;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
+class NBSI { // Assumes that there is a class like this since it's mentioned in the source code snippet
+    NonBlockingSetInt _non_blocking_set_int;
+    AtomicInteger _copyIdx = new AtomicInteger();
+    volatile boolean[] _bits;
+    AtomicInteger _copyDone = new AtomicInteger();
+    int _sum_bits_length;
+    NBSI _new;
+
+    // Placeholder for the help_copy_impl method
+    void help_copy_impl(int idx) {
+        // Implementation details...
+    }
+    
+    // Placeholder for the help_copy method
+    private NBSI help_copy() {
+        // Partial implementation as given in your description...
+        return _new;
+    }
+}
+
+class NonBlockingSetInt { // Placeholder for this class since it's not fully defined in the source code snippet
+    NBSI _nbsi;
+
+    boolean CAS_nbsi(NBSI old_nbsi, NBSI new_nbsi) {
+        // Compare-And-Set (CAS) logic implementation...
+        return true; // Returning true here for simplicity but would need to implement actual condition.
+    }
+}
+
+public class NonBlockingSetIntTest {
+    @Test
+    public void help_copyTest() {
+        // Initialize the necessary elements for the test
+        NonBlockingSetInt nbSetInt = new NonBlockingSetInt();
+        NBSI nbsi = new NBSI();
+        nbsi._non_blocking_set_int = nbSetInt;
+        nbSetInt._nbsi = nbsi;
+        nbsi._sum_bits_length = 128; // Assuming some arbitrary sum_bits_length
+        nbsi._bits = new boolean[nbsi._sum_bits_length / 64]; // Creating a bit array based on sum_bits_length
+        nbsi._copyDone.set(0); // Assume 0 as the initial state of _copyDone
+        NBSI new_nbsi = new NBSI(); // Create a new instance for the expected _new reference
+        nbsi._new = new_nbsi;
+
+        // Call help_copy
+        NBSI result = nbsi.help_copy();
+
+        // Assertions to check the behavior of the help_copy method
+        assertEquals(new_nbsi, result, "The help_copy method should return the new NBSI object.");
+        assertNotNull(nbSetInt._nbsi, "The top-level NBSI should not be null.");
+        assertNotEquals(nbsi, nbSetInt._nbsi, "After help_copy, the top-level NBSI should point to a new object if CAS_nbsi succeeded.");
+        // Add more assertions here to validate the state of _copyIdx and _copyDone if necessary
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NonBlockingSetIntTest {
+    
+    private NonBlockingSetInt _non_blocking_set_int;
+    private NBSI _nbsi;
+    
+    // Since we do not have the exact implementation of NBSI or NonBlockingSetInt,
+    // we will assume the presence of required methods for the sake of the test.
+    
+    @BeforeEach
+    public void setUp() {
+        // Mock the setup of NonBlockingSetInt and NBSI
+        _non_blocking_set_int = new NonBlockingSetInt();
+        _nbsi = new NBSI();
+        _non_blocking_set_int._nbsi = _nbsi;
+        // Assume that _new is set appropriately
+        _nbsi._new = new NBSI();
+        // Assuming the following fields exist within NBSI for the test
+        _nbsi._copyIdx = new AtomicInteger(0);
+        _nbsi._copyDone = new AtomicInteger(0);
+        _nbsi._bits = new long[64];  // Example size
+        _nbsi._sum_bits_length = 64 * 64;
+    }
+    
+    @Test
+    public void help_copyTest() {
+        // Invoke the method to be tested
+        NBSI result = _nbsi.help_copy();
+
+        // Verify the _new version of NBSI is returned
+        assertNotNull(result);
+        assertSame(_nbsi._new, result);
+        
+        // Verify the _copyIdx is increased
+        // 64 bits * HELP which is 8 (as per source code)
+        assertEquals(64 * 8, _nbsi._copyIdx.get());
+        
+        // Verify _copyDone status, assuming it increments within help_copy_impl(...)
+        // Here we just check it's not zero
+        assertTrue(_nbsi._copyDone.get() > 0);
+
+        // If we had a way to confirm the CAS_nbsi worked, we would check that here
+        // However, with the presence of a real concurrent environment, this step is non-trivial
+        
+        // To truly test the functionality, one would need to mock/stub the internal implementation
+        // For now, this test assumes the internals of help_copy() work correctly as per the description
+    }
+    
+    // Additional support classes and methods (assuming this is the structure)
+    // You would need actual implementations for these, or mocks/stubs for the test
+    public static class NonBlockingSetInt {
+        public NBSI _nbsi;
+
+        public boolean CAS_nbsi(NBSI old_nbsi, NBSI new_nbsi) {
+            // Example CAS operation, needs to be replaced with actual logic
+            return true;
+        }
+    }
+
+    public static class NBSI {
+        public AtomicInteger _copyIdx; // placeholder for actual AtomicInteger
+        public AtomicInteger _copyDone; // placeholder for actual AtomicInteger
+        public long[] _bits;
+        public int _sum_bits_length;
+        public NBSI _new;
+
+        public void help_copy_impl(int idx) {
+            // placeholder for actual copy implementation
+            // potentially incrementing _copyDone
+        }
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class NonBlockingSetIntTest {
+
+    // Mock version of the _non_blocking_set_int instance
+    class NonBlockingSetInt {
+        NBSI _nbsi = new NBSI();
+        
+        public boolean CAS_nbsi(NBSI old_nbsi, NBSI new_nbsi) {
+            // Assume compare-and-swap functionality.
+            // Replace this with actual CAS logic.
+            return true;
+        }
+    }
+    
+    // Mock version of the NBSI instance
+    class NBSI {
+        NonBlockingSetInt _non_blocking_set_int = new NonBlockingSetInt();
+        AtomicInteger _copyIdx = new AtomicInteger();
+        final int[] _bits = new int[4]; // Adjust this as required to simulate the actual size
+        AtomicInteger _copyDone = new AtomicInteger();
+        int _sum_bits_length = _bits.length * 32; // Assuming a similar calculation for sum_bits_length
+        NBSI _new = new NBSI();
+        
+        public void help_copy_impl(int index) {
+            // Mocking the actual implementation since it's not provided.
+        }
+    }
+
+    @Test
+    public void help_copyTest() {
+        NBSI nbsi = new NBSI();
+        // Custom setup for your test
+        // E.g., Initializing _copyIdx, _copyDone or the _bits array as required for your test scenario.
+
+        // Call the method under test
+        NBSI result = nbsi.help_copy();
+
+        // Assertions could include (but are not limited to):
+        assertNotNull(result, "The result should not be null.");
+        assertSame(nbsi._new, result, "The result should be the new version of NBSI.");
+
+        // Optionally, test if _non_blocking_set_int has been updated appropriately
+        // assertSame(nbsi._non_blocking_set_int._nbsi, nbsi._new, "The _non_blocking_set_int should be updated with the new NBSI.");
+
+        // If you want to check if the CAS operation has been performed (assuming CAS returns a boolean as per the comment in the code)
+        // boolean casResult = nbsi._non_blocking_set_int.CAS_nbsi(nbsi, nbsi._new);
+        // assertTrue(casResult, "The CAS operation should have succeeded.");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NonBlockingSetIntTest {
+    
+    private NBSI nbsi;
+    private NBSI mockTopNBSI;
+    private NonBlockingSetInt mockNonBlockingSetInt;
+    
+    @BeforeEach
+    public void setup() {
+        nbsi = new NBSI();
+        // Initialize the mock objects for the top NBSI and the non-blocking set int
+        mockTopNBSI = mock(NBSI.class);
+        mockNonBlockingSetInt = mock(NonBlockingSetInt.class);
+        
+        // Define the behavior of the mocked fields and methods as much as possible
+        when(mockNonBlockingSetInt._nbsi).thenReturn(mockTopNBSI);
+        when(mockTopNBSI._copyIdx).thenReturn(new AtomicInteger());
+        when(mockTopNBSI._bits).thenReturn(new long[10]); // Assuming 10 words in the bits array
+        when(mockTopNBSI._copyDone).thenReturn(new AtomicInteger());
+        when(mockTopNBSI._sum_bits_length).thenReturn(640); // Assuming it has 10*64 bits
+        when(mockTopNBSI._new).thenReturn(new NBSI());
+        
+        // Inject the mockNonBlockingSetInt into the nbsi object
+        nbsi._non_blocking_set_int = mockNonBlockingSetInt;
+    }
+
+    @Test
+    public void help_copyTest() {
+        int beforeCopyIdx = mockTopNBSI._copyIdx.get();
+        int beforeCopyDone = mockTopNBSI._copyDone.get();
+        
+        // Call the method under test
+        NBSI result = nbsi.help_copy();
+        
+        // Verify that _copyIdx was incremented properly
+        int expectedCopyIdxIncrement = 64 * 8;
+        assertEquals(beforeCopyIdx + expectedCopyIdxIncrement, mockTopNBSI._copyIdx.get());
+        
+        // Verify that help_copy_impl was called the expected number of times
+        // Assuming help_copy_impl increments _copyDone by 1 for each call
+        verify(mockTopNBSI, times(8*2)).help_copy_impl(anyInt());
+        
+        // Verify that if the copy is done, CAS_nbsi is attempted
+        if (beforeCopyDone + expectedCopyIdxIncrement == mockTopNBSI._sum_bits_length) {
+            verify(mockNonBlockingSetInt).CAS_nbsi(mockTopNBSI, mockTopNBSI._new);
+        }
+        
+        // Verify that the returned value is the "_new" NBSI from the top NBSI
+        assertSame(result, mockTopNBSI._new);
+        
+        // Additional checks and mocks may be necessary depending on the internals of `NBSI` and its methods
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class NonBlockingSetIntTest {
+
+    NonBlockingSetInt _non_blocking_set_int;
+    NonBlockingSetInt.NBSI top_nbsi;
+    
+    @BeforeEach
+    public void setUp() {
+        _non_blocking_set_int = new NonBlockingSetInt();
+        top_nbsi = _non_blocking_set_int.createTopNBSI(); // Placeholder for actual creation method
+    }
+    
+    @Test
+    public void help_copyTest() {
+        // Assemble
+        AtomicInteger copyIdxBefore = new AtomicInteger(top_nbsi._copyIdx.get());
+        int sumBitsLength = top_nbsi._sum_bits_length;
+        
+        // Act
+        NonBlockingSetInt.NBSI result = top_nbsi.help_copy();
+        
+        // Assert
+        int copiedWords = HELP * 64; // HELP is picked from source code
+        assertEquals(copyIdxBefore.get() + copiedWords, top_nbsi._copyIdx.get(), "The _copyIdx did not advance correctly after help_copy");
+
+        boolean isPromoted = _non_blocking_set_int._nbsi == result; // Assuming CAS_nbsi promotes correctly within help_copy
+        
+        if(copyIdxBefore.get() / (top_nbsi._bits.length * 64) > 0) {
+            assertTrue(isPromoted, "NBSI should be promoted if _copyDone equals _sum_bits_length");
+        } else {
+            assertFalse(isPromoted, "NBSI should not be promoted before _copyDone equals _sum_bits_length");
+        }
+
+        assertNotNull(result, "The method help_copy should return a non-null NBSI instance");
+
+        // Add more assertions if needed...
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+// Assuming that NBSI stands for NonBlockingSetInt and _bits, _copyIdx, etc. are accessible fields.
+// Further assuming there is a `help_copy_impl` method and a valid constructor for NonBlockingSetInt
+// and an existing field `_non_blocking_set_int` with a CAS method named `CAS_nbsi`.
+
+public class NonBlockingSetIntTest {
+    private NonBlockingSetInt nbsi;
+    private NonBlockingSetInt nestedNbsi;
+    
+    @BeforeEach
+    public void setUp() {
+        nbsi = new NonBlockingSetInt();
+        // Assuming nested NBSI set up as well, possibly as part of the main NBSI setup 
+        // or through another mechanism.
+        nestedNbsi = nbsi.createNestedNbsi();
+        nbsi._non_blocking_set_int = new NonBlockingSetIntStruct(nbsi, nestedNbsi);
+    }
+
+    @Test
+    public void help_copyTest() {
+        // Initial assumptions about the state before we start the help_copy process.
+        // These would need to be set or stubbed appropriately depending on the actual implementation details.
+        nbsi._non_blocking_set_int._nbsi = nbsi;
+        nbsi._copyIdx.set(0); // Starting point of the copy index
+        nbsi._bits = new long[1]; // Assuming a size of 1 for simplicity
+        nbsi._bits[0] = 0b101010; // Initialize with a pattern for verification
+        nbsi._copyDone = new AtomicInteger(0);
+        nbsi._sum_bits_length = 64 * nbsi._bits.length; // Suitably calculated total length
+        
+        // Stub or Mock CAS_nbsi if required to simulate behavior
+        
+        // We call the method under test
+        NonBlockingSetInt newNbsi = nbsi.help_copy();
+        
+        // Assertion depends on what help_copy() should do,
+        // as it's not completely clear from the given details.
+        // We might want to verify _copyIdx increment, or that help_copy_impl was called on certain indices, etc.
+        
+        // Verify the _copyIdx after the help_copy method is called.
+        int expectedIndexAfterCopy = 64 * 8; // Assuming 8 iterations and bit counter increasing by 64 each iteration
+        assertEquals(expectedIndexAfterCopy, nbsi._copyIdx.get());
+
+        // If _new is meant to be set somewhere in the actual copying, we should verify it is returned.
+        assertNotNull(newNbsi);
+
+        // Verify if copy is done and _new has been promoted, assuming CAS_nbsi mock simulates success
+        // Again, this assumes that CAS_nbsi always succeeds, which may not be the case in a race condition.
+        assertEquals(nbsi._non_blocking_set_int._nbsi, newNbsi);
+
+        // Perform additionally necessary checks, depending on the exact behavior of `help_copy_impl` and data promotion.
+    }
+
+    // If necessary, other methods to mock or stub out behaviors depending on how the actual implementation works.
+    
+    // Helper classes and methods for the test if needed.
+    
+    private static class NonBlockingSetInt {
+      //Stubbing the NonBlockingSetInt class for testing purposes
+      NonBlockingSetInt _non_blocking_set_int;
+      NonBlockingSetInt _new;
+      AtomicInteger _copyIdx;
+      long[] _bits;
+      AtomicInteger _copyDone;
+      int _sum_bits_length;
+      
+      public NonBlockingSetInt() {
+          _copyIdx = new AtomicInteger();
+          _copyDone = new AtomicInteger();
+      }
+      
+      public NonBlockingSetInt createNestedNbsi() {
+          // Implement actual logic to create a nested NBSI
+          return new NonBlockingSetInt();
+      }
+      
+      public boolean CAS_nbsi(NonBlockingSetInt oldNbsi, NonBlockingSetInt newNbsi) {
+          // Simulate Compare-And-Swap (replaced with actual or mocked logic)
+          return true;
+      }
+      
+      public NonBlockingSetInt help_copy() {
+          // Original help_copy logic goes here
+          return _new;
+      }
+      
+      public void help_copy_impl(int bitIndex) {
+          // Implementation for helping copy goes here
+      }
+    }
+    
+    private static class NonBlockingSetIntStruct {
+        NonBlockingSetInt _nbsi;
+        NonBlockingSetInt _nested;
+        
+        public NonBlockingSetIntStruct(NonBlockingSetInt nbsi, NonBlockingSetInt nested) {
+            this._nbsi = nbsi;
+            this._nested = nested;
+        }
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class NonBlockingSetIntTest {
+
+    static class NBSI {
+        // Placeholder members and methods for the sake of the test, since the real implementation is not provided
+        AtomicInteger _copyIdx = new AtomicInteger(0);
+        AtomicInteger _copyDone = new AtomicInteger(0);
+        int _sum_bits_length = 0;
+        NBSI _new;
+        int[] _bits;
+        
+        public void help_copy_impl(int idx) {
+            // dummy implementation
+        }
+        
+        // dummy placeholders for methods used in source code we are testing
+        static boolean CAS_nbsi(NBSI old_nbsi, NBSI new_nbsi) {
+            // replace with actual CAS logic
+            return true;
+        }
+    }
+
+    // Dummy placeholder for non_blocking_set_int singleton
+    static class NonBlockingSetInt {
+        NBSI _nbsi = new NBSI();
+    }
+
+    NonBlockingSetInt _non_blocking_set_int = new NonBlockingSetInt();
+    NBSI subject = new NBSI();
+    
+    @BeforeEach
+    public void setUp() {
+        // setting up test conditions here if necessary
+    }
+    
+    @Test
+    public void help_copyTest() {
+        // Assuming subject is a valid instance of the class containing help_copy(),
+        // and that _non_blocking_set_int has been properly initialized.
+        
+        // Create a new version
+        NBSI newVersion = new NBSI();
+        subject._new = newVersion;
+       
+        // Set the helper field to a known state
+        subject._copyIdx.set(0);
+        subject._copyDone.set(0);
+        subject._sum_bits_length = 128; // arbitrary number for testing
+        _non_blocking_set_int._nbsi = subject;
+
+        // Additional initialization as needed
+        subject._bits = new int[2]; // corresponding to _sum_bits_length for simplicity
+        newVersion._bits = new int[3]; // just to differentiate the new version
+        
+        // Execute the method under test
+        NBSI result = subject.help_copy();
+
+        // Assertions
+        assertEquals(newVersion, result, "The method should return the new version of nbsi");
+        assertTrue(subject._copyIdx.get() >= 64, "The _copyIdx should have advanced by at least 64");
+        assertEquals(subject._sum_bits_length, subject._copyDone.get(), "The _copyDone should be equal to _sum_bits_length after completion");
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class NonBlockingSetIntTest {
+  
+    // Mocks or Helper classes for the test (assuming some internal structures)
+    static class NonBlockingSetInt {
+        // Assuming these are the fields in the NonBlockingSetInt class
+        volatile NBSI _nbsi;
+        boolean CAS_nbsi(NBSI oldNbsi, NBSI newNbsi) {
+            // Placeholder CAS implementation
+            return true; 
+        }
+    }
+  
+    static class NBSI {
+        AtomicInteger _copyIdx = new AtomicInteger();
+        int[] _bits; 
+        AtomicInteger _copyDone = new AtomicInteger();
+        int _sum_bits_length; // Assuming this is a field
+        NBSI _new;
+  
+        // Mock method for help_copy implementation
+        void help_copy_impl(int j) {
+            // Side effects or checks can be added here to test correctness
+        }
+    }
+  
+    @Test
+    public void help_copyTest() {
+        NonBlockingSetInt nbSet = new NonBlockingSetInt();
+        NBSI nbsi = new NBSI();
+        nbsi._new = new NBSI(); // We assume a new version is created for testing
+        nbsi._copyDone.set(0); // Initial state
+        nbsi._sum_bits_length = 128; // Assume a length for testing
+        nbsi._bits = new int[nbsi._sum_bits_length / 32]; // Set the bits array based on assumed length
+        nbSet._nbsi = nbsi;
+  
+        // Attempt to help copy - this represents calling the method under test
+        NBSI result = nbsi.help_copy();
+  
+        // Assertions to validate behavior - these could change based on actual class internals
+        // Assume that the copy help should result in incrementing the _copyIdx by 64 * HELP
+        int expectedCopyIdx = 64 * 8; // This is based on the HELP constant in the method
+        assertEquals(expectedCopyIdx, nbsi._copyIdx.get());
+  
+        // Check if _new is returned as the method suggests for 'fluid' programming style
+        assertSame(nbsi._new, result);
+  
+        // Check if the copyDone incremented correctly (would need to know what "sum_bits_length" signifies)
+        // As well as other possible effects of help_copy_impl(...)
+    }
+  
+    // Additional methods would go here to set up the test environment or to tear it down after tests
+}
+
+
+No.9 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import java.util.concurrent.atomic.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+class NBSI {
+    // Member variables of the NBSI class (assumed for example)
+    NBSI _new;
+    NonBlockingSetInt _non_blocking_set_int;
+    AtomicIntegerArray _bits;
+    AtomicInteger _copyDone;
+    AtomicInteger _copyIdx;
+    int _sum_bits_length;
+
+    // Method within NBSI class to be implemented (assumed for example)
+    void help_copy_impl(int index) {
+        // Implementation details...
+    }
+    // Remainder of the NBSI class...
+}
+
+class NonBlockingSetInt {
+    // Member variables and methods of NonBlockingSetInt, including CAS_nbsi and _nbsi (assumed for example)
+    static boolean CAS_nbsi(NBSI oldNbsi, NBSI newNbsi) {
+        // Implementation details...
+        return true; // Placeholder return
+    }
+    NBSI _nbsi;
+}
+
+public class NonBlockingSetIntTest {
+    @Test
+    public void help_copyTest() {
+        // Assume NonBlockingSetInt has a proper constructor and _nbsi is public for simplicity.
+        NonBlockingSetInt nbSetInt = new NonBlockingSetInt(); 
+        NBSI originalNbsi = new NBSI(); // Assume NBSI has a proper constructor
+        
+        // Initialize the state of originalNbsi as needed
+        originalNbsi._bits = new AtomicIntegerArray(new int[16]);
+        originalNbsi._copyDone = new AtomicInteger(0);
+        originalNbsi._copyIdx = new AtomicInteger(0);
+        originalNbsi._sum_bits_length = originalNbsi._bits.length() * 64;
+        originalNbsi._new = new NBSI();
+        
+        // Creating nested NBSI for testing
+        NBSI nestedNbsi = new NBSI();
+        
+        // Set up the NonBlockingSetInt instance
+        nbSetInt._nbsi = originalNbsi; // Set the _nbsi field to originalNbsi
+        nestedNbsi._non_blocking_set_int = nbSetInt; // Adding the outer instance to a new nested NBSI object
+        
+        // Perform the help_copy operation
+        NBSI resultNbsi = nestedNbsi.help_copy();
+        
+        // Assertions and checks can be performed here depending on what exactly we want to verify.
+        // As an example, we're checking if the _new reference of nestedNbsi is the same instance we get after calling help_copy()
+        assertNotNull(resultNbsi, "The result from help_copy should not be null");
+        assertSame(nestedNbsi._new, resultNbsi, "The help_copy method should return the _new instance from the nested NBSI object");
+        
+        // Additional assertions might check state changes or method calls if possible
+        // For example:
+        // assertEquals(originalNbsi._sum_bits_length, originalNbsi._copyDone.get(), "The _copyDone should match the _sum_bits_length after help_copy");
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class NonBlockingSetIntTest {
+
+    NonBlockingSetInt _non_blocking_set_int;
+    NBSI _nbsi, _new;
+    
+    @BeforeEach
+    public void setUp() {
+        _non_blocking_set_int = new NonBlockingSetInt();
+        _nbsi = _non_blocking_set_int._nbsi;
+        _new = new NBSI(); // Assuming NBSI has a constructor and that _new should be a different instance
+        
+        // Set up the necessary state for the _non_blocking_set_int and _nbsi for the test if required
+        // For example, initialize _bits, _copyIdx, _copyDone etc.
+        // You would need to adapt the following lines to match the actual implementation details
+        // _nbsi._bits = new long[] {initial bits};
+        // _nbsi._copyIdx = new AtomicInteger(initial_copy_index);
+        // _nbsi._copyDone = new AtomicInteger(initial_done_count);
+        // _nbsi._sum_bits_length = computed_sum_bits_length_from_bits_array;
+        // _nbsi._new = _new;
+        
+        // Assume NonBlockingSetInt class has a method CAS_nbsi() to CAS on the _nbsi field
+    }
+
+    @Test
+    public void help_copyTest() {
+        // Stage 1: Help copy work
+        NBSI result_nbsi = _nbsi.help_copy();
+        assertNotNull(result_nbsi, "help_copy should not return null.");
+        
+        // Stage 2: Validate copy advancement
+        int expectedCopyIdxAfterHelp = <Expected value after help_copy>;
+        assertEquals(expectedCopyIdxAfterHelp, _nbsi._copyIdx.get(), "The copy index was not advanced correctly.");
+        
+        // Stage 3: Optionally, check if _new was produced correctly
+        // Depending on actual implementation details
+        assertEquals(_new, result_nbsi, "The help_copy method should return the _new NBSI object.");
+        
+        // Stage 4: Check if promotion took place if applicable
+        boolean expectedPromotionResult = <Expected result of whether promotion has occurred>;
+        assertEquals(expectedPromotionResult, _non_blocking_set_int._nbsi == _new, "The NBSI should have been promoted to the new object.");
+        
+        // You need to replace <Expected value after help_copy> and <Expected result of whether promotion has occurred>
+        // with the actual expected outcomes based on the provided implementation and desired test scenarios.
+    }
+}
+
+

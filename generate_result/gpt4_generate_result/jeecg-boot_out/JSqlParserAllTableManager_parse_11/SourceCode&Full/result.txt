@@ -1,0 +1,525 @@
+Source code: 
+
+
+public Map<String, SelectSqlInfo> parse() throws JSQLParserException {
+    // 1. 创建解析器
+    CCJSqlParserManager mgr = new CCJSqlParserManager();
+    // 2. 使用解析器解析sql生成具有层次结构的java类
+    Statement stmt = mgr.parse(new StringReader(this.sql));
+    if (stmt instanceof Select) {
+        Select selectStatement = (Select) stmt;
+        SelectBody selectBody = selectStatement.getSelectBody();
+        this.parsedSql = selectBody.toString();
+        // 3. 解析select查询sql的信息
+        if (selectBody instanceof PlainSelect) {
+            PlainSelect plainSelect = (PlainSelect) selectBody;
+            // 4. 合并 fromItems
+            List<FromItem> fromItems = new ArrayList<>();
+            fromItems.add(plainSelect.getFromItem());
+            // 4.1 处理join的表
+            List<Join> joins = plainSelect.getJoins();
+            if (joins != null) {
+                joins.forEach(join -> fromItems.add(join.getRightItem()));
+            }
+            // 5. 处理 fromItems
+            for (FromItem fromItem : fromItems) {
+                // 5.1 通过表名的方式from
+                if (fromItem instanceof Table) {
+                    this.addSqlInfoByTable((Table) fromItem);
+                }
+                // 5.2 通过子查询的方式from
+                else if (fromItem instanceof SubSelect) {
+                    this.handleSubSelect((SubSelect) fromItem);
+                }
+            }
+            // 6. 解析 selectFields
+            List<SelectItem> selectItems = plainSelect.getSelectItems();
+            for (SelectItem selectItem : selectItems) {
+                // 6.1 查询的是全部字段
+                if (selectItem instanceof AllColumns) {
+                    // 当 selectItem 为 AllColumns 时，fromItem 必定为 Table
+                    String tableName = plainSelect.getFromItem(Table.class).getName();
+                    // 此处必定不为空，因为在解析 fromItem 时，已经将表名添加到 allTableMap 中
+                    SelectSqlInfo sqlInfo = this.allTableMap.get(tableName);
+                    assert sqlInfo != null;
+                    // 设置为查询全部字段
+                    sqlInfo.setSelectAll(true);
+                    sqlInfo.setSelectFields(null);
+                    sqlInfo.setRealSelectFields(null);
+                }
+                // 6.2 查询的是带表别名（ u.* )的全部字段
+                else if (selectItem instanceof AllTableColumns) {
+                    AllTableColumns allTableColumns = (AllTableColumns) selectItem;
+                    String aliasName = allTableColumns.getTable().getName();
+                    // 通过别名获取表名
+                    String tableName = this.tableAliasMap.get(aliasName);
+                    if (tableName == null) {
+                        tableName = aliasName;
+                    }
+                    SelectSqlInfo sqlInfo = this.allTableMap.get(tableName);
+                    // 如果此处为空，则说明该字段是通过子查询获取的，所以可以不处理，只有实际表才需要处理
+                    if (sqlInfo != null) {
+                        // 设置为查询全部字段
+                        sqlInfo.setSelectAll(true);
+                        sqlInfo.setSelectFields(null);
+                        sqlInfo.setRealSelectFields(null);
+                    }
+                }
+                // 6.3 各种字段表达式处理
+                else if (selectItem instanceof SelectExpressionItem) {
+                    SelectExpressionItem selectExpressionItem = (SelectExpressionItem) selectItem;
+                    Expression expression = selectExpressionItem.getExpression();
+                    Alias alias = selectExpressionItem.getAlias();
+                    this.handleExpression(expression, alias, plainSelect.getFromItem());
+                }
+            }
+        } else {
+            log.warn("暂时尚未处理该类型的 SelectBody: {}", selectBody.getClass().getName());
+            throw new JeecgBootException("暂时尚未处理该类型的 SelectBody");
+        }
+    } else {
+        // 非 select 查询sql，不做处理
+        throw new JeecgBootException("非 select 查询sql，不做处理");
+    }
+    return this.allTableMap;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jeecg.common.util.sqlparse;
+
+import net.sf.jsqlparser.JSQLParserException;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Map;
+
+public class JSqlParserAllTableManagerTest {
+
+    @Test
+    public void parseSelectQueryWithSimpleTable() throws JSQLParserException {
+        // Given
+        String sql = "SELECT * FROM my_table";
+        JSqlParserAllTableManager parser = new JSqlParserAllTableManager(sql);
+
+        // When
+        Map<String, SelectSqlInfo> result = parser.parse();
+
+        // Then
+        assertNotNull(result, "The result should not be null");
+        assertTrue(result.containsKey("my_table"), "Result map should contain key 'my_table'");
+        SelectSqlInfo selectSqlInfo = result.get("my_table");
+        assertNotNull(selectSqlInfo, "SelectSqlInfo for 'my_table' should not be null");
+        assertEquals("my_table", selectSqlInfo.getFromTableName(), "FromTableName should be 'my_table'");
+        assertTrue(selectSqlInfo.isSelectAll(), "selectAll should be true for 'SELECT *' query");
+        assertNull(selectSqlInfo.getSelectFields(), "selectFields should be null for 'SELECT *' query");
+        assertNull(selectSqlInfo.getRealSelectFields(), "realSelectFields should be null for 'SELECT *' query");
+        assertEquals(sql, selectSqlInfo.getSql(), "Stored SQL should match the given SQL");
+    }
+
+    @Test
+    public void parseSelectQueryWithMultipleTablesAndJoins() throws JSQLParserException {
+        // Given
+        String sql = "SELECT a.name, b.age FROM user_table a JOIN address_table b ON a.id = b.user_id";
+        JSqlParserAllTableManager parser = new JSqlParserAllTableManager(sql);
+
+        // When
+        Map<String, SelectSqlInfo> result = parser.parse();
+
+        // Then
+        assertNotNull(result, "The result should not be null");
+        assertTrue(result.containsKey("user_table"), "Result map should contain key 'user_table'");
+        assertTrue(result.containsKey("address_table"), "Result map should contain key 'address_table'");
+    }
+
+    @Test
+    public void parseShouldThrowExceptionForNonSelectQueries() {
+        // Given
+        String sql = "UPDATE my_table SET name='Doe' WHERE id=1";
+        JSqlParserAllTableManager parser = new JSqlParserAllTableManager(sql);
+
+        // When & Then
+        assertThrows(JeecgBootException.class, parser::parse, "Non-select queries should throw JeecgBootException");
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jeecg.common.util.sqlparse;
+
+import net.sf.jsqlparser.JSQLParserException;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Map;
+
+public class JSqlParserAllTableManagerTest {
+    
+    @Test
+    public void parseTest() {
+        // Set up SQL to parse
+        String selectSql = "SELECT u.id, u.name FROM user u WHERE u.status = 'active'";
+        
+        // Instantiate JSqlParserAllTableManager with provided SQL
+        JSqlParserAllTableManager manager = new JSqlParserAllTableManager(selectSql);
+        
+        try {
+            // Call parse method and get the result
+            Map<String, SelectSqlInfo> result = manager.parse();
+            
+            // Define what we expect to get
+            assertNotNull(result, "The result map should not be null");
+            assertTrue(result.containsKey("user"), "The result map should have 'user' table key");
+            
+            SelectSqlInfo userData = result.get("user");
+            assertNotNull(userData, "UserData for 'user' should not be null");
+            assertFalse(userData.isSelectAll(), "UserData should not have selectAll as true for partial select statements");
+            assertNotNull(userData.getSelectFields(), "SelectFields for 'user' should not be null");
+            assertTrue(userData.getSelectFields().containsKey("id"), "SelectFields should contain 'id'");
+            assertTrue(userData.getSelectFields().containsKey("name"), "SelectFields should contain 'name'");
+            assertTrue(userData.getFromTableName().equals("user"), "The fromTableName should be 'user'");
+            
+            // If there are more specifics to check, those conditions would be added here as assertions.
+        } catch (JSQLParserException e) {
+            fail("Parsing threw an unexpected JSQLParserException");
+        }
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jeecg.common.util.sqlparse;
+
+import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.parser.CCJSqlParserManager;
+import net.sf.jsqlparser.statement.select.SelectBody;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Map;
+
+public class JSqlParserAllTableManagerTest {
+    private JSqlParserAllTableManager parser;
+
+    // Setup method before each test case
+    @BeforeEach
+    public void setUp() {
+        parser = new JSqlParserAllTableManager("SELECT * FROM table1");
+    }
+
+    @Test
+    public void parseTest() throws JSQLParserException {
+        Map<String, SelectSqlInfo> result = parser.parse();
+        
+        assertNotNull(result, "The result map should not be null");
+        assertTrue(result.containsKey("table1"), "The map should contain the 'table1' entry");
+
+        SelectSqlInfo table1Info = result.get("table1");
+        assertNotNull(table1Info, "The SelectSqlInfo for 'table1' should not be null");
+        assertEquals("table1", table1Info.getFromTableName(), "The from table name should match 'table1'");
+        assertTrue(table1Info.isSelectAll(), "The 'selectAll' flag should be true for 'table1'");
+        assertNull(table1Info.getSelectFields(), "The 'selectFields' for 'table1' should be null as all fields are selected");
+        assertNull(table1Info.getRealSelectFields(), "The 'realSelectFields' for 'table1' should be null as all fields are selected");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jeecg.common.util.sqlparse;
+
+import net.sf.jsqlparser.JSQLParserException;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JSqlParserAllTableManagerTest {
+    @Test
+    public void parseTest() {
+        String sqlQuery = "SELECT * FROM my_table";
+        JSqlParserAllTableManager manager = new JSqlParserAllTableManager(sqlQuery);
+
+        try {
+            // Execute the parse method
+            var result = manager.parse();
+
+            // We are using assertNotNull assertion as we at least expect a non-null map to be returned.
+            assertNotNull(result, "Resulting map should not be null");
+
+            // We expect a map with one key-value pair because we only have one table in our query.
+            assertEquals(1, result.size(), "Resulting map should have only one entry");
+
+            // Assert that the table name is as expected
+            assertNotNull(result.get("my_table"), "Map should contain an entry for 'my_table'");
+
+            // Further assertions regarding SelectSqlInfo of 'my_table' can be made based on
+            // the internal behavior of the JSqlParserAllTableManager implementation.
+        } catch (JSQLParserException e) {
+            fail("Parsing failed with exception: " + e.getMessage());
+        }
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jeecg.common.util.sqlparse;
+
+import net.sf.jsqlparser.JSQLParserException;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.Map;
+
+public class JSqlParserAllTableManagerTest {
+
+    private JSqlParserAllTableManager parser;
+
+    @BeforeEach
+    public void setup() {
+        String testSql = "SELECT u.id, u.name FROM user u WHERE u.status = 'ACTIVE'";
+        parser = new JSqlParserAllTableManager(testSql);
+    }
+
+    @Test
+    public void parseTest() throws JSQLParserException {
+        // Execute the parse method
+        Map<String, SelectSqlInfo> tableMap = parser.parse();
+
+        // Check general parsing outcome
+        assertNotNull(tableMap, "Parsed table map should not be null");
+        assertFalse(tableMap.isEmpty(), "Parsed table map should not be empty");
+
+        // Check specific parsing details
+        SelectSqlInfo userTableInfo = tableMap.get("user");
+        assertNotNull(userTableInfo, "SelectSqlInfo for user table should not be null");
+        assertEquals("user", userTableInfo.getFromTableName(), "Table name for SelectSqlInfo should match");
+
+        // Checking if the fields are parsed correctly, assuming the SelectSqlInfo has methods to retrieve field information.
+        assertTrue(userTableInfo.getSelectFields().containsKey("id"), "SelectSqlInfo should contain the id field");
+        assertTrue(userTableInfo.getSelectFields().containsKey("name"), "SelectSqlInfo should contain the name field");
+        
+        // Depending on the implementation, you may need to check other properties of SelectSqlInfo as well
+    }
+
+    @AfterEach
+    public void tearDown() {
+        parser = null;
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jeecg.common.util.sqlparse;
+
+import net.sf.jsqlparser.JSQLParserException;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JSqlParserAllTableManagerTest {
+
+    @Test
+    public void parseTest() {
+        String sqlString = "SELECT u.id, u.name FROM user u";
+        JSqlParserAllTableManager parserManager = new JSqlParserAllTableManager(sqlString);
+        Map<String, SelectSqlInfo> resultMap = null;
+        try {
+            resultMap = parserManager.parse();
+        } catch (JSQLParserException e) {
+            e.printStackTrace();
+        }
+
+        assertNotNull(resultMap, "The resultMap should not be null");
+        assertTrue(resultMap.containsKey("user"), "The resultMap should contain the key 'user'");
+        
+        SelectSqlInfo selectSqlInfo = resultMap.get("user");
+        assertNotNull(selectSqlInfo, "The selectSqlInfo for 'user' should not be null");
+        assertFalse(selectSqlInfo.isSelectAll(), "selectAll should be false");
+        
+        assertNotNull(selectSqlInfo.getSelectFields(), "selectFields should not be null");
+        assertTrue(selectSqlInfo.getSelectFields().containsKey("id"), "selectFields should contain 'id'");
+        assertTrue(selectSqlInfo.getSelectFields().containsKey("name"), "selectFields should contain 'name'");
+        
+        assertNull(selectSqlInfo.getRealSelectFields(), "realSelectFields should be null given the test case");
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jeecg.common.util.sqlparse;
+
+import net.sf.jsqlparser.JSQLParserException;
+import org.junit.jupiter.api.*;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JSqlParserAllTableManagerTest {
+
+    @Test
+    public void parseTest() {
+        // Arrange - setting up a simple select SQL query for test
+        String sql = "SELECT * FROM my_table";
+        JSqlParserAllTableManager parserManager = new JSqlParserAllTableManager(sql);
+
+        // Act - parsing the SQL query
+        Map<String, SelectSqlInfo> result = null;
+        try {
+            result = parserManager.parse();
+        } catch (JSQLParserException e) {
+            fail("Exception thrown during parsing: " + e.getMessage());
+        }
+
+        // Assert - verifying the result and checking no exceptions were thrown
+        assertNotNull(result, "The result should not be null");
+        assertTrue(result.containsKey("my_table"), "The result map should have an entry for 'my_table'");
+        
+        SelectSqlInfo myTableInfo = result.get("my_table");
+        assertNotNull(myTableInfo, "SelectSqlInfo should not be null for 'my_table'");
+        assertEquals("my_table", myTableInfo.getFromTableName(), "The from table name should be 'my_table'");
+        
+        // Additional checks could include verification of the fields selected, handling of aliases, joins etc., based on the complexity of the SQL being processed
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.jeecg.common.util.sqlparse;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import net.sf.jsqlparser.JSQLParserException;
+
+import java.util.Map;
+
+public class JSqlParserAllTableManagerTest {
+    @Test
+    public void parseTest() {
+        String sql = "SELECT u.name, p.product_name FROM users u JOIN products p ON u.id = p.owner_id WHERE u.id = 1";
+        JSqlParserAllTableManager manager = new JSqlParserAllTableManager(sql);
+        
+        assertDoesNotThrow(() -> {
+            Map<String, SelectSqlInfo> result = manager.parse();
+            
+            assertNotNull(result, "Result map should not be null");
+            assertTrue(result.containsKey("users"), "Result should contain 'users' table");
+            assertTrue(result.containsKey("products"), "Result should contain 'products' table");
+            
+            SelectSqlInfo userInfo = result.get("users");
+            assertNotNull(userInfo, "userInfo should not be null");
+            assertEquals("users", userInfo.getFromTableName());
+            assertNotNull(userInfo.getSelectFields());
+            assertTrue(userInfo.getSelectFields().containsKey("name"), "Select fields should contain 'name'");
+            
+            SelectSqlInfo productInfo = result.get("products");
+            assertNotNull(productInfo, "productInfo should not be null");
+            assertEquals("products", productInfo.getFromTableName());
+            assertNotNull(productInfo.getSelectFields());
+            assertTrue(productInfo.getSelectFields().containsKey("product_name"), "Select fields should contain 'product_name'");
+        }, "Parse method should not throw an exception");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jeecg.common.util.sqlparse;
+
+import net.sf.jsqlparser.JSQLParserException;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JSqlParserAllTableManagerTest {
+    @Test
+    public void parseTest() {
+        // Assuming you want to test the parse method for a basic SELECT statement
+        String selectSql = "SELECT id, name FROM users";
+        JSqlParserAllTableManager parserManager = new JSqlParserAllTableManager(selectSql);
+        
+        try {
+            // Act
+            Map<String, SelectSqlInfo> result = parserManager.parse();
+            
+            // Assert
+            assertNotNull(result, "Resulting map should not be null.");
+            assertEquals(1, result.size(), "Resulting map should contain exactly one entry.");
+            
+            // Get the entry for the 'users' table from the map and assert its properties
+            SelectSqlInfo selectSqlInfo = result.get("users");
+            assertNotNull(selectSqlInfo, "SelectSqlInfo for 'users' table should not be null.");
+            assertFalse(selectSqlInfo.isSelectAll(), "Should not select all fields.");
+            assertNotNull(selectSqlInfo.getSelectFields(), "Select fields should not be null.");
+            assertEquals(2, selectSqlInfo.getSelectFields().size(), "Two select fields were expected.");
+            assertTrue(selectSqlInfo.getSelectFields().containsKey("id"), "Select fields should contain 'id'.");
+            assertTrue(selectSqlInfo.getSelectFields().containsKey("name"), "Select fields should contain 'name'.");
+        } catch (JSQLParserException e) {
+            fail("Parsing SQL failed with exception: " + e.getMessage());
+        }
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.common.util.sqlparse;
+
+import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+public class JSqlParserAllTableManagerTest {
+
+    @Test
+    public void parseTest() {
+        // Set up a SQL string to parse
+        String sql = "SELECT u.id, u.name FROM user u";
+
+        // Create a new instance of JSqlParserAllTableManager with the provided SQL
+        JSqlParserAllTableManager manager = new JSqlParserAllTableManager(sql);
+
+        // Create a mocked PlainSelect object as we will not be able to parse actual SQL in the unit test
+        PlainSelect mockSelect = mock(PlainSelect.class);
+
+        // Mock the behavior of the parse() method to return our mocked PlainSelect object
+        try {
+            CCJSqlParserManager mockParserManager = Mockito.spy(new CCJSqlParserManager());
+            Mockito.doReturn(mockSelect).when(mockParserManager).parse(Mockito.any());
+
+            // Inject the mocked CCJSqlParserManager into our JSqlParserAllTableManager instance
+            manager = Mockito.spy(manager);
+            Mockito.doReturn(mockParserManager).when(manager).getParserManager();
+
+            // Call the parse method which we expect to return the allTableMap with parsed info
+            Map<String, SelectSqlInfo> result = manager.parse();
+
+            // Verify that the returned map has the expected content based on the SQL
+            assertNotNull(result, "The result should not be null.");
+            assertTrue(result.containsKey("user"), "The result map should contain the 'user' table.");
+            SelectSqlInfo selectSqlInfo = result.get("user");
+            assertNotNull(selectSqlInfo, "The SelectSqlInfo for 'user' should not be null.");
+            assertEquals(sql, selectSqlInfo.getOriginalSql(), "The original SQL should be the same as the input SQL.");
+
+            // You can add more assertions to verify the behavior of the parse() function
+            // For instance, if you had a real SelectItem, you could assert that the fields were parsed correctly
+            // However, without actual parsing, we cannot assert on SelectItem parsing behavior in this mock setup
+
+        } catch (JSQLParserException e) {
+            fail("Parsing threw an exception: " + e.getMessage());
+        }
+    }
+}
+
+

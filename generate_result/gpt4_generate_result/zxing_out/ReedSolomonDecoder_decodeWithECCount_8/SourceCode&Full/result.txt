@@ -1,0 +1,517 @@
+Source code: 
+
+
+public int decodeWithECCount(int[] received, int twoS) throws ReedSolomonException {
+  GenericGFPoly poly = new GenericGFPoly(field, received);
+  int[] syndromeCoefficients = new int[twoS];
+  boolean noError = true;
+  for (int i = 0; i < twoS; i++) {
+    int eval = poly.evaluateAt(field.exp(i + field.getGeneratorBase()));
+    syndromeCoefficients[syndromeCoefficients.length - 1 - i] = eval;
+    if (eval != 0) {
+      noError = false;
+    }
+  }
+  if (noError) {
+    return 0;
+  }
+  GenericGFPoly syndrome = new GenericGFPoly(field, syndromeCoefficients);
+  GenericGFPoly[] sigmaOmega =
+      runEuclideanAlgorithm(field.buildMonomial(twoS, 1), syndrome, twoS);
+  GenericGFPoly sigma = sigmaOmega[0];
+  GenericGFPoly omega = sigmaOmega[1];
+  int[] errorLocations = findErrorLocations(sigma);
+  int[] errorMagnitudes = findErrorMagnitudes(omega, errorLocations);
+  for (int i = 0; i < errorLocations.length; i++) {
+    int position = received.length - 1 - field.log(errorLocations[i]);
+    if (position < 0) {
+      throw new ReedSolomonException("Bad error location");
+    }
+    received[position] = GenericGF.addOrSubtract(received[position], errorMagnitudes[i]);
+  }
+  return errorLocations.length;
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.google.zxing.common.reedsolomon;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ReedSolomonDecoderTest {
+
+    private final GenericGF gf = GenericGF.QR_CODE_FIELD_256;
+    private final ReedSolomonDecoder decoder = new ReedSolomonDecoder(gf);
+
+    @Test
+    public void decodeWithECCountTest() {
+        // Initialize the error correction (EC) count and received message (errors included).
+        int ecCount = 2; // Number of error-correction codewords
+        int[] received = {0xAB, 0xCD, 0xEF, 0, 0};  // Received message with errors at last two positions
+        
+        // Introduce some errors
+        received[received.length - 1] = 0x12; // Error in the last codeword
+        received[received.length - 2] = 0x34; // Error in the second last codeword
+
+        // Perform decoding with error correction
+        assertDoesNotThrow(() -> {
+            int errorsCorrected = decoder.decodeWithECCount(received, ecCount);
+            assertEquals(2, errorsCorrected, "Number of errors corrected should be 2");
+        });
+
+        // Assert that errors are corrected
+        int[] expected = {0xAB, 0xCD, 0xEF, 0, 0}; // Expected result after correction
+        assertArrayEquals(expected, received, "Decoded message should have corrected errors");
+    }
+
+    // Additional test cases can be added here to check for other scenarios such as no errors,
+    // uncorrectable errors, different lengths of received arrays, etc.
+}
+
+
+No.2 generated result --------------------------
+
+package com.google.zxing.common.reedsolomon;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ReedSolomonDecoderTest {
+
+  private GenericGF field;
+  private ReedSolomonDecoder decoder;
+
+  @BeforeEach
+  public void setUp() {
+    // Assuming that QR_CODE_FIELD_256 is an available field constant
+    field = GenericGF.QR_CODE_FIELD_256;
+    decoder = new ReedSolomonDecoder(field);
+  }
+
+  @Test
+  public void decodeWithECCountTest_NoError() throws ReedSolomonException {
+    int[] received = {0, 0, 0, 0}; // assuming no errors in received codewords
+    int twoS = 2; // number of error-correction codewords
+
+    // Should return 0 errors corrected because there are no errors
+    int errorsCorrected = decoder.decodeWithECCount(received, twoS);
+    assertEquals(0, errorsCorrected, "There should be no errors corrected.");
+  }
+
+  @Test
+  public void decodeWithECCountTest_WithError() throws ReedSolomonException {
+    int[] received = {1, 2, 3, 4}; // some arbitrary codewords with errors
+    int twoS = 2; // number of error-correction codewords
+    
+    // Mock working implementation or predefined expected outcome is required here
+    // Without it, we cannot know the expected number of errors corrected
+    int expectedErrorsCorrected = 2; // assume 2 errors will be corrected
+    
+    // Should return expected number of errors corrected
+    int errorsCorrected = decoder.decodeWithECCount(received, twoS);
+    assertEquals(expectedErrorsCorrected, errorsCorrected, "The number of errors corrected should match the expected value.");
+  }
+
+  @Test
+  public void decodeWithECCountTest_ErrorCannotBeCorrected() {
+    int[] received = {1, 2, 3, 4}; // some arbitrary codewords with too many errors to correct
+    int twoS = 1; // insufficient number of error-correction codewords, decoding should fail
+
+    // Should throw ReedSolomonException because errors cannot be corrected
+    assertThrows(ReedSolomonException.class, () -> {
+      decoder.decodeWithECCount(received, twoS);
+    }, "Decoding should fail and throw ReedSolomonException when errors cannot be corrected.");
+  }
+}
+
+
+No.3 generated result --------------------------
+
+package com.google.zxing.common.reedsolomon;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ReedSolomonDecoderTest {
+
+    private GenericGF field;
+    private ReedSolomonDecoder decoder;
+
+    @BeforeEach
+    public void setUp() {
+        // To run the test we need a valid instance of GenericGF to create a ReedSolomonDecoder.
+        // For the purpose of this test, we'll assume we're using QR_CODE_FIELD_256.
+        // This will need to change according to the actual field used in the production environment.
+        field = GenericGF.QR_CODE_FIELD_256;
+        decoder = new ReedSolomonDecoder(field);
+    }
+
+    @Test
+    public void decodeWithECCountTest() {
+        int[] received = new int[]{...}; // Received codewords, replace `...` with actual codewords
+        int twoS = ...; // The number of error correction codewords, replace `...` with the actual number
+
+        assertDoesNotThrow(() -> {
+            int errorsCorrected = decoder.decodeWithECCount(received, twoS);
+            assertTrue(errorsCorrected >= 0, "Number of errors corrected should be non-negative");
+        });
+
+        // Further tests could include checking whether the corrected output matches the expected output
+        int[] expected = new int[]{...}; // Expected output after decoding, replace `...` with the expected codewords
+
+        try {
+            decoder.decode(received, twoS);
+            assertArrayEquals(expected, received, "Decoded codewords do not match the expected output");
+        } catch (ReedSolomonException e) {
+            fail("Decoding threw a ReedSolomonException: " + e.getMessage());
+        }
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.google.zxing.common.reedsolomon;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ReedSolomonDecoderTest {
+  
+    // Assuming there is a valid instance of GenericGF that needs to be used for test.
+    private static final GenericGF FIELD = GenericGF.QR_CODE_FIELD_256;
+    private final ReedSolomonDecoder decoder = new ReedSolomonDecoder(FIELD);
+  
+    @Test
+    public void decodeWithECCountTest() {
+        int[] received = new int[] { /* array with error correction data and errors */ };
+        int twoS = /* number of error-correction codewords available */;
+        int expectedResult = /* expected result after error correction process */;
+        int[] expectedReceived = new int[] { /* expected array after error correction */ };
+
+        try {
+            int errorsCorrected = decoder.decodeWithECCount(received, twoS);
+            assertArrayEquals(expectedReceived, received, "The corrected data should match the expected data.");
+            assertEquals(expectedResult, errorsCorrected, "The number of errors corrected should match the expected result.");
+        } catch (ReedSolomonException e) {
+            fail("Decoding failed with ReedSolomonException: " + e.getMessage());
+        }
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.google.zxing.common.reedsolomon;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ReedSolomonDecoderTest {
+
+    private GenericGF field;
+    private ReedSolomonDecoder decoder;
+    
+    @BeforeEach
+    public void setUp() {
+        field = new GenericGF(0x011D, 256, 0); // Parameters might vary depending on the actual field you need
+        decoder = new ReedSolomonDecoder(field);
+    }
+    
+    @Test
+    public void decodeWithECCountTest() {
+        // Setup input data and expected errors. 
+        // Please replace these with actual test values that trigger error correction.
+        int[] received = { /* array of received codewords including errors, e.g., */ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+        int twoS = 4; // The number of error-correction codewords
+        int expectedErrorCount = 2; // The expected number of errors corrected
+
+        // Expected corrected received array after error correction.
+        int[] expectedReceived = { /* array of received codewords after correction, e.g., */ 0, 1, 1, 3, 4, 5, 6, 7, 8, 9 };
+
+        // Try to decode
+        int errorCount = 0;
+        try {
+            errorCount = decoder.decodeWithECCount(received, twoS);
+        } catch (ReedSolomonException e) {
+            fail("Reed Solomon decoding threw an unexpected exception: " + e.getMessage());
+        }
+
+        // Verify that the error count matches expected
+        assertEquals(expectedErrorCount, errorCount, "Error count does not match expected value.");
+
+        // Verify that the received array matches the expected corrected array
+        assertArrayEquals(expectedReceived, received, "Received array does not match expected after error correction.");
+
+        // Additional asserts could include checking the syndromes, error locations, and magnitudes
+        // if the internal class structure permits or if the methods are made accessible for testing.
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package com.google.zxing.common.reedsolomon;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ReedSolomonDecoderTest {
+    
+    private ReedSolomonDecoder decoder;
+    private GenericGF mockField;
+    
+    @BeforeEach
+    public void setUp() {
+        // Assuming that a valid GenericGF instance can be created for testing
+        mockField = new GenericGF(0x011D, 256, 0); // Parameters would be specific to actual implementation details
+        decoder = new ReedSolomonDecoder(mockField);
+    }
+    
+    @Test
+    public void decodeWithECCountNoErrorTest() throws ReedSolomonException {
+        // Assuming a received array with no errors
+        int[] received = {0, 1, 2, 3, 4, 5}; // Example data, no errors introduced
+        int twoS = 6; // Assuming number of EC codewords is equal to array length for this scenario
+        
+        // No errors in data, so no correction should be needed and method should return 0
+        assertEquals(0, decoder.decodeWithECCount(received, twoS));
+    }
+    
+    @Test
+    public void decodeWithECCountWithErrorTest() throws ReedSolomonException {
+        // Assuming a received array with errors
+        int[] received = {0, 1, -1, 3, 4, 5}; // Example data with an error at position 2
+        int twoS = 6; // Assuming number of EC codewords is equal to array length for this scenario
+        
+        // Method under test is supposed to throw an exception if an error location is bad
+        ReedSolomonException exception = assertThrows(
+            ReedSolomonException.class,
+            () -> decoder.decodeWithECCount(received, twoS),
+            "Expected decodeWithECCount to throw, but it didn't");
+        
+        assertTrue(exception.getMessage().contains("Bad error location"));
+    }
+    
+    // Additional test cases could be written for scenarios like:
+    // - Multiple error correction
+    // - Edge case with empty received array
+    // - Decode with more errors than EC codewords can handle
+    
+    @AfterEach
+    public void tearDown() {
+        // Clean up or release resources if necessary
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.google.zxing.common.reedsolomon;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ReedSolomonDecoderTest {
+    private ReedSolomonDecoder decoder;
+    private final GenericGF gf = GenericGF.QR_CODE_FIELD_256;
+
+    @BeforeEach
+    public void setUp() {
+        decoder = new ReedSolomonDecoder(gf);
+    }
+
+    @Test
+    public void decodeWithECCountTest() {
+        // Assuming this is a simple example where the implementation details of GenericGF,
+        // GenericGFPoly, and the test context with specific coefficients are abstracted away
+
+        // Example received data with errors
+        int[] received = new int[] { /* Array of example received data that includes both data and error-correction codewords */ };
+        int twoS = /* The number of error-correction codewords available */;
+
+        // Expected result after decoding
+        int[] expected = new int[] { /* The expected array after correction */ };
+        int expectedErrorCount = /* The expected number of corrected errors */;
+
+        // Perform decoding
+        int actualErrorCount = decoder.decodeWithECCount(received, twoS);
+
+        assertArrayEquals(expected, received, "The decoded data does not match the expected output.");
+        assertEquals(expectedErrorCount, actualErrorCount, "The number of corrected errors does not match the expected count.");
+    }
+
+    @Test
+    public void decodeWithNoErrorsTest() {
+        // Example received data without errors, so no corrections should be made
+        int[] received = new int[] { /* Array of example received data without errors */ };
+        int twoS = /* The number of error-correction codewords available, can be 0 for no errors */;
+
+        // Actual data should remain unchanged as there are no errors
+        int[] expected = received.clone();
+
+        // Perform decoding
+        int actualErrorCount = decoder.decodeWithECCount(received, twoS);
+
+        assertArrayEquals(expected, received, "The data should remain unchanged as there are no errors.");
+        assertEquals(0, actualErrorCount, "No errors should be detected or corrected.");
+    }
+
+    @Test
+    public void decodeWithECCountErrorTest() {
+        int[] received = new int[] { /* Array of example received data that includes incorrect data and error-correction codewords */ };
+        int twoS = /* The number of error-correction codewords available */;
+
+        // Expected ReedSolomonException due to an uncorrectable error or other issue
+        assertThrows(ReedSolomonException.class, () -> {
+            decoder.decodeWithECCount(received, twoS);
+        }, "A ReedSolomonException should be thrown if the errors cannot be corrected or other issues occur.");
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package com.google.zxing.common.reedsolomon;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ReedSolomonDecoderTest {
+
+    private ReedSolomonDecoder decoder;
+    private GenericGF field;
+    
+    @BeforeEach
+    public void setUp() {
+        // Assuming that the GenericGF class has a predefined field – QR_CODE_FIELD_256
+        field = GenericGF.QR_CODE_FIELD_256;
+        decoder = new ReedSolomonDecoder(field);
+    }
+    
+    @Test
+    public void decodeWithECCountTest() {
+        // Example data for testing.
+        // Please replace with actual error correction count and a suitable received array.
+        int[] received = new int[]{ /* actual received codewords */ };
+        int ecCount = /* error correction codeword count */;
+        
+        // Expected output after decoder corrects the received codewords.
+        // This will likely be specific to the coding and error introduced in your received array.
+        int[] expected = new int[]{ /* expected codewords after decoding */ };
+
+
+        // Invoke the decoding method
+        assertDoesNotThrow(() -> {
+            int errorsCorrected = decoder.decodeWithECCount(received, ecCount);
+            assertEquals(expected.length, received.length, "Length of the received array should remain the same.");
+            assertArrayEquals(expected, received, "Corrected codewords did not match the expected array.");
+
+            // The errorsCorrected should be lesser than or equal to ecCount for successful decoding
+            assertTrue(errorsCorrected <= ecCount, "Number of errors corrected should be less than or equal to the provided EC count.");
+        }, "Decoding should not have thrown any exceptions");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package com.google.zxing.common.reedsolomon;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ReedSolomonDecoderTest {
+    private ReedSolomonDecoder decoder;
+    private GenericGF field;
+
+    @BeforeEach
+    public void setUp() {
+        field = GenericGF.QR_CODE_FIELD_256; // Assuming we're using QR field.
+        decoder = new ReedSolomonDecoder(field);
+    }
+
+    @Test
+    public void decodeWithECCountTestNoError() throws ReedSolomonException {
+        int[] received = {0, 0, 0, 0, 0, 0, 0, 0}; // No error
+        int twoS = 2; // Example number of error-correction codewords
+        // Should not throw an exception and should correct 0 errors since there are none.
+        assertEquals(0, decoder.decodeWithECCount(received, twoS));
+    }
+
+    @Test
+    public void decodeWithECCountTestWithErrors() throws ReedSolomonException {
+        // Assuming we have a predefined error condition and known error-correction codewords
+        int[] received = {12, 34, 56, 78, 90, 1, 2, 3}; // With some error
+        int twoS = 4; // Example number of error-correction codewords
+        // Should not throw an exception and should correct a known number of errors.
+        int errorsCorrected = decoder.decodeWithECCount(received, twoS);
+        assertTrue(errorsCorrected > 0, "Expected to correct at least one error");
+    }
+
+    @Test
+    public void decodeWithECCountTestErrorCorrectionFailure() {
+        int[] received = {12, 34, 56, 78, 90, 1, 2, -1}; // With unrecoverable errors
+        int twoS = 2; // Example number of error-correction codewords
+        // Should throw ReedSolomonException due to unrecoverable errors
+        assertThrows(ReedSolomonException.class, () -> decoder.decodeWithECCount(received, twoS));
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.google.zxing.common.reedsolomon;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ReedSolomonDecoderTest {
+    
+    private ReedSolomonDecoder decoder;
+    private GenericGF gf;
+    
+    @BeforeEach
+    public void setUp() {
+        gf = GenericGF.QR_CODE_FIELD_256; // assuming this is the correct field for QR codes
+        decoder = new ReedSolomonDecoder(gf);
+    }
+    
+    @Test
+    public void decodeWithECCountTest_NoError() {
+        int[] received = {0, 0, 1, 1}; // no error (just an example)
+        int twoS = 2; // number of error-correction codewords
+        assertDoesNotThrow(() -> {
+            int errorsCorrected = decoder.decodeWithECCount(received, twoS);
+            assertEquals(0, errorsCorrected, "There should be no errors corrected when no error is present.");
+        });
+    }
+    
+    @Test
+    public void decodeWithECCountTest_WithError() {
+        int[] received = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0}; // contains errors (just an example)
+        int twoS = 2; // number of error-correction codewords
+        assertDoesNotThrow(() -> {
+            int errorsCorrected = decoder.decodeWithECCount(received, twoS);
+            assertTrue(errorsCorrected > 0, "There should be some errors corrected.");
+        });
+    }
+    
+    @Test
+    public void decodeWithECCountTest_ErrorCannotBeCorrected() {
+        int[] received = {92, 29, 86, 72, 95, 21};; // contains too many errors for the given ECC (just an example)
+        int twoS = 2; // insufficient number of error-correction codewords to correct all errors
+        assertThrows(ReedSolomonException.class, () -> {
+            decoder.decodeWithECCount(received, twoS);
+        });
+    }
+    
+    // Additional tests can be added here for different scenarios, such as different error patterns,
+    // different numbers of error-correction codewords, edge cases, etc.
+}
+
+

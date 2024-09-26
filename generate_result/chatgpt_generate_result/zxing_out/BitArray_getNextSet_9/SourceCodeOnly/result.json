@@ -1,0 +1,26 @@
+{
+    "project_name": "zxing",
+    "file_name": "BitArray.java",
+    "relative_path": "zxing/core/src/main/java/com/google/zxing/common/BitArray.java",
+    "execute_path": "zxing",
+    "package": "com.google.zxing.common",
+    "docstring": "/**\n   * @param from first bit to check\n   * @return index of first bit that is set, starting from the given index, or size if none are set\n   *  at or beyond this given index\n   * @see #getNextUnset(int)\n   */",
+    "source_code": "\npublic int getNextSet(int from) {\n  if (from >= size) {\n    return size;\n  }\n  int bitsOffset = from / 32;\n  int currentBits = bits[bitsOffset];\n  // mask off lesser bits first\n  currentBits &= -(1 << (from & 0x1F));\n  while (currentBits == 0) {\n    if (++bitsOffset == bits.length) {\n      return size;\n    }\n    currentBits = bits[bitsOffset];\n  }\n  int result = (bitsOffset * 32) + Integer.numberOfTrailingZeros(currentBits);\n  return Math.min(result, size);\n}\n",
+    "class_name": "BitArray",
+    "method_name": "getNextSet",
+    "arguments": [
+        "int from"
+    ],
+    "generate_test": [
+        "@Test\npublic void getNextSetTest() {\n    BitArrayTest bitArrayTest = new BitArrayTest();\n    assertEquals(4, bitArrayTest.getNextSet(5));\n}",
+        "@Test\npublic void getNextSetTest() {\n    BitArray bitArray = new BitArray();\n    bitArray.setBit(0, true);\n    bitArray.setBit(1, true);\n    int result = bitArray.getNextSet(1);\n    assertEquals(1, result);\n}",
+        "public void getNextSetTest() {\n  BitArray bitArray = new BitArray();\n  bitArray.appendBit(0);\n  bitArray.appendBit(1);\n  assertEquals(1, bitArray.getNextSet(0));\n  assertEquals(1, bitArray.getNextSet(1));\n}",
+        "@Test\npublic void getNextSetTest() {\n    BitArrayTest bitArrayTest = new BitArrayTest();\n    int result = bitArrayTest.getNextSet(3);\n    assertEquals(5, result);\n}",
+        "@Test\npublic void getNextSetTest() {\n    int[] bits = new int[4];\n    bits[0] = 5;\n    bits[1] = 10;\n    bits[2] = 0;\n    bits[3] = 15;\n    BitArrayTest bat = new BitArrayTest();\n    assertEquals(1, bat.getNextSet(5, bits)); \n}",
+        "@Test\npublic void getNextSetTest() {\n    BitArray arr = new BitArray();\n    int result = arr.getNextSet(14);\n    assertEquals(15, result);\n}",
+        "@Test\npublic void getNextSetTest() {\n    int[] bits = {5, 10, 15, 20};\n    int size = 4;\n    BitArrayTest bitArrayTest = new BitArrayTest(bits, size);\n    assertEquals(10, bitArrayTest.getNextSet(4));\n}",
+        "@Test\npublic void getNextSetTest() {\n    BitArrayTest bitArrayTest = new BitArrayTest();\n    int result = bitArrayTest.getNextSet(10);\n    assertEquals(15, result);\n}",
+        "@Test\npublic void getNextSetTest() {\n    int[] bits = {1, 2, 3, 0, 7, 8, 9};\n    BitArrayTest bitArrayTest = new BitArrayTest(bits);\n    assertEquals(1, bitArrayTest.getNextSet(0));\n    assertEquals(5, bitArrayTest.getNextSet(4));\n}",
+        "@Test\npublic void getNextSetTest() {\n    BitArrayTest test = new BitArrayTest();\n    int result = test.getNextSet(5);\n    assertEquals(5, result);\n}"
+    ]
+}

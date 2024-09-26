@@ -1,0 +1,350 @@
+Source code: 
+
+
+private String getReqestParams(HttpServletRequest request, JoinPoint joinPoint) {
+    String httpMethod = request.getMethod();
+    String params = "";
+    if (CommonConstant.HTTP_POST.equals(httpMethod) || CommonConstant.HTTP_PUT.equals(httpMethod) || CommonConstant.HTTP_PATCH.equals(httpMethod)) {
+        Object[] paramsArray = joinPoint.getArgs();
+        // java.lang.IllegalStateException: It is illegal to call this method if the current request is not in asynchronous mode (i.e. isAsyncStarted() returns false)
+        //  https://my.oschina.net/mengzhang6/blog/2395893
+        Object[] arguments  = new Object[paramsArray.length];
+        for (int i = 0; i < paramsArray.length; i++) {
+            if (paramsArray[i] instanceof BindingResult || paramsArray[i] instanceof ServletRequest || paramsArray[i] instanceof ServletResponse || paramsArray[i] instanceof MultipartFile) {
+                //ServletRequest不能序列化，从入参里排除，否则报异常：java.lang.IllegalStateException: It is illegal to call this method if the current request is not in asynchronous mode (i.e. isAsyncStarted() returns false)
+                //ServletResponse不能序列化 从入参里排除，否则报异常：java.lang.IllegalStateException: getOutputStream() has already been called for this response
+                continue;
+            }
+            arguments[i] = paramsArray[i];
+        }
+        //update-begin-author:taoyan date:20200724 for:日志数据太长的直接过滤掉
+        PropertyFilter profilter = new PropertyFilter() {
+            @Override
+            public boolean apply(Object o, String name, Object value) {
+                int length = 500;
+                if(value!=null && value.toString().length()>length){
+                    return false;
+                }
+                return true;
+            }
+        };
+        params = JSONObject.toJSONString(arguments, profilter);
+        //update-end-author:taoyan date:20200724 for:日志数据太长的直接过滤掉
+    } else {
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        Method method = signature.getMethod();
+        // 请求的方法参数值
+        Object[] args = joinPoint.getArgs();
+        // 请求的方法参数名称
+        LocalVariableTableParameterNameDiscoverer u = new LocalVariableTableParameterNameDiscoverer();
+        String[] paramNames = u.getParameterNames(method);
+        if (args != null && paramNames != null) {
+            for (int i = 0; i < args.length; i++) {
+                params += "  " + paramNames[i] + ": " + args[i];
+            }
+        }
+    }
+    return params;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.PropertyFilter;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AutoLogAspectTest {
+    @Test
+    public void getReqestParamsTest() {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getMethod()).thenReturn("POST");
+        
+        JoinPoint joinPoint = mock(JoinPoint.class);
+        Object[] paramsArray = new Object[2];
+        paramsArray[0] = "param1";
+        paramsArray[1] = "param2";
+        when(joinPoint.getArgs()).thenReturn(paramsArray);
+        
+        PropertyFilter profilter = mock(PropertyFilter.class);
+        when(profilter.apply(any(), anyString(), any())).thenReturn(true);
+        
+        String result = AutoLogAspect.getRequestParams(request, joinPoint, profilter);
+        assertEquals("param1=param2", result);
+    }
+}
+
+
+No.2 generated result --------------------------
+
+String httpMethod = request.getMethod();
+if (CommonConstant.HTTP_POST.equals(httpMethod) || CommonConstant.HTTP_PUT.equals(httpMethod) || CommonConstant.HTTP_PATCH.equals(httpMethod)) {
+    Object[] paramsArray = joinPoint.getArgs();
+    // Convert the request parameters to a JSON string
+    String paramsJson = JSONObject.toJSONString(paramsArray);
+    return paramsJson;
+} else {
+    MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+    Method method = signature.getMethod();
+    // Get the names of the request parameters
+    String[] paramNames = signature.getParameterNames();
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < paramNames.length; i++) {
+        sb.append(paramNames[i] + ": " + paramsArray[i]);
+    }
+    return sb.toString();
+}
+
+
+No.3 generated result --------------------------
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AutoLogAspectTest {
+    @Test
+    public void getReqestParamsTest() {
+        HttpServletRequest request = new MockHttpServletRequest();
+        JoinPoint joinPoint = new MethodJoinPoint(this, request);
+        
+        String actual = AutoLogAspect.getReqestParams(request, joinPoint);
+        
+        assertEquals("Expected parameters", actual);
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpMethod;
+import org.springframework.mock.web.MockHttpServletRequest;
+
+public class AutoLogAspectTest {
+    @Test
+    public void testGetReqestParams() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setMethod(HttpMethod.GET);
+        request.addParameter("param1", "value1");
+        request.addParameter("param2", "value2");
+        
+        String params = AutoLogAspect.getReqestParams(request, null);
+        
+        assertEquals("param1=value1&param2=value2", params);
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AutoLogAspectTest {
+    private AutoLogAspect autoLogAspect;
+    
+    @BeforeEach
+    public void setUp() {
+        autoLogAspect = new AutoLogAspect();
+    }
+    
+    @Test
+    public void getReqestParamsTest() {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        JoinPoint joinPoint = mock(JoinPoint.class);
+        
+        when(request.getMethod()).thenReturn("POST");
+        when(joinPoint.getArgs()).thenReturn(new Object[] {"param1", "param2"});
+        
+        String actualParams = autoLogAspect.getReqestParams(request, joinPoint);
+        
+        assertEquals("param1: param1\nparam2: param2\n", actualParams);
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import com.alibaba.fastjson.JSONObject;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.lang.reflect.Method;
+
+public class AutoLogAspectTest {
+    @Test
+    public void getReqestParamsTest() {
+        HttpServletRequest request = <FILL>;
+        JoinPoint joinPoint = <FILL>;
+        String httpMethod = request.getMethod();
+        Object[] paramsArray = joinPoint.getArgs();
+        
+        // When the method is POST, PUT or PATCH and the arguments are not empty
+        if (CommonConstant.HTTP_POST.equals(httpMethod) || CommonConstant.HTTP_PUT.equals(httpMethod) || CommonConstant.HTTP_PATCH.equals(httpMethod)) {
+            // Then create a new object array that excludes ServletRequest, ServletResponse and MultipartFile objects
+            Object[] arguments = new Object[paramsArray.length];
+            for (int i = 0; i < paramsArray.length; i++) {
+                if (!(paramsArray[i] instanceof BindingResult) && !(paramsArray[i] instanceof ServletRequest) && !(paramsArray[i] instanceof ServletResponse) && !(paramsArray[i] instanceof MultipartFile)) {
+                    arguments[i] = paramsArray[i];
+                }
+            }
+            
+            // And convert the new object array to a JSON string using the given PropertyFilter
+            String params = JSONObject.toJSONString(arguments, new PropertyFilter() {
+                @Override
+                public boolean apply(Object o, String name, Object value) {
+                    int length = 500;
+                    if (value != null && value.toString().length() > length) {
+                        return false;
+                    }
+                    return true;
+                }
+            });
+            
+            // And assert that the resulting JSON string is not empty
+            assertFalse(params.isEmpty());
+        
+        // When the method is GET, DELETE or OPTIONS and the arguments are not empty
+        } else if (CommonConstant.HTTP_GET.equals(httpMethod) || CommonConstant.HTTP_DELETE.equals(httpMethod) || CommonConstant.HTTP_OPTIONS.equals(httpMethod)) {
+            // Then assert that the resulting JSON string is not empty
+            String params = getReqestParams(request, joinPoint);
+            assertFalse(params.isEmpty());
+        
+        // Otherwise, assert that the resulting JSON string is empty
+        } else {
+            String params = getReqestParams(request, joinPoint);
+            assertTrue(params.isEmpty());
+        }
+    }
+}
+
+
+No.7 generated result --------------------------
+
+@Test
+public void getReqestParamsTest() {
+    // Create a mock HttpServletRequest object
+    HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+    
+    // Set up the expected parameters for the request
+    String[] parameterNames = new String[] {"param1", "param2"};
+    Object[] parameterValues = new Object[] {1, 2};
+    
+    // Set up the mock HttpServletRequest to return the expected parameters when called with getParameter() method
+    Mockito.when(request.getParameter("param1")).thenReturn(parameterNames[0]);
+    Mockito.when(request.getParameter("param2")).thenReturn(parameterValues[1]);
+    
+    // Invoke the getReqestParams method with the mock request and check that it returns the expected JSON string
+    String actual = AutoLogAspect.getReqestParams(request, new JoinPoint());
+    assertEquals("{\"param1\": 1, \"param2\": 2}", actual);
+}
+
+
+No.8 generated result --------------------------
+
+import org.jeecg.common.aspect.AutoLogAspect;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AutoLogAspectTest {
+    @Test
+    public void getReqestParamsTest() {
+        HttpServletRequest request = new MockHttpServletRequest();
+        JoinPoint joinPoint = new JoinPointStub(request);
+        String result = AutoLogAspect.getReqestParams(request, joinPoint);
+        assertEquals("", result);
+    }
+}
+
+
+No.9 generated result --------------------------
+
+import org.jeecg.common.aspect.AutoLogAspect;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AutoLogAspectTest {
+    @Test
+    public void getReqestParamsTest() {
+        // create a mock HttpServletRequest object
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+        
+        // set up the expected behavior of the mock request
+        when(request.getMethod()).thenReturn("POST");
+        when(request.getParameterNames()).thenReturn(new String[] {"param1", "param2"});
+        when(request.getParameterValues("param1")).thenReturn(new String[] {"value1", "value2"});
+        when(request.getParameterValues("param2")).thenReturn(new String[] {"value3", "value4"});
+        
+        // create a mock JoinPoint object
+        JoinPoint joinPoint = Mockito.mock(JoinPoint.class);
+        
+        // set up the expected behavior of the mock join point
+        when(joinPoint.getArgs()).thenReturn(new Object[] {request});
+        
+        // call the getReqestParams method with the mock request and join point
+        String result = AutoLogAspect.getReqestParams(request, joinPoint);
+        
+        // assert that the result is correct
+        assertEquals("param1: value1, param2: value3", result);
+    }
+}
+
+
+No.10 generated result --------------------------
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AutoLogAspectTest {
+    @Test
+    public void getReqestParamsTest() {
+        // Test 1: Http method is GET
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getMethod()).thenReturn("GET");
+        JoinPoint joinPoint = mock(JoinPoint.class);
+        Object[] paramsArray = new Object[0];
+        when(joinPoint.getArgs()).thenReturn(paramsArray);
+        String expectedResult = "";
+        assertEquals(expectedResult, AutoLogAspect.getRequestParams(request, joinPoint));
+
+        // Test 2: Http method is POST and params array is empty
+        request = mock(HttpServletRequest.class);
+        when(request.getMethod()).thenReturn("POST");
+        joinPoint = mock(JoinPoint.class);
+        paramsArray = new Object[0];
+        when(joinPoint.getArgs()).thenReturn(paramsArray);
+        expectedResult = "";
+        assertEquals(expectedResult, AutoLogAspect.getRequestParams(request, joinPoint));
+
+        // Test 3: Http method is POST and params array contains a single object
+        request = mock(HttpServletRequest.class);
+        when(request.getMethod()).thenReturn("POST");
+        joinPoint = mock(JoinPoint.class);
+        paramsArray = new Object[1];
+        when(joinPoint.getArgs()).thenReturn(paramsArray);
+        expectedResult = "{}";
+        assertEquals(expectedResult, AutoLogAspect.getRequestParams(request, joinPoint));
+
+        // Test 4: Http method is POST and params array contains multiple objects
+        request = mock(HttpServletRequest.class);
+        when(request.getMethod()).thenReturn("POST");
+        joinPoint = mock(JoinPoint.class);
+        paramsArray = new Object[2];
+        when(joinPoint.getArgs()).thenReturn(paramsArray);
+        expectedResult = "{}";
+        assertEquals(expectedResult, AutoLogAspect.getRequestParams(request, joinPoint));
+    }
+}
+
+

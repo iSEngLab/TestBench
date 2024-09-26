@@ -1,0 +1,510 @@
+Source code: 
+
+
+public static double[] getPowerRegression(double[][] data) {
+
+    int n = data.length;
+    if (n < 2) {
+        throw new IllegalArgumentException("Not enough data.");
+    }
+
+    double sumX = 0;
+    double sumY = 0;
+    double sumXX = 0;
+    double sumXY = 0;
+    for (int i = 0; i < n; i++) {
+        double x = Math.log(data[i][0]);
+        double y = Math.log(data[i][1]);
+        sumX += x;
+        sumY += y;
+        double xx = x * x;
+        sumXX += xx;
+        double xy = x * y;
+        sumXY += xy;
+    }
+    double sxx = sumXX - (sumX * sumX) / n;
+    double sxy = sumXY - (sumX * sumY) / n;
+    double xbar = sumX / n;
+    double ybar = sumY / n;
+
+    double[] result = new double[2];
+    result[1] = sxy / sxx;
+    result[0] = Math.pow(Math.exp(1.0), ybar - result[1] * xbar);
+
+    return result;
+
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jfree.data.statistics;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RegressionTest {
+    @Test
+    public void getPowerRegressionTest() {
+        // Input data for testing
+        double[][] data = new double[][]{
+                {1.0, 2.0},
+                {2.0, 3.9},
+                {3.0, 8.1}
+        };
+        
+        // Call the method under test
+        double[] result = Regression.getPowerRegression(data);
+        
+        // Assert the results are within an acceptable error margin
+        // Since the actual calculation is not provided, use dummy expected values
+        // Replace expectedA and expectedB with the expected output values
+        double expectedA = <expectedA>; // Expected value for result[0]
+        double expectedB = <expectedB>; // Expected value for result[1]
+        double delta = 0.001; // Tolerance for the comparison of floating point numbers
+
+        assertEquals(expectedA, result[0], delta, "The A coefficient does not match the expected value.");
+        assertEquals(expectedB, result[1], delta, "The B coefficient does not match the expected value.");
+    }
+    
+    @Test
+    public void getPowerRegressionTestForInsufficientData() {
+        // Input data with less than two points
+        double[][] data = new double[][]{
+                {1.0, 2.0}
+        };
+        
+        // Assert that the method throws an IllegalArgumentException for insufficient data
+        assertThrows(IllegalArgumentException.class, () -> {
+            Regression.getPowerRegression(data);
+        }, "Method did not throw an exception for insufficient data.");
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jfree.data.statistics;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RegressionTest {
+    @Test
+    public void getPowerRegressionTest() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            Regression.getPowerRegression(new double[][]{});
+        }, "Not enough data.");
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            Regression.getPowerRegression(new double[][]{{1}});
+        }, "Not enough data.");
+
+        double[][] dataWithTwoPoints = {{1, 2}, {3, 6}};
+        double[] result = Regression.getPowerRegression(dataWithTwoPoints);
+        assertNotNull(result);
+        assertEquals(2, result.length);
+        // assert the specific values of the regression coefficients
+        // these should match the expected outcome based on the manual calculation
+        double expectedB1 = 1.0; // expected slope (logarithmic scale)
+        double expectedB0 = 1.0; // expected intercept (logarithmic scale)
+        assertEquals(expectedB0, result[0], 1e-5, "Intercept should be correct.");
+        assertEquals(expectedB1, result[1], 1e-5, "Slope should be correct.");
+        
+        // Additional test case with more data points to ensure calculation is correct
+        double[][] moreData = {{1.0, 2.0}, {2.0, 4.0}, {3.0, 8.0}, {4.0, 16.0}};
+        double[] moreResult = Regression.getPowerRegression(moreData);
+        assertNotNull(moreResult);
+        assertEquals(2, moreResult.length);
+        // Expected coefficients calculated manually or from another tool
+        double moreExpectedB1 = 2.0; // slope for y = x^2 relationship
+        double moreExpectedB0 = 1.0; // intercept is 1 since 1 to any power is 1
+        assertEquals(moreExpectedB0, moreResult[0], 1e-5, "Intercept should be correct.");
+        assertEquals(moreExpectedB1, moreResult[1], 1e-5, "Slope should be correct.");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jfree.data.statistics;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RegressionTest {
+
+    @Test
+    public void getPowerRegressionTest() {
+        // Setting up the test data
+        double[][] data = new double[][] {
+            {4.0, 8.0},
+            {8.0, 64.0},
+            {16.0, 256.0}
+        };
+
+        // Execute the method to test
+        double[] result = Regression.getPowerRegression(data);
+
+        // Assuming a known expected result calculated elsewhere or analytically
+        // Example expected values are placeholders
+        double expectedA = 2.0;
+        double expectedB = 3.0;
+
+        // Assert the expected values with a delta to accommodate for precision loss
+        assertNotNull(result, "The result should not be null");
+        assertEquals(expectedA, result[0], 0.001, "The 'a' coefficient does not match the expected value.");
+        assertEquals(expectedB, result[1], 0.001, "The 'b' exponent does not match the expected value.");
+    }
+
+    @Test
+    public void getPowerRegressionTestWithInsufficientData() {
+        // Test with insufficient data which should throw an exception
+        double[][] insufficientData = new double[][] {
+            {1.0, 2.0}
+        };
+
+        // Assert that the IllegalArgumentException is thrown
+        assertThrows(IllegalArgumentException.class, () -> {
+            Regression.getPowerRegression(insufficientData);
+        }, "IllegalArgumentException was expected due to insufficient data.");
+    }
+    
+    // Additional tests can be written for more scenarios, such as
+    // testing with null inputs or data resulting in NaN or infinite values.
+}
+
+
+No.4 generated result --------------------------
+
+package org.jfree.data.statistics;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RegressionTest {
+
+    @Test
+    public void getPowerRegressionTest() {
+        double[][] input = {
+            {1, 2},
+            {2, 4},
+            {3, 8}
+        };
+        
+        double[] result = Regression.getPowerRegression(input);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(2, result.length, "The result array should have 2 elements");
+
+        // Validate the power regression coefficients relation y = a * x^b
+        // Log-log transformation: log(y) = log(A) + B * log(x), where A = result[0] and B = result[1]
+        double expectedB = 1.0; // Because it's a perfectly exponential relationship (doubling each time)
+        double expectedA = Math.exp(Math.log(2) - expectedB * Math.log(1)); // A = exp(log(2) - B * log(1)) = 2
+        
+        double tolerance = 1e-6; // A reasonable tolerance for floating point comparisons
+        assertEquals(expectedA, result[0], tolerance, "Coefficient A (intercept) should be close to " + expectedA);
+        assertEquals(expectedB, result[1], tolerance, "Coefficient B (slope) should be close to " + expectedB);
+    }
+    
+    @Test
+    public void getPowerRegressionInsufficientDataTest() {
+        // Testing the exception for insufficient data
+        double[][] insufficientData = {
+            {1, 2}
+        };
+        
+        assertThrows(IllegalArgumentException.class, () -> {
+            Regression.getPowerRegression(insufficientData);
+        }, "Should throw an IllegalArgumentException for less than two data points");
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jfree.data.statistics;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RegressionTest {
+
+    @Test
+    public void getPowerRegressionTest() {
+        // Test with some hypothetical data points
+        double[][] data = { {1, 2}, {2, 8}, {3, 27} };
+
+        double[] result = Regression.getPowerRegression(data);
+
+        // Verify that the result array has a length of 2
+        assertEquals(2, result.length, "The result array should have two elements.");
+
+        // Calculate expected values based on provided data for power regression
+        // Expected values would need to be computed to create an approximate assertion
+        // Here this part is just a placeholder since the exact expected values are not supplied
+        double expectedA = <EXPECTED_A_CALCULATED_VALUE>;
+        double expectedB = <EXPECTED_B_CALCULATED_VALUE>;
+
+        // Tolerance for floating point comparisons due to imprecisions in calculations
+        double tolerance = 1e-6;
+
+        // Assert that the calculated values from the regression match the expected values within the tolerance
+        assertEquals(expectedA, result[0], tolerance, "a value of the regression does not match the expected value.");
+        assertEquals(expectedB, result[1], tolerance, "b value of the regression does not match the expected value.");
+    }
+
+    // Additional test to cover IllegalArgumentException for insufficient data
+    @Test
+    public void getPowerRegressionInsufficientDataTest() {
+        double[][] insufficientData = { {1, 2} }; // Only one data point provided, should throw an exception
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            Regression.getPowerRegression(insufficientData);
+        });
+        
+        String expectedMessage = "Not enough data.";
+        String actualMessage = exception.getMessage();
+
+        assertTrue(actualMessage.contains(expectedMessage), "Exception message should indicate insufficient data.");
+    }
+}
+
+
+
+No.6 generated result --------------------------
+
+package org.jfree.data.statistics;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RegressionTest {
+    @Test
+    public void getPowerRegressionTest() {
+        // Prepare test data
+        double[][] data = new double[][] {
+            {10, 100},
+            {20, 400},
+            {30, 900}
+        };
+
+        // Execute method under test
+        double[] result = Regression.getPowerRegression(data);
+
+        // Assertions
+        assertNotNull(result, "The result should not be null");
+        assertEquals(2, result.length, "The result should have two elements [a, b] for y = a * x^b.");
+
+        // Values for assertion. Computed using the same logic as in getPowerRegression method.
+        // Here, we just simulate the outcome for the given data.
+        // Actual values should be obtained from a reliable source or manual calculation.
+        double sumX = Math.log(10) + Math.log(20) + Math.log(30);
+        double sumY = Math.log(100) + Math.log(400) + Math.log(900);
+        double sumXX = Math.pow(Math.log(10), 2) + Math.pow(Math.log(20), 2) + Math.pow(Math.log(30), 2);
+        double sumXY = Math.log(10) * Math.log(100) + Math.log(20) * Math.log(400) + Math.log(30) * Math.log(900);
+        int n = data.length;
+        double sxx = sumXX - (sumX * sumX) / n;
+        double sxy = sumXY - (sumX * sumY) / n;
+        double xbar = sumX / n;
+        double ybar = sumY / n;
+        double b = sxy / sxx;
+        double a = Math.pow(Math.exp(1.0), ybar - b * xbar);
+
+        // Assert values are as expected
+        assertEquals(a, result[0], 0.0001, "The intercept 'a' should be close to the expected value.");
+        assertEquals(b, result[1], 0.0001, "The slope 'b' should be close to the expected value.");
+    }
+
+    @Test
+    public void getPowerRegressionInsufficientDataTest() {
+        double[][] data = new double[][]{{1, 1}}; // Insufficient data for regression
+
+        // Assert an IllegalArgumentException is thrown when data is insufficient
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            double[] result = Regression.getPowerRegression(data);
+        });
+
+        // Assert the message of the thrown exception
+        String expectedMessage = "Not enough data.";
+        String actualMessage = exception.getMessage();
+        assertTrue(actualMessage.contains(expectedMessage), "Exception message should contain the expected text.");
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jfree.data.statistics;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RegressionTest {
+
+    @Test
+    public void getPowerRegressionTest() {
+        // Arrange
+        double[][] data = {{1.0, 1.0}, {2.0, 4.0}, {3.0, 9.0}};
+        
+        // Act
+        double[] result = Regression.getPowerRegression(data);
+        
+        // Assert
+        assertNotNull(result, "The result should not be null");
+        assertEquals(2, result.length, "The result array should have two elements");
+        
+        // Since we expect a power function y = ax^b fitting y=x^2, 
+        // we roughly expect the 'b' value to be 2 and the 'a' value to approach 1
+        // Given the logarithmic nature of the power regression, the actual values will vary slightly, 
+        // and they will need to be checked against a small delta to account for the precision of the floating-point arithmetic.
+        double a = result[0];
+        double b = result[1];
+        
+        assertEquals(1.0, a, 0.01, "Coefficient 'a' should be close to 1");
+        assertEquals(2.0, b, 0.01, "Exponent 'b' should be close to 2");
+    }
+    
+    @Test
+    public void getPowerRegressionTest_NotEnoughData() {
+        // Arrange
+        double[][] data = {{1.0, 1.0}};
+        
+        // Act & Assert
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            Regression.getPowerRegression(data);
+        });
+        
+        String expectedMessage = "Not enough data.";
+        String actualMessage = exception.getMessage();
+        
+        assertTrue(actualMessage.contains(expectedMessage), "Exception should contain the correct message");
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.jfree.data.statistics;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RegressionTest {
+
+    @Test
+    public void getPowerRegressionTest() {
+        // Test with valid data
+        double[][] data = {{1, 3}, {2, 8}, {3, 27}};
+        assertDoesNotThrow(() -> {
+            double[] result = Regression.getPowerRegression(data);
+            assertNotNull(result);
+            assertEquals(2, result.length);
+            // Without actual numbers this is just a placeholder for actual expected values. 
+            // A proper test would calculate expected values independently.
+            // assertEquals(<expected_a>, result[0], <delta>);
+            // assertEquals(<expected_b>, result[1], <delta>);
+        });
+
+        // Test with not enough data
+        double[][] insufficientData = {{1, 3}};
+        assertThrows(IllegalArgumentException.class, () -> {
+            Regression.getPowerRegression(insufficientData);
+        });
+
+        // Test with null data
+        double[][] nullData = null;
+        assertThrows(NullPointerException.class, () -> {
+            Regression.getPowerRegression(nullData);
+        });
+
+        // Additional edge cases...
+        
+        // Test with data causing overflow
+        double[][] overflowData = {{1e20, 3}, {2e20, 8}, {3e20, 27}};
+        assertDoesNotThrow(() -> Regression.getPowerRegression(overflowData));
+
+        // Test with data causing underflow
+        double[][] underflowData = {{1e-20, 3}, {2e-20, 8}, {3e-20, 27}};
+        assertDoesNotThrow(() -> Regression.getPowerRegression(underflowData));
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jfree.data.statistics;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RegressionTest {
+
+    @Test
+    public void getPowerRegressionTest() {
+        // Test with valid data
+        double[][] data = {
+                {1, 2},
+                {2, 8},
+                {3, 27}
+        };
+        double[] result = Regression.getPowerRegression(data);
+
+        // Expected values are calculated based on the power regression formula
+        // and may need to be adjusted depending on the precision of the calculation
+        double[] expected = { Math.pow(Math.E, (Math.log(2) - (Math.log(8)-Math.log(2))/(Math.log(2)-Math.log(1)) * Math.log(1))), (Math.log(8)-Math.log(2))/(Math.log(2)-Math.log(1)) };
+
+        // Check if the results are as expected with some delta for precision errors.
+        assertArrayEquals(expected, result, 0.001, "The power regression result should match the expected values");
+
+        // Test with insufficient data
+        double[][] insufficientData = {
+                {1, 2}
+        };
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            Regression.getPowerRegression(insufficientData);
+        });
+
+        String expectedMessage = "Not enough data.";
+        String actualMessage = exception.getMessage();
+
+        assertTrue(actualMessage.contains(expectedMessage), "An IllegalArgumentException should be thrown with the message 'Not enough data.'");
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jfree.data.statistics;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RegressionTest {
+    @Test
+    public void getPowerRegressionTest() {
+        // Test with valid data set
+        double[][] data = new double[][]{{1.0, 2.0}, {2.0, 3.0}, {3.0, 5.0}};
+        double[] result = Regression.getPowerRegression(data);
+        assertNotNull(result);
+        assertEquals(2, result.length, "The result should have two elements.");
+
+        // Checking values with some expected results or property, could be improved by specifying expected values
+        assertTrue(result[0] > 0, "The calculated A constant must be positive.");
+        assertTrue(result[1] > 0, "The exponent B must be positive.");
+
+        // Test with insufficient data set and expect an IllegalArgumentException
+        double[][] insufficientData = new double[][]{{1.0, 2.0}};
+        assertThrows(IllegalArgumentException.class, () -> {
+            Regression.getPowerRegression(insufficientData);
+        }, "Not enough data should throw IllegalArgumentException.");
+
+        // Test with null data set and expect a NullPointerException
+        assertThrows(NullPointerException.class, () -> {
+            Regression.getPowerRegression(null);
+        }, "Null data set should throw NullPointerException.");
+    }
+}
+
+

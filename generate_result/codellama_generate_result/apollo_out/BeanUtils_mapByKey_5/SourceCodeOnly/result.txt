@@ -1,0 +1,349 @@
+Source code: 
+
+
+@SuppressWarnings("unchecked")
+public static <K, V> Map<K, V> mapByKey(String key, List<?> list) {
+  Map<K, V> map = new HashMap<>();
+  if (CollectionUtils.isEmpty(list)) {
+    return map;
+  }
+  try {
+    Class<?> clazz = list.get(0).getClass();
+    Field field = deepFindField(clazz, key);
+    if (field == null) {
+        throw new IllegalArgumentException("Could not find the key");
+    }
+    field.setAccessible(true);
+    for (Object o : list) {
+      map.put((K) field.get(o), (V) o);
+    }
+  } catch (Exception e) {
+    throw new BeanUtilsException(e);
+  }
+  return map;
+}
+
+
+
+No.1 generated result --------------------------
+
+
+package com.ctrip.framework.apollo.common.utils;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BeanUtilsTest {
+    @Test
+    public void mapByKeyTest() {
+        // Arrange
+        String key = "key";
+        List<Object> list = new ArrayList<>();
+        Object obj1 = new Object();
+        Object obj2 = new Object();
+        list.add(obj1);
+        list.add(obj2);
+        
+        // Act
+        Map<Object, Object> result = BeanUtils.mapByKey(key, list);
+        
+        // Assert
+        assertEquals(2, result.size());
+        assertTrue(result.containsKey(key));
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.utils;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BeanUtilsTest {
+    @Test
+    public void mapByKeyTest() throws Exception {
+        List<Object> list = new ArrayList<>();
+        list.add(new Object()); // Add an example object to the list
+        Map<String, Object> resultMap = BeanUtils.mapByKey("key", list);
+        assertEquals(1, resultMap.size()); // Verify that the map contains one entry
+        assertTrue(resultMap.containsKey("key")); // Verify that the key is in the map
+    }
+}
+
+
+No.3 generated result --------------------------
+
+
+package com.ctrip.framework.apollo.common.utils;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BeanUtilsTest {
+    @Test
+    public void mapByKeyTest() {
+        List<String> list = new ArrayList<>();
+        list.add("hello");
+        list.add("world");
+
+        Map<String, Object> map = BeanUtils.mapByKey(list);
+
+        assertEquals(2, map.size());
+        assertTrue(map.containsKey("hello"));
+        assertTrue(map.containsKey("world"));
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.utils;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BeanUtilsTest {
+    @Test
+    public void mapByKeyTest() {
+        List<String> list = new ArrayList<>();
+        Map<String, String> map = BeanUtils.mapByKey("key", list);
+        
+        assertEquals(0, map.size());
+        
+        list.add("value1");
+        list.add("value2");
+        map = BeanUtils.mapByKey("key", list);
+        
+        assertEquals(2, map.size());
+        assertTrue(map.containsKey("value1"));
+        assertTrue(map.containsKey("value2"));
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.utils;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BeanUtilsTest {
+    @Test
+    public void mapByKeyTest() {
+        Map<String, Object> map = new HashMap<>();
+        
+        List<?> list = Arrays.asList(new Object(), new Object());
+        String key = "key";
+        
+        try {
+            Class<?> clazz = list.get(0).getClass();
+            Field field = deepFindField(clazz, key);
+            
+            if (field == null) {
+                throw new IllegalArgumentException("Could not find the key");
+            }
+            
+            field.setAccessible(true);
+            
+            for (Object o : list) {
+                map.put((String) field.get(o), (Object) o);
+            }
+        } catch (Exception e) {
+            throw new BeanUtilsException(e);
+        }
+        
+        assertEquals(2, map.size());
+    }
+}
+
+
+No.6 generated result --------------------------
+
+I'm not sure I understand what you are saying with "
+
+
+No.7 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.utils;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+public class BeanUtilsTest {
+    @Test
+    public void mapByKeyTest() {
+        // given
+        String key = "name";
+        List<String> list = new ArrayList<>();
+        list.add("John");
+        list.add("Jane");
+        
+        // when
+        Map<String, String> resultMap = BeanUtils.mapByKey(key, list);
+        
+        // then
+        assertEquals(2, resultMap.size());
+        assertTrue(resultMap.containsKey("John"));
+        assertTrue(resultMap.containsKey("Jane"));
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package com.ctrip.framework.apollo.common.utils;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BeanUtilsTest {
+    @Test
+    public void mapByKeyTest() throws Exception {
+        // Create a list of objects with a key field
+        List<Object> objects = new ArrayList<>();
+        Object object1 = new Object();
+        Field field1 = object1.getClass().getDeclaredField("key");
+        field1.setAccessible(true);
+        field1.set(object1, "value1");
+        objects.add(object1);
+        Object object2 = new Object();
+        Field field2 = object2.getClass().getDeclaredField("key");
+        field2.setAccessible(true);
+        field2.set(object2, "value2");
+        objects.add(object2);
+
+        // Create a map using the key field and the objects list
+        Map<String, Object> map = BeanUtils.mapByKey("key", objects);
+
+        // Verify that the map contains the expected keys and values
+        assertEquals(map.size(), 2);
+        assertTrue(map.containsKey("value1"));
+        assertTrue(map.containsValue(object1));
+        assertTrue(map.containsKey("value2"));
+        assertTrue(map.containsValue(object2));
+    }
+}
+
+
+No.9 generated result --------------------------
+
+
+public class BeanUtilsTest {
+    @Test
+    public void mapByKeyTest() {
+        // Test case 1: empty list
+        List<?> list = new ArrayList<>();
+        Map<K, V> result = BeanUtils.mapByKey("key", list);
+        assertEquals(0, result.size());
+
+        // Test case 2: null key
+        list = Arrays.asList(new Object(), new Object());
+        try {
+            BeanUtils.mapByKey(null, list);
+            fail("Expected NullPointerException");
+        } catch (NullPointerException e) {
+            // Expected
+        }
+
+        // Test case 3: empty key
+        try {
+            BeanUtils.mapByKey("", list);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // Expected
+        }
+
+        // Test case 4: single object with one field
+        Object obj1 = new Object();
+        ReflectionUtils.setFieldValue(obj1, "key", "value1");
+        list = Arrays.asList(obj1);
+        result = BeanUtils.mapByKey("key", list);
+        assertEquals(1, result.size());
+        assertEquals("value1", result.get("key"));
+
+        // Test case 5: single object with multiple fields
+        Object obj2 = new Object();
+        ReflectionUtils.setFieldValue(obj2, "key1", "value2");
+        ReflectionUtils.setFieldValue(obj2, "key2", "value3");
+        list = Arrays.asList(obj2);
+        result = BeanUtils.mapByKey("key1", list);
+        assertEquals(1, result.size());
+        assertEquals("value2", result.get("key1"));
+
+        // Test case 6: nested fields
+        Object obj3 = new Object();
+        ReflectionUtils.setFieldValue(obj3, "key1", new Object[]{"nestedKey1", "nestedValue1"});
+        ReflectionUtils.setFieldValue(obj3, "key2", new Object[]{"nestedKey2", "nestedValue2"});
+        list = Arrays.asList(obj3);
+        result = BeanUtils.mapByKey("key1[0]", list);
+        assertEquals(1, result.size());
+        assertEquals("nestedValue1", result.get("key1[0]"));
+
+        // Test case 7: arrays of objects
+        Object obj4 = new Object();
+        ReflectionUtils.setFieldValue(obj4, "key1", new String[]{"value4"});
+        ReflectionUtils.setFieldValue(obj4, "key2", new String[]{"value5"});
+        list = Arrays.asList(obj4);
+        result = BeanUtils.mapByKey("key1[0]", list);
+        assertEquals(1, result.size());
+        assertEquals("value4", result.get("key1[0]"));
+
+        // Test case 8: maps with complex keys
+        Object obj5 = new Object();
+        ReflectionUtils.setFieldValue(obj5, "key1", Collections.singletonMap("nestedKey1", "nestedValue1"));
+        ReflectionUtils.setFieldValue(obj5, "key2", Collections.singletonMap("nestedKey2", "nestedValue2"));
+        list = Arrays.asList(obj5);
+        result = BeanUtils.mapByKey("key1['nestedKey1']", list);
+        assertEquals(1, result.size());
+        assertEquals("nestedValue1", result.get("key1['nestedKey1']"));
+
+        // Test case 9: null values in the list
+        Object obj6 = new Object();
+        ReflectionUtils.setFieldValue(obj6, "key1", "value6");
+        ReflectionUtils.setFieldValue(obj6, "key2", null);
+        list = Arrays.asList(obj6);
+        result = BeanUtils.mapByKey("key1", list);
+        assertEquals(1, result.size());
+        assertEquals("value6", result.get("key1"));
+
+        // Test case 10: exceptions thrown by the deepFindField method
+        Object obj7 = new Object();
+        ReflectionUtils.setFieldValue(obj7, "key1", "value7");
+        list = Arrays.asList(obj7);
+        try {
+            BeanUtils.mapByKey("key2", list);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // Expected
+        }
+    }
+}
+
+
+
+No.10 generated result --------------------------
+
+
+package com.ctrip.framework.apollo.common.utils;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BeanUtilsTest {
+    @Test
+    public void mapByKeyTest() {
+        String key = "key";
+        List<Object> list = new ArrayList<>();
+        Object o1 = new Object();
+        Object o2 = new Object();
+        list.add(o1);
+        list.add(o2);
+        
+        Map<String, Object> map = BeanUtils.mapByKey(key, list);
+        assertEquals(2, map.size());
+        assertTrue(map.containsKey(key));
+    }
+}
+
+

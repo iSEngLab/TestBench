@@ -1,0 +1,513 @@
+Source code: 
+
+
+static double slowCos(final double x, final double[] result) {
+
+    final double[] xs = new double[2];
+    final double[] ys = new double[2];
+    final double[] facts = new double[2];
+    final double[] as = new double[2];
+    split(x, xs);
+    ys[0] = ys[1] = 0.0;
+
+    for (int i = FACT.length - 1; i >= 0; i--) {
+        splitMult(xs, ys, as);
+        ys[0] = as[0];
+        ys[1] = as[1];
+
+        if ((i & 1) != 0) { // skip odd entries
+            continue;
+        }
+
+        split(FACT[i], as);
+        splitReciprocal(as, facts);
+
+        if ((i & 2) != 0) { // alternate terms are negative
+            facts[0] = -facts[0];
+            facts[1] = -facts[1];
+        }
+
+        splitAdd(ys, facts, as);
+        ys[0] = as[0]; ys[1] = as[1];
+    }
+
+    if (result != null) {
+        result[0] = ys[0];
+        result[1] = ys[1];
+    }
+
+    return ys[0] + ys[1];
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    private static final double EPSILON = 1e-9;
+
+    private static void split(double value, double[] split) {
+        // placeholder code to simulate the split function since it's not provided
+        split[0] = value * (1 - EPSILON);
+        split[1] = value * EPSILON;
+    }
+
+    private static void splitMult(double[] xs, double[] ys, double[] result) {
+        // placeholder code to simulate the splitMult function since it's not provided
+        result[0] = (xs[0] * ys[0]) - (xs[1] * ys[1]);
+        result[1] = (xs[1] * ys[0]) + (xs[0] * ys[1]);
+    }
+
+    private static void splitAdd(double[] xs, double[] ys, double[] result) {
+        // placeholder code to simulate the splitAdd function since it's not provided
+        result[0] = xs[0] + ys[0];
+        result[1] = xs[1] + ys[1];
+    }
+
+    private static void splitReciprocal(double[] input, double[] result) {
+        // placeholder code to simulate the splitReciprocal function since it's not provided
+        if (input[0] != 0) {
+            result[0] = 1 / input[0];
+            result[1] = -input[1] / (input[0] * input[0]);
+        } else {
+            result[0] = Double.POSITIVE_INFINITY;
+            result[1] = Double.POSITIVE_INFINITY;
+        }
+    }
+
+    private static final double[] FACT = {1.0, 2.0, 6.0, 24.0, 120.0}; // placeholder code, actual factorial values needed
+
+    @Test
+    public void slowCosTest() {
+        final double x = Math.PI / 4; // 45 degrees, expect cos(π/4) = √2/2
+        double[] result = new double[2];
+        double cosValue = AccurateMathCalcTest.slowCos(x, result);
+
+        // The exact value of cos(π/4)
+        final double expectedValue = Math.sqrt(2) / 2;
+
+        // Assert the result is close to the expected value.
+        assertEquals(expectedValue, cosValue, EPSILON, "calculated cos value does not match expected");
+        assertEquals(expectedValue, result[0] + result[1], EPSILON, "result array sum does not match expected");
+        
+        // Test for other values if necessary
+        // ... additional test cases ...
+    }
+    
+    // ... include the slowCos method here ...
+}
+
+
+No.2 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    @Test
+    public void slowCosTest() {
+        double x = Math.PI / 4; // 45 degrees
+        double expected = Math.cos(x); // Use Math.cos to get the expected value
+        double[] result = new double[2];
+        double actual = AccurateMathCalcTest.slowCos(x, result);
+        double delta = 1e-15; // Set an acceptable delta for comparison
+        
+        assertEquals(expected, actual, delta, "The slowCos function did not return the expected value");
+        
+        // Alternatively, we can test specific known values
+        double[] knownResult = { Math.sqrt(2) / 2, 0.0 }; // cos(45°) = √2/2
+        actual = AccurateMathCalcTest.slowCos(Math.PI / 4, result);
+        
+        assertEquals(knownResult[0], result[0], delta, "The slowCos function did not return the expected primary result");
+        assertEquals(knownResult[1], result[1], delta, "The slowCos function did not return the expected secondary result");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+
+    private static final double DELTA = 1e-6;
+
+    @Test
+    public void slowCosTest() {
+        // Test cases for the slowCos function
+        // Define the input and expected result
+        double input = Math.PI / 4; // 45 degrees
+        double[] result = new double[2];
+
+        // Call the method
+        double output = AccurateMathCalcTest.slowCos(input, result);
+
+        // Check that the result is close enough to the expected value (cos(π/4) = √2/2)
+        assertEquals(Math.sqrt(2) / 2, output, DELTA, "The calculated cosine value should be close to √2/2");
+
+        // Validate the result array is also set correctly
+        assertNotNull(result); // result array should not be null
+        assertEquals(Math.sqrt(2) / 2, result[0] + result[1], DELTA, "The output array should contain values that sum to √2/2");
+
+        // Additional test cases can be included for other angles
+
+        // Test when input is zero
+        result = new double[2];
+        output = AccurateMathCalcTest.slowCos(0.0, result);
+        assertEquals(1.0, output, DELTA, "The calculated cosine value of 0 should be 1");
+        assertEquals(1.0, result[0] + result[1], DELTA, "The output array should contain values that sum to 1");
+
+        // Test when input is π/2
+        result = new double[2];
+        output = AccurateMathCalcTest.slowCos(Math.PI / 2, result);
+        assertEquals(0.0, output, DELTA, "The calculated cosine value of π/2 should be 0");
+        assertEquals(0.0, result[0] + result[1], DELTA, "The output array should contain values that sum to 0");
+
+        // Test when result array is null
+        output = AccurateMathCalcTest.slowCos(input, null);
+        assertEquals(Math.sqrt(2) / 2, output, DELTA, "The calculated cosine value should still be close to √2/2 even if result array is null");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    @Test
+    public void slowCosTest() {
+        final double delta = 1e-8; // Define the precision delta for the assertion checks
+
+        // Test with a known value
+        double[] result = new double[2];
+        double expectedValue = Math.cos(Math.PI / 4); // cos(π/4) = sqrt(2)/2
+        double testValue = AccurateMathCalc.slowCos(Math.PI / 4, result);
+
+        // Check if the slowCos method returns a value very close to the expected value
+        assertEquals(expectedValue, testValue, delta, "slowCos should return the correct cosine value");
+
+        // Additionally, verify that the result array is correctly filled
+        assertNotNull(result, "The result array should be non-null");
+        assertEquals(expectedValue, result[0] + result[1], delta, "The result array should contain the correct cosine value");
+
+        // Test with another known value
+        expectedValue = Math.cos(0); // cos(0) = 1
+        testValue = AccurateMathCalc.slowCos(0, result);
+
+        // Check with the exact expected value for a known reference
+        assertEquals(expectedValue, testValue, "slowCos of 0 should return 1");
+        assertNotNull(result, "The result array should be non-null for cos(0)");
+        assertEquals(expectedValue, result[0] + result[1], "The result array should contain the correct cosine value for cos(0)");
+
+        // Test with edge case like negative input
+        expectedValue = Math.cos(-Math.PI / 2); // cos(-π/2) should nearly equal 0
+        testValue = AccurateMathCalc.slowCos(-Math.PI / 2, result);
+
+        assertEquals(expectedValue, testValue, delta, "slowCos should handle negative inputs correctly");
+        assertNotNull(result, "The result array should be non-null for a negative input");
+        assertEquals(expectedValue, result[0] + result[1], delta, "The result array should contain correct cosine value for a negative input");
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+
+    private static final double DELTA = 1e-15;
+
+    @Test
+    public void slowCosTest() {
+        // Known values for testing, based on the actual cosine values for these angles.
+        double[] angles = {0.0, Math.PI / 4, Math.PI / 2, Math.PI, 3 * Math.PI / 2, 2 * Math.PI};
+        double[] expectedResults = {1.0, Math.sqrt(2) / 2, 0.0, -1.0, 0.0, 1.0};
+        
+        for(int i = 0; i < angles.length; i++) {
+            double[] result = new double[2];
+            double returnValue = AccurateMathCalc.slowCos(angles[i], result);
+
+            // Verify the sum of result[0] and result[1] equals the return value
+            assertEquals(returnValue, result[0] + result[1], DELTA, 
+                         "The sum of the result array should match the returnValue.");
+
+            // Verify the return value is within the acceptable error range
+            assertEquals(expectedResults[i], returnValue, DELTA, 
+                         "The cosine calculation did not return the expected result.");
+        }
+    }
+    
+    // The slowCos method should also handle the case when the result array is null,
+    // so let's test that scenario as well.
+    @Test
+    public void slowCosTestWithNullResult() {
+        double angle = Math.PI / 3;
+        double expected = 0.5; // Actual cosine value for PI/3 is 0.5
+        
+        double returnValue = AccurateMathCalc.slowCos(angle, null);
+        
+        assertEquals(expected, returnValue, DELTA, 
+                     "The slowCos method should handle null result arrays correctly.");
+    }
+    
+    // Assuming that AccurateMathCalc includes the method slowCos
+    static double slowCos(final double x, final double[] result) {
+        // ... (omitted for brevity...)
+        return ys[0] + ys[1];
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    
+    private static final double DELTA = 1e-15;
+    
+    @Test
+    public void slowCosTest() {
+        double input = 0.5;
+        double[] result = new double[2];
+        double expected = Math.cos(input);
+        
+        // Assuming that the `FACT` and other necessary arrays and constants are properly defined.
+        double output = AccurateMathCalc.slowCos(input, result);
+        
+        // Check for correct cos value
+        assertEquals(expected, output, DELTA, "The `slowCos` method does not return the expected cosine value.");
+        
+        // Check if the result array has been correctly filled
+        assertNotNull(result, "The result array should not be null.");
+        assertEquals(expected, result[0] + result[1], DELTA, "The result array does not contain the expected values.");
+    }
+    
+    // Helper methods to be defined (assuming they are part of the calculation):
+    public void split(double x, double[] parts) {
+        // Implementation for split method
+    }
+
+    public void splitMult(double[] x, double[] y, double[] ans) {
+        // Implementation for split multiplication method
+    }
+    
+    public void splitAdd(double[] x, double[] y, double[] ans) {
+        // Implementation for split addition method
+    }
+
+    public void splitReciprocal(double[] x, double[] ans) {
+        // Implementation for split reciprocal method
+    }
+    
+    // Other methods and arrays used within the `slowCos` function
+    // ...
+}
+
+
+No.7 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    private static final double EPSILON = 1e-6;
+
+    // Static method split() and the other helper methods would be needed
+    // to run this test, as well as the constant array FACT[].
+    // Assuming FACT[] contains factorial values and split(), splitMult(),
+    // splitReciprocal(), and splitAdd() are valid methods implemented elsewhere.
+
+    @Test
+    public void slowCosTest() {
+        double[] result = new double[2]; // create an array to hold the result
+
+        // Test the slowCos method with a known value, for example pi/3
+        double input = Math.PI / 3;
+        double expected = Math.cos(input);
+
+        double actual = AccurateMathCalc.slowCos(input, result);
+
+        // Assert that the slowCos calculation is accurate within a certain epsilon
+        assertEquals(expected, actual, EPSILON, "The slowCos method should calculate the cosine value accurately.");
+
+        // Optionally, verify that the result array has been populated correctly
+        assertNotNull(result);
+        assertEquals(2, result.length, "The result array should have two elements.");
+        assertEquals(actual, result[0] + result[1], EPSILON, "The sum of the result array elements should equal the actual return value.");
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    
+    private static final double DELTA = 1e-6; // Delta for comparison (depends on precision needed)
+    
+    @Test
+    public void slowCosTest() {
+        double input = Math.PI;
+        double[] result = new double[2];
+
+        // Actual cosine value for Math.PI is -1.
+        // Using DELTA for asserting the result as double calculations have precision errors.
+        double expectedValue = -1.0;
+        double actualValue = AccurateMathCalc.slowCos(input, result);
+        
+        assertEquals(expectedValue, actualValue, DELTA, "The calculated cosine value is incorrect.");
+        assertEquals(expectedValue, result[0] + result[1], DELTA, "The result array does not contain the correct values.");
+        
+        // Test boundary values, like 0 or 2*Math.PI, and cases where result should be null
+        input = 0.0;
+        expectedValue = 1.0;
+        actualValue = AccurateMathCalc.slowCos(input, result);
+        assertEquals(expectedValue, actualValue, DELTA, "The calculated cosine value is incorrect for input 0.");
+
+        input = 2*Math.PI;
+        actualValue = AccurateMathCalc.slowCos(input, null); // passing null for the result array
+        assertEquals(expectedValue, actualValue, DELTA, "The calculated cosine value is incorrect for input 2*PI and null result array.");
+    }
+    
+    // Additional tests could be implemented here...
+}
+
+
+No.9 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    
+    @Test
+    public void slowCosTest() {
+        final double delta = 1e-15;
+        final double[] result = new double[2];
+
+        // Test case for x = 0
+        double expected = Math.cos(0);
+        assertEquals(expected, AccurateMathCalc.slowCos(0, result), delta);
+        assertEquals(expected, result[0] + result[1], delta);
+
+        // Test case for PI/2
+        expected = Math.cos(Math.PI / 2);
+        assertEquals(expected, AccurateMathCalc.slowCos(Math.PI / 2, result), delta);
+        assertEquals(expected, result[0] + result[1], delta);
+
+        // Test case for PI
+        expected = Math.cos(Math.PI);
+        assertEquals(expected, AccurateMathCalc.slowCos(Math.PI, result), delta);
+        assertEquals(expected, result[0] + result[1], delta);
+
+        // Test case for 3*PI/2
+        expected = Math.cos(3 * Math.PI / 2);
+        assertEquals(expected, AccurateMathCalc.slowCos(3 * Math.PI / 2, result), delta);
+        assertEquals(expected, result[0] + result[1], delta);
+
+        // Test case for 2*PI
+        expected = Math.cos(2 * Math.PI);
+        assertEquals(expected, AccurateMathCalc.slowCos(2 * Math.PI, result), delta);
+        assertEquals(expected, result[0] + result[1], delta);
+
+        // Test case for -PI
+        expected = Math.cos(-Math.PI);
+        assertEquals(expected, AccurateMathCalc.slowCos(-Math.PI, result), delta);
+        assertEquals(expected, result[0] + result[1], delta);
+
+        // Test case to check if 'null' result is handled
+        assertDoesNotThrow(() -> AccurateMathCalc.slowCos(0, null));
+        
+        // It is assumed that the 'split', 'splitMult', 'splitReciprocal', and 'splitAdd'
+        // methods are part of `AccurateMathCalc` and actually manipulate the 'ys' and 'as'
+        // arrays in such a way that this test would pass. If this is not the case,
+        // the static method `slowCos` cannot be tested correctly without additional implementation.
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+
+    private static final double EPSILON = 1e-6;
+
+    @Test
+    public void slowCosTest() {
+        // Example test for specific value
+        double angle = 0.0;
+        double[] result = new double[2];
+        double calculatedValue = AccurateMathCalc.slowCos(angle, result);
+        
+        // Assert the results are close to the expected value
+        assertEquals(Math.cos(angle), calculatedValue, EPSILON, "slowCos should match the Math.cos for 0");
+        
+        // Also check the result is filled correctly if not null
+        assertNotNull(result, "Result array should be filled with the cos value");
+        assertEquals(Math.cos(angle), result[0] + result[1], EPSILON, "Result array should contain accurate cos value for 0");
+        
+        // Additional test cases to cover a range of inputs and edge cases
+        // 1. Test with positive angle
+        angle = Math.PI / 4; // 45 degrees
+        calculatedValue = AccurateMathCalc.slowCos(angle, result);
+        assertEquals(Math.cos(angle), calculatedValue, EPSILON, "slowCos should match the Math.cos for PI/4");
+        assertEquals(Math.cos(angle), result[0] + result[1], EPSILON, "Result array should contain accurate cos value for PI/4");
+        
+        // 2. Test with negative angle
+        angle = -Math.PI / 4; // -45 degrees
+        calculatedValue = AccurateMathCalc.slowCos(angle, null); // pass null as result array
+        assertEquals(Math.cos(angle), calculatedValue, EPSILON, "slowCos should match Math.cos for -PI/4 and result array is null");
+        
+        // 3. Test for angle go beyond the usual range
+        angle = 2 * Math.PI; // 360 degrees
+        calculatedValue = AccurateMathCalc.slowCos(angle, result);
+        assertEquals(Math.cos(angle), calculatedValue, EPSILON, "slowCos should match the Math.cos for 2*PI");
+        
+        // 4. Test for very large angle to verify periodicity
+        angle = 100 * Math.PI; 
+        calculatedValue = AccurateMathCalc.slowCos(angle, result);
+        assertEquals(Math.cos(angle), calculatedValue, EPSILON, "slowCos should match the Math.cos for periodicity at 100*PI");
+        
+        // 5. Test boundary values and known specific results
+        angle = Math.PI; // 180 degrees
+        calculatedValue = AccurateMathCalc.slowCos(angle, result);
+        assertEquals(-1.0, calculatedValue, EPSILON, "slowCos should equal -1 for angle PI");
+    }
+}
+
+

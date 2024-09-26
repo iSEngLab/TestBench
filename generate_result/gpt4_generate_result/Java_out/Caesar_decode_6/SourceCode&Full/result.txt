@@ -1,0 +1,458 @@
+Source code: 
+
+
+public String decode(String encryptedMessage, int shift) {
+    StringBuilder decoded = new StringBuilder();
+
+    shift %= 26;
+
+    final int length = encryptedMessage.length();
+    for (int i = 0; i < length; i++) {
+        char current = encryptedMessage.charAt(i);
+        if (isCapitalLatinLetter(current)) {
+            current -= shift;
+            decoded.append((char) (current < 'A' ? current + 26 : current)); // 26 = number of latin letters
+        } else if (isSmallLatinLetter(current)) {
+            current -= shift;
+            decoded.append((char) (current < 'a' ? current + 26 : current)); // 26 = number of latin letters
+        } else {
+            decoded.append(current);
+        }
+    }
+    return decoded.toString();
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.thealgorithms.ciphers;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class CaesarTest {
+  private Caesar caesar;
+
+  @BeforeEach
+  public void setUp() {
+    caesar = new Caesar();
+  }
+
+  @Test
+  public void decodeTest() {
+    String originalMessage = "Hello World!";
+    int shift = 3;
+    
+    // Encrypting the original message by shifting it by 3 characters
+    String encryptedMessage = caesar.encode(originalMessage, shift);
+
+    // Decoding the message by shifting it back by 3 characters
+    String decodedMessage = caesar.decode(encryptedMessage, shift);
+
+    // Asserting that the original and decoded messages are equal
+    assertEquals(originalMessage, decodedMessage);
+
+    // Test case with wrapping around the end of the alphabet
+    String shiftedMessage = "Axeeh Phkew!";
+    assertEquals("Hello World!", caesar.decode(shiftedMessage, shift));
+    
+    // Test handling non alphabetic characters (they should remain unchanged)
+    String specialChars = "1234567890-=`~!@#$%^&*()_+[]\\{}|;':\",./<>?";
+    assertEquals(specialChars, caesar.decode(specialChars, shift));
+
+    // Test with max possible shift of 26 which is effectively no shift
+    assertEquals(originalMessage, caesar.decode(originalMessage, 26));
+
+    // Test with negative shift
+    String negativeShiftDecoded = caesar.decode("Khoor Zruog!", -3);
+    assertEquals(originalMessage, negativeShiftDecoded);
+    
+    // Test zero shift
+    assertEquals(originalMessage, caesar.decode(originalMessage, 0));
+  }
+}
+
+
+No.2 generated result --------------------------
+
+package com.thealgorithms.ciphers;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class CaesarTest {
+
+    private static Caesar caesar;
+
+    @BeforeAll
+    public static void setUp() {
+        caesar = new Caesar();
+    }
+
+    @Test
+    public void decodeTest() {
+        // Test basic decoding with shift
+        assertEquals("ABCD", caesar.decode("BCDE", 1), "Decoding BCDE by a shift of 1 should give ABCD");
+
+        // Test decoding with shift that wraps around the alphabet
+        assertEquals("ZABC", caesar.decode("ABCD", 1), "Decoding ABCD by a shift of 1 should give ZABC");
+
+        // Test decoding with negative shift
+        assertEquals("XYZ", caesar.decode("ABC", 25), "Decoding ABC by a shift of 25 should give XYZ");
+
+        // Test decoding with shift larger than the number of letters
+        assertEquals("BCD", caesar.decode("CDE", 27), "Decoding CDE by a shift of 27 should give BCD");
+
+        // Test decoding with non-alphabetic characters included
+        assertEquals("Hello, World!", caesar.decode("Ifmmp, Xpsme!", 1), "Decoding 'Ifmmp, Xpsme!' by a shift of 1 should give 'Hello, World!'");
+
+        // Test decoding an empty string
+        assertEquals("", caesar.decode("", 5), "Decoding an empty string should return an empty string");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.thealgorithms.ciphers;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class CaesarTest {
+
+    private Caesar caesar;
+
+    @BeforeEach
+    void setUp() {
+        caesar = new Caesar();
+    }
+
+    @Test
+    public void decodeTest() {
+        String originalMessage = "Hello World!";
+        int shift = 3;
+
+        // Encode the message first to get the encrypted version
+        String encryptedMessage = caesar.encode(originalMessage, shift);
+
+        // Now decode the encrypted message
+        String decodedMessage = caesar.decode(encryptedMessage, shift);
+
+        // Assert that the decoded message is equal to the original message
+        assertEquals(originalMessage, decodedMessage, "The decoded message should match the original message.");
+    }
+
+    @AfterEach
+    void tearDown() {
+        caesar = null;
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.thealgorithms.ciphers;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class CaesarTest {
+
+    @Test
+    public void decodeTest() {
+        Caesar caesar = new Caesar();
+        final String originalMessage = "Hello World!";
+        final String encryptedMessage = "Khoor Zruog!";
+        final int shift = 3;
+
+        String decodedMessage = caesar.decode(encryptedMessage, shift);
+
+        assertEquals(originalMessage, decodedMessage, "The decoded message should match the original message.");
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.thealgorithms.ciphers;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class CaesarTest {
+    
+    private Caesar caesar;
+
+    @BeforeEach
+    void setUp() {
+        caesar = new Caesar();
+    }
+
+    @Test
+    public void decodeTest() {
+        // Case 1: Testing lowercase text
+        String encryptedLowercase = "khoor"; // "hello" shifted with 3
+        int shiftLowerCase = 3;
+        String decodedLowercase = caesar.decode(encryptedLowercase, shiftLowerCase);
+        assertEquals("hello", decodedLowercase);
+
+        // Case 2: Testing uppercase text
+        String encryptedUppercase = "DWWDFN DW GDZQ"; // "ATTACK AT DAWN" shifted by 3
+        int shiftUpperCase = 3;
+        String decodedUppercase = caesar.decode(encryptedUppercase, shiftUpperCase);
+        assertEquals("ATTACK AT DAWN", decodedUppercase);
+
+        // Case 3: Testing with a shift that is a multiple of 26 (should return original message)
+        String originalMessage = "Multiple of 26 shift";
+        int largeShift = 52; // Multiple of 26
+        String decodedMessage = caesar.decode(originalMessage, largeShift);
+        assertEquals(originalMessage, decodedMessage);
+
+        // Case 4: Testing non-alphabetic characters (should remain unchanged)
+        String encryptedWithNonAlphabetic = "@123 #!$";
+        int shiftNonAlphabetic = 5;
+        String decodedWithNonAlphabetic = caesar.decode(encryptedWithNonAlphabetic, shiftNonAlphabetic);
+        assertEquals(encryptedWithNonAlphabetic, decodedWithNonAlphabetic);
+
+        // Case 5: Testing negative shift
+        String encryptedNegative = "cyffnf"; // "attack" shifted with -5
+        int shiftNegative = -5;
+        String decodedNegative = caesar.decode(encryptedNegative, shiftNegative);
+        assertEquals("attack", decodedNegative);
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package com.thealgorithms.ciphers;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class CaesarTest {
+
+    private Caesar caesar;
+
+    @BeforeEach
+    public void setUp() {
+        caesar = new Caesar();
+    }
+
+    @Test
+    public void decodeTest() {
+        assertEquals("ABC", caesar.decode("BCD", 1), "Decoding with shift 1");
+        assertEquals("hello", caesar.decode("ifmmp", 1), "Decoding with shift 1");
+        assertEquals("hello world", caesar.decode("khoor zruog", 3), "Decoding with shift 3");
+        assertEquals("HELLO WORLD", caesar.decode("KHOOR ZRUOG", 3), "Decoding with shift 3");
+        assertEquals("hello world", caesar.decode("hello world", 26), "Decoding with shift 26 should be no-op");
+        assertEquals("hello world", caesar.decode("hello world", 0), "Decoding with shift 0 should be no-op");
+        assertEquals("z", caesar.decode("a", 1), "Decoding 'a' with shift 1 should result in 'z'");
+        assertEquals("A message that includes punctuation!", caesar.decode("D phvvdjh wkdw lqfoxghv sxqfwxdwlrq!", 3), "Decoding with shift 3 and punctuation");
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.thealgorithms.ciphers;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class CaesarTest {
+    
+    @Test
+    public void decodeTest() {
+        Caesar caesar = new Caesar();
+        String originalMessage = "Hello World!";
+        int shift = 3;
+
+        // Encrypt the original message to get an encrypted message
+        String encryptedMessage = caesar.encode(originalMessage, shift);
+        
+        // Expected to get the original message after decoding the encrypted message
+        String decodedMessage = caesar.decode(encryptedMessage, shift);
+        assertEquals(originalMessage, decodedMessage);
+        
+        // Additional tests to ensure that the decode method works as expected
+        assertEquals("A", caesar.decode("D", 3));
+        assertEquals("a", caesar.decode("d", 3));
+        assertEquals("Hello World!", caesar.decode("Khoor Zruog!", 3));
+        assertEquals("XYZ", caesar.decode("ABC", 3));
+        assertEquals("xyz", caesar.decode("abc", 3));
+        assertEquals(" ", caesar.decode(" ", 3));  // Test to ensure spaces are unaffected
+        assertEquals("123", caesar.decode("123", 3));  // Test to ensure digits are unaffected
+        assertEquals("!@#", caesar.decode("!@#", 3));  // Test to ensure special chars are unaffected
+
+        // Test with a large shift value, ensuring it wraps properly
+        String largeShiftEncoded = caesar.encode(originalMessage, 29); // equivalent to a shift of 3
+        assertEquals(originalMessage, caesar.decode(largeShiftEncoded, 29));
+
+        // Shifting back with zero should yield the original encrypted message
+        assertEquals(encryptedMessage, caesar.decode(encryptedMessage, 0));
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package com.thealgorithms.ciphers;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class CaesarTest {
+    private Caesar caesar;
+
+    @BeforeEach
+    public void setUp() {
+        caesar = new Caesar();
+    }
+
+    @Test
+    public void decodeTest() {
+        // Test decoding of a simple message (example with shift of 3)
+        String encodedMessage = "KHOOR";
+        int shift = 3;
+        String expectedDecodedMessage = "HELLO";
+        String actualDecodedMessage = caesar.decode(encodedMessage, shift);
+        assertEquals(expectedDecodedMessage, actualDecodedMessage, "The decoded message should be 'HELLO'");
+
+        // Test decoding with wrapping around alphabet (example with shift of 1)
+        encodedMessage = "BCD";
+        shift = 1;
+        expectedDecodedMessage = "ABC";
+        actualDecodedMessage = caesar.decode(encodedMessage, shift);
+        assertEquals(expectedDecodedMessage, actualDecodedMessage, "The decoded message should be 'ABC'");
+        
+        // Test decoding with a negative shift value
+        encodedMessage = "ZAB";
+        shift = -1;
+        expectedDecodedMessage = "ABC";
+        actualDecodedMessage = caesar.decode(encodedMessage, shift);
+        assertEquals(expectedDecodedMessage, actualDecodedMessage, "The decoded message should be 'ABC'");
+        
+        // Test decoding with shift larger than alphabet size
+        encodedMessage = "ABC";
+        shift = 26;
+        expectedDecodedMessage = "ABC";
+        actualDecodedMessage = caesar.decode(encodedMessage, shift);
+        assertEquals(expectedDecodedMessage, actualDecodedMessage, "The decoded message should be 'ABC' with a shift equal to the alphabet size");
+        
+        // Test decoding non-alphabetic characters (special characters should remain unchanged)
+        encodedMessage = "123!@#";
+        shift = 5;
+        expectedDecodedMessage = "123!@#";
+        actualDecodedMessage = caesar.decode(encodedMessage, shift);
+        assertEquals(expectedDecodedMessage, actualDecodedMessage, "Non-alphabetic characters should remain unchanged");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package com.thealgorithms.ciphers;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class CaesarTest {
+
+    private Caesar caesar;
+
+    @BeforeEach
+    public void setUp() {
+        caesar = new Caesar();
+    }
+
+    @Test
+    public void decodeTest() {
+        // Given
+        String encryptedMessage = "Khoor Zruog"; // "Hello World" shifted 3 characters right
+        int shift = 3;
+        String expected = "Hello World";
+
+        // When
+        String actual = caesar.decode(encryptedMessage, shift);
+
+        // Then
+        assertEquals(expected, actual, "The decoded message should match the original message.");
+    }
+
+    // Tests for other methods like encode, isCapitalLatinLetter, etc., can be added here.
+    
+    @AfterEach
+    public void tearDown() {
+        caesar = null;
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.thealgorithms.ciphers;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class CaesarTest {
+
+    private Caesar caesar;
+
+    @BeforeEach
+    public void setUp() {
+        caesar = new Caesar();
+    }
+
+    @Test
+    public void decodeTest() {
+        String originalMessage = "Hello World!";
+        int shift = 3;
+        String encodedMessage = caesar.encode(originalMessage, shift);
+        // Checking the encoded message
+        assertEquals("Khoor Zruog!", encodedMessage);
+
+        String decodedMessage = caesar.decode(encodedMessage, shift);
+        // Now, ensuring the decode function reverses the encoded message
+        assertEquals(originalMessage, decodedMessage);
+
+        // Testing edge cases with shift values greater than 26
+        int largeShift = 29; // effective shift of 3 (29 % 26)
+        encodedMessage = caesar.encode(originalMessage, largeShift);
+        assertEquals("Khoor Zruog!", encodedMessage);
+        decodedMessage = caesar.decode(encodedMessage, largeShift);
+        assertEquals(originalMessage, decodedMessage);
+
+        // Testing with no actual shift should return original message
+        assertEquals(originalMessage, caesar.decode(originalMessage, 0));
+
+        // Testing with full shift cycle should return original message
+        assertEquals(originalMessage, caesar.decode(originalMessage, 26));
+
+        // Testing with negative shift
+        encodedMessage = caesar.encode(originalMessage, -shift);
+        assertEquals("Ebiil Tloia!", encodedMessage);
+        decodedMessage = caesar.decode(encodedMessage, -shift);
+        assertEquals(originalMessage, decodedMessage);
+
+        // Testing decoding with characters that are not Latin letters
+        String encodedNumbers = caesar.encode("1234", shift);
+        assertEquals("1234", encodedNumbers);
+        String decodedNumbers = caesar.decode(encodedNumbers, shift);
+        assertEquals("1234", decodedNumbers);
+        
+        // Testing special case with all the letters
+        // Considering 'A' shifted by 1 gives 'B'
+        // hence, 'Z' shifted by 1 will become 'A', to retain length in the cycle.
+        String fullAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        encodedMessage = caesar.encode(fullAlphabet, 1);
+        assertEquals("BCDEFGHIJKLMNOPQRSTUVWXYZA", encodedMessage);
+        decodedMessage = caesar.decode(encodedMessage, 1);
+        assertEquals(fullAlphabet, decodedMessage);
+    }
+}
+
+

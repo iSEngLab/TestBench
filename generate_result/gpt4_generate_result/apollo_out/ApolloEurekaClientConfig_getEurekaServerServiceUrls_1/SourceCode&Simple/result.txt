@@ -1,0 +1,563 @@
+Source code: 
+
+
+@Override
+public List<String> getEurekaServerServiceUrls(String myZone) {
+  List<String> urls = bizConfig.eurekaServiceUrls();
+  return CollectionUtils.isEmpty(urls) ? super.getEurekaServerServiceUrls(myZone) : urls;
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.eureka;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import com.ctrip.framework.apollo.biz.config.BizConfig;
+import org.junit.jupiter.api.Test;
+import org.springframework.cloud.netflix.eureka.EurekaClientConfigBean;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+public class ApolloEurekaClientConfigTest {
+
+    @Test
+    public void getEurekaServerServiceUrlsTest() {
+        BizConfig mockBizConfig = mock(BizConfig.class);
+        RefreshScope mockRefreshScope = mock(RefreshScope.class);
+
+        // Create instance of ApolloEurekaClientConfig with mocked dependencies
+        ApolloEurekaClientConfig apolloEurekaClientConfig = new ApolloEurekaClientConfig(mockBizConfig, mockRefreshScope);
+
+        // Define the zone we are testing with
+        String testZone = "defaultZone";
+
+        // Stubbing the mocked BizConfig.eurekaServiceUrls() method to return a non-empty list
+        List<String> mockUrls = Arrays.asList("http://eureka1.example.com", "http://eureka2.example.com");
+        when(mockBizConfig.eurekaServiceUrls()).thenReturn(mockUrls);
+
+        // Call the method under test
+        List<String> urls = apolloEurekaClientConfig.getEurekaServerServiceUrls(testZone);
+
+        // Verification that the Eureka service URLs obtained from BizConfig are returned
+        assertEquals(mockUrls, urls, "The returned Eureka server URLs should match the mock URLs from BizConfig.");
+
+        // Making sure that when `bizConfig.eurekaServiceUrls()` is empty, it falls back to `super.getEurekaServerServiceUrls()`
+        when(mockBizConfig.eurekaServiceUrls()).thenReturn(Collections.emptyList());
+
+        // Since `super.getEurekaServerServiceUrls()` is not easily mockable, let's simulate the base class behavior and assume it to return a specific URL list.
+        List<String> superUrls = Arrays.asList("http://super.eureka.example.com");
+        EurekaClientConfigBean eurekaClientConfigBean = new EurekaClientConfigBean();
+        apolloEurekaClientConfig = spy(new ApolloEurekaClientConfig(mockBizConfig, mockRefreshScope));
+        doReturn(superUrls).when(apolloEurekaClientConfig).getEurekaServerServiceUrls(testZone);
+
+        urls = apolloEurekaClientConfig.getEurekaServerServiceUrls(testZone);
+
+        // Verifying that the `super.getEurekaServerServiceUrls` has been called and has provided the URLs
+        assertEquals(superUrls, urls, "The returned Eureka server URLs should fall back to the 'super' implementation when BizConfig returns an empty list.");
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.eureka;
+
+import com.ctrip.framework.apollo.biz.config.BizConfig;
+
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+@ExtendWith(MockitoExtension.class)
+public class ApolloEurekaClientConfigTest {
+
+    @Mock
+    private BizConfig bizConfig;
+
+    @Mock
+    private ApolloEurekaClientConfig apolloEurekaClientConfig;
+
+    @BeforeEach
+    void setUp() {
+        apolloEurekaClientConfig = spy(new ApolloEurekaClientConfig(bizConfig, null));
+    }
+
+    @Test
+    public void getEurekaServerServiceUrlsTest_withNonEmptyUrls() {
+        List<String> mockUrls = Arrays.asList("http://eureka-server-1", "http://eureka-server-2");
+
+        // Mocking bizConfig.eurekaServiceUrls() to return the mock URL list
+        doReturn(mockUrls).when(bizConfig).eurekaServiceUrls();
+
+        // When
+        List<String> result = apolloEurekaClientConfig.getEurekaServerServiceUrls("myZone");
+
+        // Then
+        assertNotNull(result, "The result should not be null");
+        assertEquals(mockUrls, result, "The method should return the mocked URLs list");
+        verify(apolloEurekaClientConfig, never()).getEurekaServerServiceUrls(anyString());
+    }
+
+    @Test
+    public void getEurekaServerServiceUrlsTest_withEmptyUrls() {
+        // Mock the bizConfig.eurekaServiceUrls() to return an empty list
+        doReturn(Collections.emptyList()).when(bizConfig).eurekaServiceUrls();
+
+        // Assuming we have some default URLs in the parent method
+        List<String> defaultUrls = Arrays.asList("http://default-eureka-server");
+        doReturn(defaultUrls).when(apolloEurekaClientConfig).getEurekaServerServiceUrls("myZone");
+
+        // When
+        List<String> result = apolloEurekaClientConfig.getEurekaServerServiceUrls("myZone");
+
+        // Then
+        assertNotNull(result, "The result should not be null");
+        assertEquals(defaultUrls, result, "The method should return the default URLs as the returned list is empty");
+        verify(apolloEurekaClientConfig).getEurekaServerServiceUrls("myZone");
+    }
+
+    // Add more tests if needed to cover various cases, including null values, etc.
+}
+
+
+No.3 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.eureka;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+
+import com.ctrip.framework.apollo.biz.config.BizConfig;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.cloud.netflix.eureka.EurekaClientConfigBean;
+
+public class ApolloEurekaClientConfigTest {
+
+    private BizConfig bizConfig;
+    private ApolloEurekaClientConfig apolloEurekaClientConfig;
+    private final List<String> testUrls = Arrays.asList("http://localhost:8761/eureka/", "http://localhost:8762/eureka/");
+
+    @BeforeEach
+    public void setUp() {
+        bizConfig = mock(BizConfig.class);
+        apolloEurekaClientConfig = new ApolloEurekaClientConfig(bizConfig, null);
+    }
+
+    @Test
+    public void getEurekaServerServiceUrlsTest() {
+        when(bizConfig.eurekaServiceUrls()).thenReturn(testUrls);
+        
+        List<String> urls = apolloEurekaClientConfig.getEurekaServerServiceUrls("defaultZone");
+        
+        assertEquals(testUrls, urls);
+    }
+
+    @Test
+    public void getEurekaServerServiceUrlsWithEmptyUrlsTest() {
+        when(bizConfig.eurekaServiceUrls()).thenReturn(Collections.emptyList());
+        
+        // Mock the superclass method call since we are focusing on unit testing the ApolloEurekaClientConfig class.
+        EurekaClientConfigBean superEurekaClient = mock(EurekaClientConfigBean.class);
+        when(superEurekaClient.getEurekaServerServiceUrls("defaultZone")).thenReturn(Collections.singletonList("http://super.default.zone/eureka/"));
+        apolloEurekaClientConfig = new ApolloEurekaClientConfig(bizConfig, null) {
+            @Override
+            public List<String> getEurekaServerServiceUrls(String myZone) {
+                return super.getEurekaServerServiceUrls(myZone);
+            }
+        };
+        
+        List<String> urls = apolloEurekaClientConfig.getEurekaServerServiceUrls("defaultZone");
+        
+        assertEquals(Collections.singletonList("http://super.default.zone/eureka/"), urls);
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.eureka;
+
+import org.junit.jupiter.api.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+@ExtendWith(MockitoExtension.class)
+public class ApolloEurekaClientConfigTest {
+
+    @Mock
+    private BizConfig mockBizConfig;
+    
+    @InjectMocks
+    private ApolloEurekaClientConfig apolloEurekaClientConfig;
+
+    @Test
+    public void getEurekaServerServiceUrls_UsesBizConfig() {
+        // Given
+        List<String> expectedUrls = Arrays.asList("http://localhost:8761/eureka/");
+        when(mockBizConfig.eurekaServiceUrls()).thenReturn(expectedUrls);
+        
+        // When
+        List<String> result = apolloEurekaClientConfig.getEurekaServerServiceUrls("myZone");
+        
+        // Then
+        assertEquals(expectedUrls, result);
+        verify(mockBizConfig).eurekaServiceUrls();
+    }
+
+    @Test
+    public void getEurekaServerServiceUrls_DelegatesToSuperWhenBizConfigIsEmpty() {
+        // Given
+        List<String> expectedUrls = Arrays.asList("http://super.example.com/eureka/");
+        when(mockBizConfig.eurekaServiceUrls()).thenReturn(Collections.emptyList());
+        
+        ApolloEurekaClientConfig spyConfig = spy(apolloEurekaClientConfig);
+        doReturn(expectedUrls).when(spyConfig).getEurekaServerServiceUrls("myZone");
+
+        // When
+        List<String> result = spyConfig.getEurekaServerServiceUrls("myZone");
+        
+        // Then
+        assertEquals(expectedUrls, result);
+        verify(mockBizConfig).eurekaServiceUrls();
+        verify(spyConfig).getEurekaServerServiceUrls("myZone");
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.eureka;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.Arrays;
+import java.util.Collections;
+
+public class ApolloEurekaClientConfigTest {
+
+    private ApolloEurekaClientConfig apolloEurekaClientConfig;
+
+    @Mock
+    private BizConfig bizConfig;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+        apolloEurekaClientConfig = new ApolloEurekaClientConfig(bizConfig, null); // Assuming RefreshScope is not needed for this test
+    }
+
+    @Test
+    public void getEurekaServerServiceUrlsTest() {
+        // Case 1: Non-empty urls from bizConfig
+        List<String> mockUrls = Arrays.asList("http://localhost:8080/eureka/", "http://localhost:8090/eureka/");
+        when(bizConfig.eurekaServiceUrls()).thenReturn(mockUrls);
+
+        List<String> urls = apolloEurekaClientConfig.getEurekaServerServiceUrls("defaultZone");
+
+        assertNotNull(urls);
+        assertFalse(urls.isEmpty());
+        assertEquals(mockUrls, urls);
+
+        // Case 2: Empty urls from bizConfig should invoke super.getEurekaServerServiceUrls
+        when(bizConfig.eurekaServiceUrls()).thenReturn(Collections.emptyList());
+
+        // We cannot directly assert the result of calling super.getEurekaServerServiceUrls without an actual implementation.
+        // Hence, we will just ensure that the result is not null which is a reasonable assumption.
+        urls = apolloEurekaClientConfig.getEurekaServerServiceUrls("defaultZone");
+
+        assertNotNull(urls);
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.eureka;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.verifyZeroInteractions;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+public class ApolloEurekaClientConfigTest {
+    private ApolloEurekaClientConfig apolloEurekaClientConfig;
+
+    @Mock
+    private BizConfig mockBizConfig;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.initMocks(this);
+        apolloEurekaClientConfig = new ApolloEurekaClientConfig(mockBizConfig, null);
+    }
+
+    @Test
+    public void getEurekaServerServiceUrlsTest() {
+        // Prepare mocked data
+        List<String> mockUrls = Arrays.asList("http://localhost:8761/eureka/", "http://localhost:8762/eureka/");
+        when(mockBizConfig.eurekaServiceUrls()).thenReturn(mockUrls);
+
+        // Test the actual method
+        List<String> result = apolloEurekaClientConfig.getEurekaServerServiceUrls("myZone");
+
+        // Verify the result
+        assertEquals(mockUrls, result, "The returned URLs should match the mock URLs.");
+
+        // Test the case where the bizConfig returns an empty list
+        when(mockBizConfig.eurekaServiceUrls()).thenReturn(new ArrayList<>());
+        // Assuming we have a valid implementation of getEurekaServerServiceUrls(myZone) in the parent class
+        // This can't be mocked directly because the method is not static, and the superclass isn't mocked
+        // We're just verifying that no exception is thrown and the method returns a non-null list.
+        List<String> superResult = apolloEurekaClientConfig.getEurekaServerServiceUrls("myZone");
+        assertNotNull(superResult, "The result should fallback to the super implementation for an empty list and should not be null.");
+
+        // Verify that bizConfig.eurekaServiceUrls() is called
+        verifyZeroInteractions(mockBizConfig);
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.eureka;
+
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Arrays;
+import java.util.List;
+
+public class ApolloEurekaClientConfigTest {
+    private BizConfig bizConfig;
+    private RefreshScope refreshScope;
+    private ApolloEurekaClientConfig clientConfig;
+
+    @BeforeEach
+    public void setUp() {
+        bizConfig = Mockito.mock(BizConfig.class);
+        refreshScope = Mockito.mock(RefreshScope.class);
+        clientConfig = new ApolloEurekaClientConfig(bizConfig, refreshScope);
+    }
+
+    @Test
+    public void getEurekaServerServiceUrlsTest() {
+        String myZone = "testZone";
+
+        // Test with non-empty urls from bizConfig
+        List<String> expectedBizConfigUrls = Arrays.asList("http://localhost:8761/eureka/");
+        when(bizConfig.eurekaServiceUrls()).thenReturn(expectedBizConfigUrls);
+        List<String> actualBizConfigUrls = clientConfig.getEurekaServerServiceUrls(myZone);
+        assertEquals(expectedBizConfigUrls, actualBizConfigUrls, "Should return the URLs from bizConfig when non-empty");
+
+        // Test with empty urls from bizConfig
+        when(bizConfig.eurekaServiceUrls()).thenReturn(null);
+        EurekaClientConfigBean parent = Mockito.mock(EurekaClientConfigBean.class);
+        when(parent.getEurekaServerServiceUrls(myZone)).thenReturn(Arrays.asList("http://parentConfig:8761/eureka/"));
+        clientConfig = Mockito.spy(clientConfig);
+        Mockito.doReturn(parent).when(clientConfig).super$getEurekaServerServiceUrls(myZone);
+        List<String> actualParentUrls = clientConfig.getEurekaServerServiceUrls(myZone);
+        assertEquals(Arrays.asList("http://parentConfig:8761/eureka/"), actualParentUrls, "Should return the URLs from the superclass method when bizConfig's URLs are empty");
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.eureka;
+
+import org.junit.jupiter.api.*;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.springframework.cloud.netflix.eureka.EurekaClientConfigBean;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+public class ApolloEurekaClientConfigTest {
+
+    private ApolloEurekaClientConfig apolloEurekaClientConfig;
+    private final String myZone = "myZone";
+
+    @Mock
+    private BizConfig bizConfig;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.initMocks(this);
+        apolloEurekaClientConfig = new ApolloEurekaClientConfig(bizConfig, null);
+    }
+
+    @Test
+    public void getEurekaServerServiceUrlsTest() {
+        // Case when BizConfig returns a non-empty list of URLs
+        List<String> mockUrls = Arrays.asList("http://localhost:8761/eureka/", "http://localhost:8762/eureka/");
+        when(bizConfig.eurekaServiceUrls()).thenReturn(mockUrls);
+
+        List<String> result = apolloEurekaClientConfig.getEurekaServerServiceUrls(myZone);
+        assertEquals(mockUrls, result, "The URLs should match the list returned by bizConfig");
+
+        // Case when BizConfig returns an empty list of URLs
+        when(bizConfig.eurekaServiceUrls()).thenReturn(Collections.emptyList());
+        EurekaClientConfigBean superEurekaClientConfig = mock(EurekaClientConfigBean.class);
+        List<String> superUrls = Arrays.asList("http://superhost:8761/eureka/");
+        when(superEurekaClientConfig.getEurekaServerServiceUrls(anyString())).thenReturn(superUrls);
+
+        // Replace the actual parent with the mocked one (would require making the apolloEurekaClientConfig's super field accessible or adding a setter)
+        ReflectionTestUtils.setField(apolloEurekaClientConfig, "super$0", superEurekaClientConfig);
+        result = apolloEurekaClientConfig.getEurekaServerServiceUrls(myZone);
+        assertEquals(superUrls, result, "The URLs should match the list returned by the super implementation");
+
+        // Make sure bizConfig's method was called twice, once for each test case
+        verify(bizConfig, times(2)).eurekaServiceUrls();
+    }
+
+    @AfterEach
+    public void tearDown() {
+        // Clean up resources if necessary
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.eureka;
+
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+public class ApolloEurekaClientConfigTest {
+    
+    @Test
+    public void getEurekaServerServiceUrlsTest() {
+        // Mock the BizConfig to return a list of URLs
+        BizConfig mockBizConfig = mock(BizConfig.class);
+        List<String> mockUrls = Arrays.asList("http://localhost:8080/eureka/", "http://localhost:8081/eureka/");
+        when(mockBizConfig.eurekaServiceUrls()).thenReturn(mockUrls);
+
+        // Create an instance of ApolloEurekaClientConfig using the mocked BizConfig
+        ApolloEurekaClientConfig config = new ApolloEurekaClientConfig(mockBizConfig, null);
+
+        // Now we can call getEurekaServerServiceUrls and confirm it returns the mock URLs
+        List<String> result = config.getEurekaServerServiceUrls("anyZone");
+        assertEquals(mockUrls, result, "The returned URLs should match the mock URLs");
+
+        // Test the alternative branch where the BizConfig returns an empty list
+        when(mockBizConfig.eurekaServiceUrls()).thenReturn(Collections.emptyList());
+        List<String> superResult = Arrays.asList("http://default-eureka-url.com");
+        ApolloEurekaClientConfig configWithNoUrls = new ApolloEurekaClientConfig(mockBizConfig, null) {
+            @Override
+            public List<String> getEurekaServerServiceUrls(String myZone) {
+                return superResult; // Simulating the overridden super method
+            }
+        };
+        
+        // Confirm that the super.getEurekaServerServiceUrls is called when urls are empty
+        result = configWithNoUrls.getEurekaServerServiceUrls("anyZone");
+        assertEquals(superResult, result, "The returned URLs should match the default super URLs");
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.eureka;
+
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+import static org.mockito.Mockito.*;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class ApolloEurekaClientConfigTest {
+
+    private BizConfig mockBizConfig;
+    private RefreshScope mockRefreshScope;
+    private ApolloEurekaClientConfig apolloEurekaClientConfig;
+
+    @BeforeEach
+    public void setUp() {
+        mockBizConfig = Mockito.mock(BizConfig.class);
+        mockRefreshScope = Mockito.mock(RefreshScope.class);
+        apolloEurekaClientConfig = new ApolloEurekaClientConfig(mockBizConfig, mockRefreshScope);
+    }
+
+    @Test
+    public void getEurekaServerServiceUrlsTest() {
+        // Assume the zone is "myZone" for testing purposes
+        String zone = "myZone";
+
+        // When the bizConfig returns a non-empty list
+        List<String> nonEmptyList = Arrays.asList("http://eureka1.example.com", "http://eureka2.example.com");
+        when(mockBizConfig.eurekaServiceUrls()).thenReturn(nonEmptyList);
+        List<String> result = apolloEurekaClientConfig.getEurekaServerServiceUrls(zone);
+        assertEquals(nonEmptyList, result, "The returned URLs should be the same as the non-empty list provided by bizConfig");
+
+        // When the bizConfig returns an empty list
+        List<String> emptyList = Collections.emptyList();
+        when(mockBizConfig.eurekaServiceUrls()).thenReturn(emptyList);
+        
+        // Assuming super.getEurekaServerServiceUrls(zone) would return some default URLs for testing
+        List<String> defaultUrls = Arrays.asList("http://eureka.example.com");
+        EurekaClientConfigBean spyConfigBean = Mockito.spy(new EurekaClientConfigBean());
+        doReturn(defaultUrls).when(spyConfigBean).getEurekaServerServiceUrls(zone);
+        result = spyConfigBean.getEurekaServerServiceUrls(zone);
+        
+        assertEquals(defaultUrls, result, "The returned URLs should be the default URLs when bizConfig provides an empty list");
+    }
+}
+
+

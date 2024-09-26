@@ -1,0 +1,2445 @@
+Source code: 
+
+
+private Object parseDictText(Object result) {
+    if (result instanceof Result) {
+        if (((Result) result).getResult() instanceof IPage) {
+            List<JSONObject> items = new ArrayList<>();
+
+            //step.1 筛选出加了 Dict 注解的字段列表
+            List<Field> dictFieldList = new ArrayList<>();
+            // 字典数据列表， key = 字典code，value=数据列表
+            Map<String, List<String>> dataListMap = new HashMap<>(5);
+            //取出结果集
+            List<Object> records=((IPage) ((Result) result).getResult()).getRecords();
+            //update-begin--Author:zyf -- Date:20220606 ----for：【VUEN-1230】 判断是否含有字典注解,没有注解返回-----
+            Boolean hasDict= checkHasDict(records);
+            if(!hasDict){
+                return result;
+            }
+
+            log.debug(" __ 进入字典翻译切面 DictAspect —— " );
+            //update-end--Author:zyf -- Date:20220606 ----for：【VUEN-1230】 判断是否含有字典注解,没有注解返回-----
+            for (Object record : records) {
+                String json="{}";
+                try {
+                    //update-begin--Author:zyf -- Date:20220531 ----for：【issues/#3629】 DictAspect Jackson序列化报错-----
+                    //解决@JsonFormat注解解析不了的问题详见SysAnnouncement类的@JsonFormat
+                     json = objectMapper.writeValueAsString(record);
+                    //update-end--Author:zyf -- Date:20220531 ----for：【issues/#3629】 DictAspect Jackson序列化报错-----
+                } catch (JsonProcessingException e) {
+                    log.error("json解析失败"+e.getMessage(),e);
+                }
+                //update-begin--Author:scott -- Date:20211223 ----for：【issues/3303】restcontroller返回json数据后key顺序错乱 -----
+                JSONObject item = JSONObject.parseObject(json, Feature.OrderedField);
+                //update-end--Author:scott -- Date:20211223 ----for：【issues/3303】restcontroller返回json数据后key顺序错乱 -----
+
+                //update-begin--Author:scott -- Date:20190603 ----for：解决继承实体字段无法翻译问题------
+                //for (Field field : record.getClass().getDeclaredFields()) {
+                // 遍历所有字段，把字典Code取出来，放到 map 里
+                for (Field field : oConvertUtils.getAllFields(record)) {
+                    String value = item.getString(field.getName());
+                    if (oConvertUtils.isEmpty(value)) {
+                        continue;
+                    }
+                //update-end--Author:scott  -- Date:20190603 ----for：解决继承实体字段无法翻译问题------
+                    if (field.getAnnotation(Dict.class) != null) {
+                        if (!dictFieldList.contains(field)) {
+                            dictFieldList.add(field);
+                        }
+                        String code = field.getAnnotation(Dict.class).dicCode();
+                        String text = field.getAnnotation(Dict.class).dicText();
+                        String table = field.getAnnotation(Dict.class).dictTable();
+
+                        List<String> dataList;
+                        String dictCode = code;
+                        if (!StringUtils.isEmpty(table)) {
+                            dictCode = String.format("%s,%s,%s", table, text, code);
+                        }
+                        dataList = dataListMap.computeIfAbsent(dictCode, k -> new ArrayList<>());
+                        this.listAddAllDeduplicate(dataList, Arrays.asList(value.split(",")));
+                    }
+                    //date类型默认转换string格式化日期
+                    //update-begin--Author:zyf -- Date:20220531 ----for：【issues/#3629】 DictAspect Jackson序列化报错-----
+                    //if (JAVA_UTIL_DATE.equals(field.getType().getName())&&field.getAnnotation(JsonFormat.class)==null&&item.get(field.getName())!=null){
+                        //SimpleDateFormat aDate=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                        // item.put(field.getName(), aDate.format(new Date((Long) item.get(field.getName()))));
+                    //}
+                    //update-end--Author:zyf -- Date:20220531 ----for：【issues/#3629】 DictAspect Jackson序列化报错-----
+                }
+                items.add(item);
+            }
+
+            //step.2 调用翻译方法，一次性翻译
+            Map<String, List<DictModel>> translText = this.translateAllDict(dataListMap);
+
+            //step.3 将翻译结果填充到返回结果里
+            for (JSONObject record : items) {
+                for (Field field : dictFieldList) {
+                    String code = field.getAnnotation(Dict.class).dicCode();
+                    String text = field.getAnnotation(Dict.class).dicText();
+                    String table = field.getAnnotation(Dict.class).dictTable();
+
+                    String fieldDictCode = code;
+                    if (!StringUtils.isEmpty(table)) {
+                        fieldDictCode = String.format("%s,%s,%s", table, text, code);
+                    }
+
+                    String value = record.getString(field.getName());
+                    if (oConvertUtils.isNotEmpty(value)) {
+                        List<DictModel> dictModels = translText.get(fieldDictCode);
+                        if(dictModels==null || dictModels.size()==0){
+                            continue;
+                        }
+
+                        String textValue = this.translDictText(dictModels, value);
+                        log.debug(" 字典Val : " + textValue);
+                        log.debug(" __翻译字典字段__ " + field.getName() + CommonConstant.DICT_TEXT_SUFFIX + "： " + textValue);
+
+                        // TODO-sun 测试输出，待删
+                        log.debug(" ---- dictCode: " + fieldDictCode);
+                        log.debug(" ---- value: " + value);
+                        log.debug(" ----- text: " + textValue);
+                        log.debug(" ---- dictModels: " + JSON.toJSONString(dictModels));
+
+                        record.put(field.getName() + CommonConstant.DICT_TEXT_SUFFIX, textValue);
+                    }
+                }
+            }
+
+            ((IPage) ((Result) result).getResult()).setRecords(items);
+        }
+
+    }
+    return result;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jeecg.common.util;
+
+import java.io.*;
+import java.text.DecimalFormat;
+
+/**
+ * 字符串工具类
+ */
+public class StringUtil {
+    /**
+     * 将实体转换成驼峰命名
+     * @param oldStr
+     * @return
+     */
+    public static String upperCaseToLowerCase(String oldStr){
+        if (oldStr.isEmpty() || null == oldStr) {
+            return "";
+        }
+        // 首字母小写
+        oldStr = oldStr.substring(0,1).toUpperCase().concat(oldStr.substring(1));
+        StringBuffer sb = new StringBuffer();
+        // 替换 _
+        intIndexOfUnderline=0;
+        for (int i = 0; i < oldStr.length(); i++) {
+            char c = oldStr.charAt(i);
+            if (c == '_'){
+                sb.append(" ");
+                continue;
+            }else if(c >= 'a' && c <= 'z'){
+                // 大写转小写
+                intIndexOfUppercase=getIndexOfUpperCase(oldStr,i);
+                char upperChar = oldStr.charAt(intIndexOfUppercase);
+                sb.append((upperChar+"").toLowerCase());
+                i=intIndexOfUppercase-1;
+            }else{
+                sb.append(c);
+            }
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * 将驼峰命名转换成大写命名
+     * @param oldStr
+     * @return
+     */
+    public static String lowerCaseToUpperCase(String oldStr){
+        if (oldStr.isEmpty() || null == oldStr) {
+            return "";
+        }
+        // 首字母大写
+        oldStr = oldStr.substring(0,1).toLowerCase().concat(oldStr.substring(1));
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < oldStr.length(); i++) {
+            char c = oldStr.charAt(i);
+            if (c == ' ') {
+                // 大写转小写
+                intIndexOfUppercase=getIndexOfUpperCase(oldStr,i+1);
+                char upperChar = oldStr.charAt(intIndexOfUppercase);
+                sb.append((upperChar+"").toLowerCase());
+                i=intIndexOfUppercase-1;
+            }else{
+                sb.append(c);
+            }
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * 获取字符串中首字母大写的位置
+     * @param oldStr
+     * @param i
+     * @return
+     */
+    private static int getIndexOfUpperCase(String oldStr,int i){
+        for (; i < oldStr.length(); i++) {
+            char c = oldStr.charAt(i);
+            if ((c >= 'A' && c <= 'Z')){
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    /**
+     * 将驼峰命名转换成大写命名，仅支持一级驼峰命名的转换
+     * @param oldStr
+     * @return
+     */
+    public static String firstCharToUpperCase(String oldStr){
+        if (oldStr.isEmpty() || null == oldStr) {
+            return "";
+        }
+        // 首字母大写
+        oldStr = oldStr.substring(0,1).toUpperCase().concat(oldStr.substring(1));
+
+        return oldStr;
+    }
+}
+    
+
+### Response:
+
+
+No.2 generated result --------------------------
+
+public interface ICommonAPI {
+	/**
+	 * 翻译表字典
+	 */
+	public String translateTableDict(String table, String text, String code, String key) throws Exception;
+
+	/**
+	 * 翻译普通字典
+	 */
+	public String translateDict(String code, String key) throws Exception;
+}
+    
+
+### Response:
+
+
+No.3 generated result --------------------------
+
+package com.jeecg.p3.core.page;
+
+import java.io.Serializable;
+import java.util.*;
+
+/**
+ * @author Administrator
+ */
+@SuppressWarnings("serial")
+public class PageQuery<T> implements Serializable {
+    /**
+     * 列表数据，自动分页时使用
+     */
+    private List<T> result;
+    /**
+     * 总记录数，自动分页时使用
+     */
+    private Long totalCount = 0L;
+    /**
+     * 当前页码
+     */
+    public Integer pageNo = 1;
+    /**
+     * 每页显示的记录数
+     */
+
+
+
+### Response:
+
+
+No.4 generated result --------------------------
+
+package com.baomidou.mybatisplus.core.toolkit;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+/**
+ * 集合工具类
+ *
+ * @author hubin
+ * @since 2016-01-27
+ */
+public class CollectionUtils {
+    /**
+     * 新建一个空的 ArrayList
+     */
+    public static <T> ArrayList<T> newArrayList() {
+        return new ArrayList<>();
+    }
+
+    /**
+     * 新建一个集合对象，推荐使用
+     *
+     * @param size 初始化大小
+     */
+    public static <T> ArrayList<T> newArrayList(int size) {
+        return new ArrayList<>(size));
+    }
+
+    /**
+     * 新建一个只读集合，提升效率
+     *
+     * @param set 集合
+     */
+
+    public static <T> ArrayList<T> newArrayList(Iterable<? extends T> set) {
+        return new ArrayList<>(set);
+    }
+
+    /**
+     * 新建一个只读集合，提升效率
+     *
+     * @param ts 数组
+     */
+
+    public static <T> ArrayList<T> newArrayList(T... ts) {
+        return new ArrayList<>(ts.length, 1, ts);
+    }
+
+    /**
+     * 新建一个只读集合，提升效率
+     *
+     * @param set 集合
+     */
+
+    public static <T> ArrayList<T> newArrayListNoCopy(Iterable<? extends T> set) {
+        return new ArrayList<>(set);
+    }
+
+    /**
+     * 新建一个只读集合，提升效率
+     *
+     * @param ts 数组
+     */
+
+    public static <T> ArrayList<T> newArrayListNoCopy(T... ts) {
+        return new ArrayList<>(ts.length, 1, ts);
+    }
+
+    /**
+     * 判断对象是否为空，如果集合为空，返回 true
+     */
+
+    public static boolean isEmpty(Collection<?> collection) {
+        return collection == null || collection.isEmpty();
+    }
+
+    /**
+     * 判断对象是否非空，如果集合非空，返回 true
+     */
+
+    public static boolean isNotEmpty(Collection<?> collection) {
+        return !isEmpty(collection);
+    }
+
+    /**
+     * 将多个数组转换为ArrayList
+     * 用于参数绑定的情况，例如方法的参数就是一个ArrayList
+     */
+
+    public static <T> ArrayList<T> asList(T... a) {
+        if (a == null) {
+            return new ArrayList<>();
+        } else {
+            int size = a.length;
+            List<T> list = new ArrayList<>(size);
+            for (int i = 0; i < size; i++) {
+                list.add(a[i]);
+            }
+            return list;
+        }
+    }
+}
+    
+
+
+No.5 generated result --------------------------
+
+package com.example.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.jeecg.common.aspect.annotation.Dict;
+import org.jeecg.modules.demo.test.entity.JeecgDemo;
+import java.util.*;
+import org.jeecg.common.api.vo.Result;
+import com.example.controller.SysCommonController;
+
+@RestController
+@Slf4j
+public class TestController {
+    @Autowired
+    private SysCommonController sysCommonController;
+    
+    @ApiOperation("测试字典")
+    @GetMapping("/testDict")
+    public Result<JeecgDemo> testDict(@RequestParam JeecgDemo demo){
+        return Result.OK(demo);
+    }
+    
+    @ApiOperation("测试字典2")
+    @PostMapping("/testDict2")
+    public Result<JeecgDemo> testDict2(@RequestBody List<JeecgDemo> list){
+        // 注解方式获取字典值，这种情况下有些不便测试。
+    	//return sysCommonController.getDataByType(list);
+        
+        // 手动设置字典码值。
+        for (JeecgDemo jeecgDemo : list) {
+            if ("1".equals(jeecgDemo.getName())){
+                jeecgDemo.setName("男");
+            }else if ("0".equals(jeecgDemo.getName())) {
+                jeecgDemo.setName("女");
+            }else{
+                log.error("测试失败，请刷新页面重试！");
+            }
+        }
+        
+        return Result.OK(list);
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.stream.Collectors;
+
+/**
+ * @Description: 字典aop类
+ * @Author: scott
+ * @Date:2020-10-26
+ * @Version:V1.0
+ */
+public class DictAspect {
+    /**
+     * 拦截的方法
+     *
+     * @param list
+     * @return
+     */
+    public <T> List<T> parseDictText(List<T> list) {
+        //update-begin--Author:scott  Date:20190805 for：暂未使用到的字段添加字典注解
+        if (oConvertUtils.isEmpty(list)) {
+            return null;
+        }
+
+        List<T> newList = new ArrayList<>();
+        //update-begin--Author:szj  Date:20200312  for：TASK #2864 代码优化
+        StringBuffer textValue = null;
+        //update-end--Author:szj  Date:20200312  for：TASK #2864 代码优化
+        Map<String, DictModel> dictMap = null;
+
+        Class clazz = list.get(0).getClass();
+
+        //获取clazz的所有字段
+        Field[] fields = clazz.getDeclaredFields();
+
+        for (Field field : fields) {
+            if (oConvertUtils.isNotEmpty(field.getAnnotation(Dict.class))) {
+                Dict dict = field.getAnnotation(Dict.class);
+                //获取字典的type
+                String dictType = dict.dictType();
+                //获取字典的text
+                String dictText = dict.dictCode();
+
+                if (dictMap == null) {
+                    dictMap = new HashMap<>();
+                    dictMap.put(dictType + ":" + dictText, new DictModel());
+                    for (T t : list) {
+                        //将字典的数据放到ThreadLocal中
+                        DictUtils.setDictMap(dictMap);
+                        try {
+                            Field field1 = clazz.getDeclaredField(field.getName());
+                            if (oConvertUtils.isNotEmpty(field1)) {
+                                field1.setAccessible(true);
+                                field1.set(t, "");
+                            }
+                        } catch (Exception e) {
+                            //logger.error("字典解析出错",e);
+                            throw new RuntimeException("字典解析出错!");
+                        }
+                    }
+                } else {
+                    dictMap = DictUtils.getDictMap();
+                }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                 *
+
+
+
+
+            // Check.
+            <button>
+                </tr>
+                &nbsp;
+                &gt
+\end{code}
+        &#
+
+\begin{code}
+
+        \item{}\item{}}
+            &#4
+
+
+
+No.7 generated result --------------------------
+
+java
+package org.jeecg.common.aspect;
+
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.ibatis.javassist.*;
+import org.apache.shiro.SecurityUtils;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.jeecg.common.api.CommonAPI;
+import org.jeecg.common.api.vo.Result;
+import org.jeecg.common.constant.CacheConstant;
+import org.jeecg.common.system.base.JeecgMap;
+import org.jeecg.common.util.SpringContextUtils;
+import org.jeecg.common.util.MyBeanUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.context.request.RequestContextHolder;
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.util.*;
+
+/**
+ * 字典处理类
+ */
+@Aspect
+@Slf4j
+public class DictAspect {
+    @Autowired
+    private CommonAPI commonAPI;
+
+    /**
+     * 拦截切入点，环绕切入点前执行
+     */
+    @Pointcut("execution(* org.jeecg.modules.*..controller.*Controller.*(..))")
+    public void doBefore(){}
+
+    /**
+     * 方法执行后，切入后执行
+     *
+     * @param joinPoint
+     */
+    @After("doBefore()")
+    public void doAfterReturning(JoinPoint joinPoint){
+        try {
+            // 获取当前登录用户id
+            String userId = getUserId();
+            if (oConvertUtils.isEmpty(userId)) {
+                return;
+            }
+
+            Object[] args = joinPoint.getArgs();
+            for (Object arg : args) {
+                // 获取目标类对象
+                Method method = ((ProceedingJoinPoint) joinPoint).getSignature().getMethod();
+                Class targetClass = method.getDeclaringClass();
+
+                // 遍历所有参数
+                for (Field field : targetClass.getDeclaredFields()) {
+                    Dict dictAnnotation = field.getAnnotation(Dict.class);
+                    if (dictAnnotation == null) {
+                        continue;
+                    }
+
+                    // 获取实体类对象或Map对象
+                    Object argValue = arg;
+                    if (!(arg instanceof JeecgMap)) {
+                        try {
+                            // 将目标类转换为字节码，因为使用javassist生成代理类对象
+                            // https://blog.csdn.net/xiaoxiang19850/article/details/71649370
+                            Class<?> clazz = argValue.getClass();
+                            byte[] classByteCode = MyBeanUtil.toByteCode(clazz);
+                            CtClass pojoClass = CtClass.make("com.jeecg.pojo", null, classByteCode);
+                            // 生成代理类对象
+                            Object proxyObj = pojoClass.newInstance();
+                            proxyObj = CtField.set(proxyObj, field.getName(), argValue);
+
+                            // 将字典数据转换为Map集合
+                            String dictTable = dictAnnotation.dictTable();
+                            String dictText = dictAnnotation.dicText();
+                            String dictCode = dictAnnotation.dictCode();
+                            if (oConvertUtils.isNotEmpty(dictTable)) {
+                                Map<String, Serializable> dictMap = commonAPI.getSysAllDictByCodeAndName(userId, dictTable, dictText, dictCode);
+                                proxyObj = CtField.set(proxyObj, field.getName(), dictMap);
+                            } else {
+                                Map<String, Serializable> dictMap = commonAPI.getSysAllDictByCodeAndName(userId, dictTable, dictText, dictCode);
+                                proxyObj = CtField.set(proxyObj, field.getName(), dictMap);
+                            }
+
+                        } catch (Exception e) {
+                            log.error("", e);
+                        }
+                    }
+                }
+            }
+        } catch (Throwable e) {
+            //log.error(e, "切入后执行异常");
+        }
+    }
+
+    /**
+     * 拦截切入点，环绕切入点前执行
+     */
+    @Pointcut("execution(* org.jeecg.modules.*..controller.*Controller.*(..))")
+    public void doBefore(){}
+
+    /**
+     * 方法执行后，切入后执行
+     *
+     * @param joinPoint
+     */
+    @After("doBefore()")
+    public void doAfterReturning(JoinPoint joinPoint){
+        try {
+            // 获取当前登录用户id
+            String userId = getUserId();
+            if (oConvertUtils.isEmpty(userId)) {
+                return;
+            }
+
+            Object[] args = joinPoint.getArgs();
+            for (Object arg : args) {
+                // 获取目标类对象
+                Method method = ((ProceedingJoinPoint) joinPoint).getSignature().getMethod();
+                Class targetClass = method.getDeclaringClass();
+
+                // 遍历所有参数
+                for (Field field : targetClass.getDeclaredFields()) {
+                    Dict dictAnnotation = field.getAnnotation(Dict.class);
+                    if (dictAnnotation == null) {
+                        continue;
+                    }
+
+                    // 获取实体类对象或Map对象
+                    Object argValue = arg;
+                    if (!(arg instanceof JeecgMap)) {
+                        try {
+                            // 将目标类转换为字节码，因为使用javassist生成代理类对象
+                            // https://blog.csdn.net/xiaoxiang19850/article/details/71649370
+                            Class<?> clazz = argValue.getClass();
+                            byte[] classByteCode = MyBeanUtil.toByteCode(clazz);
+                            CtClass pojoClass = CtClass.make("com.jeecg.pojo", null, classByteCode);
+                            // 生成代理类对象
+                            Object proxyObj = pojoClass.newInstance();
+                            proxyObj = CtField.set(proxyObj, field.getName(), argValue);
+
+                            // 将字典数据转换为Map集合
+                            String dictTable = dictAnnotation.dictTable();
+                            String dictText = dictAnnotation.dicText();
+                            String dictCode = dictAnnotation.dictCode();
+                            if (oConvertUtils.isNotEmpty(dictTable)) {
+                                Map<String, Serializable> dictMap = commonAPI.getSysAllDictByCodeAndName(userId, dictTable, dictText, dictCode);
+                                proxyObj = CtField.set(proxyObj, field.getName(), dictMap);
+                            } else {
+                                Map<String, Serializable> dictMap = commonAPI.getSysAllDictByCodeAndName(userId, dictTable, dictText, dictCode);
+                                proxyObj = CtField.set(proxyObj, field.getName(), dictMap);
+                            }
+
+                        } catch (Exception e) {
+                            log.error("", e);
+                        }
+                    }
+                }
+            }
+        } catch (Throwable e) {
+            //log.error(e, "切入后执行异常");
+        }
+    }
+
+    /**
+     * 获取当前登录用户id
+     */
+    private String getUserId() {
+        try {
+            HttpServletRequest request = MyServletUtil.getHttpServletRequest();
+            if (request != null) {
+                return MyServletUtil.getHeader(request, JwtConstant.USERID);
+            } else {
+                // 未登录直接返回空串
+                return "";
+            }
+        } catch (Exception e) {
+            log.error("", e);
+        }
+        return null;
+    }
+}
+
+
+
+No.8 generated result --------------------------
+
+package com.jeecg.common;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Component;
+
+@Component
+@Slf4j
+public class CommonApi {
+    @Autowired
+    private RedisTemplate<String,Object> redisTemplate;
+    /**
+     * 翻译数据字典
+     */
+    public String translateDict(String dictCode, String key) {
+        if (oConvertUtils.isEmpty(key)) {
+            return null;
+        }
+        log.debug("获取数据字典："+dictCode+" , "+key);
+        try{
+            //update-begin--Author:scott Date:20210531 for： TASK #486 优化微服务应用下存在表字段需要字典翻译的问题-----
+            String keyString = String.format("sys:cache:dict::SimpleKey [%s,%s]", dictCode,key);
+            //update-begin--Author:scott Date:20210531 for： TASK #486 优化微服务应用下存在表字段需要字典翻译的问题-----
+            if (redisTemplate.hasKey(keyString)){
+                return oConvertUtils.getString(redisTemplate.opsForValue().get(keyString));
+            }else{
+                String res = "调用失败，未能从缓存中获取数据字典";
+                log.error(res);
+                return res;
+            }
+        }catch (Exception e){
+            log.error("翻译字典文件时发生异常！",e);
+            return null;
+        }
+    }
+    /**
+     * 翻译数据字典(从表中获取)
+     */
+    public String translateDictFromTable(String table, String text, String code, String key){
+        if (oConvertUtils.isEmpty(key)) {
+            return null;
+        }
+        log.debug(" 翻译数据字典(从表中获取)！table："+table+" ,text："+text+" ,code："+code+" ,key："+key);
+        try{
+            String keyString = String.format("sys:cache:dictTable::SimpleKey [%s,%s,%s,%s]",table,text,code,key);
+            if (redisTemplate.hasKey(keyString)){
+                return oConvertUtils.getString(redisTemplate.opsForValue().get(keyString));
+            }else{
+                String res = "调用失败，未能从缓存中获取数据字典";
+                log.error(res);
+                return res;
+            }
+        }catch (Exception e){
+            log.error("翻译字典文件时发生异常！",e);
+            return null;
+        }
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package com.example;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+public class Controller {
+    @GetMapping("/example")
+    public ResponseEntity<Object> example() {
+        return new ResponseEntity<>("Example output", HttpStatus.OK);
+    }
+}
+
+
+
+No.10 generated result --------------------------
+
+[
+    {
+        "name": "DictAspect",
+        "baseName": "DictAspect",
+        "fields": [
+            {
+                "name": "parseDictText",
+                "wrapped": true,
+                "synthetic": false,
+                "enum": false,
+                "deprecated": false,
+                "annotations": []
+            },
+            {
+                "name": "translateManyDict",
+                "wrapped": true,
+                "synthetic": false,
+                "enum": false,
+                "deprecated": false,
+                "annotations": [
+                    {
+                        "name": "Deprecated"
+                    }
+                ]
+            },
+            {
+                "name": "checkHasDict",
+                "wrapped": true,
+                "synthetic": false,
+                "enum": false,
+                "deprecated": false,
+                "annotations": []
+            }
+        ],
+        "methods": [
+            {
+                "name": "parseDictText",
+                "wrapped": true,
+                "synthetic": false,
+                "enum": false,
+                "deprecated": false,
+                "annotations": []
+            },
+            {
+                "name": "checkHasDict",
+                "wrapped": true,
+                "synthetic": false,
+                "enum": false,
+                "deprecated": false,
+                "annotations": []
+            }
+        ],
+        "constructors": [
+            
+        ],
+        "properties": [],
+        "classes": [
+            {
+                "name": "DictAspect",
+                "baseName": "DictAspect",
+                "fields": [
+                    {
+                        "name": "parseDictText",
+                        "wrapped": true,
+                        "synthetic": false,
+                        "enum": false,
+                        "deprecated": false,
+                        "annotations": []
+                    },
+                    {
+                        "name": "translateManyDict",
+                        "wrapped": true,
+                        "synthetic": false,
+                        "enum": false,
+                        "deprecated": true,
+                        "annotations": [
+                            {
+                                "name": "Deprecated"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "checkHasDict",
+                        "wrapped": true,
+                        "synthetic": false,
+                        "enum": false,
+                        "deprecated": false,
+                        "annotations": []
+                    }
+                ],
+                "methods": [
+                    {
+                        "name": "parseDictText",
+                        "wrapped": true,
+                        "synthetic": false,
+                        "enum": false,
+                        "deprecated": false,
+                        "annotations": []
+                    },
+                    {
+                        "name": "checkHasDict",
+                        "wrapped": true,
+                        "synthetic": false,
+                        "enum": false,
+                        "deprecated": false,
+                        "annotations": []
+                    }
+                ],
+                "constructors": [
+                    
+                ],
+                "properties": [],
+                "classes": []
+            }
+        ]
+    }
+]
+
+

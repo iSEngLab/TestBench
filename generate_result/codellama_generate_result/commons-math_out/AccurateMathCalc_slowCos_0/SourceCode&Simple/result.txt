@@ -1,0 +1,251 @@
+Source code: 
+
+
+static double slowCos(final double x, final double[] result) {
+
+    final double[] xs = new double[2];
+    final double[] ys = new double[2];
+    final double[] facts = new double[2];
+    final double[] as = new double[2];
+    split(x, xs);
+    ys[0] = ys[1] = 0.0;
+
+    for (int i = FACT.length - 1; i >= 0; i--) {
+        splitMult(xs, ys, as);
+        ys[0] = as[0];
+        ys[1] = as[1];
+
+        if ((i & 1) != 0) { // skip odd entries
+            continue;
+        }
+
+        split(FACT[i], as);
+        splitReciprocal(as, facts);
+
+        if ((i & 2) != 0) { // alternate terms are negative
+            facts[0] = -facts[0];
+            facts[1] = -facts[1];
+        }
+
+        splitAdd(ys, facts, as);
+        ys[0] = as[0]; ys[1] = as[1];
+    }
+
+    if (result != null) {
+        result[0] = ys[0];
+        result[1] = ys[1];
+    }
+
+    return ys[0] + ys[1];
+}
+
+
+
+No.1 generated result --------------------------
+
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    @Test
+    public void slowCosTest() {
+        double x = 0.5; // input value for the cosine function
+        double[] result = new double[2]; // output array for the cosine function
+
+        double expectedResult = Math.cos(x); // expected result from the standard cosine function
+        double actualResult = AccurateMathCalc.slowCos(x, result); // actual result from the slow cosine function
+
+        assertEquals(expectedResult, actualResult, 1e-10); // check if the results are equal within a precision of 1e-10
+    }
+}
+
+
+No.2 generated result --------------------------
+
+
+@Test
+public void slowCosTest() {
+    double x = 0.5; // input value
+    double[] result = new double[2]; // output array
+
+    // call the method to be tested
+    double expectedResult = AccurateMathCalc.slowCos(x, result);
+
+    // assert that the result is correct
+    assertEquals(0.8775825618903728, expectedResult, 1e-10);
+}
+
+
+No.3 generated result --------------------------
+
+
+@Test
+public void slowCosTest() {
+    double x = 1.0;
+    double[] result = new double[2];
+    AccurateMathCalc.slowCos(x, result);
+    assertEquals(result[0], -0.544, 1e-6);
+}
+
+
+No.4 generated result --------------------------
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    @Test
+    public void slowCosTest() {
+        // Test case 1: x = 0
+        double[] result = new double[2];
+        double actual = AccurateMathCalc.slowCos(0, result);
+        assertEquals(1.0, actual, 1e-15);
+        assertArrayEquals(new double[] { 0.0, 0.0 }, result, 1e-15);
+
+        // Test case 2: x = PI/4
+        double expected = Math.cos(Math.PI / 4);
+        actual = AccurateMathCalc.slowCos(Math.PI / 4, result);
+        assertEquals(expected, actual, 1e-15);
+        assertArrayEquals(new double[] { 0.7071067812, 0.7071067812 }, result, 1e-15);
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    @Test
+    public void slowCosTest() {
+        // Test case 1: input is a multiple of pi/2
+        double x = Math.PI / 2;
+        double[] result = new double[2];
+        double expected = Math.cos(x);
+        AccurateMathCalc.slowCos(x, result);
+        assertEquals(expected, result[0], "Expected cos(x) to be equal to the slow cosine approximation");
+
+        // Test case 2: input is not a multiple of pi/2
+        x = Math.PI / 3;
+        expected = Math.cos(x);
+        AccurateMathCalc.slowCos(x, result);
+        assertEquals(expected, result[0], "Expected cos(x) to be equal to the slow cosine approximation");
+    }
+}
+
+
+No.6 generated result --------------------------
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    @Test
+    public void slowCosTest() {
+        double x = 0.5; // valid input value for the cosine function
+        double expectedResult = Math.cos(x); // expected result from the standard library
+        double tolerance = 1e-10; // tolerance for checking the results
+        
+        double[] result = new double[2];
+        AccurateMathCalc.slowCos(x, result);
+        assertEquals(expectedResult, result[0], tolerance); // check the first component of the result
+    }
+}
+
+
+No.7 generated result --------------------------
+
+
+package org.apache.commons.math4.core.jdkmath;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    @Test
+    public void slowCosTest() {
+        double x = 3.14 / 2; // pi/2
+        double[] result = new double[2];
+        assertEquals(0.0, AccurateMathCalc.slowCos(x, result), 1e-6);
+    }
+}
+
+
+No.8 generated result --------------------------
+
+
+public class AccurateMathCalcTest {
+    @Test
+    public void slowCosTest() {
+        double x = Math.PI / 2; // input value for the cosine function
+        double expectedResult = 0.0; // expected result of the cosine function at x
+        double[] result = new double[2];
+
+        double actualResult = AccurateMathCalc.slowCos(x, result);
+
+        assertEquals(expectedResult, actualResult, 1e-6); // check if the actual result is within a small tolerance of the expected result
+    }
+}
+
+
+No.9 generated result --------------------------
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    @Test
+    public void slowCosTest() {
+        // Test 1: input is a positive number less than PI/2
+        double x = Math.PI / 4;
+        double expectedResult = Math.cos(x);
+        double[] actualResult = new double[2];
+        AccurateMathCalc.slowCos(x, actualResult);
+        assertEquals(expectedResult, actualResult[0], 1E-10);
+        assertEquals(0.0, actualResult[1], 1E-10);
+
+        // Test 2: input is a negative number less than -PI/2
+        x = -Math.PI / 4;
+        expectedResult = Math.cos(x);
+        AccurateMathCalc.slowCos(x, actualResult);
+        assertEquals(expectedResult, actualResult[0], 1E-10);
+        assertEquals(0.0, actualResult[1], 1E-10);
+
+        // Test 3: input is a positive number greater than PI/2
+        x = Math.PI * 5 / 4;
+        expectedResult = Math.cos(x);
+        AccurateMathCalc.slowCos(x, actualResult);
+        assertEquals(expectedResult, actualResult[0], 1E-10);
+        assertEquals(0.0, actualResult[1], 1E-10);
+
+        // Test 4: input is a negative number greater than -PI/2
+        x = -Math.PI * 5 / 4;
+        expectedResult = Math.cos(x);
+        AccurateMathCalc.slowCos(x, actualResult);
+        assertEquals(expectedResult, actualResult[0], 1E-10);
+        assertEquals(0.0, actualResult[1], 1E-10);
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    @Test
+    public void slowCosTest() {
+        double[] result = new double[2];
+        assertEquals(1.0, slowCos(0.0, result), 1e-6); // Test for cos(0)
+        assertEquals(-1.0, slowCos(Math.PI, result), 1e-6); // Test for cos(π)
+    }
+}
+
+

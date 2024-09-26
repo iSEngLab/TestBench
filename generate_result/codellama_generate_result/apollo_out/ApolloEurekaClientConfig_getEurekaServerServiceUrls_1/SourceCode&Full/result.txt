@@ -1,0 +1,213 @@
+Source code: 
+
+
+@Override
+public List<String> getEurekaServerServiceUrls(String myZone) {
+  List<String> urls = bizConfig.eurekaServiceUrls();
+  return CollectionUtils.isEmpty(urls) ? super.getEurekaServerServiceUrls(myZone) : urls;
+}
+
+
+
+No.1 generated result --------------------------
+
+
+@Test
+public void getEurekaServerServiceUrlsTest() {
+  // Arrange
+  String myZone = "myZone";
+  List<String> urls = new ArrayList<>();
+  urls.add("https://eureka-server.example.com");
+  
+  ApolloEurekaClientConfig config = new ApolloEurekaClientConfig(null, null);
+  
+  // Act
+  List<String> result = config.getEurekaServerServiceUrls(myZone);
+  
+  // Assert
+  assertEquals(urls, result);
+}
+
+
+No.2 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.eureka;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ApolloEurekaClientConfigTest {
+    private ApolloEurekaClientConfig config;
+    
+    @BeforeEach
+    public void setUp() {
+        config = new ApolloEurekaClientConfig(new BizConfig(), new RefreshScope());
+    }
+    
+    @Test
+    public void getEurekaServerServiceUrls_EmptyList_DelegatesToSuperclass() {
+        // Arrange
+        List<String> expectedUrls = Collections.emptyList();
+        
+        // Act
+        List<String> actualUrls = config.getEurekaServerServiceUrls("myZone");
+        
+        // Assert
+        assertEquals(expectedUrls, actualUrls);
+    }
+    
+    @Test
+    public void getEurekaServerServiceUrls_NonEmptyList_ReturnsCorrectValue() {
+        // Arrange
+        List<String> expectedUrls = Arrays.asList("url1", "url2");
+        
+        // Act
+        List<String> actualUrls = config.getEurekaServerServiceUrls("myZone");
+        
+        // Assert
+        assertEquals(expectedUrls, actualUrls);
+    }
+    
+    @Test
+    public void getEurekaServerServiceUrls_EmptyListAndNullMyZone_ThrowsException() {
+        // Arrange
+        List<String> expectedUrls = Collections.emptyList();
+        
+        // Act
+        assertThrows(IllegalArgumentException.class, () -> config.getEurekaServerServiceUrls(null));
+    }
+}
+
+
+No.3 generated result --------------------------
+
+@Test
+public void getEurekaServerServiceUrlsTest() {
+    ApolloEurekaClientConfig config = new ApolloEurekaClientConfig(mock(BizConfig.class), mock(RefreshScope.class));
+    List<String> urls = config.getEurekaServerServiceUrls("myZone");
+    assertEquals(urls, Collections.emptyList());
+}
+
+
+No.4 generated result --------------------------
+
+@Test
+public void getEurekaServerServiceUrlsTest() {
+    String myZone = "defaultZone";
+    List<String> urls = bizConfig.eurekaServiceUrls();
+    List<String> actualOutput = apolloEurekaClientConfig.getEurekaServerServiceUrls(myZone);
+    
+    if (CollectionUtils.isEmpty(urls)) {
+        assertEquals(super.getEurekaServerServiceUrls(myZone), actualOutput);
+    } else {
+        assertEquals(urls, actualOutput);
+    }
+}
+
+
+No.5 generated result --------------------------
+
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ApolloEurekaClientConfigTest {
+    @Test
+    public void getEurekaServerServiceUrlsTest() {
+        // Create a mock bizConfig instance that returns some Eureka server URLs
+        BizConfig bizConfig = Mockito.mock(BizConfig.class);
+        when(bizConfig.eurekaServiceUrls()).thenReturn(Arrays.asList("http://localhost:8761/eureka", "http://localhost:8762/eureka"));
+        
+        // Create an instance of ApolloEurekaClientConfig and provide it with the mock bizConfig instance
+        ApolloEurekaClientConfig config = new ApolloEurekaClientConfig(bizConfig, null);
+        
+        // Call getEurekaServerServiceUrls() on the config instance and verify that it returns the expected URLs
+        List<String> urls = config.getEurekaServerServiceUrls("defaultZone");
+        assertEquals(2, urls.size());
+        assertEquals("http://localhost:8761/eureka", urls.get(0));
+        assertEquals("http://localhost:8762/eureka", urls.get(1));
+    }
+}
+
+
+
+No.6 generated result --------------------------
+
+
+@Test
+public void getEurekaServerServiceUrlsTest() {
+    List<String> urls = bizConfig.eurekaServiceUrls();
+    assertEquals(1, urls.size());
+    assertEquals("http://localhost:8080/eureka", urls.get(0));
+}
+
+
+No.7 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.eureka;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ApolloEurekaClientConfigTest {
+    @Test
+    public void getEurekaServerServiceUrlsTest() {
+        // Arrange
+        BizConfig bizConfig = new BizConfig();
+        RefreshScope refreshScope = new RefreshScope();
+        ApolloEurekaClientConfig config = new ApolloEurekaClientConfig(bizConfig, refreshScope);
+        
+        // Act
+        List<String> urls = config.getEurekaServerServiceUrls("defaultZone");
+        
+        // Assert
+        assertEquals(1, urls.size());
+        assertTrue(urls.contains("http://localhost:8080/eureka"));
+    }
+}
+
+
+No.8 generated result --------------------------
+
+
+The given test case is incomplete, and it is not clear what exactly needs to be tested. However, based on the code provided, I can suggest a few possible tests that you could add to complete the test suite for this class:
+
+1. Test that `getEurekaServerServiceUrls` returns the expected URLs when the `bizConfig.eurekaServiceUrls()` method returns a non-empty list of URLs. You can use JUnit's `@ParameterizedTest` and `@CsvSource` annotations to test multiple scenarios with different inputs and outputs.
+2. Test that `getEurekaServerServiceUrls` returns the expected URLs when the `bizConfig.eurekaServiceUrls()` method returns an empty list of URLs, but the `super.getEurekaServerServiceUrls(myZone)` method returns a non-empty list of URLs.
+3. Test that `getEurekaServerServiceUrls` throws a `NullPointerException` when both the `bizConfig.eurekaServiceUrls()` and `super.getEurekaServerServiceUrls(myZone)` methods return null or an empty list of URLs.
+4. Test that `listenApplicationReadyEvent` refreshes the Eureka client properly by verifying that the `refreshScope.refresh(EUREKA_CLIENT_BEAN_NAME)` method is called with the expected parameters. You can use JUnit's `@MockitoJUnitRunner` annotation to create a mock instance of the `RefreshScope` class and verify its behavior.
+5. Test that `equals` method returns the expected result by comparing the object under test with itself, an equal object, and an unequal object. You can use JUnit's `assertTrue`, `assertFalse`, and `assertEquals` methods to compare the results of different scenarios.
+
+Please note that these tests are just suggestions, and you may need to modify them or add more tests based on your specific requirements and testing needs.
+
+
+No.9 generated result --------------------------
+
+package com.ctrip.framework.apollo.biz.eureka;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ApolloEurekaClientConfigTest {
+    private final ApolloEurekaClientConfig apolloEurekaClientConfig = new ApolloEurekaClientConfig();
+
+    @Test
+    public void getEurekaServerServiceUrlsTest() {
+        // Given a list of service URLs for the Eureka server
+        List<String> eurekaServiceUrls = Arrays.asList("http://localhost:8761/eureka", "https://eureka-server.com");
+
+        // When the getEurekaServerServiceUrls method is called with a zone
+        String myZone = "defaultZone";
+        List<String> urls = apolloEurekaClientConfig.getEurekaServerServiceUrls(myZone);
+
+        // Then the expected list of URLs should be returned
+        assertEquals(eurekaServiceUrls, urls);
+    }
+}
+
+
+No.10 generated result --------------------------
+
+I'm not sure what you mean by "complete the section contains <FILL> tag and output the whole test case". Could you please clarify your request or provide more details about what you are trying to accomplish? I'd be happy to help if I can.
+
+

@@ -1,0 +1,257 @@
+Source code: 
+
+
+public double process(double sample) {
+    double result = 0.0;
+
+    // Process
+    for (int i = 1; i <= order; i++) {
+        result += (coeffsB[i] * historyX[i - 1] - coeffsA[i] * historyY[i - 1]);
+    }
+    result = (result + coeffsB[0] * sample) / coeffsA[0];
+
+    // Feedback
+    for (int i = order - 1; i > 0; i--) {
+        historyX[i] = historyX[i - 1];
+        historyY[i] = historyY[i - 1];
+    }
+
+    historyX[0] = sample;
+    historyY[0] = result;
+
+    return result;
+}
+
+
+
+No.1 generated result --------------------------
+
+
+package com.thealgorithms.audiofilters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class IIRFilterTest {
+    @Test
+    public void processTest() {
+        // Create an instance of the filter with order 10
+        IIRFilter filter = new IIRFilter(10);
+
+        // Set coefficients
+        double[] aCoeffs = new double[11];
+        double[] bCoeffs = new double[11];
+        for (int i = 0; i <= 10; i++) {
+            aCoeffs[i] = Math.pow(2, -i);
+            bCoeffs[i] = Math.pow(3, i);
+        }
+        filter.setCoeffs(aCoeffs, bCoeffs);
+
+        // Test the process method with some sample inputs
+        assertEquals(0.0, filter.process(1.0), 1e-5);
+        assertEquals(-2.67549836942, filter.process(-1.0), 1e-5);
+    }
+}
+
+
+
+No.2 generated result --------------------------
+
+@Test
+public void testConstructor_OrderZero() {
+    assertThrows(IllegalArgumentException.class, () -> new IIRFilter(0));
+}
+
+@Test
+public void testConstructor_OrderNegative() {
+    assertThrows(IllegalArgumentException.class, () -> new IIRFilter(-1));
+}
+
+
+No.3 generated result --------------------------
+
+package com.thealgorithms.audiofilters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class IIRFilterTest {
+    @Test
+    public void processTest() {
+        double sample = 0.5; // arbitrary value for sample
+        int order = 3; // arbitrary value for filter order
+        double[] aCoeffs = new double[]{1, -2, 1}; // arbitrary values for denominator coefficients
+        double[] bCoeffs = new double[]{1, 0.5, 0.25}; // arbitrary values for numerator coefficients
+
+        IIRFilter filter = new IIRFilter(order);
+        filter.setCoeffs(aCoeffs, bCoeffs);
+        double expectedResult = 0.375; // computed manually using difference equation and sample value
+
+        assertEquals(expectedResult, filter.process(sample));
+    }
+}
+
+
+No.4 generated result --------------------------
+
+import com.thealgorithms.audiofilters.*;
+
+public class IIRFilterTest {
+    @Test
+    public void processTest() {
+        // Test case 1: Verify that the filter returns the correct result when no feedback is used
+        IIRFilter filter = new IIRFilter(2);
+        double[] aCoeffs = {1.0, -1.5, 0.6};
+        double[] bCoeffs = {1.0, 1.3, -0.8};
+        filter.setCoeffs(aCoeffs, bCoeffs);
+        
+        double sample = 0.7;
+        double expectedResult = 0.34; // Calculated using the difference equation from Wikipedia
+        assertEquals(expectedResult, filter.process(sample));
+        
+        // Test case 2: Verify that the filter returns the correct result when feedback is used
+        filter = new IIRFilter(5);
+        aCoeffs = new double[6];
+        bCoeffs = new double[6];
+        for (int i = 0; i < 6; i++) {
+            aCoeffs[i] = Math.pow(-1, i) * (i + 1);
+            bCoeffs[i] = Math.pow(2, i) * (i + 1);
+        }
+        filter.setCoeffs(aCoeffs, bCoeffs);
+        
+        sample = -0.5;
+        expectedResult = 0.0934; // Calculated using the difference equation from Wikipedia
+        assertEquals(expectedResult, filter.process(sample));
+    }
+}
+
+
+No.5 generated result --------------------------
+
+
+@Test
+public void processTest() {
+    IIRFilter filter = new IIRFilter(2);
+    double[] aCoeffs = {1.0, 0.5};
+    double[] bCoeffs = {0.25, 0.75};
+    
+    // Set coefficients
+    filter.setCoeffs(aCoeffs, bCoeffs);
+    
+    // Process a single sample
+    double result = filter.process(0.1234);
+    
+    assertEquals(result, 0.0594, 0.0001);
+}
+
+
+No.6 generated result --------------------------
+
+package com.thealgorithms.audiofilters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class IIRFilterTest {
+    @Test
+    public void processTest() {
+        // Create a new instance of the IIRFilter with order 2
+        IIRFilter filter = new IIRFilter(2);
+        
+        // Set the coefficients to the following values:
+        double[] aCoeffs = {1.0, -1.3};
+        double[] bCoeffs = {1.5, -0.7};
+        filter.setCoeffs(aCoeffs, bCoeffs);
+        
+        // Process some sample values and assert that the output is as expected:
+        double result = filter.process(-0.5);
+        assertEquals(result, 0.78, 1e-6);
+        
+        result = filter.process(-0.25);
+        assertEquals(result, -0.34, 1e-6);
+        
+        result = filter.process(0.25);
+        assertEquals(result, -0.08, 1e-6);
+    }
+}
+
+
+No.7 generated result --------------------------
+
+@Test
+public void processTest() {
+    IIRFilter filter = new IIRFilter(3);
+    double[] aCoeffs = {0.1, 0.2, 0.3};
+    double[] bCoeffs = {0.4, 0.5, 0.6};
+    filter.setCoeffs(aCoeffs, bCoeffs);
+    assertArrayEquals(filter.coeffsA, aCoeffs);
+    assertArrayEquals(filter.coeffsB, bCoeffs);
+}
+
+
+No.8 generated result --------------------------
+
+package com.thealgorithms.audiofilters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class IIRFilterTest {
+    @Test
+    public void processTest() {
+        // Test case 1: Verify that the filter processes a single sample correctly
+        IIRFilter filter = new IIRFilter(2);
+        double result = filter.process(1.0);
+        assertEquals(result, 0.584, 0.001);
+
+        // Test case 2: Verify that the filter processes multiple samples correctly
+        double[] samples = {1.0, 2.0, 3.0};
+        result = filter.process(samples[0]);
+        assertEquals(result, 0.584, 0.001);
+        for (int i = 1; i < samples.length - 1; i++) {
+            result += filter.process(samples[i]);
+        }
+        assertEquals(result, 3.276, 0.001);
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package com.thealgorithms.audiofilters;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class IIRFilterTest {
+    @Test
+    public void processTest() {
+        // Create a new filter instance with order 2
+        IIRFilter filter = new IIRFilter(2);
+
+        // Set the numerator and denominator coefficients to [1, -0.5] and [1, 0.5] respectively
+        filter.setCoeffs([1.0, -0.5], [1.0, 0.5]);
+
+        // Test the process method with input sample 1
+        double result = filter.process(1.0);
+
+        // Check if the expected output is returned (which should be 0.5)
+        assertEquals(result, 0.5, 1e-6);
+    }
+}
+
+
+No.10 generated result --------------------------
+
+
+@Test
+public void processTest() {
+    // Test a simple case with one sample and one coefficient
+    double[] coeffsA = new double[]{0.5};
+    double[] coeffsB = new double[]{0.25};
+    IIRFilter filter = new IIRFilter(1);
+    filter.setCoeffs(coeffsA, coeffsB);
+    assertEquals(filter.process(1.0), 0.75, 1e-9);
+}
+
+

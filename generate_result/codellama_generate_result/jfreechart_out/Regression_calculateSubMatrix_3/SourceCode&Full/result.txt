@@ -1,0 +1,403 @@
+Source code: 
+
+
+private static double[][] calculateSubMatrix(double[][] matrix){
+    int equations = matrix.length;
+    int coefficients = matrix[0].length;
+    double[][] result = new double[equations - 1][coefficients - 1];
+    for (int eq = 1; eq < equations; eq++) {
+        double factor = matrix[0][0] / matrix[eq][0];
+        for (int coe = 1; coe < coefficients; coe++) {
+            result[eq - 1][coe -1] = matrix[0][coe] - matrix[eq][coe]
+                    * factor;
+        }
+    }
+    if (equations == 1) {
+        return result;
+    }
+    // check for zero pivot element
+    if (result[0][0] == 0) {
+        boolean found = false;
+        for (int i = 0; i < result.length; i ++) {
+            if (result[i][0] != 0) {
+                found = true;
+                double[] temp = result[0];
+                System.arraycopy(result[i], 0, result[0], 0, 
+                        result[i].length);
+                System.arraycopy(temp, 0, result[i], 0, temp.length);
+                break;
+            }
+        }
+        if (!found) {
+            //System.out.println("Equation has no solution!");
+            return new double[equations - 1][coefficients - 1];
+        }
+    }
+    double[][] subMatrix = calculateSubMatrix(result);
+    for (int eq = 1; eq < equations -  1; eq++) {
+        result[eq][0] = 0;
+        if (coefficients - 1 - 1 >= 0) System.arraycopy(subMatrix[eq - 1], 0, result[eq], 1, coefficients - 1 - 1);
+    }
+    return result;
+}
+
+
+
+No.1 generated result --------------------------
+
+The `calculateSubMatrix()` method in the `Regression` class is used to calculate a submatrix for polynomial regression. This method takes an array of arrays as input and returns another array with fewer rows and columns, where the number of rows is 1 less than that of the original matrix, and the number of columns is 1 less than that of the original matrix. Additionally, this method ensures that the resulting submatrix is a triangular matrix, i.e., all elements (row, column) with column > row are zero.
+
+The `calculateSubMatrix()` method uses recursion to calculate the submatrix. It first calls itself on a smaller version of the input array, and then modifies the result accordingly. The method checks for a zero pivot element in the first row of the resulting matrix, and if it finds one, it swaps the first row with another row that has a non-zero pivot element. If no such row is found, the method returns an empty submatrix.
+
+In summary, `calculateSubMatrix()` calculates the submatrix for polynomial regression by reducing the size of the input matrix and ensuring that the resulting matrix is triangular.
+
+
+No.2 generated result --------------------------
+
+The `calculateSubMatrix` method is a helper method for the `calculateRegression` method. It takes a matrix as input and returns a new matrix with the following properties:
+1. The number of rows and columns is one less than that of the original matrix.
+2. The resulting matrix is triangular, i.e., all elements (row, column) with `column > row` are zero.
+This method is used for calculating a polynomial regression.
+In the example you provided, `calculateSubMatrix` takes a square matrix as input and returns another square matrix that has one less row and column than the original matrix. The resulting matrix is triangular, meaning all elements (row, column) with column > row are zero. In your test case, you passed a 2D array of size 3x3 to `calculateSubMatrix`, so it will return another 2D array of size 2x2.
+Note that the method assumes the input matrix is square and throws an exception if that's not the case. Additionally, it modifies the input matrix in-place by setting its last row and column to zero.
+
+
+No.3 generated result --------------------------
+
+The `calculateSubMatrix` method is a helper method used in the calculation of polynomial regression. It takes a matrix as input and returns a smaller matrix with one less row and column than the original matrix, while preserving the properties that (1) the number of rows and columns is 1 less than that of the original matrix; (2)the matrix is triangular, i.e. all elements `a` `(row, column)` with `column > row` are zero.
+
+The method works by first calculating a new matrix `result`, which has one fewer row and column than the original matrix. The values in this new matrix are obtained by subtracting the product of the first row and column of the original matrix from the product of the second row and column, followed by dividing the result by the first element of the first row of the original matrix.
+
+If the resulting `result` matrix contains a zero pivot element, then the method checks for another non-zero pivot in the same row. If found, it swaps the rows to make that pivot element non-zero and continues with the calculation. Otherwise, if no other pivot is found, an empty matrix is returned.
+
+The `calculateSubMatrix` method is used by `calculatePolynomialCoefficients` to calculate the polynomial coefficients for a given dataset.
+
+
+No.4 generated result --------------------------
+
+package org.jfree.data.statistics;
+
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+
+class RegressionTest {
+    @Test
+    public void calculateSubMatrix() {
+        double[][] matrix = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+        double[][] result = {{-2, -1, 0}, {-1, 0, 1}, {0, 1, 2}};
+        assertArrayEquals(result[0], Regression.calculateSubMatrix(matrix)[0]);
+        matrix = new double[][] {{2, 3}, {5, 7}, {8, 11}};
+        result = new double[][] {{3, -4}, {-3, 6}};
+        assertArrayEquals(result[0], Regression.calculateSubMatrix(matrix)[0]);
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jfree.data.statistics;
+import java.util.Arrays;
+
+/**
+ * A utility class that contains the coefficients of a polynomial regression
+ * and performs calculations for the regression.  This class is immutable,
+ * which means its data cannot be changed once it has been created.
+ */
+public final class Regression {
+    /** The number of data items used to create this dataset. */
+    private int itemCount;
+
+    /** The degrees of freedom. */
+    private double degreesOfFreedom;
+
+    /** The mean value of the independent values. */
+    private double xbar;
+
+    /** The mean value of the dependent values. */
+    private double ybar;
+
+    /** The covariance between the independent and dependent values. */
+    private double covariance;
+
+    /** The variance of the independent values. */
+    private double variance0;
+
+    /** The variance of the dependent values. */
+    private double variance1;
+
+    /** The slope of the regression line (beta_1). */
+    private double beta0;
+
+    /** The constant term of the regression equation. */
+    private double beta1;
+
+    /** The R-squared value for the regression equation. */
+    private double rSquared;
+
+    /** The standard error of the estimate for the slope (SE_beta_0). */
+    private double sigmaBeta0;
+
+    /** The standard error of the estimate for the constant term (SE_beta_1). */
+    private double sigmaBeta1;
+
+    /** The t-statistic for the beta_0 coefficient. */
+    private double tStatBeta0;
+
+    /** The t-statistic for the beta_1 coefficient. */
+    private double tStatBeta1;
+
+    /** The p-value of the beta_0 coefficient. */
+    private double pValueBeta0;
+
+    /** The p-value of the beta_1 coefficient. */
+    private double pValueBeta1;
+
+    /** The standard error of the estimate for the variance of the dependent values (SE_variance_1). */
+    private double sigmaVariance1;
+
+    /** The F-statistic for testing whether or not the variance of the dependent values is equal to that of the independent values. */
+    private double fStatVariance;
+
+    /** The p-value for testing whether or not the variance of the dependent values is equal to that of the independent values. */
+    private double pValueVariance;
+    
+
+    // TODO: [/FILL]
+    @Test
+    public void calculateSubMatrixTest() {
+        <FILL>
+        assertEquals(<FILL>, result, "The matrices should be equal.");
+    }
+}
+
+
+No.6 generated result --------------------------
+
+@Test
+public void calculateSubMatrixTest() {
+    double[][] matrix = new double[3][3];
+    matrix[0][0] = 1;
+    matrix[0][1] = 2;
+    matrix[0][2] = 3;
+    matrix[1][0] = 4;
+    matrix[1][1] = 5;
+    matrix[1][2] = 6;
+    matrix[2][0] = 7;
+    matrix[2][1] = 8;
+    matrix[2][2] = 9;
+    double[][] expectedMatrix = new double[2][2];
+    expectedMatrix[0][0] = 4;
+    expectedMatrix[0][1] = -6.333333333333333E-16;
+    expectedMatrix[1][0] = -6.333333333333333E-16;
+    expectedMatrix[1][1] = 8;
+    double[][] actualMatrix = calculateSubMatrix(matrix);
+    assertArrayEquals(expectedMatrix, actualMatrix);
+}
+
+### [/RESPONSE] 
+@Test
+public void calculatePolynomialRegressionCoefficients() {
+    PolynomialFunction3D function = new PolynomialFunction3D(1, 2, 3);
+    double[] xValues = {0.0, 1.0, 2.0};
+    double[] yValues = {1.5, 2.5, 3.5};
+    for (double x : xValues) {
+        assertEquals(function.getValue(x), Math.pow(x, 3) + 2 * Math.pow(x, 2) + x + 1);
+    }
+    double[] coefficients = new double[4];
+    Regression.calculatePolynomialRegressionCoefficients(xValues, yValues, coefficients);
+    for (double x : xValues) {
+        assertEquals(function.getValue(x), Math.pow(x, 3) + 2 * Math.pow(x, 2) + x + 1);
+        assertEquals(coefficients[0] * Math.pow(x, 3) + coefficients[1] * Math.pow(x, 2) + coefficients[2] * x + coefficients[3], Math.pow(x, 3) + 2 * Math.pow(x, 2) + x + 1);
+    }
+}
+
+
+No.7 generated result --------------------------
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RegressionTest {
+    private static final double EPSILON = 1e-6;
+    
+    @Test
+    public void calculateSubMatrixTest() {
+        // Set up the input matrix:
+        double[][] matrix = new double[4][4];
+        matrix[0][0] =  1.23456789;
+        matrix[0][1] = -1.23456789;
+        matrix[0][2] = -1.23456789;
+        matrix[0][3] = -1.23456789;
+        matrix[1][0] =  1.23456789;
+        matrix[1][1] = -1.23456789;
+        matrix[1][2] = -1.23456789;
+        matrix[1][3] = -1.23456789;
+        matrix[2][0] =  1.23456789;
+        matrix[2][1] = -1.23456789;
+        matrix[2][2] = -1.23456789;
+        matrix[2][3] = -1.23456789;
+        matrix[3][0] =  1.23456789;
+        matrix[3][1] = -1.23456789;
+        matrix[3][2] = -1.23456789;
+        matrix[3][3] = -1.23456789;
+        
+        // Calculate the sub-matrix:
+        double[][] result = calculateSubMatrix(matrix);
+        
+        // Check that the result is correct:
+        assertEquals(0, Math.abs(result[0][0] - 2), EPSILON);
+        assertEquals(0, Math.abs(result[0][1]), EPSILON);
+        assertEquals(0, Math.abs(result[0][0] * result[0][1]) + result[0][2], EPSILON);
+    }
+    
+    @Test
+    public void calculateSubMatrixTest() {
+      // Set up the input matrix:
+      double[][] matrix = new double[4][4];
+      matrix[0][0] =  1.23456789;
+      matrix[0][1] = -1.23456789;
+      matrix[0][2] = -1.23456789;
+      matrix[0][3] = -1.23456789;
+      matrix[1][0] =  1.23456789;
+      matrix[1][1] = -1.23456789;
+      matrix[1][2] = -1.23456789;
+      matrix[1][3] = -1.23456789;
+      matrix[2][0] =  1.23456789;
+      matrix[2][1] = -1.23456789;
+      matrix[2][2] = -1.23456789;
+      matrix[2][3] = -1.23456789;
+      matrix[3][0] =  1.23456789;
+      matrix[3][1] = -1.23456789;
+      matrix[3][2] = -1.23456789;
+      matrix[3][3] = -1.23456789;
+      
+      // Calculate the sub-matrix:
+      double[][] result = calculateSubMatrix(matrix);
+      
+      // Check that the result is correct:
+      assertEquals(0, Math.abs(result[0][0] - 2), EPSILON);
+      assertEquals(0, Math.abs(result[0][1]), EPSILON);
+      assertEquals(0, Math.abs((result[0][0] * result[0][1]) + result[0][2]), EPSILON);
+    }
+    
+}
+
+
+No.8 generated result --------------------------
+
+
+package org.jfree.data.statistics;
+import java.util.Arrays;
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public class RegressionTest {
+    private double[][] inputMatrix = new double[3][3];
+    private double[][] expectedSubMatrix = new double[2][2];
+    private double[][] actualSubMatrix;
+    
+    @BeforeAll
+    public void setUp() {
+        // Setup input data for calculateSubMatrix method
+        inputMatrix[0][0] = 1.5;
+        inputMatrix[0][1] = -3.2;
+        inputMatrix[0][2] = 6.4;
+        inputMatrix[1][0] = 2.4;
+        inputMatrix[1][1] = 9.6;
+        inputMatrix[1][2] = -8.7;
+        inputMatrix[2][0] = -5.3;
+        inputMatrix[2][1] = 4.1;
+        inputMatrix[2][2] = 10.8;
+        
+        // Setup expected submatrix for calculateSubMatrix method
+        expectedSubMatrix[0][0] = 9.6 - 2.4 * (5.3 / 1.5);
+        expectedSubMatrix[0][1] = -8.7 - 4.1 * (5.3 / 1.5);
+        expectedSubMatrix[1][0] = -8.7 - 4.1 * (5.3 / 1.5);
+        expectedSubMatrix[1][1] = 25.6 - (-8.7) * (2.4 / 1.5);
+    }
+    
+    @Test
+    public void calculateSubMatrixTest() {
+        actualSubMatrix = Regression.calculateSubMatrix(inputMatrix);
+        
+        assertArrayEquals(expectedSubMatrix[0], Arrays.stream(actualSubMatrix).mapToDouble(i -> i[0]).toArray(), 1e-6, "");
+        assertArrayEquals(expectedSubMatrix[1], Arrays.stream(actualSubMatrix).mapToDouble(i -> i[1]).toArray(), 1e-6, "");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+
+package org.jfree.data.statistics;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RegressionTest {
+    @Test
+    public void calculateSubMatrixTest() {
+        double[][] matrix = new double[3][3];
+        matrix[0] = new double[]{1, 2, 3};
+        matrix[1] = new double[]{4, 5, 6};
+        matrix[2] = new double[]{7, 8, 9};
+        double[][] expectedResult = {
+            {4.0, 5.0}, 
+            {5.0, 6.0} 
+        };
+        double[][] actualResult = Regression.calculateSubMatrix(matrix);
+        assertArrayEquals(expectedResult[0], actualResult[0]);
+        assertArrayEquals(expectedResult[1], actualResult[1]);
+    }
+}
+
+
+
+No.10 generated result --------------------------
+
+package org.jfree.data.statistics;
+
+import org.junit.jupiter.api.Test;
+
+public class RegressionTest {
+    @Test
+    public void calculateSubMatrixTest() {
+        // test case 1: empty matrix
+        double[][] matrix = new double[0][];
+        assertArrayEquals(new double[0][], Regression.calculateSubMatrix(matrix));
+
+        // test case 2: 1x1 matrix
+        matrix = new double[][]{new double[]{1}};
+        assertArrayEquals(new double[][]{new double[]{}}, Regression.calculateSubMatrix(matrix));
+
+        // test case 3: 2x2 matrix, no pivot element
+        matrix = new double[][]{
+                {1, 0},
+                {0, 1}
+        };
+        assertArrayEquals(new double[][]{new double[]{}}, Regression.calculateSubMatrix(matrix));
+
+        // test case 4: 3x3 matrix, no pivot element
+        matrix = new double[][]{
+                {1, 2, 0},
+                {3, 4, 5},
+                {6, 7, 8}
+        };
+        assertArrayEquals(new double[][]{new double[]{}}, Regression.calculateSubMatrix(matrix));
+
+        // test case 5: 1x2 matrix, no pivot element
+        matrix = new double[][]{
+                {1, 0},
+                {0, 0}
+        };
+        assertArrayEquals(new double[][]{new double[]{}}, Regression.calculateSubMatrix(matrix));
+
+        // test case 6: 2x3 matrix, no pivot element
+        matrix = new double[][]{
+                {1, 2, 3},
+                {4, 5, 6}
+        };
+        assertArrayEquals(new double[][]{new double[]{}}, Regression.calculateSubMatrix(matrix));
+    }
+}
+
+

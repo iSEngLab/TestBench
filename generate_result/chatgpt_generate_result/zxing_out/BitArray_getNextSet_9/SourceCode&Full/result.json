@@ -1,0 +1,26 @@
+{
+    "project_name": "zxing",
+    "file_name": "BitArray.java",
+    "relative_path": "zxing/core/src/main/java/com/google/zxing/common/BitArray.java",
+    "execute_path": "zxing",
+    "package": "com.google.zxing.common",
+    "docstring": "/**\n   * @param from first bit to check\n   * @return index of first bit that is set, starting from the given index, or size if none are set\n   *  at or beyond this given index\n   * @see #getNextUnset(int)\n   */",
+    "source_code": "\npublic int getNextSet(int from) {\n  if (from >= size) {\n    return size;\n  }\n  int bitsOffset = from / 32;\n  int currentBits = bits[bitsOffset];\n  // mask off lesser bits first\n  currentBits &= -(1 << (from & 0x1F));\n  while (currentBits == 0) {\n    if (++bitsOffset == bits.length) {\n      return size;\n    }\n    currentBits = bits[bitsOffset];\n  }\n  int result = (bitsOffset * 32) + Integer.numberOfTrailingZeros(currentBits);\n  return Math.min(result, size);\n}\n",
+    "class_name": "BitArray",
+    "method_name": "getNextSet",
+    "arguments": [
+        "int from"
+    ],
+    "generate_test": [
+        "        BitArray bitArray = new BitArray();\n        bitArray.appendBit(true); \n        int result = bitArray.getNextSet(0);\n        assertEquals(0, result);",
+        "@Test\npublic void getNextSetTest() {\n    BitArray bitArray = new BitArray(10);\n    bitArray.set(3);\n    int result = bitArray.getNextSet(2);\n    assertEquals(3, result);\n}",
+        "@Test\npublic void getNextSetTest() {\n    // Create a new BitArray object\n    BitArray bitArray = new BitArray();\n    // Set the bits in the bitArray object using the set() method\n    bitArray.set(3);\n    bitArray.set(5);\n    // Call the getNextSet() method and save the result\n    int result = bitArray.getNextSet(0);\n    // Check if the result is as expected\n    assertEquals(3, result);\n}",
+        "@Test\npublic void getNextSetTest() {\n    BitArray bitArray = new BitArray(64);\n    for (int i = 0; i < 32; i++) {\n        bitArray.set(i * 2);\n    }\n    for (int i = 0; i < 32; i++) {\n        assertEquals(i * 2, bitArray.getNextSet(i * 2));\n    }\n    assertEquals(32, bitArray.getNextSet(32 * 2));\n}",
+        "\nint[] testBits = {0x01000000};\nBitArray bitArray = new BitArray(testBits, 32);\nint result = bitArray.getNextSet(0);\nassertEquals(24, result);\n",
+        "int[] bits = new int[] {1, 2, 3, 4, 5};\nBitArray bitArray = new BitArray(bits, 160);\nint nextSet = bitArray.getNextSet(0);\nassertEquals(0, nextSet);\nnextSet = bitArray.getNextSet(1);\nassertEquals(32, nextSet);\nnextSet = bitArray.getNextSet(2);\nassertEquals(33, nextSet);",
+        "@Test\npublic void getNextSetTest() {\n    BitArray bitArray = new BitArray(32);\n    for (int i = 0; i < 32; i++) {\n        bitArray.set(i);\n    }\n    assertEquals(0, bitArray.getNextSet(0));\n    assertEquals(1, bitArray.getNextSet(1));\n    assertEquals(2, bitArray.getNextSet(2));\n    assertEquals(3, bitArray.getNextSet(3));\n    // ... continue setting and checking getNextSet for additional values\n}",
+        "@Test\npublic void getNextSetTest() {\n    BitArray bitArray = new BitArray(64); // create a BitArray with a size of 64\n    for (int i = 0; i < 64; i += 2) {\n        bitArray.set(i); // set every even index bit\n    }\n    assertEquals(0, bitArray.getNextSet(0)); // expect to find the first set bit at index 0\n    assertEquals(2, bitArray.getNextSet(1)); // expect to find the next set bit at index 2\n    assertEquals(4, bitArray.getNextSet(3)); // expect to find the next set bit at index 4\n    assertEquals(63, bitArray.getNextSet(62)); // expect to find a set bit at the end of the array\n}\n",
+        "@Test\npublic void getNextSetTest() {\n    BitArray bitArray = new BitArray();\n    bitArray.appendBits(0b1111, 4);\n    assertEquals(0, bitArray.getNextSet(0));\n    assertEquals(1, bitArray.getNextSet(1));\n    assertEquals(2, bitArray.getNextSet(2));\n    assertEquals(3, bitArray.getNextSet(3));\n    assertEquals(4, bitArray.getNextSet(4));\n}",
+        "public void getNextSetTest() {\n    BitArray bitArray = new BitArray(64);\n    // Test case: from = 0\n    int result1 = bitArray.getNextSet(0);\n    assertEquals(0, result1);\n  \n    // Test case: from = 32\n    int result2 = bitArray.getNextSet(32);\n    assertEquals(32, result2);\n  \n    // Test case: from = 64\n    int result3 = bitArray.getNextSet(64);\n    assertEquals(64, result3);\n}"
+    ]
+}

@@ -1,0 +1,361 @@
+Source code: 
+
+
+public AztecDetectorResult detect(boolean isMirror) throws NotFoundException {
+
+  // 1. Get the center of the aztec matrix
+  Point pCenter = getMatrixCenter();
+
+  // 2. Get the center points of the four diagonal points just outside the bull's eye
+  //  [topRight, bottomRight, bottomLeft, topLeft]
+  ResultPoint[] bullsEyeCorners = getBullsEyeCorners(pCenter);
+
+  if (isMirror) {
+    ResultPoint temp = bullsEyeCorners[0];
+    bullsEyeCorners[0] = bullsEyeCorners[2];
+    bullsEyeCorners[2] = temp;
+  }
+
+  // 3. Get the size of the matrix and other parameters from the bull's eye
+  int errorsCorrected = extractParameters(bullsEyeCorners);
+
+  // 4. Sample the grid
+  BitMatrix bits = sampleGrid(image,
+                              bullsEyeCorners[shift % 4],
+                              bullsEyeCorners[(shift + 1) % 4],
+                              bullsEyeCorners[(shift + 2) % 4],
+                              bullsEyeCorners[(shift + 3) % 4]);
+
+  // 5. Get the corners of the matrix.
+  ResultPoint[] corners = getMatrixCornerPoints(bullsEyeCorners);
+
+  return new AztecDetectorResult(bits, corners, compact, nbDataBlocks, nbLayers, errorsCorrected);
+}
+
+
+
+No.1 generated result --------------------------
+
+
+package com.google.zxing.aztec.detector;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DetectorTest {
+    private AztecDetector detector = new AztecDetector();
+
+    @Test
+    public void detectTest() {
+        // Test case 1: isMirror=false, compact=true, nbDataBlocks=20, nbLayers=3
+        boolean isMirror = false;
+        boolean compact = true;
+        int nbDataBlocks = 20;
+        int nbLayers = 3;
+        AztecDetectorResult result = detector.detect(isMirror, compact, nbDataBlocks, nbLayers);
+        assertEquals(result.getErrorsCorrected(), 1); // Expected value for errorsCorrected
+        assertTrue(result.isCompact()); // Expected value for isCompact
+        assertEquals(result.getNbDataBlocks(), nbDataBlocks); // Expected value for nbDataBlocks
+        assertEquals(result.getNbLayers(), nbLayers); // Expected value for nbLayers
+
+        // Test case 2: isMirror=true, compact=false, nbDataBlocks=10, nbLayers=5
+        isMirror = true;
+        compact = false;
+        nbDataBlocks = 10;
+        nbLayers = 5;
+        result = detector.detect(isMirror, compact, nbDataBlocks, nbLayers);
+        assertEquals(result.getErrorsCorrected(), 2); // Expected value for errorsCorrected
+        assertFalse(result.isCompact()); // Expected value for isCompact
+        assertEquals(result.getNbDataBlocks(), nbDataBlocks); // Expected value for nbDataBlocks
+        assertEquals(result.getNbLayers(), nbLayers); // Expected value for nbLayers
+    }
+}
+
+
+
+No.2 generated result --------------------------
+
+
+@Test
+public void detectTest() {
+    // Arrange
+    AztecDetector detector = new AztecDetector();
+    boolean isMirror = false;
+    int errorsCorrected = 0;
+    Point pCenter = new Point(1, 2);
+    ResultPoint[] bullsEyeCorners = {new ResultPoint(3, 4), new ResultPoint(5, 6), new ResultPoint(7, 8), new ResultPoint(9, 10)};
+    int shift = 0;
+    BitMatrix bits = new BitMatrix(11, 12);
+    ResultPoint[] corners = {new ResultPoint(13, 14), new ResultPoint(15, 16), new ResultPoint(17, 18), new ResultPoint(19, 20)};
+    int nbDataBlocks = 5;
+    int nbLayers = 3;
+    
+    // Act
+    AztecDetectorResult result = detector.detect(isMirror);
+    
+    // Assert
+    assertEquals(pCenter, result.getMatrixCenter());
+    assertArrayEquals(bullsEyeCorners, result.getBullsEyeCorners());
+    assertEquals(errorsCorrected, result.getErrorsCorrected());
+    assertEquals(shift, result.getShift());
+    assertEquals(bits, result.getBits());
+    assertArrayEquals(corners, result.getMatrixCornerPoints());
+    assertEquals(nbDataBlocks, result.getNbDataBlocks());
+    assertEquals(nbLayers, result.getNbLayers());
+}
+
+
+No.3 generated result --------------------------
+
+
+package com.google.zxing.aztec.detector;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DetectorTest {
+    @Test
+    public void detectTest() {
+        // 1. Test for a valid Aztec matrix with the center point in the image
+        Point pCenter = new Point(10, 10);
+        ResultPoint[] bullsEyeCorners = getBullsEyeCorners(pCenter);
+        int errorsCorrected = extractParameters(bullsEyeCorners);
+        assertTrue(errorsCorrected > 0);
+        
+        // 2. Test for a valid Aztec matrix with the center point outside of the image
+        pCenter = new Point(-1, -1);
+        bullsEyeCorners = getBullsEyeCorners(pCenter);
+        errorsCorrected = extractParameters(bullsEyeCorners);
+        assertTrue(errorsCorrected > 0);
+        
+        // 3. Test for an Aztec matrix with a mirrored layout (rotated 180 degrees)
+        pCenter = new Point(10, 10);
+        bullsEyeCorners = getBullsEyeCorners(pCenter);
+        errorsCorrected = extractParameters(bullsEyeCorners);
+        assertTrue(errorsCorrected > 0);
+        
+        // 4. Test for an Aztec matrix with a skewed layout (not straight lines)
+        pCenter = new Point(10, 10);
+        bullsEyeCorners = getBullsEyeCorners(pCenter);
+        errorsCorrected = extractParameters(bullsEyeCorners);
+        assertTrue(errorsCorrected > 0);
+    }
+}
+
+
+No.4 generated result --------------------------
+
+
+@Test
+public void detectTest() {
+    // Arrange
+    AztecDetector detector = new AztecDetector();
+    boolean isMirror = false;
+    int errorsCorrected = 0;
+    int compact = 1;
+    int nbDataBlocks = 2;
+    int nbLayers = 3;
+    BitMatrix image = new BitMatrix(25, 25);
+    ResultPoint[] bullsEyeCorners = new ResultPoint[4];
+    for (int i = 0; i < 4; i++) {
+        bullsEyeCorners[i] = new ResultPoint(i * 10, i * 10);
+    }
+
+    // Act
+    AztecDetectorResult result = detector.detect(isMirror, errorsCorrected, compact, nbDataBlocks, nbLayers, image, bullsEyeCorners);
+
+    // Assert
+    assertEquals(result.getBits(), new BitMatrix(25, 25));
+    assertArrayEquals(result.getCornerPoints(), new ResultPoint[] {new ResultPoint(0 * 10, 0 * 10), new ResultPoint(1 * 10, 1 * 10), new ResultPoint(2 * 10, 2 * 10), new ResultPoint(3 * 10, 3 * 10)});
+    assertEquals(result.getCompact(), 1);
+    assertEquals(result.getNbDataBlocks(), 2);
+    assertEquals(result.getNbLayers(), 3);
+    assertEquals(result.getErrorsCorrected(), errorsCorrected);
+}
+
+
+No.5 generated result --------------------------
+
+
+@Test
+public void detectTest() {
+    // Arrange
+    boolean isMirror = false;
+    Point pCenter = new Point(10, 10);
+    ResultPoint[] bullsEyeCorners = getBullsEyeCorners(pCenter);
+    int errorsCorrected = extractParameters(bullsEyeCorners);
+    BitMatrix bits = sampleGrid(image,
+                              bullsEyeCorners[shift % 4],
+                              bullsEyeCorners[(shift + 1) % 4],
+                              bullsEyeCorners[(shift + 2) % 4],
+                              bullsEyeCorners[(shift + 3) % 4]);
+    ResultPoint[] corners = getMatrixCornerPoints(bullsEyeCorners);
+
+    // Act
+    AztecDetectorResult result = detect(isMirror);
+
+    // Assert
+    assertEquals(bits, result.getBits());
+    assertArrayEquals(corners, result.getCorners());
+    assertEquals(compact, result.isCompact());
+    assertEquals(nbDataBlocks, result.getNbDataBlocks());
+    assertEquals(nbLayers, result.getNbLayers());
+    assertEquals(errorsCorrected, result.getErrorsCorrected());
+}
+
+
+No.6 generated result --------------------------
+
+
+@Test
+public void detectTest() throws NotFoundException {
+    AztecDetector detector = new AztecDetector();
+    boolean isMirror = false;
+    Point pCenter = getMatrixCenter();
+    ResultPoint[] bullsEyeCorners = getBullsEyeCorners(pCenter);
+    if (isMirror) {
+        ResultPoint temp = bullsEyeCorners[0];
+        bullsEyeCorners[0] = bullsEyeCorners[2];
+        bullsEyeCorners[2] = temp;
+    }
+    int errorsCorrected = extractParameters(bullsEyeCorners);
+    BitMatrix bits = sampleGrid(image, bullsEyeCorners[shift % 4], bullsEyeCorners[(shift + 1) % 4], bullsEyeCorners[(shift + 2) % 4], bullsEyeCorners[(shift + 3) % 4]);
+    ResultPoint[] corners = getMatrixCornerPoints(bullsEyeCorners);
+    AztecDetectorResult result = detector.detect(isMirror);
+    assertEquals(result.getErrorsCorrected(), errorsCorrected);
+    assertArrayEquals(result.getBullsEyeCorners(), bullsEyeCorners);
+    assertEquals(result.getBitMatrix(), bits);
+    assertArrayEquals(result.getCorners(), corners);
+}
+
+
+No.7 generated result --------------------------
+
+
+@Test
+public void detectTest() {
+    // Arrange
+    AztecDetector detector = new AztecDetector();
+    boolean isMirror = true;
+    Point pCenter = new Point(10, 15);
+    ResultPoint[] bullsEyeCorners = new ResultPoint[4];
+    int shift = 3;
+
+    // Act
+    AztecDetectorResult result = detector.detect(isMirror);
+
+    // Assert
+    assertEquals(result.getBits(), null, "The bits of the aztec matrix should be null");
+    assertEquals(result.getCorners(), new ResultPoint[0], "The corners of the aztec matrix should be an empty array");
+    assertEquals(result.getCompact(), false, "The compact property of the aztec matrix should be false");
+    assertEquals(result.getDataBlocks(), 0, "The number of data blocks in the aztec matrix should be zero");
+    assertEquals(result.getLayers(), 0, "The number of layers in the aztec matrix should be zero");
+    assertEquals(result.getErrorsCorrected(), -1, "The number of errors corrected in the aztec matrix should be -1");
+}
+
+
+No.8 generated result --------------------------
+
+@Test
+public void detectTest() throws NotFoundException {
+    // Arrange
+    AztecDetector detector = new AztecDetector();
+    boolean isMirror = false;
+
+    // Act
+    AztecDetectorResult result = detector.detect(isMirror);
+
+    // Assert
+    assertNotNull(result);
+    assertEquals(12, result.getNbDataBlocks());
+    assertEquals(4, result.getNbLayers());
+    assertEquals(3, result.getErrorsCorrected());
+}
+
+
+No.9 generated result --------------------------
+
+
+package com.google.zxing.aztec.detector;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DetectorTest {
+    @Test
+    public void detectTest() {
+        AztecDetector detector = new AztecDetector();
+        boolean isMirror = false;
+
+        // 1. Get the center of the aztec matrix
+        Point pCenter = detector.getMatrixCenter();
+
+        // 2. Get the center points of the four diagonal points just outside the bull's eye
+        // [topRight, bottomRight, bottomLeft, topLeft]
+        ResultPoint[] bullsEyeCorners = detector.getBullsEyeCorners(pCenter);
+
+        if (isMirror) {
+            ResultPoint temp = bullsEyeCorners[0];
+            bullsEyeCorners[0] = bullsEyeCorners[2];
+            bullsEyeCorners[2] = temp;
+        }
+
+        // 3. Get the size of the matrix and other parameters from the bull's eye
+        int errorsCorrected = detector.extractParameters(bullsEyeCorners);
+
+        // 4. Sample the grid
+        BitMatrix bits = detector.sampleGrid(null, // image
+                              bullsEyeCorners[0],
+                              bullsEyeCorners[1],
+                              bullsEyeCorners[2],
+                              bullsEyeCorners[3]);
+
+        // 5. Get the corners of the matrix.
+        ResultPoint[] corners = detector.getMatrixCornerPoints(bullsEyeCorners);
+
+        assertNotNull(corners);
+        assertEquals(8, corners.length);
+
+        for (int i = 0; i < 4; i++) {
+            ResultPoint corner = corners[i];
+            assertNotNull(corner);
+            assertTrue(corner.getX() > 0 && corner.getY() > 0);
+        }
+    }
+}
+
+
+
+No.10 generated result --------------------------
+
+public AztecDetectorResult detect(boolean isMirror) throws NotFoundException {
+  // Get the center of the aztec matrix
+  Point pCenter = getMatrixCenter();
+  
+  // Get the center points of the four diagonal points just outside the bull's eye
+  // [topRight, bottomRight, bottomLeft, topLeft]
+  ResultPoint[] bullsEyeCorners = getBullsEyeCorners(pCenter);
+  
+  if (isMirror) {
+    ResultPoint temp = bullsEyeCorners[0];
+    bullsEyeCorners[0] = bullsEyeCorners[2];
+    bullsEyeCorners[2] = temp;
+  }
+  
+  // Get the size of the matrix and other parameters from the bull's eye
+  int errorsCorrected = extractParameters(bullsEyeCorners);
+  
+  // Sample the grid
+  BitMatrix bits = sampleGrid(image,
+                              bullsEyeCorners[shift % 4],
+                              bullsEyeCorners[(shift + 1) % 4],
+                              bullsEyeCorners[(shift + 2) % 4],
+                              bullsEyeCorners[(shift + 3) % 4]);
+  
+  // Get the corners of the matrix.
+  ResultPoint[] corners = getMatrixCornerPoints(bullsEyeCorners);
+  
+  return new AztecDetectorResult(bits, corners, compact, nbDataBlocks, nbLayers, errorsCorrected);
+}
+
+

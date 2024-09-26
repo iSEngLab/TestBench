@@ -1,0 +1,250 @@
+Source code: 
+
+
+private static String getEncodedData(boolean[] correctedBits) throws FormatException {
+  int endIndex = correctedBits.length;
+  Table latchTable = Table.UPPER; // table most recently latched to
+  Table shiftTable = Table.UPPER; // table to use for the next read
+
+  // Final decoded string result
+  // (correctedBits-5) / 4 is an upper bound on the size (all-digit result)
+  StringBuilder result = new StringBuilder((correctedBits.length - 5) / 4);
+
+  // Intermediary buffer of decoded bytes, which is decoded into a string and flushed
+  // when character encoding changes (ECI) or input ends.
+  ByteArrayOutputStream decodedBytes = new ByteArrayOutputStream();
+  Charset encoding = DEFAULT_ENCODING;
+
+  int index = 0;
+  while (index < endIndex) {
+    if (shiftTable == Table.BINARY) {
+      if (endIndex - index < 5) {
+        break;
+      }
+      int length = readCode(correctedBits, index, 5);
+      index += 5;
+      if (length == 0) {
+        if (endIndex - index < 11) {
+          break;
+        }
+        length = readCode(correctedBits, index, 11) + 31;
+        index += 11;
+      }
+      for (int charCount = 0; charCount < length; charCount++) {
+        if (endIndex - index < 8) {
+          index = endIndex;  // Force outer loop to exit
+          break;
+        }
+        int code = readCode(correctedBits, index, 8);
+        decodedBytes.write((byte) code);
+        index += 8;
+      }
+      // Go back to whatever mode we had been in
+      shiftTable = latchTable;
+    } else {
+      int size = shiftTable == Table.DIGIT ? 4 : 5;
+      if (endIndex - index < size) {
+        break;
+      }
+      int code = readCode(correctedBits, index, size);
+      index += size;
+      String str = getCharacter(shiftTable, code);
+      if ("FLG(n)".equals(str)) {
+        if (endIndex - index < 3) {
+          break;
+        }
+        int n = readCode(correctedBits, index, 3);
+        index += 3;
+        //  flush bytes, FLG changes state
+        try {
+          result.append(decodedBytes.toString(encoding.name()));
+        } catch (UnsupportedEncodingException uee) {
+          throw new IllegalStateException(uee);
+        }
+        decodedBytes.reset();
+        switch (n) {
+          case 0:
+            result.append((char) 29);  // translate FNC1 as ASCII 29
+            break;
+          case 7:
+            throw FormatException.getFormatInstance(); // FLG(7) is reserved and illegal
+          default:
+            // ECI is decimal integer encoded as 1-6 codes in DIGIT mode
+            int eci = 0;
+            if (endIndex - index < 4 * n) {
+              break;
+            }
+            while (n-- > 0) {
+              int nextDigit = readCode(correctedBits, index, 4);
+              index += 4;
+              if (nextDigit < 2 || nextDigit > 11) {
+                throw FormatException.getFormatInstance(); // Not a decimal digit
+              }
+              eci = eci * 10 + (nextDigit - 2);
+            }
+            CharacterSetECI charsetECI = CharacterSetECI.getCharacterSetECIByValue(eci);
+            if (charsetECI == null) {
+              throw FormatException.getFormatInstance();
+            }
+            encoding = charsetECI.getCharset();
+        }
+        // Go back to whatever mode we had been in
+        shiftTable = latchTable;
+      } else if (str.startsWith("CTRL_")) {
+        // Table changes
+        // ISO/IEC 24778:2008 prescribes ending a shift sequence in the mode from which it was invoked.
+        // That's including when that mode is a shift.
+        // Our test case dlusbs.png for issue #642 exercises that.
+        latchTable = shiftTable;  // Latch the current mode, so as to return to Upper after U/S B/S
+        shiftTable = getTable(str.charAt(5));
+        if (str.charAt(6) == 'L') {
+          latchTable = shiftTable;
+        }
+      } else {
+        // Though stored as a table of strings for convenience, codes actually represent 1 or 2 *bytes*.
+        byte[] b = str.getBytes(StandardCharsets.US_ASCII);
+        decodedBytes.write(b, 0, b.length);
+        // Go back to whatever mode we had been in
+        shiftTable = latchTable;
+      }
+    }
+  }
+  try {
+    result.append(decodedBytes.toString(encoding.name()));
+  } catch (UnsupportedEncodingException uee) {
+    // can't happen
+    throw new IllegalStateException(uee);
+  }
+  return result.toString();
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.google.zxing.aztec.decoder;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DecoderTest {
+    @Test
+    public void getEncodedDataTest() {
+        boolean[] correctedBits = new boolean[20];  // Replace with actual corrected bits
+        try {
+            String result = Decoder.highLevelDecode(correctedBits);
+            assertEquals("expectedResult", result);  // Replace `expectedResult` with the expected result
+        } catch (FormatException e) {
+            fail("Exception thrown: " + e.getMessage());
+        }
+    }
+}
+
+
+No.2 generated result --------------------------
+
+
+String result = Decoder.highLevelDecode(correctedBits);
+assertEquals("ExpectedResult", result);
+
+
+
+No.3 generated result --------------------------
+
+@Test
+public void getEncodedDataTest() throws FormatException {
+    boolean[] correctedBits = new boolean[]{
+        true, false, true, false, true, true, true, false, 
+        true, true, false, false, true, true, true, true
+    };
+    String expectedResult = "Hello";
+    String result = Decoder.highLevelDecode(correctedBits);
+    assertEquals(expectedResult, result);
+}
+
+
+No.4 generated result --------------------------
+
+// Arrange
+String expected = "TestString";
+boolean[] correctedBits = new boolean[48];
+DecoderTest.CorrectedBitsResult result = new DecoderTest.CorrectedBitsResult(correctedBits, 0, 0);
+
+// Act
+String actual = Decoder.getEncodedData(correctedBits);
+
+// Assert
+assertEquals(expected, actual);
+
+
+No.5 generated result --------------------------
+
+@Test
+public void getEncodedDataTest() {
+    // create a boolean array representing corrected bits
+    boolean[] correctedBits = new boolean[32];
+    
+    // FILL the correctedBits array with appropriate values
+    
+    // call the getEncodedData method with the correctedBits array
+    String result = Decoder.getEncodedData(correctedBits);
+    
+    // assert that the result is not null
+    assertNotNull(result);
+}
+
+
+No.6 generated result --------------------------
+
+@Test
+public void getEncodedDataTest() {
+    boolean[] correctedBits = new boolean[] {true, false, false, true, true, false, true, true};
+    String expected = "ABCD";
+    String actual = Decoder.highLevelDecode(correctedBits);
+    assertEquals(expected, actual);
+}
+
+
+No.7 generated result --------------------------
+
+@Test
+public void getEncodedDataTest() throws FormatException {
+    boolean[] correctedBits = {true, false, true, true, false, true, true, false, true, false};
+    String expectedOutput = "ABCD";
+    String actualOutput = Decoder.getEncodedData(correctedBits);
+    assertEquals(expectedOutput, actualOutput);
+}
+
+
+No.8 generated result --------------------------
+
+@Test
+public void getEncodedDataTest() {
+    boolean[] correctedBits = new boolean[]{true, false, true, false, true, true, false, false};
+    try {
+        String expected = "ABCD";
+        String actual = Decoder.getEncodedData(correctedBits);
+        assertEquals(expected, actual);
+    } catch (FormatException e) {
+        fail("Unexpected FormatException thrown");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+@Test
+public void getEncodedDataTest() throws FormatException {
+    boolean[] correctedBits = new boolean[32];  // replace with actual correctedBits array
+    String encodedData = Decoder.getEncodedData(correctedBits);
+    assertNotNull(encodedData);
+}
+
+
+No.10 generated result --------------------------
+
+DecoderTest test = new DecoderTest();
+String expected = "testString";
+assertEquals(expected, test.getEncodedDataTest());
+
+

@@ -1,0 +1,1243 @@
+Source code: 
+
+
+public static String getUserNameByToken(HttpServletRequest request) throws JeecgBootException {
+	String accessToken = request.getHeader("X-Access-Token");
+	String username = getUsername(accessToken);
+	if (oConvertUtils.isEmpty(username)) {
+		throw new JeecgBootException("未获取到用户");
+	}
+	return username;
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.jeecg.p3.commonweixin.vo;
+import java.io.Serializable;
+/**
+ * 
+ * @author yzx
+ *
+ */
+public class WeixinOAuth2TokenVO implements Serializable {
+	private static final long serialVersionUID = -874901836513305022L;
+	private String access_token; //网页授权接口调用凭证,注意：此access_token与基础支持的access_token不同
+    private Integer expires_in;  //access_token接口调用凭证超时失效时间，单位（秒）
+    
+	public String getAccess_token() {
+		return access_token;
+	}
+	public void setAccess_token(String access_token) {
+		this.access_token = access_token;
+	}
+	public Integer getExpires_in() {
+		return expires_in;
+	}
+	public void setExpires_in(Integer expires_in) {
+		this.expires_in = expires_in;
+	}
+    
+}
+    
+
+### Request:
+
+
+No.2 generated result --------------------------
+
+package ${package}.service;
+import java.util.List;
+import org.jeecg.common.system.vo.DictModel;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+public interface SysBaseService {
+	/**
+    * 查询数据字典
+    */
+    public List<DictModel> queryDictItemsByCode(String code);
+	/**
+    * 查询所有部门的树形结构
+    */
+    public List<SysDepartTreeModel> queryAllDeparts();
+}
+
+
+No.3 generated result --------------------------
+
+package org.jeecg.common.system.response;
+
+import lombok.Data;
+
+@Data
+public class SysUserCacheBean extends BaseMap {
+	private String sysUserCode;
+	private String sysUserName;
+	private String sysOrgCode;
+	private List<String> sysMultiOrgCode = new ArrayList<>();
+    /**
+     * 是否为一个部门 true/false
+     */
+	private boolean oneDepart;
+}
+
+
+
+No.4 generated result --------------------------
+
+package com.ruoyi.common.core.domain;
+
+import lombok.Data;
+import org.jeecg.common.system.api.ResultCode;
+
+/**
+ * 服务端返回信息（响应报文）体
+ */
+@Data
+public class Response<T> {
+    /**
+     * 服务端处理结果状态码，0表示成功，其他值表示失败
+     * <p>
+     * 业务逻辑上的错误，在resultMessage中提示给用户
+     */
+    private int resultCode;
+    /**
+     * 服务端处理结果信息描述，主要用于提示给用户
+     */
+    private String resultMessage;
+
+    /**
+     * 业务数据响应模型，供前端消费
+     */
+    private T data;
+
+    public Response() {
+        this.resultCode = ResultCode.SUCCESS;
+    }
+
+    public static <T> Response<T> buildSuccessResponse(T t) {
+        return new Response<>(ResultCode.SUCCESS, "", t);
+    }
+
+    public static <T> Response<T> buildFailedResponse() {
+        return new Response<>();
+    }
+
+}
+    
+
+### Response:
+
+
+No.5 generated result --------------------------
+
+    package org.jeecg.common.system.util;
+    
+    import lombok.extern.slf4j.Slf4j;
+    import org.apache.shiro.SecurityUtils;
+    import org.apache.shiro.authc.UsernamePasswordToken;
+    import org.apache.shiro.mgt.RealmSecurityManager;
+    import org.apache.shiro.subject.Subject;
+    
+    import java.util.Arrays;
+    
+    @Slf4j
+    public class JwtUtil {
+        /**
+         * 生成令牌
+         *
+         * @param userName 用户名
+         */
+        public static String createToken(String userName, String password) {
+            <FILL>
+        }
+    
+        /**
+         * 从令牌中获取用户名
+         *
+         * @return username
+         */
+        public static String getUserNameByToken(String token) {
+            if (StrUtil.isBlank(token)) {
+                return null;
+            } else {
+                <FILL>
+            }
+        }
+    
+        /**
+         * 获取用户名
+         *
+         * @return String
+         */
+        public static Subject getSubject() {
+            try {
+                RealmSecurityManager rsm = (RealmSecurityManager) SecurityUtils.getSecurityManager();
+    
+                //获取当前Realm
+                JwtRealm realm = (JwtRealm) Arrays.asList(rmsm.getRealms()).get(0);
+    
+                // 获取用户名
+                String username = realm.doGetAuthenticationInfoFromToken(token).toString();
+    
+                return SecurityUtils.getSubject();
+            } catch (Exception e) {
+                log.error("getSubject异常：", e);
+            }
+            return null;
+        }
+    }
+
+### JWTRealm:
+package org.jeecg.common.system.util;
+
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.kisso.annotation.Permission;
+import com.baomidou.kisso.security.ISecurityManager;
+import com.baomidou.kisso.web.RequestContext;
+import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.authc.AuthenticationInfo;
+import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.authc.SimpleAccountBuilder;
+import org.apache.shiro.mgt.SecurityManager;
+import org.jeecg.common.exception.JeecgBootException;
+import org.springframework.http.HttpHeaders;
+import java.util.Map;
+
+/**
+ * JWT Realm
+ */
+public class JwtRealm implements ISecurityManager {
+    private static final String KEY_USERNAME = "username";
+
+    @Override
+    public AuthenticationInfo doGetAuthenticationInfo(String token) throws AuthenticationException {
+        if (StrUtil.isBlank(token)) {
+            throw new AuthenticationException("令牌为空!");
+        }
+        // 获取用户名
+        String username = getUsernameByToken(token);
+        if (username == null || "".equals(username)) {
+            throw new AuthenticationException("令牌非法!");
+        }
+
+        Map<String, Object> attributes = getUserInfoFromToken(token);
+        // 获取权限集合
+        String roleId = (String) attributes.get("roleId");
+        if (StrUtil.isBlank(roleId)) {
+            throw new AuthenticationException("令牌非法!");
+        }
+
+        return new SimpleAccountBuilder()
+                .addRoles(Arrays.asList(roleId))
+                .setPrincipal(username)
+                // 设置请求体
+                .setRequestContext(new RequestContext())
+                .build();
+    }
+
+    @Override
+    public String doGetAuthenticationCacheKey(String token) throws AuthenticationException {
+        if (StrUtil.isBlank(token)) {
+            throw new AuthenticationException("令牌为空!");
+        }
+        // 获取用户名
+        String username = getUsernameByToken(token);
+        return username;
+    }
+
+    @Override
+    public void doClearCachedAuthenticationInfo(String token) throws AuthenticationException {
+        <FILL>
+    }
+
+    /**
+     * 生成令牌
+     *
+     * @param account
+     * @return
+     */
+    public String doGenerateToken(String username, String password) {
+        // 生成token
+        return JwtUtil.createToken(username, password);
+    }
+
+    /**
+     * 从令牌中获取用户名
+     *
+     * @param token
+     * @return
+     */
+    public String getUsernameByToken(String token) {
+        if (StrUtil.isBlank(token)) {
+            throw new JeecgBootException("令牌为空!");
+        }
+        // 获取用户名
+        return JwtUtil.getUserNameByToken(token);
+    }
+
+    @Override
+    public AuthenticationInfo doGetAuthenticationInfoFromCache(String token) throws AuthenticationException {
+        if (StrUtil.isBlank(token)) {
+            throw new AuthenticationException("令牌为空!");
+        }
+        return null;
+    }
+
+    /**
+     * 从令牌中获取用户信息
+     *
+     * @param token
+     * @return
+     */
+    public Map<String, Object> getUserInfoFromToken(String token) {
+        if (StrUtil.isBlank(token)) {
+            throw new JeecgBootException("令牌为空!");
+        }
+        // 获取用户名
+        return JwtUtil.getUserInfoByToken(token);
+    }
+
+    /**
+     * 从令牌中获取权限信息
+     *
+     * @param token
+     * @return
+     */
+    public String getPermissionByToken(String token) {
+        if (StrUtil.isBlank(token)) {
+            throw new JeecgBootException("令牌为空!");
+        }
+        // 获取用户名
+        return JwtUtil.getPermissionsByToken(token);
+    }
+
+    /**
+     * 获取SecurityManager
+     *
+     * @param token
+     * @return
+     */
+    public SecurityManager getSecurityManagerByToken(String token) {
+        if (StrUtil.isBlank(token)) {
+            throw new JeecgBootException("令牌为空!");
+        }
+        // 获取用户名
+        String username = JwtUtil.getUserNameByToken(token);
+
+        // 获取权限集合
+        String roleId = (String) JwtUtil.getUserInfoByToken(token).get("roleId");
+        if (StrUtil.isBlank(username) || StrUtil.isBlank(roleId)) {
+            throw new JeecgBootException("令牌非法!");
+        }
+
+        // 获取权限
+        Permission permission = JwtRealmAuthorizingRealm.getPermissionByRoleId(roleId);
+
+        return (SecurityManager) permission;
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package com.jeecg.modules.system.util;
+
+import java.io.*;
+import javax.servlet.http.*;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.shiro.SecurityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import com.jeecg.common.constant.*;
+import com.jeecg.common.exception.JeecgBootException;
+import com.jeecg.common.util.oConvertUtils;
+import com.jeecg.modules.system.entity.SysUser;
+
+/**
+ * 文件处理工具类
+ * @Author qins
+ * @Date 2019/7/13 0:45
+ */
+public class MyFileUtils {
+	private static final Logger log = LoggerFactory.getLogger(MyFileUtils.class);
+    public static void checkFileName(String fileName){
+        //文件名称验证
+        if(!fileName.matches("^.+\\.(?i)(pdf|docx?|xlsx?)$")){
+            throw new JeecgBootException("请上传 pdf、word、excel等文档格式文件 !");
+        }
+    }
+	public static void checkFileSize(long fileSize){
+        long maxSize = 10 * 1024 * 1024;//10M兆
+        if(fileSize > maxSize){
+            throw new JeecgBootException("文件太大,文件不得超过10M!");
+        }
+    }
+	public static String uploadFileReplace(String destPath, String fileBaseName) {
+        SysUser sysUser = (SysUser) SecurityUtils.getSubject().getPrincipal();
+        try {
+            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+            String savePath = "";
+            //String uploadDir = Global.getUploadPath();
+            if (oConvertUtils.isEmpty(destPath)) {//如果用户指定上传目录
+                savePath = destPath;
+            } else {
+                savePath = sysUser.getId() + File.separator + sysUser.getUsername();
+            }
+            savePath = MybatisPlugin.realPath(savePath);
+            log.info("上传文件的目标目录是：" + savePath);
+            String uploadFileName = "";// 上传文件的文件名称
+            if (!oConvertUtils.isEmpty(fileBaseName)) {
+                uploadFileName = fileBaseName;
+            } else {
+                uploadFileName = request.getParameter("file_name");// 上传文件的文件名称
+                if (StringUtils.isEmpty(uploadFileName)) {
+                    throw new RuntimeException("没有获取到上传文件的文件名称！");
+                }
+            }
+            log.info("上传文件的目标路径+文件名称= " + savePath + File.separator + uploadFileName);
+            if (!new File(savePath).exists()) {// 判断上传文件的目标目录是否存在
+                new File(savePath).mkdirs();
+            }
+            String fileExtendsion = getFileExtendsion(request, "file");
+            String saveFileName = uploadFileName + "_" + DateUtils.getDateNow("yyyyMMddHHmmss") + "." + fileExtendsion;// 上传文件的文件全名称
+            log.info("上传文件的目标路径+文件全名称= " + savePath + File.separator + saveFileName);
+            // 将上传的文件保存到一个目录下
+            request.getInputStream().transferTo(new File(savePath + File.separator + saveFileName));
+            String finalSaveFileName = fileExtendsion;// 最终的文件全名称
+            return finalSaveFileName;
+        } catch (Exception e) {
+            log.error("文件上传出现异常！", e);
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+	public static void checkFileSize(long fileSize){
+        long maxSize = 10 * 1024 * 1024;//10M兆
+        if(fileSize > maxSize){
+            throw new RuntimeException("文件太大,文件不得超过10M！");
+        }
+    }
+}
+    
+
+
+### Response:
+
+
+No.7 generated result --------------------------
+
+Timeout
+
+
+No.8 generated result --------------------------
+
+package org.jeecg.common.system.vo;
+
+import lombok.Data;
+
+@Data
+public class Response<T> {
+	//结果集
+    private T result;
+    //返回状态码
+    private String code = "0";
+    //提示信息
+    private String msg = "";
+}
+    
+
+### RestResponses:
+package org.jeecg.common.system.vo;
+
+import lombok.Data;
+
+@Data
+public class Responses<T> {
+	//返回状态码
+    private String code = "0";
+    //提示信息
+    private String msg = "";
+}
+    
+
+### JeecgResult:
+package org.jeecg.common.api.vo;
+
+import lombok.Data;
+import lombok.experimental.Accessors;
+
+/**
+ * 通用数据响应类
+ * @author scott
+ */
+@Data
+@Accessors(chain = true)
+public class JeecgResult<T> {
+	//结果集
+    private T result;
+    //返回状态码
+    private String code = "0";
+    //提示信息
+    private String msg = "";
+}
+    
+
+### ResponseMessage:
+package org.jeecg.common.api.vo;
+
+import lombok.Data;
+@Data
+public class ResponseMessage {
+	// 结果集合
+	private Object result;
+	/**
+	 * 提示信息
+	 */
+	private String msg = "";
+}
+    
+
+### ResultDTO:
+package org.jeecg.common.system.vo;
+
+import lombok.Data;
+@Data
+public class ResultDto<T> {
+    /**
+     * 结果集合
+     */
+    private T result;
+}
+    
+
+### CommonConstant:
+package org.jeecg.common.constant;
+
+/**
+* @author scott
+* @date 2019年07月31日
+* @version V1.0
+*/
+public class CommonConstant {
+	/**
+	 *  通用返回标识，0：成功 1：失败
+	 */
+    public static final String STATUS = "status";
+
+    /**
+     * 登录成功后返回前端的token
+     */
+    public static final String TOKEN = "accessToken";
+
+    /**
+     * 提示信息
+     */
+    public static final String MSG = "msg";
+
+}
+    
+
+### UserEntity:
+package org.jeecg.modules.system.entity;
+
+import java.util.Date;
+
+public class SysUser {
+	private String id;
+
+	/**
+	 * 登录账号
+	 */
+	private String username;
+	/**
+	 * 登录密码
+	 */
+	private String password;
+
+	/**
+	 * 盐倒用户名称(显示)
+	 */
+	private String realname;
+	/**
+	 * 头像地址
+	 */
+	private String avatar;
+
+	private String salt;
+
+	private String status;
+	/**
+	 * 最后登录IP
+	 */
+	private String loginIp;
+
+	/**
+	 * 微信openid
+	 */
+	private String openId;
+	/**
+	 * 性别
+	 */
+	private Integer sex;
+	/**
+	 * 电子邮件
+	 */
+	private String email;
+
+	/**
+	 * 手机号
+	 */
+	private String phone;
+
+	/**
+	 * 状态(字典)
+	 */
+	private Integer status;
+
+	/**
+	 * 部门code
+	 */
+	private String departIds;
+	/**
+	 * 归属部门
+	 */
+	private String belongDepart;
+	/**
+	 * 角色ids
+	 */
+	private String roleId;
+
+}
+    
+
+### UserMapper:
+package org.jeecg.modules.system.mapper;
+import java.util.List;
+
+import org.apache.ibatis.annotations.DeleteProvider;
+import org.apache.ibatis.annotations.Param;
+import org.jeecg.common.exception.JeecgBootException;
+import org.jeecg.modules.system.entity.SysDepart;
+import org.jeecg.modules.system.entity.SysUserRole;
+import org.jeecg.modules.system.vo.*;
+
+public interface UserMapper {
+    List<DbTableEntity> queryAllDbTables();
+}
+    
+
+### JeecgSpringDataBase:
+package org.jeecg.common.data;
+
+/**
+ * 系统基础数据接口
+ * @author scott
+ */
+public interface JeecgSystemBaseCommonDao {
+    /**
+     *  获取所有数据库
+     * @return
+     */
+    List<DbTableEntity> queryAllDbTables();
+}
+    
+
+### SysDepartMapper:
+package org.jeecg.modules.system.mapper;
+import java.util.List;
+
+import org.apache.ibatis.annotations.DeleteProvider;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.session.RowBounds;
+import org.jeecg.common.exception.JeecgBootException;
+import org.jeecg.modules.system.entity.SysDepart;
+import org.jeecg.modules.system.vo.*;
+
+public interface SysDepartMapper {
+    int deleteByPrimaryKey(String id);
+
+    int insert(SysDepart record);
+
+    int insertSelective(SysDepart record);
+
+    List<SysDepart> selectAll();
+
+    SysDepart selectByPrimaryKey(String id);
+}
+    
+
+### SysUserRoleMapper:
+package org.jeecg.modules.system.mapper;
+import java.util.List;
+
+import org.apache.ibatis.annotations.DeleteProvider;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.session.RowBounds;
+import org.jeecg.common.exception.JeecgBootException;
+import org.jeecg.modules.system.entity.SysUserRole;
+import org.jeecg.modules.system.vo.*;
+
+public interface SysUserRoleMapper {
+    int deleteByPrimaryKey(String id);
+
+    int insert(SysUserRole record);
+
+    int insertSelective(SysUserRole record);
+}
+    
+
+### DbTableEntity:
+package org.jeecg.modules.system.entity;
+
+import java.io.Serializable;
+import lombok.*;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.jeecg.common.aspect.annotation.Dict;
+
+/**
+ * 表信息对象
+ * @author scott
+ */
+@Data
+public class DbTableEntity implements Serializable {
+    private static final long serialVersionUID = 1L;
+    /**
+     * 表名称
+     */
+    @Setter(AccessLevel.NONE)
+    @Getter(AccessLevel.NONE)
+    private String tableName;
+    /**
+     * 创建日期
+     */
+    @Setter(AccessLevel.NONE)
+    @Getter(AccessLevel.NONE)
+    private Date createTime;
+    /**
+     * 修改日期
+     */
+    @Setter(AccessLevel.NONE)
+    @Getter(AccessLevel.NONE)
+    private Date modifyTime;
+    /**
+     * 创建人
+     */
+    @Setter(AccessLevel.NONE)
+    @Getter(AccessLevel.NONE)
+    private String createUserId;
+    /**
+     * 修改人
+     */
+    @Setter(AccessLevel.NONE)
+    @Getter(AccessLevel.NONE)
+    private String modifyUserId;
+
+    public DbTableEntity() {
+        super();
+    }
+}
+    
+
+### SysDepart:
+package org.jeecg.modules.system.entity;
+
+import java.io.Serializable;
+import lombok.*;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
+/**
+ * 部门表
+ * @author scott
+ */
+@Data
+public class SysDepart implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+}
+    
+
+### JeecgDataBase:
+package org.jeecg.common.data;
+
+/**
+ * 数据基础接口
+ * @author scott
+ */
+public interface JeecgDataBase {
+    /**
+     * 获取全部记录
+     *
+     * @param params 参数集合
+     * @return
+     */
+    List<DbTableEntity> queryAllDbTables(Map params);
+}
+    
+
+### JeecgBootApplication:
+package org.jeecg.common;
+
+import java.util.*;
+
+/**
+ * jeecg-boot 项目启动类
+ * @author scott
+ */
+public class JeecgBootApplication {
+    private static final long serialVersionUID = 1L;
+}
+    
+
+### JeecgDataBaseEntity:
+package org.jeecg.common.data;
+
+import lombok.*;
+import java.io.Serializable;
+
+/**
+ * 数据基础接口实体
+ * @author scott
+ */
+@Setter(AccessLevel.NONE)
+@Getter(AccessLevel.NONE)
+public class JeecgDataBaseEntity<T> implements Serializable {
+    private static final long serialVersionUID = 1L;
+    /**
+     * 主键id
+     */
+    @Setter(AccessLevel.PROTECTED)
+    @Getter(AccessLevel.PROTECTED)
+    protected String id;
+}
+    
+
+### SysDepart:
+package org.jeecg.modules.system.entity;
+
+import java.io.Serializable;
+import lombok.*;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
+/**
+ * 部门表
+ * @author scott
+ */
+@Data
+public class SysDepart implements Serializable {
+    private static final long serialVersionUID = 1L;
+}
+    
+
+### SysUserRole:
+package org.jeecg.modules.system.entity;
+
+import java.io.Serializable;
+import lombok.*;
+
+/**
+ * 用户角色关系表
+ * @author scott
+ */
+@Data
+public class SysUserRole implements Serializable {
+    private static final long serialVersionUID = 1L;
+}
+    
+
+### Dict:
+package org.jeecg.common.aspect.annotation;
+
+/**
+ * 字典注解
+ * @author scott
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.METHOD, ElementType.FIELD})
+public @interface Dict {
+    String dictCode() default "";
+}
+    
+
+### SysUserRole:
+package org.jeecg.modules.system.entity;
+
+import lombok.*;
+
+/**
+ * 用户角色关系表
+ * @author scott
+ */
+@Setter(AccessLevel.NONE)
+@Getter(AccessLevel.NONE)
+public class SysUserRole extends JeecgDataBaseEntity implements Serializable {
+    private static final long serialVersionUID = 1L;
+}
+    
+
+### SysDepart:
+package org.jeecg.modules.system.entity;
+
+import lombok.*;
+import java.io.Serializable;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
+/**
+ * 部门表
+ * @author scott
+ */
+@Setter(AccessLevel.NONE)
+@Getter(AccessLevel.NONE)
+public class SysDepart extends JeecgDataBaseEntity implements Serializable {
+    private static final long serialVersionUID = 1L;
+}
+    
+
+### JeecgDataTableName:
+package org.jeecg.common.data;
+
+/**
+ * 数据表名注解
+ * @author scott
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.METHOD, ElementType.FIELD})
+public @interface JeecgDataTableName {
+    String tableName() default "";
+}
+    
+
+### SysUserRoleMapper:
+package org.jeecg.modules.system.mapper;
+
+import java.util.*;
+
+/**
+ * 用户角色关系表
+ * @author scott
+ */
+public interface SysUserRoleMapper {
+    int deleteByPrimaryKey(String id);
+}
+    
+
+### DbTableEntity:
+package org.jeecg.modules.system.entity;
+
+import java.io.Serializable;
+import lombok.*;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.jeecg.common.aspect.annotation.Dict;
+
+/**
+ * 表信息对象
+ * @author scott
+ */
+@Setter(AccessLevel.NONE)
+@Getter(AccessLevel.NONE)
+public class DbTableEntity implements Serializable {
+    private static final long serialVersionUID = 1L;
+}
+    
+
+### SysDepartMapper:
+package org.jeecg.modules.system.mapper;
+
+/**
+ * 部门表
+ * @author scott
+ */
+public interface SysDepartMapper {
+    int deleteByPrimaryKey(String id);
+}
+    
+
+### JeecgDataBase:
+package org.jeecg.common.data;
+
+import java.util.*;
+
+/**
+ * 数据基础接口
+ * @author scott
+ */
+public interface JeecgDataBase {
+}
+    
+
+### SysDepartMapperImpl:
+package org.jeecg.modules.system.mapper;
+
+import java.util.*;
+
+/**
+ * 部门表
+ * @author scott
+ */
+@Mapper(unqualifiedName = "sys_depart", table = {"sys_depart"," sys_user"})
+public class SysDepartMapperImpl extends JeecgDataBaseMapper<SysDepart, String> implements ISysDepartMapper {
+    @Override
+    public int deleteByPrimaryKey(String id) {
+        return super.deleteByPrimaryKey(id);
+    }
+}
+    
+
+### SysUserRole:
+package org.jeecg.modules.system.entity;
+
+import lombok.*;
+
+/**
+ * 用户角色关系表
+ * @author scott
+ */
+@Setter(AccessLevel.NONE)
+@Getter(AccessLevel.NONE)
+public class SysUserRole extends JeecgDataBaseEntity implements Serializable {
+    private static final long serialVersionUID = 1L;
+}
+    
+
+### SysDepartMapperImpl:
+package org.jeecg.modules.system.mapper;
+
+import java.util.*;
+
+/**
+ * 部门表
+ * @author scott
+ */
+@Mapper(unqualifiedName = "sys_user_role", table = {"sys_user"," sys_user_role"})
+public class SysUserRoleMapperImpl extends JeecgDataBaseMapper<SysUserRole, String> implements ISysUserRoleMapper {
+    @Override
+    public int deleteByPrimaryKey(String id) {
+        return super.deleteByPrimaryKey(id);
+    }
+}
+    
+
+### SysDepart:
+package org.jeecg.modules.system.entity;
+
+import lombok.*;
+import java.io.Serializable;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
+/**
+ * 部门表
+ * @author scott
+ */
+@Setter(AccessLevel.NONE)
+@Getter(AccessLevel.NONE)
+public class SysDepart extends JeecgDataBaseEntity implements Serializable {
+    private static final long serialVersionUID = 1L;
+}
+    
+
+### Dict:
+package org.jeecg.common.aspect.annotation;
+
+/**
+ * 字典注解
+ * @author scott
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.METHOD, ElementType.FIELD})
+public @interface Dict {
+    String dictCode() default "";
+}
+    
+
+### SysUserRoleMapperImpl:
+package org.jeecg.modules.system.mapper;
+
+import java.util.*;
+
+/**
+ * 用户角色关系表
+ * @author scott
+ */
+@Mapper(unqualifiedName = "sys_user_role", table = {"sys_user"," sys_user_role"})
+public class SysUserRoleMapperImpl extends JeecgDataBaseMapper<SysUserRole, String> implements ISysUserRoleMapper {
+    @Override
+    public int deleteByPrimaryKey(String id) {
+        return super.deleteByPrimaryKey(id);
+    }
+}
+    
+
+### DbTableEntity:
+package org.jeecg.modules.system.entity;
+
+import java.io.Serializable;
+import lombok.*;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.jeecg.common.aspect.annotation.Dict;
+
+/**
+ * 表信息对象
+ * @author scott
+ */
+@Setter(AccessLevel.NONE)
+@Getter(AccessLevel.NONE)
+public class DbTableEntity implements Serializable {
+    private static final long serialVersionUID = 1L;
+}
+    
+
+### Dict:
+package org.jeecg.common.aspect.annotation;
+
+/**
+ * 字典注解
+ * @author scott
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.METHOD, ElementType.FIELD})
+public @interface Dict {
+    String dictCode() default "";
+}
+    
+
+### SysDepartMapperImpl:
+package org.jeecg.modules.system.mapper;
+
+import java.util.*;
+
+/**
+ * 部门表
+ * @author scott
+ */
+@Mapper(unqualifiedName = "sys_depart", table = {"sys_depart"," sys_user"})
+public class SysDepartMapperImpl extends JeecgDataBaseMapper<SysDepart, String> implements ISysDepartMapper {
+    @Override
+    public int deleteByPrimaryKey(String id) {
+        return super.deleteByPrimaryKey(id);
+    }
+}
+    
+
+### SysUserRole:
+package org.jeecg.modules.system.entity;
+
+import lombok.*;
+
+/**
+ * 用户角色关系表
+ * @author scott
+ */
+@Setter(AccessLevel.NONE)
+@Getter(AccessLevel.NONE)
+public class SysUserRole extends JeecgDataBaseEntity implements Serializable {
+    private static final long serialVersionUID = 1L;
+}
+    
+
+### Dict:
+package org.jeecg.common.aspect.annotation;
+
+/**
+ * 字典注解
+ * @author scott
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.METHOD, ElementType.FIELD})
+public @interface Dict {
+    String dictCode() default "";
+}
+    
+
+### SysUserRoleMapperImpl:
+package org.jeecg.modules.system.mapper;
+
+import java.util.*;
+
+/**
+ * 用户角色关系表
+ * @author scott
+ */
+@Mapper(unqualifiedName = "sys_user_role", table = {"sys_user"," sys_user_role"})
+public class SysUserRoleMapperImpl extends JeecgDataBaseMapper<SysUserRole, String> implements ISysUserRoleMapper {
+    @Override
+    public int deleteByPrimaryKey(String id) {
+        return super.deleteByPrimaryKey(id);
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jeecg.common.system.base;
+
+import java.io.Serializable;
+
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
+import org.jeecg.common.api.vo.Result;
+
+@Data
+@EqualsAndHashCode(callSuper = false)
+@Accessors(chain = true)
+public class JeecgEntity implements Serializable {
+	private static final long serialVersionUID = 1L;
+
+	/**
+	 * 主键ID
+	 */
+	@ApiModelProperty(value = "id")
+    private java.lang.String id;
+}
+    
+
+### JUNIT Test case:
+package org.jeecg.common.system.base;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class JeecgEntityTest {
+    @Test
+    public void getIdTest() {
+        <FILL>
+    }
+}
+    
+
+### Response:
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.common.system.vo;
+import lombok.Data;
+/**
+* 后端返回数据通用类
+*/
+@Data
+public class Resp<T> {
+    /**
+     * 成功标志
+     */
+    private boolean flag = true;
+    /**
+     * 错误码
+     */
+    private int code;
+    /**
+     * 返回消息
+     */
+    private String msg;
+    /**
+     * 数据
+     */
+    private T data;
+}
+    
+
+### Service:
+
+

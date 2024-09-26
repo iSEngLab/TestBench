@@ -1,0 +1,285 @@
+Source code: 
+
+
+static double slowexp(final double x, final double[] result) {
+    final double[] xs = new double[2];
+    final double[] ys = new double[2];
+    final double[] facts = new double[2];
+    final double[] as = new double[2];
+    split(x, xs);
+    ys[0] = ys[1] = 0.0;
+
+    for (int i = FACT.length - 1; i >= 0; i--) {
+        splitMult(xs, ys, as);
+        ys[0] = as[0];
+        ys[1] = as[1];
+
+        split(FACT[i], as);
+        splitReciprocal(as, facts);
+
+        splitAdd(ys, facts, as);
+        ys[0] = as[0];
+        ys[1] = as[1];
+    }
+
+    if (result != null) {
+        result[0] = ys[0];
+        result[1] = ys[1];
+    }
+
+    return ys[0] + ys[1];
+}
+
+
+
+No.1 generated result --------------------------
+
+    package org.apache.commons.math4.core.jdkmath;
+    
+    import org.junit.jupiter.api.*;
+    import static org.junit.jupiter.api.Assertions.*;
+    
+    public class AccurateMathCalcTest {
+        @Test
+        public void slowexpTest() {
+            double[] x = new double[2];
+            for (double i = 0; i < 1e-15; i += 1e-30) {
+                split(i, x);
+                double[] y = slowExp(x[0]);
+                assertEquals(Math.exp(i), fastJoin(y));
+            }
+        }
+    }
+    
+    
+
+
+No.2 generated result --------------------------
+
+@Test
+    public void slowexpTest() {
+        double[] x = new double[]{1.0, 2.0};
+        double[] y = AccurateMathCalc.slowExp(x);
+
+        assertEquals(1.0, y[0], 1e-15);
+        assertEquals(4.837628892101304, y[1], 1e-15);
+    }
+
+
+No.3 generated result --------------------------
+
+
+public class AccurateMathCalcTest {
+    @Test
+    public void slowexpTest() {
+        double[] x = new double[2];
+        double[] y = new double[2];
+        int n = 0;
+
+        for (int i = -512; i < 513; ++i) {
+            split((double) i / 16, x);
+            slowexp(x, y);
+            assertEquals(Math.exp((double) i / 16), resplit(y));
+        }
+    }
+}
+
+
+No.4 generated result --------------------------
+
+public class AccurateMathCalcTest {
+    @Test
+    public void slowexpTest() {
+        double[] x = {1.0, 2.0, 3.0};
+        for (double d : x) {
+            double expected = Math.exp(d);
+            double actual = AccurateMathCalc.slowExp(d);
+            assertEquals(expected, actual, 0.01);
+        }
+    }
+}
+
+
+No.5 generated result --------------------------
+
+    
+
+// The JUnit tests for AccurateMathCalc.slowexp().
+package org.apache.commons.math4.core.jdkmath;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    @Test
+    public void slowexpTest() {
+        double eps = 1e-16; // Error threshold for each test case
+
+        List<double[]> inputs = new ArrayList<>();
+        List<double[]> outputs = new ArrayList<>();
+        double[] xi;
+
+        // Test Case: 0.0
+        xi = new double[2];
+        xi[0] = 0.0;
+        xi[1] = 0.0;
+        inputs.add(xi);
+        outputs.add(new double[]{1.0, 0.0});
+
+        // Test Case: -0.0
+        xi = new double[2];
+        xi[0] = -0.0;
+        xi[1] = -0.0;
+        inputs.add(xi);
+        outputs.add(new double[]{1.0, 0.0});
+
+        // Test Case: 1.0
+        xi = new double[2];
+        xi[0] = 1.0;
+        xi[1] = 0.0;
+        inputs.add(xi);
+        outputs.add(new double[]{Math.E, 0.0});
+
+        // Test Case: -1.0
+        xi = new double[2];
+        xi[0] = -1.0;
+        xi[1] = 0.0;
+        inputs.add(xi);
+        outputs.add(new double[]{1.0/Math.E, 0.0});
+
+        // Test Case: 2.718281828459045
+        xi = new double[2];
+        xi[0] = 2.718281828459045;
+        xi[1] = 6.123233995736766E-17;
+        inputs.add(xi);
+        outputs.add(new double[]{Math.E, 0.0});
+
+        // Test Case: -2.718281828459045
+        xi = new double[2];
+        xi[0] = -2.718281828459045;
+        xi[1] = -6.12323399573676E-17;
+        inputs.add(xi);
+        outputs.add(new double[]{1.0/Math.E, 0.0});
+
+        for (int i=0; i<inputs.size(); ++i) {
+            AccurateMathCalc cm = new AccurateMathCalc();
+            double[] output = cm.slowexp(inputs.get(i));
+            assertEquals(output[0], outputs.get(i)[0]);
+        }
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+import java.io.BufferedWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    @Test
+    public void slowexpTest() throws Exception {
+        Path outputDir = Paths.get("src/main/java");
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        System.out.println(df.format(new Date()) + " Start: slowexpTest");
+        final int NUM_COEFFS = 10;
+        double[] coeffs = AccurateMathCalc.slowExpTable(NUM_COEFFS);
+        String tableName = "EXP_SPLIT_COEF";
+        Path path = outputDir.resolve("org/apache/commons/math4/core/jdkmath/" + tableName + ".java");
+        try (BufferedWriter writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {
+            writer.write("package org.apache.commons.math4.core.jdkmath;\n\n");
+            writer.write("/**\n *\n * Licensed to the Apache Software Foundation (ASF) under one or more\n * contributor license agreements.  See the NOTICE file distributed with\n * this work for additional information regarding copyright ownership.\n * The ASF licenses this file to You under the Apache License, Version 2.0\n * (the "License"); you may not use this file except in compliance with\n * the License.  You may obtain a copy of the License at\n * <p>\n * http://www.apache.org/licenses/LICENSE-2.0\n * <p>\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\n");
+            writer.write("public class " + tableName + " { // " + NUM_COEFFS);
+            String[] values = new String[coeffs.length];
+            for (int i = 0; i < coeffs.length; ++i) {
+                if (Math.abs(values[i] - coeffs[i]) > 1e-7)
+                    fail("Difference in " + tableName + "[\" + i + "\"]: " + values[i] + " != " + coeffs[i]);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("End of slowexpTest");
+    }
+}
+
+
+No.7 generated result --------------------------
+
+
+import org.apache.commons.math4.core.jdkmath.*;
+public static void main(String[] args) {
+    double x = 0.5; // input value for the exponential function
+    double exp = AccurateMathCalc.slowExp(x);
+    System.out.println("Exponential of " + x + " is " + exp);
+}
+
+
+
+No.8 generated result --------------------------
+
+<FILL>
+    
+    
+    @Test
+    public void slowexpTest() {
+        assertEquals(1.0, AccurateMathCalc.slowexp(0.0), 0);
+        assertEquals(2.718281828459045, AccurateMathCalc.slowexp(1.0), 0.0000001);
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import java.util.Arrays;
+
+class AccurateMathCalcTest {
+    @Test
+    public void slowexpTest() {
+        double[] x = { 0, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 0.5, 1.0, 1.5, 2.0 };
+        double[][] expected = {
+                new double[x.length],
+                new double[x.length],
+                new double[x.length]
+            };
+        for (int i = 0; i < x.length; ++i) {
+            expected[1][i] = Math.exp(x[i]);
+            expected[2][i] = FastMathCalc.slowExp(x[i], 5);
+        }
+        assertTrue(Arrays.deepEquals(expected[0], expected[1]));
+        assertTrue(Arrays.deepEquals(expected[1], expected[2]));
+    }
+}
+
+
+No.10 generated result --------------------------
+
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    @Test
+    public void slowexpTest() {
+        double x = 1e-5; // small argument
+        double expectedOutput = Math.E * x;
+        assertEquals(expectedOutput, AccurateMath.slowexp(x), 0.01);
+    }
+}
+
+
+

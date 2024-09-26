@@ -1,0 +1,192 @@
+Source code: 
+
+
+public int decodeWithECCount(int[] received, int twoS) throws ReedSolomonException {
+  GenericGFPoly poly = new GenericGFPoly(field, received);
+  int[] syndromeCoefficients = new int[twoS];
+  boolean noError = true;
+  for (int i = 0; i < twoS; i++) {
+    int eval = poly.evaluateAt(field.exp(i + field.getGeneratorBase()));
+    syndromeCoefficients[syndromeCoefficients.length - 1 - i] = eval;
+    if (eval != 0) {
+      noError = false;
+    }
+  }
+  if (noError) {
+    return 0;
+  }
+  GenericGFPoly syndrome = new GenericGFPoly(field, syndromeCoefficients);
+  GenericGFPoly[] sigmaOmega =
+      runEuclideanAlgorithm(field.buildMonomial(twoS, 1), syndrome, twoS);
+  GenericGFPoly sigma = sigmaOmega[0];
+  GenericGFPoly omega = sigmaOmega[1];
+  int[] errorLocations = findErrorLocations(sigma);
+  int[] errorMagnitudes = findErrorMagnitudes(omega, errorLocations);
+  for (int i = 0; i < errorLocations.length; i++) {
+    int position = received.length - 1 - field.log(errorLocations[i]);
+    if (position < 0) {
+      throw new ReedSolomonException("Bad error location");
+    }
+    received[position] = GenericGF.addOrSubtract(received[position], errorMagnitudes[i]);
+  }
+  return errorLocations.length;
+}
+
+
+
+No.1 generated result --------------------------
+
+int[] received = {5, 4, 7, 10, 3, 9};
+int twoS = 3;
+ReedSolomonDecoder rsDecoder = new ReedSolomonDecoder(new GenericGF(twoS));
+try {
+    int result = rsDecoder.decodeWithECCount(received, twoS);
+    assertEquals(0, result);
+} catch (ReedSolomonException e) {
+    fail("Exception thrown: " + e.getMessage());
+}
+
+
+No.2 generated result --------------------------
+
+@Test
+    public void decodeWithECCountTest() {
+        GenericGF field = new GenericGF(0x011D, 256, 1);
+        int[] received = {1, 2, 3, 4, 5, 6};
+        int twoS = 4;
+        ReedSolomonDecoder decoder = new ReedSolomonDecoder(field);
+        int result = decoder.decodeWithECCount(received, twoS);
+        assertEquals(0, result);
+    }
+
+
+No.3 generated result --------------------------
+
+@Test
+public void decodeWithECCountTest() {
+    ReedSolomonDecoder decoder = new ReedSolomonDecoder(new GenericGF());
+    int[] received = {1, 2, 3, 4, 5};
+    int twoS = 5;
+    try {
+        int result = decoder.decodeWithECCount(received, twoS);
+        assertEquals(0, result);
+    } catch (ReedSolomonException e) {
+        fail("An exception should not have been thrown");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+@Test
+public void decodeWithECCountTest() throws ReedSolomonException {
+    int[] received = {1, 2, 3, 4, 5, 6};
+    int twoS = 3;
+    ReedSolomonDecoder decoder = new ReedSolomonDecoder(new GenericGF());
+    int result = decoder.decodeWithECCount(received, twoS);
+    assertEquals(0, result);
+}
+
+
+No.5 generated result --------------------------
+
+    @Test
+    public void decodeWithECCountTest() throws ReedSolomonException {
+        int[] received = {1, 2, 3, 4, 5};
+        int twoS = 3;
+        
+        ReedSolomonDecoder decoder = new ReedSolomonDecoder(new GenericGF(0, 0, 0));
+        int result = decoder.decodeWithECCount(received, twoS);
+        
+        assertEquals(0, result);
+    }
+
+
+No.6 generated result --------------------------
+
+@Test
+public void decodeWithECCountTest() {
+    // Create test objects
+    GenericGF field = new GenericGF(0x11D, 256, 1);
+    int[] received = {123, 234, 345, 456};
+    int twoS = 4;
+    
+    // Create instance of ReedSolomonDecoder
+    ReedSolomonDecoder decoder = new ReedSolomonDecoder(field);
+    
+    // Call the method to test
+    int result = decoder.decodeWithECCount(received, twoS);
+    
+    // Verify the result
+    assertEquals(0, result);
+}
+
+
+No.7 generated result --------------------------
+
+@Test
+public void decodeWithECCountTest() {
+    int[] received = {4, 2, 1, 3};
+    GenericGF field = new GenericGF(0x11D, 256, 1);
+    ReedSolomonDecoder rsDecoder = new ReedSolomonDecoder(field);
+    int twoS = 2;
+    int result;
+    try {
+        result = rsDecoder.decodeWithECCount(received, twoS);
+        assertEquals(0, result);
+    } catch (ReedSolomonException e) {
+        e.printStackTrace();
+    }
+}
+
+
+No.8 generated result --------------------------
+
+@Test
+public void decodeWithECCountTest() {
+    int[] received = {1, 0, 1, 0, 1, 0};
+    int twoS = 3;
+    ReedSolomonDecoder rsDecoder = new ReedSolomonDecoder(new GenericGF(0, 2));
+    try {
+        int result = rsDecoder.decodeWithECCount(received, twoS);
+        assertEquals(0, result);
+    } catch (ReedSolomonException e) {
+        e.printStackTrace();
+    }
+}
+
+
+No.9 generated result --------------------------
+
+@Test
+public void decodeWithECCountTest() {
+    // Arrange
+    GenericGF field = new GenericGF(285, 256, 0);
+    ReedSolomonDecoder decoder = new ReedSolomonDecoder(field);
+    int[] received = {135, 216, 30, 32, 32, 38, 44, 25, 177, 179, 1, 170, 47, 204, 74};
+    int twoS = 5;
+
+    // Act
+    int result = decoder.decodeWithECCount(received, twoS);
+
+    // Assert
+    assertEquals(5, result);
+}
+
+
+No.10 generated result --------------------------
+
+@Test
+public void decodeWithECCountTest() {
+    ReedSolomonDecoder decoder = new ReedSolomonDecoder(GenericGF.DATA_MATRIX_FIELD_256);
+    int[] received = {1, 2, 3, 4, 5};
+    int twoS = 4;
+    try {
+        int result = decoder.decodeWithECCount(received, twoS);
+        assertEquals(0, result);
+    } catch (ReedSolomonException e) {
+        fail("Exception thrown");
+    }
+}
+
+

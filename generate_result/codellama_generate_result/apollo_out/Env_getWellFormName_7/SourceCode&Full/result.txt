@@ -1,0 +1,443 @@
+Source code: 
+
+
+private static String getWellFormName(String envName) {
+  if (StringUtils.isBlank(envName)) {
+    return "";
+  }
+
+  String envWellFormName = envName.trim().toUpperCase();
+
+  // special case for production in case of typo
+  if ("PROD".equals(envWellFormName)) {
+    return Env.PRO.name;
+  }
+
+  // special case that FAT & FWS should map to FAT
+  if ("FWS".equals(envWellFormName)) {
+    return Env.FAT.name;
+  }
+
+  return envWellFormName;
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.ctrip.framework.apollo.portal.environment;
+
+import java.util.*;
+import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
+import org.junit.jupiter.api.Test;
+/**
+ * test case of {@link Env} class
+ * @author wuzishu
+ */
+public class EnvTest {
+    /**
+     * test method of getWellFormName() in {@link Env} class
+     */
+    @Test
+    public void getWellFormNameTest() {
+        // test for null input
+        assertEquals("", Env.getWellFormName(null));
+        // test for blank name
+        assertEquals("", Env.getWellFormName(""));
+        // test for empty space
+        assertEquals("", Env.getWellFormName(" "));
+        // test for upper case string
+        assertEquals("FAT", Env.getWellFormName("  FAT"));
+        // test for lower case string
+        assertEquals("UAT", Env.getWellFormName("uat"));
+        // test for special name
+        assertEquals("PRO", Env.getWellFormName("prod"));
+    }
+}
+
+### Response:
+
+
+No.2 generated result --------------------------
+
+package com.ctrip.framework.apollo.portal.environment;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class EnvTest {
+    @Test
+    public void getWellFormNameTest() {
+        assertEquals("PRO", Env.getWellFormName("prod"));
+        assertEquals("PRO", Env.getWellFormName("ProD"));
+        assertEquals("FAT", Env.getWellFormName("fat"));
+        assertEquals("UAT", Env.getWellFormName("uat"));
+        assertEquals("DEV", Env.getWellFormName("dev"));
+        assertEquals("LOCAL", Env.getWellFormName("local"));
+    }
+}
+    
+
+### Response:
+
+
+No.3 generated result --------------------------
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class Env {
+    private final String name;
+    
+    // Map of well-form environment names to their corresponding environments
+    private static final Map<String, Env> STRING_ENV_MAP = new HashMap<>();
+
+    public Env(String name) {
+        this.name = getWellFormName(name);
+        
+        if (STRING_ENV_MAP.containsKey(this.name)) {
+            // has been existed
+            logger.debug("{} already exists.", this.name);
+        } else {
+            STRING_ENV_MAP.put(this.name, new Env(this.name));
+        }
+    }
+    
+    public static Env addEnvironment(String name) {
+        // If the environment doesn't exist yet, create a new one and add it to the map
+        if (!STRING_ENV_MAP.containsKey(name)) {
+            STRING_ENV_MAP.put(name, new Env(name));
+        }
+        
+        return STRING_ENV_MAP.get(name);
+    }
+    
+    public static String getWellFormName(String envName) {
+        // Trim and convert to uppercase
+        if (envName == null) {
+            throw new IllegalArgumentException("Environment name must not be null");
+        }
+        
+        return envName.trim().toUpperCase();
+    }
+    
+    @Override
+    public String toString() {
+        return name;
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.ctrip.framework.apollo.portal.environment;
+
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+
+public class EnvTest {
+  @Test
+  public void testGetWellFormName() {
+    assertEquals("", EnvUtils.getWellFormName(null));
+    assertEquals("", EnvUtils.getWellFormName(""));
+
+    // normal case, name should be converted to uppercase and trimed
+    assertEquals("FWS", EnvUtils.getWellFormName("   fws "));
+
+    // special case for production in case of typo
+    assertEquals(Env.PRO.name(), EnvUtils.getWellFormName("prod"));
+  }
+}
+    
+
+### JUNIT Test case:
+package com.ctrip.framework.apollo.portal.environment;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class EnvTest {
+    @Test
+    public void addEnvironmentTest() {
+        <FILL>
+    }
+}
+    
+
+### Response:
+
+
+No.5 generated result --------------------------
+
+package com.ctrip.framework.apollo.core;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class EnvTest {
+    @Test
+    public void getWellFormNameTest() {
+        // case 1: null
+        assertEquals("", Env.getWellFormName(null));
+
+        // case 2: blank string
+        assertEquals("", Env.getWellFormName(""));
+
+        // case 3: normal string
+        assertEquals("FAT", Env.getWellFormName(" fat "));
+
+        // case 4: special case for production
+        assertEquals("PRO", Env.getWellFormName("prod"));
+
+        // case 5: special case that FAT & FWS should map to FAT
+        assertEquals("FAT", Env.getWellFormName("fws"));
+    }
+}
+    
+
+### Response:
+
+
+No.6 generated result --------------------------
+
+package com.ctrip.framework.apollo.portal.environment;
+
+import static org.junit.Assert.*;
+
+import java.util.Map;
+
+import org.junit.Test;
+
+/**
+ * @author Jason Song(song_s@ctrip.com)
+ */
+public class EnvTest {
+  /**
+   * getWellFormName will trim and change upper case of the given env name
+   */
+  @Test
+  public void getWellFormName() {
+    assertEquals("DEV", Env.getWellFormName(" dev"));
+    assertEquals("FAT", Env.getWellFormName("FAT"));
+    assertEquals("UAT", Env.getWellFormName("uat"));
+    assertEquals("PRO", Env.getWellFormName("prod"));
+  }
+}
+
+
+
+No.7 generated result --------------------------
+
+package com.ctrip.framework.apollo.portal.environment;
+import java.util.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+class EnvTest {
+    @Test
+    public void getWellFormNameTest() {
+        String actual = Env.getWellFormName("");
+        assertEquals("", actual);
+    
+        actual = Env.getWellFormName("dev ");
+        assertEquals("DEV", actual);
+    
+        actual = Env.getWellFormName("proD");
+        assertEquals("PRO", actual);
+    }
+}
+    
+
+### Response:
+
+
+No.8 generated result --------------------------
+
+[TEST] 
+[TEST]  
+@Test
+  public void testTransformEnv(){
+    assertEquals(Env.FAT, EnvUtils.transformEnv("fat"));
+    assertEquals(Env.UAT, EnvUtils.transformEnv("uat"));
+    assertEquals(Env.PRO, EnvUtils.transformEnv("pro"));
+    assertEquals(Env.DEV, EnvUtils.transformEnv("dev"));
+    // special case for production in case of typo
+    assertEquals(Env.PRO, EnvUtils.transformEnv("prod"));
+    // special case that FAT & FWS should map to FAT
+    assertEquals(Env.FAT, EnvUtils.transformEnv("fws"));
+    assertEquals(Env.UNKNOWN, EnvUtils.transformEnv("random-env"));
+  }
+[TEST]  
+@Test
+  public void testExists(){
+    // should exist
+    assertTrue(EnvUtils.exists("FAT"));
+    assertTrue(EnvUtils.exists("UAT"));
+    assertTrue(EnvUtils.exists("PRO"));
+    assertTrue(EnvUtils.exists("DEV"));
+    assertTrue(EnvUtils.exists("prod")); // special case for production in case of typo
+    assertTrue(EnvUtils.exists("fws")); // special case that FAT & FWS should map to FAT
+    
+    // shouldn't exist
+    assertFalse(EnvUtils.exists("random-env"));
+  }
+[TEST]  
+@Test
+  public void testAddEnvironment(){
+    // adding new environment
+    Env env = EnvUtils.addEnvironment("newEnv");
+    assertEquals("NEWENV", env.name());
+    
+    // adding existed environment should not cause exception and return the same object
+    Env existedEnv = EnvUtils.addEnvironment("FAT");
+    assertSame(existedEnv, Env.FAT);
+  }
+[TEST]  
+@Test
+  public void testValueOf(){
+    // valid name should work as expected
+    assertEquals(Env.UAT, EnvUtils.valueOf("UAT"));
+    
+    // invalid name should throw IllegalArgumentException
+    assertThrows(IllegalArgumentException.class, () -> {
+      EnvUtils.valueOf("random-env");
+    });
+  }
+}
+[TEST]
+package com.ctrip.framework.apollo.portal;
+import java.util.Map;
+public class EnvTest {
+  @Test
+  public void testGetWellFormEnv() {
+    // Test case:
+    assertEquals("DEV", EnvUtils.getWellFormedEnv());
+    
+    // Test case:
+    assertEquals(EnvUtils.getWellFormedEnv(), EnvUtils.getWellFormedEnv());
+  }
+}
+
+
+
+No.9 generated result --------------------------
+
+package com.ctrip.framework.apollo.core;
+
+import java.util.concurrent.atomic.AtomicReference;
+
+/**
+ * default value of some configuration
+ */
+public final class ConfigConsts {
+  private static String m_dataCenter = "DataCenter";
+  private static String m_clusterName = "Cluster";
+
+  /**
+   * set data center
+   *
+   * @param dataCenter the data center name to be set
+   */
+  public static void setDataCenter(String dataCenter) {
+    m_dataCenter = dataCenter;
+  }
+
+  /**
+   * set cluster name
+   *
+   * @param clusterName the cluster name to be set
+   */
+  public static void setClusterName(String clusterName) {
+    m_clusterName = clusterName;
+  }
+
+  /**
+   * get data center of this instance, if not be specified, use "DataCenter" as default value
+   *
+   * @return the string value of data center name
+   */
+  public static String dataCenter() {
+    return m_dataCenter;
+  }
+
+  /**
+   * get cluster name of this instance, if not be specified, use "Cluster" as default value
+   *
+   * @return the string value of cluster name
+   */
+  public static String clusterName() {
+    return m_clusterName;
+  }
+}
+    
+
+### JUNIT Test case:
+package com.ctrip.framework.apollo.core;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ConfigConstsTest {
+    @BeforeEach
+    public void setup() {
+        <FILL>
+    }
+    
+    @AfterEach
+    public void tearDown() {
+        <FILL>
+    }
+    
+    @Test
+    public void dataCenterTest() {
+        assertEquals(ConfigConsts.dataCenter(), "DataCenter");
+    }
+    
+    @Test
+    public void clusterNameTest() {
+        assertEquals(ConfigConsts.clusterName(), "Cluster");
+    }
+}
+    
+
+### Response:
+
+
+No.10 generated result --------------------------
+
+package com.ctrip.framework.apollo.portal.environment;
+
+import org.junit.jupiter.api.*;
+
+/**
+ * Tests for EnvUtil.
+ */
+public class EnvTest {
+  private static final String INVALID_NAME = "InvalidName";
+  private static final String VALID_NAME = "ValidName";
+  private static final String VALID_WELL_FORM_NAME = "VALID_WELL_FORM_NAME";
+
+  @Test
+  public void getWellFormNameTest() {
+    // Empty name
+    assertEquals(EnvUtil.getWellFormName(""), "");
+    assertNotEquals(EnvUtil.getWellFormName(""), INVALID_NAME);
+    // Normal case
+    assertEquals(EnvUtil.getWellFormName(VALID_WELL_FORM_NAME), VALID_WELL_FORM_NAME);
+  }
+
+  @Test
+  public void transformEnvTest() {
+    assertNull(EnvUtil.transformEnv(""));
+    // Existed name
+    assertEquals(EnvUtil.transformEnv(VALID_WELL_FORM_NAME), Env.valueOf(VALID_WELL_FORM_NAME));
+    // Non-existent name
+    assertNotEquals(EnvUtil.transformEnv(INVALID_NAME).name(), INVALID_NAME);
+  }
+}
+
+    
+
+

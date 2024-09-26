@@ -1,0 +1,259 @@
+Source code: 
+
+// Fast fuzzy version.  Used a cached value until it gets old, then re-up
+// the cache.
+public long estimate_sum( ) {
+  // For short tables, just do the work
+  if( _t.length <= 64 ) return sum();
+  // For bigger tables, periodically freshen a cached value
+  long millis = System.currentTimeMillis();
+  if( _fuzzy_time != millis ) { // Time marches on?
+    _fuzzy_sum_cache = sum(); // Get sum the hard way
+    _fuzzy_time = millis;   // Indicate freshness of cached value
+  }
+  return _fuzzy_sum_cache;  // Return cached sum
+}
+
+
+
+No.1 generated result --------------------------
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ConcurrentAutoTableTest {
+    @Test
+    public void estimate_sumTest() {
+        // Test case 1: Verify that the method returns a positive value for any input table size greater than or equal to 64.
+        int[] tableSizes = new int[]{64, 128, 256};
+        for (int i = 0; i < tableSizes.length; ++i) {
+            int size = tableSizes[i];
+            ConcurrentAutoTable cat = new ConcurrentAutoTable(size);
+            long expectedSum = 1 + (long)(Math.random() * (size - 1));
+            for (int j = 0; j < expectedSum; ++j) {
+                cat.add(1L);
+            }
+            assertTrue(cat.estimate_sum() >= expectedSum, "The estimated sum should be greater than or equal to the actual sum.");
+        }
+
+        // Test case 2: Verify that the method returns a negative value for any input table size less than 64.
+        int[] smallTableSizes = new int[]{0, 1, 32};
+        for (int i = 0; i < smallTableSizes.length; ++i) {
+            int size = smallTableSizes[i];
+            ConcurrentAutoTable cat = new ConcurrentAutoTable(size);
+            assertTrue(cat.estimate_sum() <= 0, "The estimated sum should be less than or equal to 0 for a table size smaller than 64.");
+        }
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jctools.maps;
+
+import java.util.*;
+
+public class ConcurrentAutoTableTest {
+    @Test
+    public void estimate_sumTest() {
+        Map<Integer,Integer> map = new HashMap<>();
+        for( int i=0; i<10000; i++ ) {
+            map.put(i,i);
+        }
+        long expectedSum = 0;
+        for( Integer v : map.values() ) expectedSum += v;
+        
+        ConcurrentAutoTable<Integer> table = new ConcurrentAutoTable<>();
+        for( int i=0; i<10000; i++ ) {
+            assertEquals(expectedSum,table.sum());
+            long r = table.add(i);
+            expectedSum += i-r;  // Sum is the sum of all adds so far, plus the delta
+        }
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jctools.maps;
+
+import java.util.Arrays;
+import java.util.Random;
+
+public class ConcurrentAutoTableTest {
+    @Test
+    public void estimate_sumTest() {
+        // Create a CAT with 2 long values in each bucket
+        final int numBuckets = 100, numEntriesPerBucket = 2;
+        ConcurrentAutoTable table = new ConcurrentAutoTable(numBuckets);
+        for (int i=0; i<numBuckets; i++) {
+            long expectedValue = i*numEntriesPerBucket;
+            assertEquals(expectedValue, table.estimate_sum());
+        }
+    }
+}
+    
+
+### Response:
+
+
+No.4 generated result --------------------------
+
+
+public long estimate_sum() {
+    if (_fuzzy_time != 0 && _fuzzy_time > System.currentTimeMillis()) {
+        return _fuzzy_sum_cache;
+    } else {
+        _fuzzy_sum_cache = sum();
+        _fuzzy_time = System.currentTimeMillis() + 1000L; // Update cache every second
+        return _fuzzy_sum_cache;
+    }
+}
+
+
+
+No.5 generated result --------------------------
+
+    @Test
+    public void estimate_sumTest() {
+        CAT cat = new CAT();
+        long x = (long)Math.random(), y = (long)Math.random(), z = (long)Math.random();
+        assertEquals(0, cat.estimate_sum()); // Empty table sums to 0
+        cat.add(x);
+        assertTrue(cat.estimate_sum() >= x && cat.estimate_sum() < 2*x);
+        cat.add(y);
+        assertTrue(cat.estimate_sum() >= x+y && cat.estimate_sum() < 2*(x+y));
+        cat.add(z);
+        assertTrue(cat.estimate_sum() >= x+y+z && cat.estimate_sum() < 2*(x+y+z));
+    }
+    
+    
+### JUNIT Test case:
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ConcurrentAutoTableTest {
+    @Test
+    public void sumTest() {
+        <FILL>
+    }
+}
+    
+
+### Response:
+
+
+No.6 generated result --------------------------
+
+@Test
+public void estimate_sumTest() {
+    final int N = 1024*1024; // Million entries
+    final ConcurrentAutoTable<Integer> cat = new ConcurrentAutoTable<>();
+    assertEquals(0, cat.estimate_sum());
+
+    for (int i = 0; i < N; i++) {
+        cat.add(i);
+        if (i % (N / 10) == 0) { // Every 10%
+            long estimate = cat.estimate_sum();
+            double error = Math.abs((double) estimate - (double) i * (i + 1) / 2.0);
+            System.out.println(String.format("At %d, estimate is %d with error %.2f%%", i, estimate, error * 100.0 / N));
+        }
+    }
+
+    assertEquals((long) (N * (N + 1L) / 2L), cat.estimate_sum());
+}
+
+
+No.7 generated result --------------------------
+
+    public static void estimate_sumTest() {
+      ConcurrentAutoTable auto = new ConcurrentAutoTable(0L, 16, null);
+      long e = auto.estimate_sum();
+      assertEquals(0L, e);
+      // Add a single element to the table and check that estimate_sum gives same result as sum.
+      auto._t[0] += 1;
+      e = auto.estimate_sum();
+      long s = auto.sum();
+      assertEquals(s, e);
+    }
+    
+
+### Response:
+
+
+No.8 generated result --------------------------
+
+
+public class ConcurrentAutoTableTest {
+    @Test public void estimate_sumTest() {
+        ConcurrentAutoTable<String, Integer> caut = new ConcurrentAutoTable<>();
+        assertEquals(0, caut.estimate_sum()); // Initial sum is 0
+        
+        caut.adjustOrCreateValue("foo", 1, 1);
+        assertEquals(1, caut.estimate_sum()); // Adjusted 'foo' to 1
+        
+        caut.adjustOrCreateValue("foo", 2, -1);
+        assertEquals(0, caut.estimate_sum()); // Adjusted 'foo' back to 0
+    }
+}
+    
+
+### Response:
+
+
+No.9 generated result --------------------------
+
+
+package org.jctools.maps;
+
+import java.util.*;
+
+public class ConcurrentAutoTableTest {
+    public static void estimate_sumTest() {
+        // Create a new CAT with 1 element
+        final long x = 42L;
+        final CAT cat = new CAT(null,x);
+        assertEquals(cat.estimate_sum(), x);
+        // Add another element to the end of the table
+        final long y = 1037L;
+        cat.add(y);
+        assertEquals(cat.estimate_sum(), x + y);
+    }
+}
+
+    
+
+### JUNIT Test case:
+package org.jctools.maps;
+
+import java.util.*;
+
+public class ConcurrentAutoTableTest {
+    public static void estimate_sumTest() {
+        // Create a new CAT with 1 element
+        final long x = 42L;
+        final CAT cat = new CAT(null,x);
+        assertEquals(cat.estimate_sum(), x);
+        // Add another element to the end of the table
+        final long y = 1037L;
+        cat.add(y);
+        assertEquals(cat.estimate_sum(), x + y);
+    }
+}
+    
+
+### Response:
+
+
+No.10 generated result --------------------------
+
+@Test
+public void estimate_sumTest() {
+    final int N = 10;
+    CAT t = new CAT(null,N);
+    assertEquals(t.estimate_sum(),t._t[N]);
+}
+
+

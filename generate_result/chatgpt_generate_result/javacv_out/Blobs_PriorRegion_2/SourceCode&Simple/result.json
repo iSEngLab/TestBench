@@ -1,0 +1,30 @@
+{
+    "project_name": "javacv",
+    "file_name": "Blobs.java",
+    "relative_path": "javacv/src/main/java/org/bytedeco/javacv/Blobs.java",
+    "execute_path": "javacv",
+    "package": "org.bytedeco.javacv",
+    "docstring": null,
+    "source_code": "// Determine the prior (lower number) region that meets the desired conditions\npublic static int PriorRegion(int Parent, int Color, double MinArea, double MaxArea, int Label)\n{\n    double DParent = (double) Parent; \n    double DColor = (double) Color; if(DColor > 0) DColor = 1;\n    \n    int i;\n    for(i = Label; i >= 0; i--)\n    {\n        double [] Region = RegionData[i];\n        double ThisParent = Region[BLOBPARENT];\n        double ThisColor = Region[BLOBCOLOR];\n        if(DParent >= 0 && DParent != ThisParent) continue;\n        if(DColor >= 0 && DColor != ThisColor) continue;\n        if(Region[BLOBAREA] < MinArea || Region[BLOBAREA] > MaxArea) continue;  \n        break;      // We have a match!\n    }\n    if(i < 0) i = -1;   // Use -1 to flag that there was no match\n    return i;\n}\n",
+    "class_name": "Blobs",
+    "method_name": "PriorRegion",
+    "arguments": [
+        "int Parent",
+        "int Color",
+        "double MinArea",
+        "double MaxArea",
+        "int Label"
+    ],
+    "generate_test": [
+        "@Test\npublic void PriorRegionTest() {\n    int result = PriorRegion(1, 2, 3.0, 5.0, 4);\n    assertEquals(-1, result);\n}",
+        "@Test\npublic void PriorRegionTest() {\n    int Parent = 2;\n    int Color = 1;\n    double MinArea = 10.0;\n    double MaxArea = 20.0;\n    int Label = 5;\n    \n    int result = Blobs.PriorRegion(Parent, Color, MinArea, MaxArea, Label);\n    assertEquals(-1, result);\n}",
+        "@Test\npublic void PriorRegionTest() {\n    int Parent = 1;\n    int Color = 1;\n    double MinArea = 1.0;\n    double MaxArea = 10.0;\n    int Label = 0; // Example label value\n\n    int expected = -1; // Example expected value\n\n    int result = Blobs.PriorRegion(Parent, Color, MinArea, MaxArea, Label);\n\n    assertEquals(expected, result);\n}",
+        "@Test\npublic void PriorRegionTest() {\n    int Parent = 5;\n    int Color = 1;\n    double MinArea = 10.0;\n    double MaxArea = 100.0;\n    int Label = 3;\n    int result = Blobs.PriorRegion(Parent, Color, MinArea, MaxArea, Label);\n    assertEquals(expectedResult, result);\n}",
+        "@Test\npublic void PriorRegionTest() {\n    int Parent = 1;\n    int Color = 0;\n    double MinArea = 10.0;\n    double MaxArea = 100.0;\n    int Label = 5;\n    int result = Blobs.PriorRegion(Parent, Color, MinArea, MaxArea, Label);\n    assertEquals(-1, result);\n}",
+        "@Test\npublic void PriorRegionTest() {\n    int label = 1;\n    int result = Blobs.PriorRegion(1, 1, 0.0, 100.0, label);\n    assertEquals(-1, result);\n}",
+        "@Test\npublic void PriorRegionTest() {\n    int result = Blobs.PriorRegion(0, 1, 10.0, 20.0, 1);\n    assertEquals(-1, result);\n}",
+        "@Test\npublic void PriorRegionTest() {\n    int parent = 1;\n    int color = 0;\n    double minArea = 10.0;\n    double maxArea = 100.0;\n    int label = 1;\n    int result = Blobs.PriorRegion(parent, color, minArea, maxArea, label);\n    assertEquals(1, result);\n}",
+        "@Test\npublic void PriorRegionTest() {\n    int result = Blobs.PriorRegion(1, 2, 3.0, 4.0, 5);\n    assertEquals(-1, result);\n}",
+        "@Test\npublic void PriorRegionTest() {\n    int expected = -1; // Since PriorRegion() returns -1 when there is no match\n    int actual = Blobs.PriorRegion(0, 1, 10.0, 100.0, 1); // Example input values\n    assertEquals(expected, actual);\n}"
+    ]
+}

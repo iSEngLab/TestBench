@@ -1,0 +1,911 @@
+Source code: 
+
+
+@Override
+public boolean offer(final E e)
+{
+    // Objects.requireNonNull(e);
+    if (null == e)
+    {
+        throw new NullPointerException();
+    }
+    // local load of field to avoid repeated loads after volatile reads
+    final E[] buffer = producerBuffer;
+    final long index = lpProducerIndex();
+    final long mask = producerMask;
+    final long offset = calcCircularRefElementOffset(index, mask);
+    // expected hot path
+    if (index < producerBufferLimit)
+    {
+        writeToQueue(buffer, e, index, offset);
+        return true;
+    }
+    return offerColdPath(buffer, mask, index, offset, e, null);
+}
+
+
+
+No.1 generated result --------------------------
+
+@Test
+public void offerTest() {
+    final MpscLinkedQueue<Integer> queue = new MpscLinkedQueue<>();
+    
+    // Test 1: Queue is empty, so we should be able to add an element
+    assertTrue(queue.offer(0));
+    assertEquals(1, queue.size());
+    
+    // Test 2: Queue is full (capacity of 8), so we shouldn't be able to add another element
+    for (int i = 1; i < 7; i++) {
+        queue.offer(i);
+    }
+    assertFalse(queue.offer(7));
+    
+    // Test 3: Queue is not full, so we should be able to add another element
+    assertTrue(queue.offer(8));
+    assertEquals(8, queue.size());
+}
+
+### JUNIT Test case:
+package org.jctools.queues;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseMpscLinkedQueueColdTest {
+    @Test
+    public void offerAndPollWithWrapAround() throws InterruptedException {
+        final MpscLinkedQueue<Integer> queue = new MpscLinkedQueue<>();
+        
+        // Test 1: Queue is empty, so we should be able to add an element
+        assertTrue(queue.offer(0));
+        assertEquals(1, queue.size());
+        assertEquals(0, (int) queue.poll());
+        
+        // Test 2: Add a bunch of elements and make sure they are all there
+        for (int i = 1; i <= 8; i++) {
+            queue.offer(i);
+        }
+        assertEquals(8, queue.size());
+        for (int i = 0; i < 9; i++) {
+            assertEquals(i, (int) queue.poll());
+        }
+        
+        // Test 3: Add a bunch of elements and make sure they are all there
+        for (int i = 1; i <= 8; i++) {
+            queue.offer(i);
+        }
+        assertEquals(8, queue.size());
+        for (int i = 0; i < 9; i++) {
+            assertEquals(i, (int) queue.poll());
+        }
+        
+        // Test 4: Make sure the size is correct
+        assertTrue(queue.offer(1));
+        assertTrue(queue.offer(2));
+        assertEquals(2, queue.size());
+    }
+}
+    
+
+### Response:
+
+
+No.2 generated result --------------------------
+
+import org.jctools.queues.BaseSpscLinkedArrayQueue;
+import java.util.concurrent.atomic.AtomicLongFieldUpdater;
+
+public class BaseSpscLinkedArrayQueuePrePadTest extends TestCase {
+    public void testOffer() throws Exception {
+        <FILL>
+    }
+}
+
+
+
+No.3 generated result --------------------------
+
+# Testing offer method
+
+<FILL>
+
+@Test
+public void offerTest() {
+    // given
+    final var queue = new SpscArrayQueue<String>(16);
+    
+    // when
+    final boolean result = queue.offer("element");
+    
+    // then
+    assertTrue(result);
+}
+
+# Testing poll method
+
+@Test
+public void pollTest() {
+    // given
+    final var queue = new SpscArrayQueue<String>(16);
+    queue.offer("element");
+    
+    // when
+    final String result = queue.poll();
+    
+    // then
+    assertEquals("element", result);
+}
+
+# Testing peek method
+
+@Test
+public void peekTest() {
+    // given
+    final var queue = new SpscArrayQueue<String>(16);
+    queue.offer("element");
+    
+    // when
+    final String result = queue.peek();
+    
+    // then
+    assertEquals("element", result);
+}
+
+# Testing clear method
+
+@Test
+public void clearTest() {
+    // given
+    final var queue = new SpscArrayQueue<String>(16);
+    queue.offer("element");
+    
+    // when
+    queue.clear();
+    
+    // then
+    assertEquals(0, queue.size());
+}
+
+# Testing drain method
+
+@Test
+public void drainTest() {
+    // given
+    final var queue = new SpscArrayQueue<String>(16);
+    queue.offer("element");
+    
+    // when
+    final List<String> result = queue.drain();
+    
+    // then
+    assertEquals(Collections.singletonList("element"), result);
+}
+
+# Testing fill method
+
+@Test
+public void fillTest() {
+    // given
+    final var queue = new SpscArrayQueue<String>(16);
+    final var elements = Arrays.asList("a", "b", "c");
+    
+    // when
+    queue.fill(elements);
+    
+    // then
+    assertEquals(3, queue.size());
+}
+
+
+No.4 generated result --------------------------
+
+package org.jctools.queues;
+import static org.junit.jupiter.api.Assertions.*;
+public class BaseSpscLinkedArrayQueuePrePadTest {
+    @Test
+    public void offerTest() {
+        <FILL>
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jctools.queues;
+
+import java.util.*;
+
+public class BaseSpscLinkedArrayQueuePrePadTest {
+    @Test
+    public void offerTest() {
+        int size = 1024 * 8; // 8K elements
+        final Queue<Integer> queue = new BaseSpscLinkedArrayQueue<>(size);
+
+        for (int i = 0; i < size; i++) {
+            assertTrue(queue.offer(i));
+        }
+
+        for (int i = 0; i < size; i++) {
+            Integer result = queue.poll();
+            assertNotNull(result);
+            assertEquals(result, i);
+        }
+    }
+}
+
+
+No.6 generated result --------------------------
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class BaseSpscLinkedArrayQueuePrePadTest {
+    @Test
+    public void offerTest() {
+        // Create an instance of your queue implementation:
+        BaseSpscLinkedArrayQueuePrePad<Integer> q = new MyQueue();
+        
+        // Try offering some elements into the queue:
+        assertTrue(q.offer(1));
+        assertTrue(q.offer(2));
+        assertTrue(q.offer(3));
+        
+        // Make sure that only the first three elements were accepted:
+        assertEquals(3, q.size());
+    }
+}
+
+
+No.7 generated result --------------------------
+
+SpscLinkedArrayQueuePrePad.java:
+package org.jctools.queues;
+
+import static org.jctools.util.UnsafeAccess.UNSAFE;
+import static org.jctools.util.UnsafeAccess.fieldOffset;
+
+abstract class BaseSpscLinkedArrayQueuePrePad<E> extends ConcurrentSequencedCircularArrayQueuePrePad<E> {
+    long p0, p1, p2, p3, p4, p5, p6;
+    long p10, p11, p12, p13, p14, p15;
+    
+    public BaseSpscLinkedArrayQueuePrePad(int capacity) {
+        super(capacity);
+    }
+}
+
+package org.jctools.queues;
+
+import static org.jctools.util.UnsafeAccess.UNSAFE;
+import static org.jctools.util.UnsafeAccess.fieldOffset;
+
+abstract class BaseSpscLinkedArrayQueue<E> extends ConcurrentSequencedCircularArrayQueue<E> {
+    long p0, p1, p2, p3, p4, p5, p6;
+    long p10, p11, p12, p13, p14, p15;
+    
+    public BaseSpscLinkedArrayQueue(int capacity) {
+        super(capacity);
+    }
+}
+
+package org.jctools.queues;
+
+import static org.jctools.util.UnsafeAccess.UNSAFE;
+import static org.jctools.util.UnsafeAccess.fieldOffset;
+
+abstract class BaseSpscLinkedArrayQueuePostPad<E> extends ConcurrentSequencedCircularArrayQueuePostPad<E> {
+    long p0, p1, p2, p3, p4, p5, p6;
+    long p10, p11, p12, p13, p14, p15;
+    
+    public BaseSpscLinkedArrayQueuePostPad(int capacity) {
+        super(capacity);
+    }
+}
+
+package org.jctools.queues;
+
+import static org.jctools.util.UnsafeAccess.*;
+import static org.jctools.util.UnsafeRefArrayAccess.*;
+
+abstract class BaseSpscLinkedArrayQueueL2Pad<E> extends ConcurrentSequencedCircularArrayQueueL1Pad<E> {
+    long p0, p1, p2, p3, p4, p5, p6;
+    long p10, p11, p12, p13, p14, p15;
+    
+    public BaseSpscLinkedArrayQueueL2Pad(int capacity) {
+        super(capacity);
+    }
+}
+
+package org.jctools.queues;
+
+import static org.jctools.util.UnsafeAccess.*;
+import static org.jctools.util.UnsafeRefArrayAccess.*;
+
+abstract class BaseSpscLinkedArrayQueueL1Pad<E> extends ConcurrentSequencedCircularArrayQueueFields<E> {
+    long p0, p1, p2, p3, p4, p5, p6;
+    long p10, p11, p12, p13, p14, p15;
+    
+    public BaseSpscLinkedArrayQueueL1Pad(int capacity) {
+        super(capacity);
+    }
+}
+
+package org.jctools.queues;
+
+import static org.jctools.util.UnsafeAccess.*;
+import static org.jctools.util.UnsafeRefArrayAccess.*;
+
+abstract class BaseSpscLinkedArrayQueueFields<E> {
+    // offer indices are even, poll indices are odd (even for initial value)
+    private final long producerIndexCache;
+    protected final int length;// fixed for the instance, could be set via constructor param
+    protected E[] buffer; // fixed for the instance, could be set via constructor param
+    
+    public BaseSpscLinkedArrayQueueFields(int capacity) {
+        this.producerIndexCache = 0L;
+        this.length = calculateSize(capacity);
+        @SuppressWarnings("unchecked")
+        E[] buff = (E[]) new Object[length];
+        this.buffer = buff;
+    }
+    
+    private static int calculateSize(final int capacity) {
+        return 1 << Bits.log2Ceil(capacity);
+    }
+    
+    public final long lvProducerIndexCache() {
+        return producerIndexCache;
+    }
+}
+
+package org.jctools.queues;
+
+import static org.jctools.util.UnsafeAccess.UNSAFE;
+import static org.jctools.util.UnsafeAccess.*;
+import static org.jctools.util.UnsafeRefArrayAccess.*;
+
+/**
+ * Common base for all Spsc queues.
+ */
+abstract class ConcurrentSequencedCircularArrayQueue<E> extends BaseSpscLinkedArrayQueueL2Pad<E> {
+    long consumerIndex;
+    
+    public ConcurrentSequencedCircularArrayQueue(int capacity) {
+        super(capacity);
+        
+        this.consumerIndex = 0L;
+        soPadding();
+    }
+}
+
+package org.jctools.queues;
+
+import static org.jctools.util.UnsafeAccess.*;
+import static org.jctools.util.UnsafeAccess.fieldOffset;
+import static org.jctools.util.UnsafeRefArrayAccess.*;
+
+/**
+ * Common base for all Spsc queues.
+ */
+abstract class BaseSpscLinkedArrayQueue<E> extends ConcurrentSequencedCircularArrayQueueL1Pad<E> {
+    private static final long PRODUCER_INDEX_OFFSET;
+    
+    static {
+        try {
+            PRODUCER_INDEX_OFFSET = fieldOffset(BaseSpscLinkedArrayQueue.class.getDeclaredField("producerIndex"));
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+    
+    public BaseSpscLinkedArrayQueue(int capacity) {
+        super(capacity);
+        
+        soPadding();
+    }
+}
+
+package org.jctools.queues;
+
+import static org.jctools.util.UnsafeAccess.*;
+import static org.jctools.util.UnsafeRefArrayAccess.*;
+
+/**
+ * Common base for all Spsc queues.
+ */
+abstract class ConcurrentSequencedCircularArrayQueueL1Pad<E> extends BaseSpscLinkedArrayQueueFields<E> {
+    long p0, p1, p2, p3, p4, p5, p6;
+    
+    public ConcurrentSequencedCircularArrayQueueL1Pad(int capacity) {
+        super(capacity);
+        
+        soPadding();
+    }
+}
+
+package org.jctools.queues;
+
+import static org.jctools.util.UnsafeAccess.*;
+import static org.jctools.util.UnsafeRefArrayAccess.*;
+
+/**
+ * Common base for all Spsc queues.
+ */
+abstract class BaseSpscLinkedArrayQueueFields<E> extends ConcurrentSequencedCircularArrayQueueL2Pad<E> {
+    private static final long PRODUCER_INDEX_OFFSET;
+    
+    public BaseSpscLinkedArrayQueueFields(int capacity) {
+        super(capacity);
+        
+        soPadding();
+    }
+}
+
+package org.jctools.queues;
+
+import static org.jctools.util.UnsafeAccess.*;
+import static org.jctools.util.UnsafeRefArrayAccess.*;
+
+/**
+ * Common base for all Spsc queues.
+ */
+abstract class ConcurrentSequencedCircularArrayQueueL2Pad<E> extends BaseSpscLinkedArrayQueueFields<E> {
+    long p0, p1, p2, p3, p4, p5, p6;
+    
+    public ConcurrentSequencedCircularArrayQueueL2Pad(int capacity) {
+        super(capacity);
+        
+        soPadding();
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.jctools.queues;
+
+import java.util.AbstractQueue;
+import java.util.Iterator;
+
+/**
+ * A LinkedArrayQueue is an implementation of the {@link MessagePassingQueue} interface. The queue uses a linked array
+ * structure and preallocates arrays to minimize garbage collection.
+ */
+public class BaseSpscLinkedArrayQueue<E> extends AbstractQueue<E> implements SpscLinkedArrayQueue<E>, QueueProgressIndicators {
+    static final long INDEX_OFFSET = UnsafeAccess.UNSAFE.objectFieldOffset(
+            BaseSpscLinkedArrayQueueProducerFields.class, "producerIndex");
+
+    private static final Object JUMP = new Object();
+
+    // consumer fields are initialized before the producer in the same way as the MPMCSS queue (see below),
+    // so that we can create instance with all fields pre-initialized:
+    protected long consumerMask;
+    protected E[] consumerBuffer;
+    private final int offset;
+    private int minConsumerIndex;//used by hasNext() to determine if it's stale.
+    private volatile long producerLookAhead; // we use a single lookahead for both the index and size, so that we only need to update one field when producing (we could keep separate values, but this would require an extra load for each insertion)
+
+    /**
+     * Creates a {@link BaseSpscLinkedArrayQueue} instance.
+     */
+    public BaseSpscLinkedArrayQueue(int chunkSize) {
+        int p2capacity = Pow2.roundToPowerOfTwo(chunkSize);
+        offset = calcCircularRefElementOffset(p2capacity, p2capacity - 1);
+        // must evaluate value to be assigned to final field before constructor is complete:
+        E[] buf = createBuffer(p2capacity);
+        producerLookAhead = minConsumerIndex = offset;
+        consumerMask = mask(buf.length - 2);
+        soProducerLimit(maskNull(buf, 2));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public final Iterator<E> iterator() {
+        throw new UnsupportedOperationException();
+    }
+
+    private static long mask(long m) {
+        return m;//m - 1;
+    }
+
+    private long lvProducerLookAhead() {
+        return producerLookAhead; // LoadLoad
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long currentProducerIndex() {
+        return lvProducerIndex();
+    }
+
+    private long lvProducerIndex() {
+        return producerLookAhead; // LoadLoad
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long currentConsumerIndex() {
+        return (minConsumerIndex == offset) ? lpConsumerIndex() : minConsumerIndex;
+    }
+
+    private long lvProducerLimit() {
+        return producerLimit.value; // LoadLoad
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int capacity() {
+        return (int) (mask(producerBuffer.length - 1));
+    }
+
+    private void soProducerLimit(long producerLimit) {
+        UnsafeAccess.UNSAFE.putOrderedLong(this, P_LIMIT_OFFSET, producerLimit); // StoreStore
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int size() {
+        return ((int) (producerLookAhead - minConsumerIndex));
+    }
+
+    private long lvProducerTail() {
+        return producerTail.value; // LoadLoad
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isEmpty() {
+        return minConsumerIndex == producerLookAhead;
+    }
+
+    private void soProducerTail(long tail) {
+        UnsafeAccess.UNSAFE.putOrderedLong(this, P_TAIL_OFFSET, tail); // StoreStore
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void clear() {
+        while (poll(lvProducerIndex())) ;
+    }
+
+    private static int calcCircularRefElementOffset(int mask) {
+        return UnsafeAccess.UNSAFE.objectFieldOffset(BaseSpscLinkedArrayQueueProducerFields.class, "producerBuffer") + UnsafeAccess.UNSAFE.arrayIndexScale(mask) * (Long.SIZE / 8);
+    }
+
+    private E[] createBuffer(int capacity) {
+        return (E[]) new Object[capacity]; // TODO: add support for ClassLoaders
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean offer(E e) {
+        if (null == e) throw new NullPointerException("Null is not a valid element");
+        final long mask = this.producerMask; // TODO: could calculate this value just once
+        final long capacity = mask + 1; // TODO: could be assigned in the constructor, and removed here
+        final E[] buffer = this.producerBuffer;
+
+        // Look ahead to next buffer and wrap pointer if necessary
+        final long producerIndex = lvProducerIndex();// LoadLoad
+        for (int i = 0; i < capacity; i++) {
+            final long index = calcCircularRefElementOffset(i);
+            E[] newBuffer = createBuffer(capacity);
+            Object o = UnsafeAccess.UNSAFE.getObjectVolatile(buffer, index); // TODO: fix
+            if (o == null) continue;
+            else {
+                producerIndex--;
+                producerTail.value++;
+                buffer[i] = newBuffer;
+            }
+        }
+
+        long maskedIndex = calcCircularRefElementOffset(producerIndex + offset);// LoadLoad
+
+        // Claim the index and attempt to insert, if we fail to claim the slot we abort.
+        E[] buffer = producerBuffer;// LoadLoad
+        final long limit = lvProducerLimit();// LoadLoad
+        final long wrapPoint = limit - capacity + 1;// TODO: calculate once in constructor
+
+        // Attempt to insert the element
+        E e1 = e;// LoadLoad
+        if (producerIndex >= wrapPoint) {// TODO: replace with <= and remove else below
+            buffer[maskedIndex] = e1;
+            soProducerIndex(producerIndex + 1); // StoreStore
+            return true;
+        } else {
+            E[] newBuffer = createBuffer(capacity);// LoadLoad
+            UnsafeAccess.UNSAFE.putObjectVolatile(buffer, maskedIndex, newBuffer);// TODO: fix
+            if (producerTail.value == limit) {
+                producerTail.lazySet(limit - capacity + 1); // StoreStore
+                soProducerLimit(maskNull(newBuffer, 2)); // StoreStore
+                return false;
+            } else {
+                UnsafeAccess.UNSAFE.putObjectVolatile(buffer, maskedIndex, e1);// TODO: fix
+                soProducerTail(producerTail.value + 1); // StoreStore
+                soProducerIndex(producerIndex + 1); // StoreStore
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean offer(E e, E e1) {
+        if (null == e || null == e1) throw new NullPointerException("Null is not a valid element");
+        final long mask = this.producerMask; // TODO: could calculate this value just once
+        final long capacity = mask + 1; // TODO: could be assigned in the constructor, and removed here
+        final E[] buffer = this.producerBuffer;
+
+        // Look ahead to next buffer and wrap pointer if necessary
+        final long producerIndex = lvProducerIndex();// LoadLoad
+        for (int i = 0; i < capacity; i++) {
+            final long index = calcCircularRefElementOffset(i);
+            E[] newBuffer = createBuffer(capacity);
+            Object o = UnsafeAccess.UNSAFE.getObjectVolatile(buffer, index); // TODO: fix
+            if (o == null) continue;
+            else {
+                producerIndex--;
+                producerTail.value++;
+                buffer[i] = newBuffer;
+            }
+        }
+
+        long maskedIndex = calcCircularRefElementOffset(producerIndex + offset);// LoadLoad
+
+        // Claim the index and attempt to insert, if we fail to claim the slot we abort.
+        E[] buffer = producerBuffer;// LoadLoad
+        final long limit = lvProducerLimit();// LoadLoad
+        final long wrapPoint = limit - capacity + 1;// TODO: calculate once in constructor
+
+        // Attempt to insert the element
+        if (producerIndex >= wrapPoint) {// TODO: replace with <= and remove else below
+            buffer[maskedIndex] = e;
+            soProducerIndex(producerIndex + 1); // StoreStore
+            return true;
+        } else {
+            E[] newBuffer = createBuffer(capacity);// LoadLoad
+            UnsafeAccess.UNSAFE.putObjectVolatile(buffer, maskedIndex, newBuffer);// TODO: fix
+            if (producerTail.value == limit) {
+                producerTail.lazySet(limit - capacity + 1); // StoreStore
+                soProducerLimit(maskNull(newBuffer, 2)); // StoreStore
+                return false;
+            } else {
+                UnsafeAccess.UNSAFE.putObjectVolatile(buffer, maskedIndex, e);// TODO: fix
+                soProducerTail(producerTail.value + 1); // StoreStore
+                soProducerIndex(producerIndex + 1); // StoreStore
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean offer(E e, E e1, E e2) {
+        if (null == e || null == e1 || null == e2) throw new NullPointerException("Null is not a valid element");
+        final long mask = this.producerMask; // TODO: could calculate this value just once
+        final long capacity = mask + 1; // TODO: could be assigned in the constructor, and removed here
+        final E[] buffer = this.producerBuffer;
+
+        // Look ahead to next buffer and wrap pointer if necessary
+        final long producerIndex = lvProducerIndex();// LoadLoad
+        for (int i = 0; i < capacity; i++) {
+            final long index = calcCircularRefElementOffset(i);
+            E[] newBuffer = createBuffer(capacity);
+            Object o = UnsafeAccess.UNSAFE.getObjectVolatile(buffer, index); // TODO: fix
+            if (o == null) continue;
+            else {
+                producerIndex--;
+                producerTail.value++;
+                buffer[i] = newBuffer;
+            }
+        }
+
+        long maskedIndex = calcCircularRefElementOffset(producerIndex + offset);// LoadLoad
+
+        // Claim the index and attempt to insert, if we fail to claim the slot we abort.
+        E[] buffer = producerBuffer;// LoadLoad
+        final long limit = lvProducerLimit();// LoadLoad
+        final long wrapPoint = limit - capacity + 1;// TODO: calculate once in constructor
+
+        // Attempt to insert the element
+        if (producerIndex >= wrapPoint) {// TODO: replace with <= and remove else below
+            buffer[maskedIndex] = e;
+            soProducerIndex(producerIndex + 1); // StoreStore
+            return true;
+        } else {
+            E[] newBuffer = createBuffer(capacity);// LoadLoad
+            UnsafeAccess.UNSAFE.putObjectVolatile(buffer, maskedIndex, newBuffer);// TODO: fix
+            if (producerTail.value == limit) {
+                producerTail.lazySet(limit - capacity + 1); // StoreStore
+                soProducerLimit(maskNull(newBuffer, 2)); // StoreStore
+                return false;
+            } else {
+                UnsafeAccess.UNSAFE.putObjectVolatile(buffer, maskedIndex, e);// TODO: fix
+                soProducerTail(producerTail.value + 1); // StoreStore
+                soProducerIndex(producerIndex + 1); // StoreStore
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean offer(E e, E e1, E e2, E... otherElements) {
+        if (null == e || null == e1 || null == e2 || null == otherElements) throw new NullPointerException("Null is not a valid element");
+        final long mask = this.producerMask; // TODO: could calculate this value just once
+        final long capacity = mask + 1; // TODO: could be assigned in the constructor, and removed here
+        final E[] buffer = this.producerBuffer;
+
+        // Look ahead to next buffer and wrap pointer if necessary
+        final long producerIndex = lvProducerIndex();// LoadLoad
+        for (int i = 0; i < capacity; i++) {
+            final long index = calcCircularRefElementOffset(i);
+            E[] newBuffer = createBuffer(capacity);
+            Object o = UnsafeAccess.UNSAFE.getObjectVolatile(buffer, index); // TODO: fix
+            if (o == null) continue;
+            else {
+                producerIndex--;
+                producerTail.value++;
+                buffer[i] = newBuffer;
+            }
+        }
+
+        long maskedIndex = calcCircularRefElementOffset(producerIndex + offset);// LoadLoad
+
+        // Claim the index and attempt to insert, if we fail to claim the slot we abort.
+        E[] buffer = producerBuffer;// LoadLoad
+        final long limit = lvProducerLimit();// LoadLoad
+        final long wrapPoint = limit - capacity + 1;// TODO: calculate once in constructor
+
+        // Attempt to insert the element
+        if (producerIndex >= wrapPoint) {// TODO: replace with <= and remove else below
+            buffer[maskedIndex] = e;
+            soProducerIndex(producerIndex + 1); // StoreStore
+            return true;
+        } else {
+            E[] newBuffer = createBuffer(capacity);// LoadLoad
+            UnsafeAccess.UNSAFE.putObjectVolatile(buffer, maskedIndex, newBuffer);// TODO: fix
+            if (producerTail.value == limit) {
+                producerTail.lazySet(limit - capacity + 1); // StoreStore
+                soProducerLimit(maskNull(newBuffer, 2)); // StoreStore
+                return false;
+            } else {
+                UnsafeAccess.UNSAFE.putObjectVolatile(buffer, maskedIndex, e);// TODO: fix
+                soProducerTail(producerTail.value + 1); // StoreStore
+                soProducerIndex(producerIndex + 1); // StoreStore
+            }
+        }
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jctools.queues;
+
+import static java.lang.System.out;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.*;
+
+import org.junit.jupiter.api.Test;
+
+public class BaseSpscLinkedArrayQueuePrePadTest {
+    @Test
+    public void offerTest() throws InterruptedException, ExecutionException {
+        final int testSize = 10_000_000;
+
+        final int producerCount = Runtime.getRuntime().availableProcessors();
+        final List<Thread> producerThreads = new ArrayList<>();
+        for (int i = 0; i < producerCount; i++) {
+            Thread thread = new Thread(() -> {
+                while (!Thread.interrupted()) {
+                    try {
+                        spscLinkedArrayQueuePrePad.offer("1");
+                    } catch (Throwable ex) {
+                        fail(ex);
+                    }
+                }
+            });
+            thread.setDaemon(true);
+            producerThreads.add(thread);
+            thread.start();
+        }
+
+        final int consumerCount = Runtime.getRuntime().availableProcessors() * 2;
+        final List<Thread> consumerThreads = new ArrayList<>();
+        for (int i = 0; i < consumerCount; i++) {
+            Thread thread = new Thread(() -> {
+                while (!Thread.interrupted()) {
+                    try {
+                        spscLinkedArrayQueuePrePad.poll();
+                    } catch (Throwable ex) {
+                        fail(ex);
+                    }
+                }
+            });
+            thread.setDaemon(true);
+            consumerThreads.add(thread);
+            thread.start();
+        }
+
+        final long startNanos = System.nanoTime();
+        final ExecutorService executorService = Executors.newCachedThreadPool();
+        try {
+            for (int i = 0; i < producerCount; i++) {
+                executorService.submit(() -> {
+                    while (!Thread.interrupted()) {
+                        try {
+                            spscLinkedArrayQueuePrePad.offer("1");
+                        } catch (Throwable ex) {
+                            fail(ex);
+                        }
+                    }
+                });
+            }
+            final Future<Long> pollFuture = executorService.submit(() -> {
+                long count = 0;
+                while (!Thread.interrupted()) {
+                    try {
+                        spscLinkedArrayQueuePrePad.poll();
+                        if (++count % 1_000_000 == 0) {
+                            out.println(count);
+                        }
+                    } catch (Throwable ex) {
+                        fail(ex);
+                    }
+                }
+                return count;
+            });
+            Thread.sleep(5_000);
+            executorService.shutdownNow();
+            final long polledCount = pollFuture.get();
+            assertEquals(testSize, polledCount);
+        } finally {
+            producerThreads.forEach(Thread::interrupt);
+            consumerThreads.forEach(Thread::interrupt);
+        }
+    }
+}
+
+
+No.10 generated result --------------------------
+
+@RestController
+public class GreetingController {
+    @RequestMapping("/greeting")
+    public String greeting(@RequestParam(value="name", defaultValue="World") String name) {
+        return "Hello, " + name + "!";
+    }
+}
+    
+
+### Response:
+
+

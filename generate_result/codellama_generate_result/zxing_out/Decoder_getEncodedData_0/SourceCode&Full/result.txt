@@ -1,0 +1,478 @@
+Source code: 
+
+
+private static String getEncodedData(boolean[] correctedBits) throws FormatException {
+  int endIndex = correctedBits.length;
+  Table latchTable = Table.UPPER; // table most recently latched to
+  Table shiftTable = Table.UPPER; // table to use for the next read
+
+  // Final decoded string result
+  // (correctedBits-5) / 4 is an upper bound on the size (all-digit result)
+  StringBuilder result = new StringBuilder((correctedBits.length - 5) / 4);
+
+  // Intermediary buffer of decoded bytes, which is decoded into a string and flushed
+  // when character encoding changes (ECI) or input ends.
+  ByteArrayOutputStream decodedBytes = new ByteArrayOutputStream();
+  Charset encoding = DEFAULT_ENCODING;
+
+  int index = 0;
+  while (index < endIndex) {
+    if (shiftTable == Table.BINARY) {
+      if (endIndex - index < 5) {
+        break;
+      }
+      int length = readCode(correctedBits, index, 5);
+      index += 5;
+      if (length == 0) {
+        if (endIndex - index < 11) {
+          break;
+        }
+        length = readCode(correctedBits, index, 11) + 31;
+        index += 11;
+      }
+      for (int charCount = 0; charCount < length; charCount++) {
+        if (endIndex - index < 8) {
+          index = endIndex;  // Force outer loop to exit
+          break;
+        }
+        int code = readCode(correctedBits, index, 8);
+        decodedBytes.write((byte) code);
+        index += 8;
+      }
+      // Go back to whatever mode we had been in
+      shiftTable = latchTable;
+    } else {
+      int size = shiftTable == Table.DIGIT ? 4 : 5;
+      if (endIndex - index < size) {
+        break;
+      }
+      int code = readCode(correctedBits, index, size);
+      index += size;
+      String str = getCharacter(shiftTable, code);
+      if ("FLG(n)".equals(str)) {
+        if (endIndex - index < 3) {
+          break;
+        }
+        int n = readCode(correctedBits, index, 3);
+        index += 3;
+        //  flush bytes, FLG changes state
+        try {
+          result.append(decodedBytes.toString(encoding.name()));
+        } catch (UnsupportedEncodingException uee) {
+          throw new IllegalStateException(uee);
+        }
+        decodedBytes.reset();
+        switch (n) {
+          case 0:
+            result.append((char) 29);  // translate FNC1 as ASCII 29
+            break;
+          case 7:
+            throw FormatException.getFormatInstance(); // FLG(7) is reserved and illegal
+          default:
+            // ECI is decimal integer encoded as 1-6 codes in DIGIT mode
+            int eci = 0;
+            if (endIndex - index < 4 * n) {
+              break;
+            }
+            while (n-- > 0) {
+              int nextDigit = readCode(correctedBits, index, 4);
+              index += 4;
+              if (nextDigit < 2 || nextDigit > 11) {
+                throw FormatException.getFormatInstance(); // Not a decimal digit
+              }
+              eci = eci * 10 + (nextDigit - 2);
+            }
+            CharacterSetECI charsetECI = CharacterSetECI.getCharacterSetECIByValue(eci);
+            if (charsetECI == null) {
+              throw FormatException.getFormatInstance();
+            }
+            encoding = charsetECI.getCharset();
+        }
+        // Go back to whatever mode we had been in
+        shiftTable = latchTable;
+      } else if (str.startsWith("CTRL_")) {
+        // Table changes
+        // ISO/IEC 24778:2008 prescribes ending a shift sequence in the mode from which it was invoked.
+        // That's including when that mode is a shift.
+        // Our test case dlusbs.png for issue #642 exercises that.
+        latchTable = shiftTable;  // Latch the current mode, so as to return to Upper after U/S B/S
+        shiftTable = getTable(str.charAt(5));
+        if (str.charAt(6) == 'L') {
+          latchTable = shiftTable;
+        }
+      } else {
+        // Though stored as a table of strings for convenience, codes actually represent 1 or 2 *bytes*.
+        byte[] b = str.getBytes(StandardCharsets.US_ASCII);
+        decodedBytes.write(b, 0, b.length);
+        // Go back to whatever mode we had been in
+        shiftTable = latchTable;
+      }
+    }
+  }
+  try {
+    result.append(decodedBytes.toString(encoding.name()));
+  } catch (UnsupportedEncodingException uee) {
+    // can't happen
+    throw new IllegalStateException(uee);
+  }
+  return result.toString();
+}
+
+
+
+No.1 generated result --------------------------
+
+package com.google.zxing.aztec.decoder;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DecoderTest {
+    @Test
+    public void getEncodedDataTest() {
+        // Arrange
+        BitMatrix matrix = new BitMatrix(20, 20);
+        boolean compact = true;
+        int expectedSize = 1024;
+
+        // Act
+        byte[] data = Decoder.getEncodedData(matrix, compact);
+
+        // Assert
+        assertEquals(expectedSize, data.length);
+    }
+}
+
+
+No.2 generated result --------------------------
+
+private byte[] encodedData;
+
+@BeforeEach
+public void setUp() {
+    encodedData = new byte[20];
+}
+
+@Test
+public void getEncodedDataWithNoErrors() {
+    for (int i = 0; i < encodedData.length; i++) {
+        encodedData[i] = (byte) i;
+    }
+    BitArray bitArray = new BitArray(encodedData);
+    Decoder decoder = new Decoder();
+    int numDataCodewords = decoder.getNumDataCodewords();
+    Result result = decoder.decode(bitArray, numDataCodewords);
+    assertTrue(result instanceof CorrectedBitsResult);
+    byte[] actualData = ((CorrectedBitsResult) result).getDecodedData();
+    for (int i = 0; i < encodedData.length; i++) {
+        assertEquals(encodedData[i], actualData[i]);
+    }
+}
+
+@Test
+public void getEncodedDataWithErrors() {
+    for (int i = 0; i < encodedData.length; i++) {
+        encodedData[i] = (byte) i;
+    }
+    BitArray bitArray = new BitArray(encodedData);
+    Decoder decoder = new Decoder();
+    int numDataCodewords = decoder.getNumDataCodewords();
+    Result result = decoder.decode(bitArray, numDataCodewords + 10);
+    assertTrue(result instanceof CorrectedBitsResult);
+    byte[] actualData = ((CorrectedBitsResult) result).getDecodedData();
+    for (int i = 0; i < encodedData.length; i++) {
+        assertEquals(encodedData[i], actualData[i]);
+    }
+}
+
+@Test
+public void getEncodedDataWithChecksum() {
+    for (int i = 0; i < encodedData.length; i++) {
+        encodedData[i] = (byte) i;
+    }
+    BitArray bitArray = new BitArray(encodedData);
+    Decoder decoder = new Decoder();
+    int numDataCodewords = decoder.getNumDataCodewords();
+    Result result = decoder.decode(bitArray, numDataCodewords + 10);
+    assertTrue(result instanceof CorrectedBitsResult);
+    byte[] actualData = ((CorrectedBitsResult) result).getDecodedData();
+    for (int i = 0; i < encodedData.length; i++) {
+        assertEquals(encodedData[i], actualData[i]);
+    }
+}
+
+@Test
+public void getEncodedDataWithChecksumAndNoErrors() {
+    for (int i = 0; i < encodedData.length; i++) {
+        encodedData[i] = (byte) i;
+    }
+    BitArray bitArray = new BitArray(encodedData);
+    Decoder decoder = new Decoder();
+    int numDataCodewords = decoder.getNumDataCodewords();
+    Result result = decoder.decode(bitArray, numDataCodewords + 10);
+    assertTrue(result instanceof CorrectedBitsResult);
+    byte[] actualData = ((CorrectedBitsResult) result).getDecodedData();
+    for (int i = 0; i < encodedData.length; i++) {
+        assertEquals(encodedData[i], actualData[i]);
+    }
+}
+
+@Test
+public void getEncodedDataWithChecksumAndErrors() {
+    for (int i = 0; i < encodedData.length; i++) {
+        encodedData[i] = (byte) i;
+    }
+    BitArray bitArray = new BitArray(encodedData);
+    Decoder decoder = new Decoder();
+    int numDataCodewords = decoder.getNumDataCodewords();
+    Result result = decoder.decode(bitArray, numDataCodewords + 10);
+    assertTrue(result instanceof CorrectedBitsResult);
+    byte[] actualData = ((CorrectedBitsResult) result).getDecodedData();
+    for (int i = 0; i < encodedData.length; i++) {
+        assertEquals(encodedData[i], actualData[i]);
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package com.google.zxing.aztec.decoder;
+
+import org.junit.jupiter.api.*;
+
+public class DecoderTest {
+    @Test
+    public void getEncodedDataTest() {
+        int numDataCodewords = 0;
+        int maskedMode = 1;
+        int[] dataWords = new int[numDataCodewords];
+        boolean compact = false;
+        
+        Decoder decoder = new Decoder();
+        CorrectedBitsResult result = decoder.getEncodedData(dataWords, numDataCodewords, maskedMode, compact);
+    }
+}
+
+
+No.4 generated result --------------------------
+
+@Test
+public void getEncodedDataTest() {
+    byte[] encodedBits = convertBoolArrayToByteArray(extractBits(matrix));
+    DecoderResult result = DecodedBitStreamParser.decode(encodedBits);
+}
+
+
+No.5 generated result --------------------------
+
+
+package com.google.zxing.aztec.decoder;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DecoderTest {
+    @Test
+    public void getEncodedDataTest() {
+        String expectedMessage = "Hello World";
+        byte[] encodedBytes = new byte[0]; // <FILL_ME>
+        DecoderResult result = new Decoder().getDecoderResult(encodedBytes);
+        assertEquals(expectedMessage, result.getText());
+    }
+}
+
+
+
+No.6 generated result --------------------------
+
+@Override
+public List<Result> decodeMultiple(BinaryBitmap image) throws NotFoundException, ChecksumException, FormatException {
+    // The list to hold results.
+    ArrayList<Result> resultList = new ArrayList<>();
+
+    // Attempt to read an Aztec code in "full" mode -- that is, as if it were a complete 2D matrix.
+    // Look for at least foursquare modules to succeed; less will still work with some difficulty.
+    Result rawResultFull = getDecoder().decode(image, true);
+    resultList.add(rawResultFull);
+
+    // Now look for a data matrix in "sparse" mode -- that is, assuming that it is only part of a larger
+    // 2D matrix. This assumes that any partial decoding that hasn't happened has been done already in full mode.
+    Result rawResultSparse = getDecoder().decode(image, false);
+    resultList.add(rawResultSparse);
+
+    return resultList;
+}
+    
+
+
+No.7 generated result --------------------------
+
+@Test
+  public void encodedBits1() {
+    int[] d = new int[]{30,20,70,56,84,27,69,14};
+    String expectedString = "Hello World!";
+    
+    assertEquals(expectedString, getEncodedData(d));
+  }
+  
+  @Test
+  public void encodedBits2() {
+    int[] d = new int[]{30,20,70,56,84,27,69,14,87};
+    String expectedString = "Hello World!";
+    
+    assertEquals(expectedString, getEncodedData(d));
+  }
+  
+  @Test
+  public void encodedBits3() {
+    int[] d = new int[]{60,24,19,70,56,84,27,69,14};
+    String expectedString = "Hello World!";
+    
+    assertEquals(expectedString, getEncodedData(d));
+  }
+  
+  @Test
+  public void encodedBits4() {
+    int[] d = new int[]{30,20,70,56,84,27,69,14,87};
+    String expectedString = "Hello World!";
+    
+    assertEquals(expectedString, getEncodedData(d));
+  }
+}
+
+
+No.8 generated result --------------------------
+
+package com.google.zxing.aztec.decoder;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DecoderTest {
+    @Test
+    public void getEncodedDataTest() throws Exception {
+        List<byte[]> encodedBits = new ArrayList<>();
+        boolean compact = false;
+        
+        // Check if the list of encoded bits is empty
+        assertEquals(0, encodedBits.size());
+        
+        int layers = 0;
+        try {
+            Decoder.getEncodedData(encodedBits, compact, layers);
+            fail("Expected an IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            assertTrue(true);
+        }
+        
+        // Check if the number of layers is 0
+        encodedBits.add(new byte[] {});
+        try {
+            Decoder.getEncodedData(encodedBits, compact, layers);
+            fail("Expected an IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            assertTrue(true);
+        }
+        
+        // Check if the number of layers is 1 and the list of encoded bits has 8 elements
+        encodedBits.clear();
+        layers = 1;
+        for (int i = 0; i < 8; ++i) {
+            encodedBits.add(new byte[] {});
+        }
+        
+        // Check if the number of layers is greater than 20 and less or equal to 90
+        encodedBits.clear();
+        for (int i = 0; i < Decoder.TOTAL_BOXES_PER_PARTITION * Decoder.MAX_PARTITIONS + 1; ++i) {
+            encodedBits.add(new byte[] {});
+        }
+        
+        // Check if the number of layers is greater than or equal to 90
+        encodedBits.clear();
+        for (int i = 0; i < Decoder.TOTAL_BOXES_PER_PARTITION * Decoder.MAX_PARTITIONS + 1; ++i) {
+            encodedBits.add(new byte[] {});
+        }
+        
+        // Check if the number of layers is greater than or equal to 90
+        encodedBits.clear();
+        for (int i = 0; i < Decoder.TOTAL_BOXES_PER_PARTITION * Decoder.MAX_PARTITIONS + 1; ++i) {
+            encodedBits.add(new byte[] {});
+        }
+        
+        // Check if the number of layers is greater than or equal to 90
+        encodedBits.clear();
+        for (int i = 0; i < Decoder.TOTAL_BOXES_PER_PARTITION * Decoder.MAX_PARTITIONS + 1; ++i) {
+            encodedBits.add(new byte[] {});
+        }
+        
+        // Check if the number of layers is greater than or equal to 90
+        encodedBits.clear();
+        for (int i = 0; i < Decoder.TOTAL_BOXES_PER_PARTITION * Decoder.MAX_PARTITIONS + 1; ++i) {
+            encodedBits.add(new byte[] {});
+        }
+        
+        // Check if the number of layers is greater than or equal to 90
+        encodedBits.clear();
+        for (int i = 0; i < Decoder.TOTAL_BOXES_PER_PARTITION * Decoder.MAX_PARTITIONS + 1; ++i) {
+            encodedBits.add(new byte[] {});
+        }
+        
+        // Check if the number of layers is greater than or equal to 90
+        encodedBits.clear();
+        for (int i = 0; i < Decoder.TOTAL_BOXES_PER_PARTITION * Decoder.MAX_PARTITIONS + 1; ++i) {
+            encodedBits.add(new byte[] {});
+        }
+        
+        // Check if the number of layers is greater than or equal to 90
+        encodedBits.clear();
+        for (int i = 0; i < Decoder.TOTAL_BOXES_PER_PARTITION * Decoder.MAX_PARTITIONS + 1; ++i) {
+            encodedBits.add(new byte[] {});
+        }
+    }
+}
+
+
+No.9 generated result --------------------------
+
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DecoderTest {
+    @Test
+    public void getEncodedDataTest() {
+        int[] dataWords = new int[]{1, 2, 3};
+        BitMatrix matrix = null; // Fill in the value for this field.
+        Decoder decoder = new Decoder();
+        CorrectedBitsResult result = decoder.decode(dataWords, matrix);
+        assertNotNull(result);
+        boolean[] expectedBits = new boolean[]{true, false, true, false};
+        assertArrayEquals(expectedBits, result.getCorrectedBits());
+        int expectedErrors = 2;
+        assertEquals(expectedErrors, result.getErrorCount());
+    }
+}
+
+
+
+No.10 generated result --------------------------
+
+@Override
+  public boolean check(char[] encodedData, int length) {
+    if (length % 2 != 0) {
+      return false;
+    }
+    for (int i = 0; i < length; i++) {
+      char c = encodedData[i];
+      if (!isHexCharacter(c)) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+
+

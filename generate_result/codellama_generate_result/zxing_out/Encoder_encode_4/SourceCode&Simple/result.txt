@@ -1,0 +1,228 @@
+Source code: 
+
+
+public static AztecCode encode(String data, int minECCPercent, int userSpecifiedLayers, Charset charset) {
+  byte[] bytes = data.getBytes(null != charset ? charset : StandardCharsets.ISO_8859_1);
+  return encode(bytes, minECCPercent, userSpecifiedLayers, charset);
+}
+
+
+
+No.1 generated result --------------------------
+
+@Test
+public void encodeTest() {
+    String data = "Hello World";
+    int minECCPercent = 20;
+    int userSpecifiedLayers = 3;
+    Charset charset = StandardCharsets.UTF_8;
+    AztecCode aztecCode = Encoder.encode(data, minECCPercent, userSpecifiedLayers, charset);
+    assertNotNull(aztecCode);
+    assertEquals(10, aztecCode.getBits().length());
+}
+
+
+No.2 generated result --------------------------
+
+
+@Test
+public void encodeTest() {
+  String data = "Hello World!";
+  int minECCPercent = 20;
+  int userSpecifiedLayers = 3;
+  Charset charset = StandardCharsets.UTF_8;
+  AztecCode actualAztecCode = Encoder.encode(data, minECCPercent, userSpecifiedLayers, charset);
+  BitArray expectedBitArray = new BitArray();
+  expectedBitArray.appendBits(0b110100010000, 12); // Header
+  expectedBitArray.appendBits(0b000000000010, 6); // Layers
+  expectedBitArray.appendBits(0b000000000010, 6); // Min ECC Percent
+  expectedBitArray.appendBits(0b000000000010, 6); // Charset
+  for (int i = 0; i < data.length(); i++) {
+    int charCode = (int) data.charAt(i);
+    expectedBitArray.appendBits(charCode, 8);
+  }
+  expectedBitArray.appendBits(0b110100010000, 12); // Footer
+  assertEquals(expectedBitArray, actualAztecCode.getBits());
+}
+
+
+No.3 generated result --------------------------
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class EncoderTest {
+    @Test
+    public void encodeTest() {
+        String input = "Hello World";
+        AztecCode code = Encoder.encode(input);
+        assertNotNull(code);
+        BitMatrix matrix = code.getMatrix();
+        int expectedSize = 14; // this is the default size of an Aztec code, you may need to adjust this based on your input string and other parameters
+        assertEquals(expectedSize, matrix.size());
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package com.google.zxing.aztec.encoder;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+public class EncoderTest {
+    @Test
+    public void encodeTest() {
+        String data = "Hello World";
+        int minECCPercent = 20;
+        int userSpecifiedLayers = 5;
+        Charset charset = StandardCharsets.UTF_8;
+        
+        AztecCode code = Encoder.encode(data, minECCPercent, userSpecifiedLayers, charset);
+        assertEquals(code.getSize(), userSpecifiedLayers * 40 + (2 * minECCPercent / 100));
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package com.google.zxing.aztec.encoder;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class EncoderTest {
+    @Test
+    public void encodeTest() {
+        // Test case 1: null data, minECCPercent=0, userSpecifiedLayers=0, charset=null
+        assertNull(Encoder.encode(null, 0, 0, null));
+
+        // Test case 2: empty data, minECCPercent=0, userSpecifiedLayers=0, charset=null
+        assertEquals("", Encoder.encode("", 0, 0, null).getData());
+
+        // Test case 3: non-empty data, minECCPercent=50, userSpecifiedLayers=1, charset=StandardCharsets.ISO_8859_1
+        String data = "Hello World!";
+        int minECCPercent = 50;
+        int userSpecifiedLayers = 1;
+        Charset charset = StandardCharsets.ISO_8859_1;
+        AztecCode code = Encoder.encode(data, minECCPercent, userSpecifiedLayers, charset);
+        assertNotNull(code);
+        assertEquals(minECCPercent, code.getMinimumECCPercent());
+        assertEquals(userSpecifiedLayers, code.getUserSpecifiedLayers());
+    }
+}
+
+
+No.6 generated result --------------------------
+
+
+@Test
+public void encodeTest() {
+    String data = "Hello World!";
+    int minECCPercent = 30;
+    int userSpecifiedLayers = 2;
+    Charset charset = StandardCharsets.UTF_8;
+    
+    AztecCode code = Encoder.encode(data, minECCPercent, userSpecifiedLayers, charset);
+    assertNotNull(code);
+    assertEquals(Encoder.DEFAULT_EC_PERCENT, code.getErrorCorrectionLevel());
+    assertEquals(userSpecifiedLayers, code.getLayers());
+}
+
+
+No.7 generated result --------------------------
+
+package com.google.zxing.aztec.encoder;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class EncoderTest {
+    @Test
+    public void encodeTest() {
+        // Test 1: Check the encoding of a string with default values for minECCPercent and userSpecifiedLayers
+        String data = "This is a test";
+        int minECCPercent = 33;
+        int userSpecifiedLayers = 20;
+        AztecCode code1 = Encoder.encode(data, minECCPercent, userSpecifiedLayers);
+        
+        // Check the length of the encoded data
+        assertEquals(code1.getEncodedData().length(), 3426);
+        
+        // Test 2: Check the encoding of a string with a different charset
+        Charset charset = StandardCharsets.UTF_8;
+        AztecCode code2 = Encoder.encode(data, minECCPercent, userSpecifiedLayers, charset);
+        
+        // Check the length of the encoded data
+        assertEquals(code2.getEncodedData().length(), 3426);
+    }
+}
+
+
+No.8 generated result --------------------------
+
+@Test
+public void encodeTest() {
+  // Arrange
+  String data = "Hello World!";
+  int minECCPercent = 25;
+  int userSpecifiedLayers = 10;
+  Charset charset = StandardCharsets.ISO_8859_1;
+  
+  // Act
+  AztecCode actualResult = Encoder.encode(data, minECCPercent, userSpecifiedLayers, charset);
+  
+  // Assert
+  assertEquals("Aztec code", actualResult);
+}
+
+
+No.9 generated result --------------------------
+
+package com.google.zxing.aztec.encoder;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class EncoderTest {
+    @Test
+    public void encodeTest() {
+        String data = "hello world";
+        int minECCPercent = 20;
+        int userSpecifiedLayers = 3;
+        Charset charset = StandardCharsets.ISO_8859_1;
+        
+        AztecCode code = Encoder.encode(data, minECCPercent, userSpecifiedLayers, charset);
+        
+        assertNotNull(code);
+        assertEquals(code.getEncodedData(), data);
+        assertEquals(code.getMinimumErrorCorrectionPercentage(), minECCPercent);
+        assertEquals(code.getUserSpecifiedNumberOfLayers(), userSpecifiedLayers);
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package com.google.zxing.aztec.encoder;
+
+import org.junit.jupiter.api.Test;
+
+class EncoderTest {
+
+  @Test
+  void encodeTest() {
+    // Arrange
+    String data = "hello world";
+    int minECCPercent = 20;
+    int userSpecifiedLayers = 3;
+    Charset charset = StandardCharsets.UTF_8;
+
+    // Act
+    AztecCode result = Encoder.encode(data, minECCPercent, userSpecifiedLayers, charset);
+
+    // Assert
+    assertNotNull(result);
+  }
+}
+
+

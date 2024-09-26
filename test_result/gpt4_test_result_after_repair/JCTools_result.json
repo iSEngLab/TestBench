@@ -1,0 +1,303 @@
+[
+    {
+        "project_name": "JCTools",
+        "code": "// Fast fuzzy version.  Used a cached value until it gets old, then re-up\n// the cache.\npublic long estimate_sum( ) {\n  // For short tables, just do the work\n  if( _t.length <= 64 ) return sum();\n  // For bigger tables, periodically freshen a cached value\n  long millis = System.currentTimeMillis();\n  if( _fuzzy_time != millis ) { // Time marches on?\n    _fuzzy_sum_cache = sum(); // Get sum the hard way\n    _fuzzy_time = millis;   // Indicate freshness of cached value\n  }\n  return _fuzzy_sum_cache;  // Return cached sum\n}\n",
+        "package": "org.jctools.maps",
+        "class_name": "ConcurrentAutoTable",
+        "method_name": "estimate_sum",
+        "SourceCode&Full": [
+            "Test Error",
+            "Test Error",
+            "Compile Error",
+            "Compile Error",
+            "Test Error",
+            "Test Error",
+            "Test Error",
+            "Test Error",
+            "Compile Error",
+            "Test Error"
+        ],
+        "SourceCode&Simple": [
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error"
+        ],
+        "SourceCodeOnly": [
+            "Compile Error",
+            "Test Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Test Error",
+            "Test Error"
+        ]
+    },
+    {
+        "project_name": "JCTools",
+        "code": "// Help any top-level NBSI to copy until completed.\n// Always return the _new version of *this* NBSI, in case we're nested.\nprivate NBSI help_copy() {\n  // Pick some words to help with - but only help copy the top-level NBSI.\n  // Nested NBSI waits until the top is done before we start helping.\n  NBSI top_nbsi = _non_blocking_set_int._nbsi;\n  final int HELP = 8;       // Tuning number: how much copy pain are we willing to inflict?\n  // We \"help\" by forcing individual bit indices to copy.  However, bits\n  // come in lumps of 64 per word, so we just advance the bit counter by 64's.\n  int idx = top_nbsi._copyIdx.getAndAdd(64*HELP);\n  for( int i=0; i<HELP; i++ ) {\n    int j = idx+i*64;\n    j %= (top_nbsi._bits.length<<6); // Limit, wrap to array size; means we retry indices\n    top_nbsi.help_copy_impl(j   );\n    top_nbsi.help_copy_impl(j+63); // Also force the nested-by-64 bit\n  }\n\n  // Top level guy ready to promote?\n  // Note: WE may not be the top-level guy!\n  if( top_nbsi._copyDone.get() == top_nbsi._sum_bits_length )\n    // One shot CAS to promote - it may fail since we are racing; others\n    // may promote as well\n    if( _non_blocking_set_int.CAS_nbsi( top_nbsi, top_nbsi._new ) ) {\n      //System.out.println(\"Promote at top level to size \"+(_non_blocking_set_int._nbsi._bits.length<<6));\n    }\n\n  // Return the new bitvector for 'fluid' programming style\n  return _new;\n}\n",
+        "package": "org.jctools.maps",
+        "class_name": "NonBlockingSetInt",
+        "method_name": "help_copy",
+        "SourceCode&Full": [
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Test Error",
+            "Compile Error",
+            "Test Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error"
+        ],
+        "SourceCode&Simple": [
+            "Syntax Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Syntax Error",
+            "Compile Error"
+        ],
+        "SourceCodeOnly": [
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Syntax Error"
+        ]
+    },
+    {
+        "project_name": "JCTools",
+        "code": "\n@Override\npublic String toString() {\n  Iterator<Entry<TypeK,TypeV>> i = entrySet().iterator();\n  if( !i.hasNext())\n    return \"{}\";\n\n  StringBuilder sb = new StringBuilder();\n  sb.append('{');\n  for (;;) {\n    Entry<TypeK,TypeV> e = i.next();\n    TypeK key = e.getKey();\n    TypeV value = e.getValue();\n    sb.append(key   == this ? \"(this Map)\" : key);\n    sb.append('=');\n    sb.append(value == this ? \"(this Map)\" : value);\n    if( !i.hasNext())\n      return sb.append('}').toString();\n    sb.append(\", \");\n  }\n}\n",
+        "package": "org.jctools.maps",
+        "class_name": "NonBlockingHashMap",
+        "method_name": "toString",
+        "SourceCode&Full": [
+            "Test Error",
+            "Test Error",
+            "Test Error",
+            "Compile Error",
+            "Compile Error",
+            "Test Error",
+            "Test Error",
+            "Test Error",
+            "Test Error",
+            "Test Error"
+        ],
+        "SourceCode&Simple": [
+            "Test Error",
+            "Test Error",
+            "Test Error",
+            "Test Error",
+            "Test Error",
+            "Compile Error",
+            "Test Error",
+            "Test Error",
+            "Compile Error",
+            "Test Error"
+        ],
+        "SourceCodeOnly": [
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Syntax Error",
+            "Test Error",
+            "Test Error",
+            "Compile Error",
+            "Compile Error",
+            "Test Error",
+            "Test Error"
+        ]
+    },
+    {
+        "project_name": "JCTools",
+        "code": "// Help copy this one word.  State Machine.\n// (1) If not \"made immutable\" in the old array, set the sign bit to make\n//     it immutable.\n// (2) If non-zero in old array & zero in new, CAS new from 0 to copy-of-old\n// (3) If non-zero in old array & non-zero in new, CAS old to zero\n// (4) Zero in old, new is valid\n// At this point, old should be immutable-zero & new has a copy of bits\nprivate NBSI help_copy_impl( int i ) {\n  // Handle every 64th bit via using a nested array\n  NBSI old = this;          // The bit array being copied from\n  NBSI nnn = _new;          // The bit array being copied to\n  if( nnn == null ) return this; // Promoted already\n  int j = i;                // The bit index being added\n  while( (j&63) == 63 ) {   // Bit 64? (low 6 bits are all set)\n    old = old._nbsi64;      // Recurse\n    nnn = nnn._nbsi64;      // Recurse\n    j = j>>6;               // Strip off low 6 bits (all set)\n  }\n\n  // Transit from state 1: word is not immutable yet\n  // Immutable is in bit 63, the sign bit.\n  long bits = old._bits[j>>6];\n  while( bits >= 0 ) {      // Still in state (1)?\n    long oldbits = bits;\n    bits |= mask(63);       // Target state of bits: sign-bit means immutable\n    if( old.CAS( j>>6, oldbits, bits ) ) {\n      if( oldbits == 0 ) _copyDone.addAndGet(1);\n      break;                // Success - old array word is now immutable\n    }\n    bits = old._bits[j>>6]; // Retry if CAS failed\n  }\n\n  // Transit from state 2: non-zero in old and zero in new\n  if( bits != mask(63) ) {  // Non-zero in old?\n    long new_bits = nnn._bits[j>>6];\n    if( new_bits == 0 ) {   // New array is still zero\n      new_bits = bits & ~mask(63); // Desired new value: a mutable copy of bits\n      // One-shot CAS attempt, no loop, from 0 to non-zero.\n      // If it fails, somebody else did the copy for us\n      if( !nnn.CAS( j>>6, 0, new_bits ) )\n        new_bits = nnn._bits[j>>6]; // Since it failed, get the new value\n      assert new_bits != 0;\n    }\n\n    // Transit from state 3: non-zero in old and non-zero in new\n    // One-shot CAS attempt, no loop, from non-zero to 0 (but immutable)\n    if( old.CAS( j>>6, bits, mask(63) ) )\n      _copyDone.addAndGet(1); // One more word finished copying\n  }\n\n  // Now in state 4: zero (and immutable) in old\n\n  // Return the self bitvector for 'fluid' programming style\n  return this;\n}\n",
+        "package": "org.jctools.maps",
+        "class_name": "NonBlockingSetInt",
+        "method_name": "help_copy_impl",
+        "SourceCode&Full": [
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error"
+        ],
+        "SourceCode&Simple": [
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error"
+        ],
+        "SourceCodeOnly": [
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Test Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Test Error"
+        ]
+    },
+    {
+        "project_name": "JCTools",
+        "code": "\nprivate int probe() {\n    // Fast path for reliable well-distributed probe, available from JDK 7+.\n    // As long as PROBE is final static this branch will be constant folded\n    // (i.e removed).\n    if (PROBE != -1) {\n        int probe;\n        if ((probe = UNSAFE.getInt(Thread.currentThread(), PROBE)) == 0) {\n            ThreadLocalRandom.current(); // force initialization\n            probe = UNSAFE.getInt(Thread.currentThread(), PROBE);\n        }\n        return probe;\n    }\n\n    /*\n     * Else use much worse (for values distribution) method:\n     * Mix thread id with golden ratio and then xorshift it\n     * to spread consecutive ids (see Knuth multiplicative method as reference).\n     */\n    int probe = (int) ((Thread.currentThread().getId() * 0x9e3779b9) & Integer.MAX_VALUE);\n    // xorshift\n    probe ^= probe << 13;\n    probe ^= probe >>> 17;\n    probe ^= probe << 5;\n    return probe;\n}\n\n",
+        "package": "org.jctools.counters",
+        "class_name": "FixedSizeStripedLongCounterPrePad",
+        "method_name": "probe",
+        "SourceCode&Full": [
+            "Test Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Test Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error"
+        ],
+        "SourceCode&Simple": [
+            "Compile Error",
+            "Compile Error",
+            "Test Error",
+            "Compile Error",
+            "Compile Error",
+            "Test Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error"
+        ],
+        "SourceCodeOnly": [
+            "Compile Error",
+            "Test Error",
+            "Compile Error",
+            "Compile Error",
+            "Test Error",
+            "Compile Error",
+            "Syntax Error",
+            "Compile Error",
+            "Test Error",
+            "Compile Error"
+        ]
+    },
+    {
+        "project_name": "JCTools",
+        "code": "\n@Override\npublic boolean offer(final E e)\n{\n    // Objects.requireNonNull(e);\n    if (null == e)\n    {\n        throw new NullPointerException();\n    }\n    // local load of field to avoid repeated loads after volatile reads\n    final E[] buffer = producerBuffer;\n    final long index = lpProducerIndex();\n    final long mask = producerMask;\n    final long offset = calcCircularRefElementOffset(index, mask);\n    // expected hot path\n    if (index < producerBufferLimit)\n    {\n        writeToQueue(buffer, e, index, offset);\n        return true;\n    }\n    return offerColdPath(buffer, mask, index, offset, e, null);\n}\n",
+        "package": "org.jctools.queues",
+        "class_name": "BaseSpscLinkedArrayQueuePrePad",
+        "method_name": "offer",
+        "SourceCode&Full": [
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error"
+        ],
+        "SourceCode&Simple": [
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error"
+        ],
+        "SourceCodeOnly": [
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error"
+        ]
+    },
+    {
+        "project_name": "JCTools",
+        "code": "\n@Override\npublic final int size()\n{\n    // Read consumer first, this is important because if the producer is node is 'older' than the consumer\n    // the consumer may overtake it (consume past it) invalidating the 'snapshot' notion of size.\n    LinkedQueueNode<E> chaserNode = lvConsumerNode();\n    LinkedQueueNode<E> producerNode = lvProducerNode();\n    int size = 0;\n    // must chase the nodes all the way to the producer node, but there's no need to count beyond expected head.\n    while (chaserNode != producerNode && // don't go passed producer node\n        chaserNode != null && // stop at last node\n        size < Integer.MAX_VALUE) // stop at max int\n    {\n        LinkedQueueNode<E> next;\n        next = chaserNode.lvNext();\n        // check if this node has been consumed, if so return what we have\n        if (next == chaserNode)\n        {\n            return size;\n        }\n        chaserNode = next;\n        size++;\n    }\n    return size;\n}\n",
+        "package": "org.jctools.queues",
+        "class_name": "BaseLinkedQueuePad0",
+        "method_name": "size",
+        "SourceCode&Full": [
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error"
+        ],
+        "SourceCode&Simple": [
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error"
+        ],
+        "SourceCodeOnly": [
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Compile Error",
+            "Syntax Error",
+            "Compile Error",
+            "Compile Error",
+            "Syntax Error",
+            "Compile Error",
+            "Compile Error"
+        ]
+    }
+]

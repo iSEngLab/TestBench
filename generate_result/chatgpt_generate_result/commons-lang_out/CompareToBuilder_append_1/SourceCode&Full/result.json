@@ -1,0 +1,27 @@
+{
+    "project_name": "commons-lang",
+    "file_name": "CompareToBuilder.java",
+    "relative_path": "commons-lang/src/main/java/org/apache/commons/lang3/builder/CompareToBuilder.java",
+    "execute_path": "commons-lang",
+    "package": "org.apache.commons.lang3.builder",
+    "docstring": "/**\n     * Appends to the {@code builder} the deep comparison of\n     * two {@code byte} arrays.\n     *\n     * <ol>\n     *  <li>Check if arrays are the same using {@code ==}</li>\n     *  <li>Check if for {@code null}, {@code null} is less than non-{@code null}</li>\n     *  <li>Check array length, a shorter length array is less than a longer length array</li>\n     *  <li>Check array contents element by element using {@link #append(byte, byte)}</li>\n     * </ol>\n     *\n     * @param lhs  left-hand side array\n     * @param rhs  right-hand side array\n     * @return this\n     */",
+    "source_code": "\npublic CompareToBuilder append(final byte[] lhs, final byte[] rhs) {\n    if (comparison != 0) {\n        return this;\n    }\n    if (lhs == rhs) {\n        return this;\n    }\n    if (lhs == null) {\n        comparison = -1;\n        return this;\n    }\n    if (rhs == null) {\n        comparison = 1;\n        return this;\n    }\n    if (lhs.length != rhs.length) {\n        comparison = lhs.length < rhs.length ? -1 : 1;\n        return this;\n    }\n    for (int i = 0; i < lhs.length && comparison == 0; i++) {\n        append(lhs[i], rhs[i]);\n    }\n    return this;\n}\n",
+    "class_name": "CompareToBuilder",
+    "method_name": "append",
+    "arguments": [
+        "byte[] lhs",
+        "byte[] rhs"
+    ],
+    "generate_test": [
+        "package org.apache.commons.lang3.builder;\n\nimport org.junit.jupiter.api.*;\nimport static org.junit.jupiter.api.Assertions.*;\n\npublic class CompareToBuilderTest {\n    @Test\n    public void appendTest() {\n        CompareToBuilder builder = new CompareToBuilder();\n        int result = builder.append(new byte[]{1, 2, 3}, new byte[]{1, 2, 3}).toComparison();\n        assertEquals(0, result);\n    }\n}",
+        "@Test\npublic void appendTest() {\n    CompareToBuilder builder = new CompareToBuilder();\n    byte[] arr1 = {1, 2, 3};\n    byte[] arr2 = {1, 2, 4};\n    CompareToBuilder result = builder.append(arr1, arr2);\n    assertEquals(0, result.toComparison());\n}",
+        "CompareToBuilder builder;\n\n@BeforeEach\npublic void setup() {\n    builder = new CompareToBuilder();\n}\n\n@Test\npublic void appendTest() {\n    builder.append(new byte[] { 1, 2, 3 }, new byte[] { 4, 5, 6 });\n    int comparison = builder.toComparison();\n    assertEquals(-1, comparison);\n}",
+        "CompareToBuilder compareToBuilder = new CompareToBuilder();\ncompareToBuilder.append(new byte[] { 1, 2, 3 }, new byte[] { 1, 2, 3 });\nassertEquals(0, compareToBuilder.toComparison());",
+        "@Test\npublic void appendTest() {\n    CompareToBuilder builder = new CompareToBuilder();\n    builder.append((byte) 1, (byte) 2);\n    int result = builder.toComparison();\n    assertEquals(-1, result);\n}",
+        "CompareToBuilder cb = new CompareToBuilder();\ncb.append(new byte[]{1, 2, 3}, new byte[]{1, 2, 3});\nassertEquals(0, cb.toComparison());",
+        "@Test\npublic void appendTest() {\n    CompareToBuilder builder = new CompareToBuilder();\n    assertEquals(0, builder.append((byte) 1, (byte) 1).toComparison());\n}",
+        "@Test\npublic void appendTest() {\n    CompareToBuilder builder = new CompareToBuilder();\n    builder.append(new byte[]{1, 2, 3}, new byte[]{1, 2, 3});\n    int result = builder.toComparison();\n    assertEquals(0, result);\n}",
+        "CompareToBuilder builder = new CompareToBuilder();\nint result = builder.append(new byte[]{1, 2, 3, 4}, new byte[]{1, 2, 3, 4}).toComparison();\nassertTrue(result == 0, \"Comparison result should be 0\");",
+        "@Test\npublic void appendTest() {\n    CompareToBuilder builder = new CompareToBuilder();\n    byte[] lhs = new byte[] {1, 2, 3};\n    byte[] rhs = new byte[] {1, 2, 3};\n    int result = builder.append(lhs, rhs).toComparison();\n    assertEquals(0, result);\n}"
+    ]
+}

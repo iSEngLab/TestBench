@@ -1,0 +1,530 @@
+Source code: 
+
+// Fast fuzzy version.  Used a cached value until it gets old, then re-up
+// the cache.
+public long estimate_sum( ) {
+  // For short tables, just do the work
+  if( _t.length <= 64 ) return sum();
+  // For bigger tables, periodically freshen a cached value
+  long millis = System.currentTimeMillis();
+  if( _fuzzy_time != millis ) { // Time marches on?
+    _fuzzy_sum_cache = sum(); // Get sum the hard way
+    _fuzzy_time = millis;   // Indicate freshness of cached value
+  }
+  return _fuzzy_sum_cache;  // Return cached sum
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ConcurrentAutoTableTest {
+    
+    // Assuming a method to retrieve the private field _t array length for the unit test
+    private static int getTableLength(ConcurrentAutoTable.CAT cat) throws Exception {
+        java.lang.reflect.Field field = cat.getClass().getDeclaredField("_t");
+        field.setAccessible(true);
+        long[] t = (long[]) field.get(cat);
+        return t.length;
+    }
+
+    @Test
+    public void estimate_sumTest() {
+        // create a CAT object with initial conditions
+        ConcurrentAutoTable.CAT cat = new ConcurrentAutoTable.CAT(null, 100, 0L);
+
+        // add values to _t, for example
+        cat.add_if(10L, 1, new ConcurrentAutoTable());
+
+        // using reflection to access private fields
+        try {
+            // access and modify the _fuzzy_sum_cache and _fuzzy_time fields
+            java.lang.reflect.Field fuzzySumCacheField = cat.getClass().getDeclaredField("_fuzzy_sum_cache");
+            fuzzySumCacheField.setAccessible(true);
+            fuzzySumCacheField.setLong(cat, 10L);
+            
+            java.lang.reflect.Field fuzzyTimeField = cat.getClass().getDeclaredField("_fuzzy_time");
+            fuzzyTimeField.setAccessible(true);
+            fuzzyTimeField.setLong(cat, System.currentTimeMillis());
+
+            // Test case when the cached sum is fresh
+            assertEquals(10L, cat.estimate_sum());
+
+            // Simulate a time change to force a cache refresh
+            Thread.sleep(1); // Ensure the time definitely changes
+            long currentSum = cat.estimate_sum();
+            assertEquals(10L, currentSum);
+            long currentTime = fuzzyTimeField.getLong(cat);
+            assertNotEquals(System.currentTimeMillis(), currentTime); // Time should be different now
+
+            // Test case for table lengths less than or equal to 64
+            // Use reflection to control the size of _t array
+            java.lang.reflect.Field tField = cat.getClass().getDeclaredField("_t");
+            tField.setAccessible(true);
+            long[] smallTable = new long[64]; // create a small table with exactly 64 elements
+            tField.set(cat, smallTable);
+
+            // Now add something to the small table to change the sum
+            cat.add_if(5L, 1, new ConcurrentAutoTable());
+            assertEquals(smallTable.length, getTableLength(cat)); // Ensure _t is the small table
+            assertEquals(15L, cat.estimate_sum()); // Should calculate based on smallTable conditions
+
+        } catch (NoSuchFieldException | IllegalAccessException | InterruptedException e) {
+            e.printStackTrace();
+            fail("Exception during test: " + e.getMessage());
+        }
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class ConcurrentAutoTableTest {
+
+    @Test
+    public void estimate_sumTest() {
+        ConcurrentAutoTable.CAT cat = mock(ConcurrentAutoTable.CAT.class);
+
+        // First configure the mock CAT to match the given context, with array length and time behavior
+        when(cat._t).thenReturn(new long[65]); // array longer than 64 to trigger caching behavior
+        when(cat.sum()).thenReturn(100L); // stub the sum() method to return a fixed value
+
+        // Simulate the time-dependent caching behavior by capturing the value of passed millis
+        doAnswer(invocation -> {
+            long millis = invocation.getArgument(0);
+            cat._fuzzy_time = millis;
+            cat._fuzzy_sum_cache = cat.sum(); // calculating the sum as per source
+            return null;
+        }).when(cat).estimate_sum();
+
+        // Test 1: Sum has been computed and should be properly cached initially
+        assertEquals(100L, cat.estimate_sum());
+        verify(cat).sum(); // verify that sum() was called
+
+        // Test 2: Simulate cache is still valid, should not call sum() again
+        cat._fuzzy_time = System.currentTimeMillis();
+        assertEquals(100L, cat.estimate_sum());
+        verify(cat, times(1)).sum(); // sum() should still have been called only once
+
+        // Test 3: Invalidate cache and check for update
+        cat._fuzzy_time = 0L; 
+        assertEquals(100L, cat.estimate_sum());
+        verify(cat, times(2)).sum(); // Now sum() should have been called twice to refresh cache
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ConcurrentAutoTableTest {
+
+    // Assuming 'CAT' is a nested class inside 'ConcurrentAutoTable' and is accessible 
+    // for the purpose of this example test case. Also, assuming that the '_t' field 
+    // can somehow be set or influenced in the test (e.g., via a constructor, setter, or 
+    // exposed for testing), and that the sum() method provides a correct sum of '_t'.
+    // Without the complete class definitions, including visibility and mutability of 
+    // certain fields, this test case uses mock values and might not reflect an actual 
+    // case.
+
+    @Test
+    public void estimate_sumTest() {
+        final long EXPECTED_SUM = 100L;
+        ConcurrentAutoTable.CAT cat = new ConcurrentAutoTable.CAT(null, 65, 0L);
+        // Populating '_t' with more than 64 elements to trigger the caching behavior
+        // and using a mock sum implementation that simply returns EXPECTED_SUM.
+        cat._t = new long[65]; // Assuming a setter or constructor that allows us to modify '_t'
+        
+        // Mocking the sum() method response
+        new MockUp<ConcurrentAutoTable.CAT>() {
+            @Mock
+            public long sum() {
+                return EXPECTED_SUM;
+            }
+        };
+
+        // Initial call to estimate_sum() should calculate and cache the sum
+        assertEquals(EXPECTED_SUM, cat.estimate_sum());
+
+        // Update the millis to be the same to simulate cached value usage
+        long fakeCurrentMillis = System.currentTimeMillis();
+        cat._fuzzy_time = fakeCurrentMillis; // Assuming we can set this for testing purposes
+
+        // The next call should use the cached value, hence no change expected
+        assertEquals(EXPECTED_SUM, cat.estimate_sum());
+
+        // Advance the time to invalidate the cached sum
+        cat._fuzzy_time = fakeCurrentMillis - 1; // Changing time to trigger cache update
+
+        // Assuming sum() will be called internally again due to cache invalidation
+        assertEquals(EXPECTED_SUM, cat.estimate_sum(), "Cached sum should be refreshed and match the expected sum");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ConcurrentAutoTableTest {
+    // Helper method to simulate passage of time (not part of standard JUnit)
+    private static void advanceTime(CAT cat) {
+        cat._fuzzy_time = System.currentTimeMillis();
+    }
+
+    @Test
+    public void estimate_sumTest() {
+        ConcurrentAutoTable catTable = new ConcurrentAutoTable();
+        
+        // Initialize CAT object with reasonable test values
+        ConcurrentAutoTable.CAT cat = catTable.new CAT(null, 100, 0);
+
+        // Set initial sum cache and time
+        long initialFuzzySum = 15L;
+        cat._fuzzy_sum_cache = initialFuzzySum;
+        cat._fuzzy_time = System.currentTimeMillis();
+
+        // Here we test with a table size greater than 64 to trigger the cache logic
+        long[] table = new long[65];
+        cat._t = table; // we need to assign a long array to _t to simulate a larger table
+
+        // Ensure sum cache is used without updating
+        assertEquals(initialFuzzySum, cat.estimate_sum(), "Fuzzy sum should return cached value without updating");
+
+        // Simulate time advancement and force cache update
+        advanceTime(cat);
+        
+        // Assume the sum method correctly calculates the sum of the array and force update
+        cat._fuzzy_sum_cache = 0; // Assume the sum() method would set this value
+        long newTime = System.currentTimeMillis();
+        
+        cat.estimate_sum(); // Trigger a cache update
+        
+        // The cache should now be updated with a refreshed sum
+        assertEquals(0, cat.estimate_sum(), "Fuzzy sum cache should be updated");
+        
+        // Verify that the _fuzzy_time changed after cache update
+        assertTrue(cat._fuzzy_time != initialFuzzySum, "Fuzzy time should be updated after cache refresh");
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import java.lang.reflect.Field;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ConcurrentAutoTableTest {
+    
+    // We will need access to private fields within our test
+    private static Field getPrivateField(Class<?> cls, String fieldName) throws NoSuchFieldException {
+        Field field = cls.getDeclaredField(fieldName);
+        field.setAccessible(true);
+        return field;
+    }
+
+    @Test
+    public void estimate_sumTest() throws Exception {
+        // Create an instance of the ConcurrentAutoTable.CAT class
+        ConcurrentAutoTable.CAT cat = new ConcurrentAutoTable.CAT(null, 65, 0L); // Size 65 to trigger caching
+        
+        // Add elements to the _t array and calculate the expected sum
+        long expectedSum = 0;
+        for(int i = 0; i < cat._t.length; i++) {
+            cat._t[i] = i;
+            expectedSum += i;
+        }
+        
+        // Ensure that sum() calculates the correct sum for _t
+        assertEquals(expectedSum, cat.sum(), "The sum method should calculate the correct sum.");
+        
+        // Initially, the _fuzzy_time should be unset (-1 if we consider it to be a common default)
+        // This might change depending on the actual initialization in the ConcurrentAutoTable.CAT class
+        long fuzzyTime = getPrivateField(ConcurrentAutoTable.CAT.class, "_fuzzy_time").getLong(cat);
+        assertEquals(-1, fuzzyTime, "Initial _fuzzy_time should be -1 (or other unset value).");
+
+        // Now calculate and check the fuzzy sum
+        long estimatedSum = cat.estimate_sum();
+        assertEquals(expectedSum, estimatedSum, "The estimated sum should be equal to the actual sum when the cache is first computed.");
+        
+        // Get the _fuzzy_sum_cache value
+        long fuzzySumCache = getPrivateField(ConcurrentAutoTable.CAT.class, "_fuzzy_sum_cache").getLong(cat);
+        assertEquals(expectedSum, fuzzySumCache, "The _fuzzy_sum_cache should hold the correct sum after estimate_sum call.");
+        
+        // Check that subsequent calls to estimate_sum return the cached sum without updating it
+        // To simulate time passage without waiting, manipulate the _fuzzy_time field directly
+        getPrivateField(ConcurrentAutoTable.CAT.class, "_fuzzy_time").setLong(cat, System.currentTimeMillis());
+        
+        // The sum should be fetched from the cache this time since `_fuzzy_time != millis` condition should fail
+        estimatedSum = cat.estimate_sum();
+        assertEquals(expectedSum, estimatedSum, "Subsequent calls should use the cached sum instead of recalculating.");
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ConcurrentAutoTableTest {
+    @Test
+    public void estimate_sumTest() throws InterruptedException {
+        // Create an instance of ConcurrentAutoTable
+        ConcurrentAutoTable table = new ConcurrentAutoTable();
+        
+        // Ensure the table size is greater than 64 to test the fuzzy logic
+        for (int i = 0; i < 100; i++) {
+            table.add(1);
+        }
+        
+        // First call to estimate_sum() should result in the hard computation of sum
+        long initialFuzzySum = table.estimate_sum();
+        
+        // The following calls within the same millisecond should return the cached sum
+        long cachedFuzzySum = table.estimate_sum();
+        
+        assertEquals(initialFuzzySum, cachedFuzzySum, "Cached sum should be equal to the initial computed sum");
+        
+        // Sleep for 1 millisecond to update the current time
+        Thread.sleep(1);
+
+        // Change the state of the table
+        table.add(1);
+        
+        // Call estimate_sum again after sleeping and expect a different sum since the cache should have been updated
+        long updatedFuzzySum = table.estimate_sum();
+        
+        assertNotEquals(initialFuzzySum, updatedFuzzySum, "Updated sum should be different after cache refresh");
+        
+        // To be completely sure, the updated sum should be exactly 1 more than the initial sum (as we only added 1)
+        assertEquals(initialFuzzySum + 1, updatedFuzzySum, "Updated sum should be exactly 1 more than initial sum");
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.mockito.Mockito;
+
+public class ConcurrentAutoTableTest {
+
+    @Test
+    public void estimate_sumTest() {
+        // Assuming there is a private field named '_t' in the CAT class which represents the table.
+        // We will mock this field to control its length and behavior during the test.
+        
+        // Create mock CAT instance to bypass other functionality and direct access to fields
+        ConcurrentAutoTable.CAT mockCat = Mockito.mock(ConcurrentAutoTable.CAT.class);
+
+        long[] mockArray = new long[100]; // An array longer than 64, which should trigger the caching mechanism
+        Mockito.when(mockCat._t).thenReturn(mockArray);
+
+        // Assuming that CAT.sum() is a method that computes the sum effectively
+        // We will mock this sum method to return a controlled value for testing.
+        Mockito.when(mockCat.sum()).thenReturn(12345L);
+
+        // Directly create an instance of ConcurrentAutoTable to test
+        ConcurrentAutoTable table = new ConcurrentAutoTable();
+
+        // Set the mock _cat field within the ConcurrentAutoTable
+        UnsafeAccess.UNSAFE.putObject(table, UnsafeAccess.UNSAFE.objectFieldOffset(ConcurrentAutoTable.class.getDeclaredField("_cat")), mockCat);
+
+        // Set the fuzzy time to the current time
+        mockCat._fuzzy_time = System.currentTimeMillis();
+        // Force the cache update by making the fuzzy time different than the current time (using Mockito when/then)
+        Mockito.when(mockCat._fuzzy_time).thenReturn(System.currentTimeMillis() - 1);
+
+        // Estimate the sum which should update the cache
+        long estimatedSumFirst = table.estimate_sum();
+        assertEquals(12345L, estimatedSumFirst, "The cached sum should match the mocked sum");
+
+        // Simulate waiting for some time more than the currentTimeMillis granularity.
+        // (depends on the system currentTimeMillis resolution, usually 1ms on most systems)
+        Thread.sleep(1);
+
+        // Now call estimate_sum again, should fetch from cache without updating
+        long estimatedSumSecond = table.estimate_sum();
+        assertEquals(12345L, estimatedSumSecond, "The cached sum should be returned without update");
+
+        // Verify the behavior that sum() was called once to populate the cache initially
+        Mockito.verify(mockCat, Mockito.times(1)).sum();
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ConcurrentAutoTableTest {
+
+    @Test
+    public void estimate_sumTest() {
+        // Arrange
+        ConcurrentAutoTable cat = new ConcurrentAutoTable();
+        cat.set(50); // Set an initial value
+        long expectedSum = cat.sum(); // Get the actual sum to compare it later
+
+        // Act
+        long estimatedSumBeforeTimeChange = cat.estimate_sum();
+        // Simulate time change and cache refresh
+        try {
+            Thread.sleep(1); // Ensure the current time millis will definitely be different
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } 
+        long estimatedSumAfterTimeChange = cat.estimate_sum();
+
+        // Assert
+        assertEquals(expectedSum, estimatedSumBeforeTimeChange, "Estimate before time change should be equal to the actual sum");
+        assertEquals(expectedSum, estimatedSumAfterTimeChange, "Estimate after time change should be recalculated and equal to the actual sum");
+
+        // Verify that a cached value is returned when the time hasn't changed
+        long estimatedSumAgainWithoutTimeChange = cat.estimate_sum();
+        assertEquals(estimatedSumAfterTimeChange, estimatedSumAgainWithoutTimeChange, "Subsequent estimates without a time change should use the cached sum");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+class ConcurrentAutoTableTest {
+
+    // Inner class to create a mock CAT for testing purposes
+    private static class MockCAT extends ConcurrentAutoTable.CAT {
+        public MockCAT(int sz, long init) {
+            super(null, sz, init);
+        }
+        
+        @Override
+        public long sum() {
+            // Mock implementation of sum that just returns a fixed value
+            return 42;
+        }
+    }
+    
+    @Test
+    public void estimate_sumTest() {
+        // Create an instance of the mock CAT class with an initial sum and size that won't invoke actual summing
+        MockCAT mockCat = new MockCAT(100, 0); // Array size > 64 to trigger fuzzy logic
+        long initialSum = mockCat.estimate_sum(); // Get the initial fuzzy sum
+        
+        // Assume System.currentTimeMillis() returns a different value
+        try {
+            // Sleep for a millisecond to ensure the timestamp will definitely be different
+            Thread.sleep(1);
+        } catch(InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        
+        long newSum = mockCat.estimate_sum(); // Should trigger a refresh since the time has changed
+        
+        // Assert that the values are as expected
+        assertEquals(42, initialSum, "The initial sum should be 42.");
+        assertEquals(42, newSum, "The new sum should be 42 after refreshing.");
+        
+        // Verify that calling estimate_sum again without delay won't refresh the sum
+        long sameSum = mockCat.estimate_sum();
+        assertEquals(42, sameSum, "The sum should remain unchanged at 42 without a significant time delay.");
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jctools.maps;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ConcurrentAutoTableTest {
+    private ConcurrentAutoTable cat;
+    private ConcurrentAutoTable.CAT innerCat;
+
+    @BeforeEach
+    public void setUp() {
+        // Assuming constructor and necessary methods exist to instantiate ConcurrentAutoTable and its inner CAT class.
+        cat = new ConcurrentAutoTable();
+        innerCat = new ConcurrentAutoTable.CAT(null, 16, 0L); // Assuming a constructor with these parameters exists.
+    }
+
+    @Test
+    public void estimate_sumTest() {
+        // Set up the table with a length less than 64, expecting the sum method to be directly used.
+        long[] smallTable = new long[64];
+        for(int i = 0; i < smallTable.length; i++) {
+            innerCat._cat._t[i] = i;
+        }
+        long actualSum = innerCat.estimate_sum();
+        long expectedSum = innerCat.sum();
+        assertEquals(expectedSum, actualSum, "The sum should be directly calculated for small tables.");
+        
+        // Set up the environment for a larger table length where caching should be used.
+        long[] largeTable = new long[65];
+        innerCat._cat._t = largeTable;
+        innerCat._fuzzy_time = System.currentTimeMillis() - 1; // Set the time to the past to force cache refresh
+        largeTable[64] = 42; // Change the last element to differentiate from zero initialization
+        innerCat.estimate_sum(); // Call to potentially update the cache
+
+        long cachedValueBefore = innerCat._fuzzy_sum_cache;
+        long timeBefore = innerCat._fuzzy_time;
+
+        // Sleep for a millisecond to ensure the time has changed.
+        try {
+            Thread.sleep(1);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        actualSum = innerCat.estimate_sum();
+        // Check if the cache value is updated or not. The cached sum should be recalculated as the time has advanced.
+        assertNotEquals(cachedValueBefore, innerCat._fuzzy_sum_cache, "Cache value should be updated for large tables when the time changes.");
+        assertNotEquals(timeBefore, innerCat._fuzzy_time, "The time should be updated to the current time on recalculation.");
+        assertEquals(actualSum, innerCat.sum(), "The cached sum should match the actual sum after recalculation.");
+
+        // Re-invoke the estimate to test that the cached value is used while the time has not advanced.
+        long cachedValueAfter = innerCat._fuzzy_sum_cache;
+        actualSum = innerCat.estimate_sum();
+        assertEquals(cachedValueAfter, actualSum, "The cached sum should be returned without recalculation if time has not advanced.");
+        assertEquals(cachedValueAfter, innerCat._fuzzy_sum_cache, "The cache should remain unchanged if time has not advanced.");
+    }
+}
+
+

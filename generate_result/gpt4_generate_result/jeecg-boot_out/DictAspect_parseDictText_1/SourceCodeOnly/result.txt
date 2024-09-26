@@ -1,0 +1,844 @@
+Source code: 
+
+
+private Object parseDictText(Object result) {
+    if (result instanceof Result) {
+        if (((Result) result).getResult() instanceof IPage) {
+            List<JSONObject> items = new ArrayList<>();
+
+            //step.1 筛选出加了 Dict 注解的字段列表
+            List<Field> dictFieldList = new ArrayList<>();
+            // 字典数据列表， key = 字典code，value=数据列表
+            Map<String, List<String>> dataListMap = new HashMap<>(5);
+            //取出结果集
+            List<Object> records=((IPage) ((Result) result).getResult()).getRecords();
+            //update-begin--Author:zyf -- Date:20220606 ----for：【VUEN-1230】 判断是否含有字典注解,没有注解返回-----
+            Boolean hasDict= checkHasDict(records);
+            if(!hasDict){
+                return result;
+            }
+
+            log.debug(" __ 进入字典翻译切面 DictAspect —— " );
+            //update-end--Author:zyf -- Date:20220606 ----for：【VUEN-1230】 判断是否含有字典注解,没有注解返回-----
+            for (Object record : records) {
+                String json="{}";
+                try {
+                    //update-begin--Author:zyf -- Date:20220531 ----for：【issues/#3629】 DictAspect Jackson序列化报错-----
+                    //解决@JsonFormat注解解析不了的问题详见SysAnnouncement类的@JsonFormat
+                     json = objectMapper.writeValueAsString(record);
+                    //update-end--Author:zyf -- Date:20220531 ----for：【issues/#3629】 DictAspect Jackson序列化报错-----
+                } catch (JsonProcessingException e) {
+                    log.error("json解析失败"+e.getMessage(),e);
+                }
+                //update-begin--Author:scott -- Date:20211223 ----for：【issues/3303】restcontroller返回json数据后key顺序错乱 -----
+                JSONObject item = JSONObject.parseObject(json, Feature.OrderedField);
+                //update-end--Author:scott -- Date:20211223 ----for：【issues/3303】restcontroller返回json数据后key顺序错乱 -----
+
+                //update-begin--Author:scott -- Date:20190603 ----for：解决继承实体字段无法翻译问题------
+                //for (Field field : record.getClass().getDeclaredFields()) {
+                // 遍历所有字段，把字典Code取出来，放到 map 里
+                for (Field field : oConvertUtils.getAllFields(record)) {
+                    String value = item.getString(field.getName());
+                    if (oConvertUtils.isEmpty(value)) {
+                        continue;
+                    }
+                //update-end--Author:scott  -- Date:20190603 ----for：解决继承实体字段无法翻译问题------
+                    if (field.getAnnotation(Dict.class) != null) {
+                        if (!dictFieldList.contains(field)) {
+                            dictFieldList.add(field);
+                        }
+                        String code = field.getAnnotation(Dict.class).dicCode();
+                        String text = field.getAnnotation(Dict.class).dicText();
+                        String table = field.getAnnotation(Dict.class).dictTable();
+
+                        List<String> dataList;
+                        String dictCode = code;
+                        if (!StringUtils.isEmpty(table)) {
+                            dictCode = String.format("%s,%s,%s", table, text, code);
+                        }
+                        dataList = dataListMap.computeIfAbsent(dictCode, k -> new ArrayList<>());
+                        this.listAddAllDeduplicate(dataList, Arrays.asList(value.split(",")));
+                    }
+                    //date类型默认转换string格式化日期
+                    //update-begin--Author:zyf -- Date:20220531 ----for：【issues/#3629】 DictAspect Jackson序列化报错-----
+                    //if (JAVA_UTIL_DATE.equals(field.getType().getName())&&field.getAnnotation(JsonFormat.class)==null&&item.get(field.getName())!=null){
+                        //SimpleDateFormat aDate=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                        // item.put(field.getName(), aDate.format(new Date((Long) item.get(field.getName()))));
+                    //}
+                    //update-end--Author:zyf -- Date:20220531 ----for：【issues/#3629】 DictAspect Jackson序列化报错-----
+                }
+                items.add(item);
+            }
+
+            //step.2 调用翻译方法，一次性翻译
+            Map<String, List<DictModel>> translText = this.translateAllDict(dataListMap);
+
+            //step.3 将翻译结果填充到返回结果里
+            for (JSONObject record : items) {
+                for (Field field : dictFieldList) {
+                    String code = field.getAnnotation(Dict.class).dicCode();
+                    String text = field.getAnnotation(Dict.class).dicText();
+                    String table = field.getAnnotation(Dict.class).dictTable();
+
+                    String fieldDictCode = code;
+                    if (!StringUtils.isEmpty(table)) {
+                        fieldDictCode = String.format("%s,%s,%s", table, text, code);
+                    }
+
+                    String value = record.getString(field.getName());
+                    if (oConvertUtils.isNotEmpty(value)) {
+                        List<DictModel> dictModels = translText.get(fieldDictCode);
+                        if(dictModels==null || dictModels.size()==0){
+                            continue;
+                        }
+
+                        String textValue = this.translDictText(dictModels, value);
+                        log.debug(" 字典Val : " + textValue);
+                        log.debug(" __翻译字典字段__ " + field.getName() + CommonConstant.DICT_TEXT_SUFFIX + "： " + textValue);
+
+                        // TODO-sun 测试输出，待删
+                        log.debug(" ---- dictCode: " + fieldDictCode);
+                        log.debug(" ---- value: " + value);
+                        log.debug(" ----- text: " + textValue);
+                        log.debug(" ---- dictModels: " + JSON.toJSONString(dictModels));
+
+                        record.put(field.getName() + CommonConstant.DICT_TEXT_SUFFIX, textValue);
+                    }
+                }
+            }
+
+            ((IPage) ((Result) result).getResult()).setRecords(items);
+        }
+
+    }
+    return result;
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.mockito.Mockito;
+
+import java.lang.reflect.Field;
+import java.util.*;
+
+// Make sure to have the necessary imports for your testing, for instance, Mockito and any other used classes from the JAVA Source Code
+
+public class DictAspectTest {
+
+    private DictAspect dictAspect;
+
+    @BeforeEach
+    public void setUp() {
+        dictAspect = new DictAspect();
+        dictAspect.objectMapper = new ObjectMapper(); // Assuming ObjectMapper instance is available in the DictAspect class
+        dictAspect.setDictService(mockDictService); // Assuming you have a setter or some form of DI for DictService
+    }
+
+    @Test
+    public void parseDictTextTest() {
+        // Setup
+        Result mockResult = Mockito.mock(Result.class);
+        IPage mockPage = Mockito.mock(IPage.class);
+        List<Object> records = new ArrayList<>();
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("name", "John Doe");
+
+        records.add(jsonObject);
+        Mockito.when(mockPage.getRecords()).thenReturn(records);
+        Mockito.when(mockResult.getResult()).thenReturn(mockPage);
+
+        // Assuming checkHasDict method and translDictText method are being tested separately
+        Mockito.when(dictAspect.checkHasDict(records)).thenReturn(true);
+        
+        Map<String, List<DictModel>> translationMap = new HashMap<>();
+        List<DictModel> dictModels = Collections.singletonList(new DictModel("stringValue", "textValue"));
+        translationMap.put("someDictCode", dictModels);
+        Mockito.when(dictAspect.translateAllDict(Mockito.any())).thenReturn(translationMap);
+
+        Mockito.when(dictAspect.translDictText(dictModels, "stringValue")).thenReturn("TranslatedText");
+
+        // Execution
+        Object result = dictAspect.parseDictText(mockResult);
+
+        // Assertion
+        assertNotNull(result);
+        assertTrue(result instanceof Result);
+        Object resultData = ((Result) result).getResult();
+        assertTrue(resultData instanceof IPage);
+        List<?> resultRecords = ((IPage) resultData).getRecords();
+        assertFalse(resultRecords.isEmpty());
+        assertTrue(resultRecords.get(0) instanceof JSONObject);
+        JSONObject resultRecord = (JSONObject) resultRecords.get(0);
+        assertEquals("TranslatedText", resultRecord.getString("nameDictText"));
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import org.junit.jupiter.api.*;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.lang.reflect.Field;
+import java.util.*;
+
+// Mock classes and interfaces to represent the assumed ones in the JAVA source code
+interface IPage {
+    List<Object> getRecords();
+    void setRecords(List<JSONObject> records);
+}
+
+class Result {
+    Object getResult() {
+        return null; // Placeholder for mocked method
+    }
+}
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
+@interface Dict {
+    String dicCode();
+
+    String dicText();
+
+    String dictTable() default "";
+}
+
+class DictModel {
+    // Placeholder for assumed DictModel fields and methods
+}
+
+public class DictAspectTest {
+
+    @InjectMocks
+    private DictAspect dictAspect;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void parseDictTextTest() throws JsonProcessingException, NoSuchFieldException {
+        // Create mock instances for Result and IPage
+        Result mockResult = mock(Result.class);
+        IPage mockPage = mock(IPage.class);
+        when(mockResult.getResult()).thenReturn(mockPage);
+
+        // Create a fake record to be returned by mockPage.getRecords()
+        Object fakeRecord = new Object();
+        List<Object> fakeRecordsList = Collections.singletonList(fakeRecord);
+        when(mockPage.getRecords()).thenReturn(fakeRecordsList);
+
+        // Prepare a JSON string to be returned by objectMapper
+        String jsonString = "{\"key\":\"value\"}";
+        when(objectMapper.writeValueAsString(any())).thenReturn(jsonString);
+
+        // Assume a JSONObject to be added to page records after processing
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("key", "value");
+
+        // Prepare a field with the @Dict annotation to simulate the behavior
+        Field annotatedField = Object.class.getDeclaredField("fakeField");
+        Dict dictAnnotation = mock(Dict.class);
+        when(dictAnnotation.dicCode()).thenReturn("someCode");
+        when(dictAnnotation.dicText()).thenReturn("someText");
+        when(annotatedField.getAnnotation(Dict.class)).thenReturn(dictAnnotation);
+
+        // Mock other methods used in parseDictText
+        // These methods have custom behavior and depend on application-specific logic
+        // Here they are simply stubbed to allow the test to proceed without errors
+        when(dictAspect.translateAllDict(any())).thenReturn(Collections.emptyMap());
+        when(dictAspect.translDictText(any(), any())).thenReturn("translatedText");
+
+        // Call the method under test with the mocked Result
+        Object finalResult = dictAspect.parseDictText(mockResult);
+
+        // Assert the expected modifications to the records list
+        List<JSONObject> expectedRecords = Collections.singletonList(jsonObject);
+        assertIterableEquals(expectedRecords, mockPage.getRecords());
+
+        // Verify the interactions with mocked objects
+        verify(mockPage).getRecords();
+        verify(objectMapper).writeValueAsString(fakeRecord);
+    }
+}
+
+class DictAspect {
+    // Placeholder for methods used in parseDictText
+    Map<String, List<DictModel>> translateAllDict(Map<String, List<String>> dataListMap) {
+        return new HashMap<>();
+    }
+
+    String translDictText(List<DictModel> dictModels, String value) {
+        return "";
+    }
+
+    // Method under test; implementation copied from JAVA source with some details omitted for brevity
+    private Object parseDictText(Object result) {
+        // ... Existing implementation from JAVA source code ...
+        return result;
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.*;
+import org.mockito.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+// Assuming JSONObject, IPage, Result, Field are part of some library or custom implementation
+import org.json.JSONObject;
+
+public class DictAspectTest {
+    private DictAspect aspect; // Assuming DictAspect is the class where parseDictText method exists
+
+    @BeforeEach
+    void setUp() {
+        aspect = new DictAspect();
+    }
+
+    @Test
+    public void parseDictTextTest() {
+        // Create mock objects or construct real ones, as appropriate
+        Result mockResult = Mockito.mock(Result.class);
+        IPage mockPage = Mockito.mock(IPage.class);
+        
+        // Assuming some setup is done here with Result and IPage mock objects
+        Mockito.when(mockResult.getResult()).thenReturn(mockPage);
+        
+        List<Object> mockRecords = new ArrayList<>();
+        Mockito.when(mockPage.getRecords()).thenReturn(mockRecords);
+        
+        Object result = aspect.parseDictText(mockResult);
+        
+        // Verify IPage's records are set as expected after parseDictText()
+        Mockito.verify(mockPage).setRecords(anyList());
+        
+        // Assertions to validate the behavior according to your source code logic
+        assertNotNull(result, "The result should not be null after parsing dict text.");
+
+        // Assuming parseDictText method is supposed to modify the records in the result
+        assertNotEquals(mockRecords, ((Result)result).getResult().getRecords(), "The records should not be the same after parsing dict text.");
+
+        // Add other relevant assertions here depending on what the `parseDictText` method is supposed to do
+    }
+    
+    // More unit tests as needed...
+}
+
+
+No.4 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import com.alibaba.fastjson.JSONObject;
+import org.junit.jupiter.api.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+import org.mockito.MockitoAnnotations;
+
+import java.lang.reflect.Field;
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+// Added imports necessary for mocking and testing
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+public class DictAspectTest {
+
+    @InjectMocks
+    private DictAspect dictAspect; // Assuming the parseDictText method is in the DictAspect class
+
+    @Mock
+    private ObjectMapper objectMapper;
+    
+    @Mock
+    private IPage iPage; // Assuming IPage is an interface with method getRecords()
+
+    @Mock
+    private Result result;
+
+    // Setting up mocks before each test
+    @BeforeEach
+    public void setUp() {
+        // Initialize mocks created with annotations
+        MockitoAnnotations.openMocks(this);
+
+        // Setup mock behavior –– if necessary for the objectMapper
+        // when(objectMapper.writeValueAsString(any())).thenReturn("{\"key\":\"value\"}");
+
+        // Mock the Result and IPage behavior as per your test needs
+        // when(result.getResult()).thenReturn(iPage);
+        // when(iPage.getRecords()).thenReturn(Collections.singletonList(new YourRecordClass()));
+    }
+
+    @Test
+    public void parseDictTextTest() {
+        // Set the result to be passed to the parseDictText method
+        // when(iPage.getRecords()).thenReturn("Your mocked records here"); // For example, a list of record items.
+
+        // You may need to mock additional behavior depending on the exact functionality and data
+        // such as mocking the hasDict, listAddAllDeduplicate, translateAllDict methods, etc.
+
+        // Assure that the method can handle input correctly and the response is as expected
+        Object parsedResult = dictAspect.parseDictText(result);
+
+        // Assuming you want to test the returned object is the same
+        assertEquals(result, parsedResult);
+
+        // Add additional assertions here depending on the intended outcomes
+        // For instance, you might check if items have been properly added to the 'result' variable
+        // ... or if specific methods were called on mocks
+    }
+
+    // Add additional teardown, test cases, or utility methods as needed
+}
+
+
+No.5 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.jeecg.common.constant.CommonConstant;
+import org.jeecg.modules.result.Result;
+import org.jeecg.modules.model.DictModel;
+import org.jeecg.modules.page.IPage;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.mockito.Mockito;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+
+public class DictAspectTest {
+
+    private DictAspect dictAspect;
+    private ObjectMapper objectMapper;
+
+    @BeforeEach
+    public void setUp() {
+        dictAspect = new DictAspect();
+        objectMapper = Mockito.mock(ObjectMapper.class); // Assuming ObjectMapper is injected in DictAspect
+        // Add additional setup for mock objects if necessary
+    }
+
+    @Test
+    public void parseDictTextTest() {
+        // Given
+        Result inputResult = Mockito.mock(Result.class);
+        IPage page = Mockito.mock(IPage.class);
+        List<Object> records = new ArrayList<>();
+
+        // TODO: Populate records with mock data that includes fields with @Dict annotations
+        // This is necessary if you want to test the actual dictionary translation logic
+
+        Mockito.when(inputResult.getResult()).thenReturn(page);
+        Mockito.when(page.getRecords()).thenReturn(records);
+
+        // Mock the objectMapper behavior if necessary
+        // Mockito.when(objectMapper.writeValueAsString(Mockito.any())).thenReturn(...);
+
+        // When
+        Object outputResult = dictAspect.parseDictText(inputResult);
+
+        // Then
+        assertNotNull(outputResult);
+        assertTrue(outputResult instanceof Result);
+
+        // Assuming your method modifies the 'records' list on the page object
+        Result resultCast = (Result) outputResult;
+        IPage pageResult = (IPage) resultCast.getResult();
+        assertNotNull(pageResult.getRecords());
+        // More assertions based on expected behavior
+
+        // Verify that the modified records contain the expected keys/values
+        // for (Object record : pageResult.getRecords()) {
+        //     JSONObject recordJson = (JSONObject) record;
+        //     assertTrue(recordJson.containsKey( ... )); // key added by parseDictText method
+        //     assertEquals( ... , recordJson.get( ... )); // value expected
+        // }
+    }
+
+    // Additional test methods and tearDown if necessary
+}
+
+
+No.6 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.json.JSONObject;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+public class DictAspectTest {
+    // Mocked classes and required methods for testing
+    private static class Result {
+        private IPage page;
+        // Assume that this is an appropriate constructor.
+        public Result(IPage page) {
+            this.page = page;
+        }
+        public Object getResult() { 
+            // Returning the mock page
+            return this.page;
+        }
+    }
+
+    private static class IPage {
+        private List<Object> records;
+        public IPage(List<Object> records) {
+            this.records = records;
+        }
+        public List<Object> getRecords() {
+            // Returning the mock records
+            return this.records;
+        }
+        public void setRecords(List<JSONObject> items) {
+            // Assume this is the appropriate method to set records.
+            // The test does not verify the records, so no actual implementation is needed.
+        }
+    }
+
+    // Assuming DictAspect is the class where parseDictText method is defined
+    private DictAspect dictAspect;
+
+    @BeforeEach
+    public void setUp() {
+        dictAspect = new DictAspect();
+    }
+
+    @Test
+    public void parseDictTextTest() {
+        // Set up the input data for the test
+        List<Object> records = new ArrayList<>();
+        // ... You would add mock objects that represent your records here
+        
+        // Mock IPage with the records
+        IPage page = new IPage(records);
+        
+        // Mock Result with the IPage
+        Result result = new Result(page);
+        
+        // Call the method under test
+        Object parsedResult = dictAspect.parseDictText(result);
+        
+        // Verify the result
+        assertNotNull(parsedResult);
+        // Additional asserts would go here based on the expected behavior
+        // For example, if we expect a certain record to have updated fields, we should check for that
+    }
+    
+    // Additional tests would follow, likely requiring you to stub the behavior of parseDictText more heavily
+}
+
+
+No.7 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+import static org.mockito.Mockito.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.jeecg.common.constant.CommonConstant;
+import org.jeecg.common.system.vo.DictModel;
+import org.jeecg.common.util.oConvertUtils;
+import org.json.simple.JSONObject;
+
+import java.lang.reflect.Field;
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DictAspectTest {
+
+    private DictAspect dictAspect;
+    private ObjectMapper objectMapper;
+
+    @BeforeEach
+    public void setUp() {
+        dictAspect = Mockito.spy(new DictAspect());
+        objectMapper = Mockito.mock(ObjectMapper.class);
+        dictAspect.objectMapper = objectMapper;
+    }
+
+    @Test
+    public void parseDictTextTest() {
+        // Create a mock `Result` object
+        Result mockResult = Mockito.mock(Result.class);
+        IPage mockPage = Mockito.mock(IPage.class);
+        List<Object> records = Collections.singletonList(new SomeRecordObject()); // Replace with actual record objects
+        when(mockResult.getResult()).thenReturn(mockPage);
+        when(mockPage.getRecords()).thenReturn(records);
+
+        // Define the expected parsed JSON object using the result records
+        String expectedJsonString = "{\"someField\":\"someValue\"}";
+        JSONObject expectedItem = new JSONObject();
+        expectedItem.put("someField", "someValue");
+
+        try {
+            // Mock the ObjectMapper's writeValueAsString method
+            when(objectMapper.writeValueAsString(any())).thenReturn(expectedJsonString);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        // Execute the method to be tested
+        Object actualResultObject = dictAspect.parseDictText(mockResult);
+
+        // Asserting the expected outcome based on our logic
+        assertNotNull(actualResultObject, "The result should not be null");
+        assertTrue(actualResultObject instanceof Result, "The result should be an instance of Result");
+
+        Result actualResult = (Result)actualResultObject;
+        IPage actualPage = (IPage)actualResult.getResult();
+        assertNotNull(actualPage, "The page in the result should not be null");
+
+        List<Object> actualRecords = actualPage.getRecords();
+        assertNotNull(actualRecords, "The records in the page should not be null");
+        assertFalse(actualRecords.isEmpty(), "The records in the page should not be empty");
+
+        // Assuming there's a method to obtain the JSONObject from the record, replace with actual method and verify
+        JSONObject actualFirstRecord = (JSONObject) actualRecords.get(0);
+        assertNotNull(actualFirstRecord, "The first record should not be null");
+        assertEquals(expectedItem, actualFirstRecord, "The parsed JSON Object should match the expected JSON object");
+        
+        // Additional assertions based on specific field values may be added, depending on the details of test scenarios
+        // ...
+    }
+
+    // You may need to create additional private helper classes that resemble the objects being used in your actual code
+    private static class SomeRecordObject {
+        // fields and methods
+    }
+    
+    // Additional helper methods for mocking and assertions
+}
+
+
+No.8 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.*;
+import org.mockito.*;
+import static org.mockito.Mockito.*;
+
+import java.util.*;
+
+public class DictAspectTest {
+
+    // Assuming there exists a DictAspect class which the parseDictText method belongs to
+    private DictAspect dictAspect;
+
+    // Mock objects required for the test
+    private Result mockResult;
+    private IPage mockPage;
+    private List<Object> mockRecords;
+    private DictModel mockDictModel;
+    private Field mockField;
+    private Dict mockDictAnnotation;
+    private ObjectMapper mockObjectMapper;
+    
+    @BeforeEach
+    public void setup() {
+        dictAspect = new DictAspect();
+        mockResult = mock(Result.class);
+        mockPage = mock(IPage.class);
+        mockRecords = new ArrayList<>();
+        mockDictModel = mock(DictModel.class);
+        mockField = mock(Field.class);
+        mockDictAnnotation = mock(Dict.class);
+        mockObjectMapper = mock(ObjectMapper.class);
+
+        when(mockResult.getResult()).thenReturn(mockPage);
+        when(mockPage.getRecords()).thenReturn(mockRecords);
+
+        // You would fill in the rest of the mock setup here,
+        // including defining the behavior of methods like translateAllDict
+        // and mocking their responses, as well as any other necessary parts of the code
+        // that are required for the parseDictText method to function.
+
+        // Example of setting up mock behavior
+        when(mockField.getAnnotation(Dict.class)).thenReturn(mockDictAnnotation);
+        when(mockDictAnnotation.dicCode()).thenReturn("testDicCode");
+        when(mockDictAnnotation.dicText()).thenReturn("testDicText");
+        when(mockDictAnnotation.dictTable()).thenReturn("testDictTable");
+    }
+
+    @Test
+    public void parseDictTextTest() {
+        // Set up test data that the method will process
+        Object mockRecord = new Object(); // Replace this with a proper mock or dummy instance
+        mockRecords.add(mockRecord);
+        
+        // Assume that the method listAddAllDeduplicate and translateAllDict are working correctly
+        // and mock their behavior accordingly.
+
+        // Call the method under test
+        Object result = dictAspect.parseDictText(mockResult);
+
+        // Assert the expected behavior/result
+        assertNotNull(result, "Result should not be null");
+        // More assertions would be made here to check that parseDictText does what it should do.
+        // However, without the full context of the other methods and classes used, 
+        // these assertions cannot be accurately filled out.
+        
+        // Example assertion (assuming getRecords() returns the modified list after parseDictText logic)
+        assertEquals(mockRecords, ((IPage) ((Result) result).getResult()).getRecords(), "Records should be modified with dict text");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import static org.mockito.Mockito.*;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.*;
+
+public class DictAspectTest {
+    
+    private Result mockResult;
+    private IPage mockIPage;
+    private DictAspect dictAspect;
+
+    @BeforeEach
+    public void setUp() {
+        mockResult = mock(Result.class); // assuming Result is a class that can be mocked
+        mockIPage = mock(IPage.class); // assuming IPage is an interface that can be mocked
+        dictAspect = new DictAspect(); // assuming DictAspect is the class under test
+    }
+
+    @Test
+    public void parseDictTextTest() {
+        // Assuming the existence of a constructor or a method to set the result in the IPage.
+        List<Object> mockedRecords = new ArrayList<>();
+        when(mockIPage.getRecords()).thenReturn(mockedRecords);
+        when(mockResult.getResult()).thenReturn(mockIPage);
+        
+        // Setting up the expected behavior for methods used in the source code
+        // This might involve mocking more classes or writing stubs for methods like checkHasDict,
+        // translateAllDict, translDictText, etc.
+        
+        // Create a fake result and records as per expected behavior of the method parseDictText
+        
+        // Act
+        Object finalResult = dictAspect.parseDictText(mockResult);
+        
+        // Assert
+        // Here you will assert the conditions based on expected behavior, for example:
+        assertNotNull(finalResult);
+        // More assertions based on the expected state of finalResult
+
+        // Verify if certain methods were called if needed
+        verify(mockIPage).getRecords();
+        // Additional verification of method calls if required
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.common.aspect;
+
+import org.jeecg.modules.result.Result;
+import org.jeecg.modules.page.IPage;
+import org.jeecg.modules.dict.Dict;
+import org.jeecg.modules.dict.DictModel;
+import org.jeecg.modules.constant.CommonConstant;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.util.*;
+
+public class DictAspectTest {
+
+    private DictAspect dictAspect;
+
+    @BeforeEach
+    public void setUp() {
+        dictAspect = new DictAspect();
+    }
+
+    @Test
+    public void parseDictTextTest() {
+        // Mock the necessary objects and the behavior.
+        Result mockResult = mock(Result.class);
+        IPage mockPage = mock(IPage.class);
+        List<Object> mockRecords = new ArrayList<>();
+        Object mockRecord = new Object();  // Need to be replaced by an actual instance with Dict fields.
+        mockRecords.add(mockRecord);
+
+        when(mockResult.getResult()).thenReturn(mockPage);
+        when(mockPage.getRecords()).thenReturn(mockRecords);
+        doReturn(true).when(dictAspect).checkHasDict(mockRecords);
+
+        Map<String, List<DictModel>> mockTranslText = new HashMap<>();
+        List<DictModel> mockDictModels = new ArrayList<>();
+        // Assuming DictModel has a constructor with `code` and `text` values.
+        mockDictModels.add(new DictModel("code", "translated_text"));
+        mockTranslText.put("dictCode", mockDictModels);
+        doReturn(mockTranslText).when(dictAspect).translateAllDict(any());
+
+        // Call the method being tested
+        Object result = dictAspect.parseDictText(mockResult);
+
+        // Assertions here based on expected behavior.
+        assertNotNull(result);
+        assertSame(result, mockResult);
+        
+        // Assuming IPage contains method setResult which accepts a list of records.
+        verify(mockPage).setRecords(any());
+        
+        // More detailed assertions depending on the actual functionality and the availability of getters.
+    }
+}
+
+

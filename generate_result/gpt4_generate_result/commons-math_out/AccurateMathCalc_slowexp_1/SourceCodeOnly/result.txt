@@ -1,0 +1,520 @@
+Source code: 
+
+
+static double slowexp(final double x, final double[] result) {
+    final double[] xs = new double[2];
+    final double[] ys = new double[2];
+    final double[] facts = new double[2];
+    final double[] as = new double[2];
+    split(x, xs);
+    ys[0] = ys[1] = 0.0;
+
+    for (int i = FACT.length - 1; i >= 0; i--) {
+        splitMult(xs, ys, as);
+        ys[0] = as[0];
+        ys[1] = as[1];
+
+        split(FACT[i], as);
+        splitReciprocal(as, facts);
+
+        splitAdd(ys, facts, as);
+        ys[0] = as[0];
+        ys[1] = as[1];
+    }
+
+    if (result != null) {
+        result[0] = ys[0];
+        result[1] = ys[1];
+    }
+
+    return ys[0] + ys[1];
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+
+    // Helper methods are assumed to be defined within the same class for unit testing
+    // Since we do not have their implementations, they are omitted here
+
+    private static final double EPSILON = 1e-10;
+
+    @Test
+    public void slowexpTest() {
+        double x = 0.5;
+        double[] result = new double[2];
+        double calculated = AccurateMathCalcTest.slowexp(x, result);
+
+        // Expected result for e^0.5. Usually, you would compare against a known good value.
+        double expected = Math.exp(x);
+        assertEquals(expected, calculated, EPSILON, "The slowexp method did not calculate the expected value.");
+        
+        // Optionally, you can also ensure that the result array is properly filled
+        // Here we just check if the sum of both parts equals the calculated value
+        assertEquals(result[0] + result[1], calculated, EPSILON, "The result array does not reflect the correct output.");
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    
+    // We need to define the static `split`, `splitMult`, `splitReciprocal`, and `splitAdd` methods,
+    // as well as `FACT` array for this test to compile, but as they are not present in the original code,
+    // we need to assume what they do or that they exist elsewhere in the code base.
+    // This code will focus solely on the `slowexp` method and the test code.
+
+    @Test
+    public void slowexpTest() {
+        // Define the input x value and the expected results array
+        double x = 1.0; // Use e^1 (euler's number)
+        double[] expectedResult = new double[2];
+
+        // Call the method under test
+        double result = AccurateMathCalcTest.slowexp(x, expectedResult);
+
+        // Add the assertions
+        assertNotNull(expectedResult, "Result array should not be null");
+        assertEquals(2, expectedResult.length, "Result array should have two elements");
+
+        // Assuming Math.exp(x) here for test comparison,
+        // but in a real-world scenario, we would want to compare against a known correct value for e^x.
+        double expectedValue = Math.exp(x);
+        
+        // Verify the result is correct (within a reasonable delta to account for floating point errors)
+        assertEquals(expectedValue, result, 1e-6, "The value of slowexp should be as expected");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+
+    @Test
+    public void slowexpTest() {
+        final double delta = 1e-8; // tolerance for the expected value
+        double input = 2.0;
+        double[] expectedResult = new double[2];
+        double result = AccurateMathCalcTest.slowexp(input, expectedResult);
+
+        // Verify the return value
+        assertEquals(Math.exp(input), result, delta, "The returned value should be equal to Math.exp(input) within the delta tolerance.");
+
+        // Verify the result array
+        assertNotNull(expectedResult, "The result array should not be null.");
+        assertEquals(2, expectedResult.length, "The result array should have exactly 2 elements.");
+
+        // Since the test does not contain the full implementation of reciprocal or split functions,
+        // and also the values in the FACT array (not provided in your snippet),
+        // we cannot know the exact expected behavior. Hence we will check if result array contains valid numbers.
+        // Assuming a hypothetical value for illustration:
+        double expectedFirstElement = 1.0; // Replace with the expected element obtained during split
+        double expectedSecondElement = Math.exp(input) - expectedFirstElement; // Replace with the expected calculation
+
+        assertEquals(expectedFirstElement, expectedResult[0], delta, "The first element of the result array should be the correct split part of the exponential.");
+        assertEquals(expectedSecondElement, expectedResult[1], delta, "The second element of the result array should be the correct split part of the exponential.");
+
+        // Assume we also need to test the case where result is null
+        double resultWithNull = AccurateMathCalcTest.slowexp(input, null);
+        assertEquals(Math.exp(input), resultWithNull, delta, "The returned value should be correct even when the result array is null.");
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    
+    @Test
+    public void slowexpTest() {
+        // Set up test data
+        double x = 1.0; // The value to calculate the slow exponential of
+        double[] result = new double[2]; // An array to store the result
+        
+        // Call the method under test
+        double calculatedExp = AccurateMathCalcTest.slowexp(x, result);
+        
+        // Expected value (approximately e^1, where e is the base of natural logarithms)
+        double expectedExp = Math.exp(x);
+        
+        // Verify the result is close to the actual value within some acceptable error
+        double delta = 1e-6; // tolerance for this test
+        assertEquals(expectedExp, calculatedExp, delta, "The slowexp function does not calculate e^x accurately.");
+        
+        // Optional: check if the result array is also filled correctly if needed
+        assertNotNull(result);
+        assertEquals(2, result.length);
+        double combinedResult = result[0] + result[1];
+        assertEquals(expectedExp, combinedResult, delta, "The result array does not contain the accurate sum of the parts.");
+    }
+    
+    // Assuming the definition of slowexp and related private methods and constants are within the same class
+    static double slowexp(final double x, final double[] result) {
+        //... the rest of the slowexp source code
+    }
+    
+    //... definitions of split, splitMult, splitReciprocal, FACT array, etc.
+}
+
+
+No.5 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    
+    @Test
+    public void slowexpTest() {
+        double input = 1.0; // Example input
+        double[] result = new double[2];
+
+        double expectedValue = Math.exp(input); // Expected result using Java's Math.exp
+
+        // Tolerance for floating-point comparisons
+        double delta = 0.0000001;
+
+        double actualValue = AccurateMathCalc.slowexp(input, result);
+
+        // Check if the result is close enough to the expected value.
+        assertEquals(expectedValue, actualValue, delta, "The actual value should be close to Math.exp(input)");
+
+        // Additionally, check if the `result` array contains the proper split values.
+        // Without details of the split method, we assume it should return the same value
+        // as slowexp in both index 0 and index 1 for the simple input of 1.0.
+        assertEquals(result[0], result[1], delta, "Both indices of the result should contain the same value for this simple case");
+        assertEquals(expectedValue, result[0] + result[1], delta, "The sum of the result array should be close to the expected value");
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+
+    private static double relativeError(double expected, double actual) {
+        return Math.abs(expected - actual) / Math.abs(expected);
+    }
+
+    @Test
+    public void slowexpTest() {
+        double x = 1.0; // Argument to slowexp where e^x is known.
+        double[] result = new double[2];
+        double output = AccurateMathCalcTest.slowexp(x, result);
+
+        double expected = Math.exp(x); // Using Java's Math.exp to get the expected value.
+        double tolerance = 1e-15; // The acceptable relative error for the test.
+        
+        // Assert that the returned value and the first element of result are close to the expected value of e^x
+        assertTrue(relativeError(expected, output) < tolerance,
+                "The output is not accurate enough.");
+        assertTrue(relativeError(expected, result[0]) < tolerance,
+                "The result[0] is not accurate enough.");
+        
+        // Optionally check the second element of result if there is specific behavior intended for it.
+        // Assert that the sum of result[0] and result[1] is again close to the expected value, if that's the expected behavior.
+        assertTrue(relativeError(expected, result[0] + result[1]) < tolerance,
+                "The sum of result[0] and result[1] is not accurate enough.");
+    }
+
+    private static void split(double value, double[] splitVal) {
+        // Assume this method exists and is being called within the slowexp method
+    }
+
+    private static void splitMult(double[] xs, double[] ys, double[] as) {
+        // Assume this method exists and is being called within the slowexp method
+    }
+
+    private static void splitReciprocal(double[] as, double[] facts) {
+        // Assume this method exists and is being called within the slowexp method
+    }
+
+    private static void splitAdd(double[] ys, double[] facts, double[] as) {
+        // Assume this method exists and is being called within the slowexp method
+    }
+
+    private static final double[] FACT = new double[] {}; // Populate with actual factorial values 
+    // (empty for this example since we don't know the logic or input values for FACT)
+
+    // Include the provided slowexp method if it's not in the same class. For testing's sake,
+    // we assume it is in the same class.
+    static double slowexp(final double x, final double[] result) {
+        final double[] xs = new double[2];
+        final double[] ys = new double[2];
+        final double[] facts = new double[2];
+        final double[] as = new double[2];
+        split(x, xs);
+        ys[0] = ys[1] = 0.0;
+
+        for (int i = FACT.length - 1; i >= 0; i--) {
+            splitMult(xs, ys, as);
+            ys[0] = as[0];
+            ys[1] = as[1];
+
+            split(FACT[i], as);
+            splitReciprocal(as, facts);
+
+            splitAdd(ys, facts, as);
+            ys[0] = as[0];
+            ys[1] = as[1];
+        }
+
+        if (result != null) {
+            result[0] = ys[0];
+            result[1] = ys[1];
+        }
+
+        return ys[0] + ys[1];
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+
+    @Test
+    public void slowexpTest() {
+        final double tolerance = 0.0001;
+        double[] expectedResult = new double[2];
+        // Example test with input 1.0, expected to approximate e^1.0 with a two-part result
+        double result = AccurateMathCalcTest.slowexp(1.0, expectedResult);
+        assertEquals(Math.exp(1.0), result, tolerance, "slowexp does not approximate e^x correctly for x = 1.0");
+
+        // Test with input 0.0, expected to be 1.0 since e^0 = 1
+        result = AccurateMathCalcTest.slowexp(0.0, expectedResult);
+        assertEquals(1.0, result, tolerance, "slowexp does not approximate e^x correctly for x = 0.0");
+
+        // Additional tests can be added with different values for x
+        
+        // Assuming a test case where the result should not be stored in 'result array':
+        result = AccurateMathCalcTest.slowexp(2.0, null);
+        // Assuming exp(2.0) should be approximated, exp() is from java.lang.Math for reference
+        assertEquals(Math.exp(2.0), result, tolerance, "slowexp does not approximate e^x correctly for x = 2.0");
+    }
+    
+    // Assumes the existence of the slowexp method within the same testing class
+    static double slowexp(final double x, final double[] result) {
+        // Dummy implementation of slowexp, specifically for testing purposes.
+        // The real implementation would be the one provided in the Java Source Code.
+        double computationResult = Math.exp(x);
+        if (result != null) {
+            result[0] = computationResult;
+            result[1] = 0.0; // Assuming that the real implementation populates a two-part result.
+        }
+        return computationResult;
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    
+    // Assuming the existence of the following constants for the test case
+    private static final double[] FACT = {1,1,2,6,24,120,720,5040,40320,362880,3628800,39916800,479001600,6227020800L,87178291200L};
+    private static final double DELTA = 1e-6;
+    
+    // Stub methods for the 'split', 'splitMult', 'splitAdd', and 'splitReciprocal' methods
+    // These methods must be properly implemented for the 'slowexp' method to work correctly
+    static void split(double value, double[] result) {
+        // ... method implementation ...
+        // This is a stub and does not reflect actual method functionality
+    }
+
+    static void splitMult(double[] x, double[] y, double[] result) {
+        // ... method implementation ...
+        // This is a stub and does not reflect actual method functionality
+    }
+
+    static void splitAdd(double[] x, double[] y, double[] result) {
+        // ... method implementation ...
+        // This is a stub and does not reflect actual method functionality
+    }
+
+    static void splitReciprocal(double[] input, double[] result) {
+        // ... method implementation ...
+        // This is a stub and does not reflect actual method functionality
+    }
+
+    // Replacement for the slowexp function referencing the above stubs
+    static double slowexp(final double x, final double[] result) {
+        final double[] xs = new double[2];
+        final double[] ys = new double[2];
+        final double[] facts = new double[2];
+        final double[] as = new double[2];
+        split(x, xs);
+        ys[0] = ys[1] = 0.0;
+
+        for (int i = FACT.length - 1; i >= 0; i--) {
+            splitMult(xs, ys, as);
+            ys[0] = as[0];
+            ys[1] = as[1];
+
+            split(FACT[i], as);
+            splitReciprocal(as, facts);
+
+            splitAdd(ys, facts, as);
+            ys[0] = as[0];
+            ys[1] = as[1];
+        }
+
+        if (result != null) {
+            result[0] = ys[0];
+            result[1] = ys[1];
+        }
+
+        return ys[0] + ys[1];
+    }
+    
+    @Test
+    public void slowexpTest() {
+        // Test with a known exponent and expected result
+        final double x = 1.0; // e^1 should roughly be Math.E
+        final double expectedResult = Math.E;
+        final double[] resultContainer = new double[2];
+
+        double result = AccurateMathCalcTest.slowexp(x, resultContainer);
+
+        assertEquals(expectedResult, result, DELTA, "The result of slowexp should be close to Math.E");
+        assertNotNull(resultContainer, "Result container should not be null");
+        assertEquals(resultContainer[0] + resultContainer[1], result, DELTA, "Components sum should match the result");
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+
+    @Test
+    public void slowexpTest() {
+        final double tolerance = 1e-9; // Acceptable error tolerance for floating point comparison
+
+        // Test slowexp with a known value
+        double x = 1.0; // e^1 should be approximately equal to Math.E
+        double[] result = new double[2];
+        double calculatedValue = AccurateMathCalcTest.slowexp(x, result);
+        
+        // Check both cumulative sum and parts separately
+        assertEquals(Math.E, calculatedValue, tolerance, "The slowexp cumulative sum does not match Math.E within tolerance.");
+        assertNotNull(result, "The result array should be filled.");
+        assertNotEquals(0.0, result[0], "The first part of the result should not be 0.");
+        assertNotEquals(0.0, result[1], "The second part of the result should not be 0.");
+        
+        // Additional edge-case tests can go here:
+        // Test slowexp for edge case like x = 0 (e^0 = 1)
+        calculatedValue = AccurateMathCalcTest.slowexp(0.0, result);
+        assertEquals(1.0, calculatedValue, tolerance, "The slowexp value for x=0 should be 1 within tolerance.");
+        
+        // Test slowexp for negative x
+        double negativeX = -1.0; // e^-1 should be approximately equal to 1/Math.E
+        calculatedValue = AccurateMathCalcTest.slowexp(negativeX, result);
+        assertEquals(1 / Math.E, calculatedValue, tolerance, "The slowexp value for negative x does not match 1/Math.E within tolerance.");
+
+        // Test with null result to ensure no NullPointerException is thrown
+        assertDoesNotThrow(() -> AccurateMathCalcTest.slowexp(x, null), "Method should not throw an exception when result is null.");
+        
+        // Additional checks against expected results for specific values of x can be included here...
+        // for example, x = 2, x = -2, etc., depending on the application's requirements and the range of x.
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+
+    private static final double EPSILON = 1e-6; // or some other small number appropriate for your accuracy requirements
+
+    @Test
+    public void slowexpTest() {
+        double[] result = new double[2];
+        double x = 2.0; // Example input value--you'll need to tailor this to your requirements
+
+        // Call the method under test
+        double output = AccurateMathCalc.slowexp(x, result);
+
+        // Now we need to compare to some expected value, which we need to pre-calculate.
+        // For the purpose of an example, let's say the expected value should be Math.exp(x),
+        // although in fact it would likely be different.
+        double expectedValue = Math.exp(x);
+
+        // This assertion will check if the result is correct within the prescribed accuracy (EPSILON)
+        assertEquals(expectedValue, output, EPSILON, "The slowexp method should compute the exponential accurately.");
+
+        // Additionally, if we want to also verify that the result array is filled in correctly,
+        // we would expect that the sum of result[0] and result[1] is also equal to the expected value (with the given accuracy)
+        assertEquals(expectedValue, result[0] + result[1], EPSILON, "The result array should contain the accurate pieces of the exponential.");
+
+        // If those helper methods rely on some specific behavior or their own tests,
+        // those should also be implemented to ensure complete coverage.
+    }
+
+    // You can add more test methods here to cover additional cases such as:
+    // - Boundary conditions for x (e.g., very large or small values)
+    // - Special cases where x has a known answer (e.g., 0, 1)
+    // - Ensuring that the result array is used correctly when it's passed as null
+    // - Error handling (if applicable)
+}
+
+// Method under test must be accessible hence, exposed in this mock static class for the example
+class AccurateMathCalc {
+    public static double slowexp(final double x, final double[] result) {
+        // Body of slowexp method, assumed to be given or pre-implemented elsewhere
+        return 0.0; // placeholder return
+    }
+}
+
+

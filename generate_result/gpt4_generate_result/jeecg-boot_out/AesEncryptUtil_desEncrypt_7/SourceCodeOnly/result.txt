@@ -1,0 +1,408 @@
+Source code: 
+
+
+public static String desEncrypt(String data, String key, String iv) throws Exception {
+    //update-begin-author:taoyan date:2022-5-23 for:VUEN-1084 【vue3】online表单测试发现的新问题 6、解密报错 ---解码失败应该把异常抛出去，在外面处理
+    byte[] encrypted1 = Base64.decode(data);
+
+    Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
+    SecretKeySpec keyspec = new SecretKeySpec(key.getBytes(), "AES");
+    IvParameterSpec ivspec = new IvParameterSpec(iv.getBytes());
+
+    cipher.init(Cipher.DECRYPT_MODE, keyspec, ivspec);
+
+    byte[] original = cipher.doFinal(encrypted1);
+    String originalString = new String(original);
+    //加密解码后的字符串会出现\u0000
+    return originalString.replaceAll("\\u0000", "");
+    //update-end-author:taoyan date:2022-5-23 for:VUEN-1084 【vue3】online表单测试发现的新问题 6、解密报错 ---解码失败应该把异常抛出去，在外面处理
+}
+
+
+
+No.1 generated result --------------------------
+
+package org.jeecg.common.util.encryption;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AesEncryptUtilTest {
+
+    // Assuming there's a class which the desEncrypt method belongs to 
+    // Let's call this class EncryptUtil and we are going to use it to invoke desEncrypt
+    
+    @Test
+    public void desEncryptTest() throws Exception {
+        // Assuming we have a known plaintext and the corresponding encrypted data
+        String testData = "EncryptedDataAsString"; // replace with actual Base64 encrypted string
+        String testKey = "16ByteLongKey123!"; // an example for a 16-byte long key
+        String testIv = "UniqueInitVector!"; // an example for a 16-byte long IV
+
+        // The expected output after decryption (the original data)
+        String expectedOutput = "ThePlainTextString";
+
+        // Perform decryption
+        String decryptedOutput = EncryptUtil.desEncrypt(testData, testKey, testIv);
+
+        // Assert the decrypted output is as expected
+        assertEquals(expectedOutput, decryptedOutput);
+    }
+}
+
+
+No.2 generated result --------------------------
+
+package org.jeecg.common.util.encryption;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+import javax.crypto.spec.IvParameterSpec;
+import java.util.Base64;
+
+public class AesEncryptUtilTest {
+
+    @Test
+    public void desEncryptTest() throws Exception {
+        String input = "Test String";
+        String key = "1234567890123456"; // 16-byte key for AES
+        String iv = "abcdefghijklmnop"; // 16-byte initialization vector
+        
+        // Let's assume the "desEncrypt" method is part of a class named "EncryptionUtil"
+        // Encrypt the input
+        byte[] inputBytes = input.getBytes("UTF-8");
+        SecretKeySpec keyspec = new SecretKeySpec(key.getBytes("UTF-8"), "AES");
+        IvParameterSpec ivspec = new IvParameterSpec(iv.getBytes("UTF-8"));
+        Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
+        cipher.init(Cipher.ENCRYPT_MODE, keyspec, ivspec);
+        while(inputBytes.length % 16 != 0){ // pad with zero bytes to make it a multiple of 16 bytes
+            inputBytes = ("Test String" + new String(new char[] {0})).getBytes("UTF-8");
+        }
+        byte[] encrypted = cipher.doFinal(inputBytes);
+        
+        // Convert the encrypted byte array to a base64 string
+        String encryptedData = Base64.getEncoder().encodeToString(encrypted);
+        
+        // Decrypt using the method we want to test
+        String decryptedData = EncryptionUtil.desEncrypt(encryptedData, key, iv);
+        
+        // Remove padding manually, for the assertion
+        String unpaddedInput = new String(inputBytes).replaceAll("\\u0000", "");
+        
+        // Assertions
+        assertNotNull(decryptedData, "The decrypted data should not be null");
+        assertEquals(unpaddedInput, decryptedData, "The decrypted input does not match the original input.");
+    }
+}
+
+
+No.3 generated result --------------------------
+
+package org.jeecg.common.util.encryption;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Base64;
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
+public class AesEncryptUtilTest {
+    
+    // Utility method to encrypt data for testing
+    private static String encryptData(String data, String key, String iv) throws Exception {
+        Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
+        SecretKeySpec keyspec = new SecretKeySpec(key.getBytes(), "AES");
+        IvParameterSpec ivspec = new IvParameterSpec(iv.getBytes());
+
+        cipher.init(Cipher.ENCRYPT_MODE, keyspec, ivspec);
+        byte[] encrypted = cipher.doFinal(data.getBytes());
+
+        return Base64.getEncoder().encodeToString(encrypted);
+    }
+    
+    @Test
+    public void desEncryptTest() throws Exception {
+        String key = "1234567890123456"; // Example key (must be 16 bytes)
+        String iv = "1234567890123456"; // Example IV (must be 16 bytes)
+        String originalData = "Secret Message";
+
+        // Pad originalData to block size if necessary (AES block size is 16 bytes)
+        while (originalData.length() % 16 != 0) {
+            originalData += "\u0000";
+        }
+
+        String encryptedData = encryptData(originalData, key, iv);
+        
+        // The actual test starts here
+        
+        // Decrypt the encrypted data
+        String decryptedData = AesEncryptUtil.desEncrypt(encryptedData, key, iv);
+        
+        // Check if the decrypted string matches the original data after removing padding
+        assertEquals(originalData.replaceAll("\\u0000", ""), decryptedData);
+    }
+}
+
+
+No.4 generated result --------------------------
+
+package org.jeecg.common.util.encryption;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AesEncryptUtilTest {
+
+    @Test
+    public void desEncryptTest() throws Exception {
+        // Setup test data
+        String originalData = "The quick brown fox jumps over the lazy dog";
+        String key = "1234567890123456"; // Example key (16 characters for AES-128)
+        String iv = "1234567890123456"; // Example IV (16 characters)
+        
+        // Encrypt data (for the purposes of the test)
+        String encryptedData = simulateEncryptionOfData(originalData, key, iv); // Simulate encryption for test
+        
+        // Act
+        String decryptedData = AesEncryptUtil.desEncrypt(encryptedData, key, iv);
+        
+        // Assert
+        assertEquals(originalData, decryptedData, "Decrypted data should match the original data");
+    }
+    
+    // Simulated encryption utility (for testing purposes)
+    private String simulateEncryptionOfData(String data, String key, String iv) throws Exception {
+        // This method should actually encrypt the data using the same method that `desEncrypt` is planned to decrypt.
+        // The implementation would be similar to the real encryption process, returning a Base64 encoded encrypted string.
+        // For simplicity, let's assume such a method exists and just return a value representing encrypted data.
+        // In real-world usage, replace the below line with actual encryption code
+        return "encryptedDataInBase64Here"; // Placeholder encrypted string in Base64 format
+    }
+}
+
+
+No.5 generated result --------------------------
+
+package org.jeecg.common.util.encryption;
+
+import org.junit.jupiter.api.*;
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.util.Base64;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AesEncryptUtilTest {
+    
+    @Test
+    public void desEncryptTest() throws Exception {
+        // Prepare the data to encrypt
+        String inputString = "This is a secret message";
+        String key = "1234567890123456"; // 16-byte key for AES
+        String iv = "1234567890123456"; // 16-byte IV for AES
+
+        // Encrypt the data using the source code logic
+        Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
+        SecretKeySpec keyspec = new SecretKeySpec(key.getBytes(), "AES");
+        IvParameterSpec ivspec = new IvParameterSpec(iv.getBytes());
+
+        cipher.init(Cipher.ENCRYPT_MODE, keyspec, ivspec);
+        byte[] paddedData = padString(inputString).getBytes();
+        byte[] encryptedData = cipher.doFinal(paddedData);
+        String encryptedString = Base64.getEncoder().encodeToString(encryptedData);
+        
+        // Call the method to test
+        String decryptedString = AesEncryptUtil.desEncrypt(encryptedString, key, iv);
+
+        // Remove padding manually from the string (if necessary in the case of 'NoPadding')
+        String trimmedDecryptedString = inputString.trim();
+
+        // Verify that the decrypted string matches the original input
+        assertEquals(inputString, trimmedDecryptedString, "Decrypted string should match the original");
+    }
+
+    private static String padString(String source) {
+        char paddingChar = '\0';
+        int size = 16;
+        int x = source.length() % size;
+        int padLength = size - x;
+
+        for (int i = 0; i < padLength; i++) {
+            source += paddingChar;
+        }
+        return source;
+    }
+}
+
+
+No.6 generated result --------------------------
+
+package org.jeecg.common.util.encryption;
+
+import org.junit.jupiter.api.*;
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.util.Base64;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AesEncryptUtilTest {
+
+    @Test
+    public void desEncryptTest() throws Exception {
+        String key = "1234567890123456"; // Key should be 16/24/32 bytes for AES
+        String iv = "1234567890123456"; // IV should be 16 bytes for AES
+        String plainText = "The quick brown fox jumps over the lazy dog";
+        Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
+        SecretKeySpec keyspec = new SecretKeySpec(key.getBytes(), "AES");
+        IvParameterSpec ivspec = new IvParameterSpec(iv.getBytes());
+
+        cipher.init(Cipher.ENCRYPT_MODE, keyspec, ivspec);
+        byte[] encryptedData = cipher.doFinal(plainText.getBytes());
+        String base64Encrypted = Base64.getEncoder().encodeToString(encryptedData);
+
+        // Decrypt
+        String decryptedData = AesEncryptUtil.desEncrypt(base64Encrypted, key, iv);
+
+        // The decrypted string should match the original string after replacing trailing zeros
+        String expectedPlainText = plainText.replaceAll("\\u0000", "");
+        assertEquals(expectedPlainText, decryptedData);
+    }
+}
+
+
+No.7 generated result --------------------------
+
+package org.jeecg.common.util.encryption;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AesEncryptUtilTest {
+
+    private static final String ORIGINAL_STRING = "HelloWorld";
+    private static final String ENCODED_STRING = "encrypted version of HelloWorld";
+    private static final String KEY = "1234567890123456"; // this should be 16 bytes key
+    private static final String IV = "1234567890123456"; // this should be 16 bytes iv
+
+    @Test
+    public void desEncryptTest() throws Exception {
+        String decryptedString = AesEncryptUtil.desEncrypt(ENCODED_STRING, KEY, IV);
+        assertEquals(ORIGINAL_STRING, decryptedString);
+    }
+}
+
+
+No.8 generated result --------------------------
+
+package org.jeecg.common.util.encryption;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AesEncryptUtilTest {
+    @Test
+    public void desEncryptTest() throws Exception {
+        // Setup test variables
+        final String expectedOutput = "The quick brown fox";
+        final String key = "1234567890123456"; // Example key (16 chars for AES-128)
+        final String iv = "1234567890123456"; // Example IV (16 chars for AES-128)
+        
+        // Encoded data that we expect to decrypt, should be base64 encoded string of encrypted data.
+        final String encodedData = "<the encoded data here>";
+        // The above encodedData should be the result of encrypting expectedOutput with the given key and IV and then Base64 encoding it.
+
+        try {
+            // Call the method being tested
+            String result = AesEncryptUtil.desEncrypt(encodedData, key, iv);
+
+            // Run assertions
+            assertNotNull(result, "The decrypted string should not be null.");
+            assertEquals(expectedOutput, result, "The decrypted string should match the expected output.");
+        } catch (Exception e) {
+            fail("An exception should not have been thrown during decryption.");
+        }
+    }
+}
+
+
+No.9 generated result --------------------------
+
+package org.jeecg.common.util.encryption;
+
+import org.junit.jupiter.api.*;
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.util.Base64;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AesEncryptUtilTest {
+    private static final String KEY = "1234567890123456"; // example key (should be 16, 24, or 32 bytes)
+    private static final String IV = "1234567890123456"; // example IV (must be 16 bytes)
+
+    @Test
+    public void desEncryptTest() throws Exception {
+        // Test data initialisation
+        String originalData = "Hello World!";
+        String data = encryptData(originalData, KEY, IV);
+
+        // Act
+        String decryptedData = AesEncryptUtil.desEncrypt(data, KEY, IV);
+
+        // Assert
+        assertEquals(originalData, decryptedData);
+    }
+
+    private String encryptData(String input, String key, String iv) throws Exception {
+        Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
+        int blockSize = cipher.getBlockSize();
+        byte[] data = input.getBytes();
+        int plaintextLength = data.length;
+        if (plaintextLength % blockSize != 0) {
+            plaintextLength = plaintextLength + (blockSize - (plaintextLength % blockSize));
+            byte[] plaintext = new byte[plaintextLength];
+            System.arraycopy(data, 0, plaintext, 0, data.length);
+            data = plaintext;
+        }
+        SecretKeySpec keyspec = new SecretKeySpec(key.getBytes(), "AES");
+        IvParameterSpec ivspec = new IvParameterSpec(iv.getBytes());
+
+        cipher.init(Cipher.ENCRYPT_MODE, keyspec, ivspec);
+        byte[] encrypted = cipher.doFinal(data);
+        return Base64.getEncoder().encodeToString(encrypted);
+    }
+}
+
+
+No.10 generated result --------------------------
+
+package org.jeecg.common.util.encryption;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AesEncryptUtilTest {
+    @Test
+    public void desEncryptTest() {
+        String dataToEncrypt = "your-base64-encoded-data";
+        String key = "your-encryption-key";
+        String iv = "your-initialization-vector";
+
+        try {
+            String decryptedData = AesEncryptUtil.desEncrypt(dataToEncrypt, key, iv);
+            String expectedDecryptedData = "the-expected-result-after-decryption";
+            
+            // Verify that the decrypted string is what we expect (without null padding)
+            assertEquals(expectedDecryptedData, decryptedData);
+        } catch (Exception e) {
+            fail("Exception should not be thrown");
+        }
+    }
+}
+
+

@@ -1,0 +1,27 @@
+{
+    "project_name": "commons-lang",
+    "file_name": "CompareToBuilder.java",
+    "relative_path": "commons-lang/src/main/java/org/apache/commons/lang3/builder/CompareToBuilder.java",
+    "execute_path": "commons-lang",
+    "package": "org.apache.commons.lang3.builder",
+    "docstring": "/**\n     * Appends to the {@code builder} the deep comparison of\n     * two {@code double} arrays.\n     *\n     * <ol>\n     *  <li>Check if arrays are the same using {@code ==}</li>\n     *  <li>Check if for {@code null}, {@code null} is less than non-{@code null}</li>\n     *  <li>Check array length, a shorter length array is less than a longer length array</li>\n     *  <li>Check array contents element by element using {@link #append(double, double)}</li>\n     * </ol>\n     *\n     * @param lhs  left-hand side array\n     * @param rhs  right-hand side array\n     * @return this\n     */",
+    "source_code": "\npublic CompareToBuilder append(final double[] lhs, final double[] rhs) {\n    if (comparison != 0) {\n        return this;\n    }\n    if (lhs == rhs) {\n        return this;\n    }\n    if (lhs == null) {\n        comparison = -1;\n        return this;\n    }\n    if (rhs == null) {\n        comparison = 1;\n        return this;\n    }\n    if (lhs.length != rhs.length) {\n        comparison = lhs.length < rhs.length ? -1 : 1;\n        return this;\n    }\n    for (int i = 0; i < lhs.length && comparison == 0; i++) {\n        append(lhs[i], rhs[i]);\n    }\n    return this;\n}\n",
+    "class_name": "CompareToBuilder",
+    "method_name": "append",
+    "arguments": [
+        "double[] lhs",
+        "double[] rhs"
+    ],
+    "generate_test": [
+        "@Test\npublic void appendTest() {\n    CompareToBuilder builder = new CompareToBuilder();\n    double[] lhs = {1.0, 2.0, 3.0};\n    double[] rhs = {1.0, 2.0, 3.0};\n    CompareToBuilder result = builder.append(lhs, rhs);\n    assertNotNull(result);\n}",
+        "public void appendTest() {\n    CompareToBuilder builder = new CompareToBuilder();\n    double[] lhs = {1.0, 2.0, 3.0};\n    double[] rhs = {1.0, 2.0, 3.0};\n    builder.append(lhs, rhs);\n    int comparisonResult = builder.toComparison();\n    assertEquals(0, comparisonResult);\n}",
+        "@Test\npublic void appendTest() {\n    CompareToBuilder builder = new CompareToBuilder();\n    double[] arr1 = {1.0, 2.5, 3.7};\n    double[] arr2 = {1.0, 2.5, 3.7};\n    CompareToBuilder result = builder.append(arr1, arr2);\n    assertEquals(builder, result);\n}",
+        "@Test\npublic void appendTest() {\n    CompareToBuilder builder = new CompareToBuilder();\n    double[] lhs = {1.0, 2.0, 3.0};\n    double[] rhs = {1.0, 2.0, 3.0};\n    assertEquals(builder.append(lhs, rhs), builder);\n    assertEquals(builder.toComparison(), 0);\n}",
+        "@Test\npublic void appendTest() {\n    CompareToBuilder builder = new CompareToBuilder();\n    double[] lhs = {1.2, 2.3, 3.4};\n    double[] rhs = {1.2, 2.3, 3.4};\n    CompareToBuilder result = builder.append(lhs, rhs);\n    assertEquals(0, result.toComparison());\n}",
+        "@Test\npublic void appendTest() {\n    CompareToBuilder builder = new CompareToBuilder();\n    double[] lhs = {1.0, 2.0, 3.0};\n    double[] rhs = {1.0, 2.0, 3.0};\n    CompareToBuilder result = builder.append(lhs, rhs);\n    assertEquals(builder, result);\n}",
+        "@Test\npublic void appendTest() {\n    CompareToBuilder builder = new CompareToBuilder();\n    double[] lhs = {1.0, 2.0, 3.0};\n    double[] rhs = {1.0, 2.0, 3.0};\n    CompareToBuilder result = builder.append(lhs, rhs);\n    assertEquals(builder, result);\n}",
+        "public void appendTest() {\n    double[] lhs1 = new double[] { 1.0, 2.0, 3.0 };\n    double[] rhs1 = new double[] { 1.0, 2.0, 3.0 };\n    int result1 = new CompareToBuilder().append(lhs1, rhs1).toComparison();\n    assertEquals(0, result1);\n\n    double[] lhs2 = new double[] { 1.5, 2.5, 3.5 };\n    double[] rhs2 = new double[] { 1.5, 2.5, 4.0 };\n    int result2 = new CompareToBuilder().append(lhs2, rhs2).toComparison();\n    assertEquals(-1, result2);\n}",
+        "@Test\npublic void appendTest() {\n    double[] lhs = {1.0, 2.0, 3.0};\n    double[] rhs = {1.0, 2.0, 3.0};\n    CompareToBuilder builder = new CompareToBuilder().append(lhs, rhs);\n    assertEquals(0, builder.toComparison());\n}",
+        "@Test\n    public void appendTest() {\n        CompareToBuilder builder = new CompareToBuilder();\n        builder.append(new double[]{1.5, 2.5}, new double[]{1.5, 2.5});\n        assertEquals(0, builder.toComparison());\n    }"
+    ]
+}

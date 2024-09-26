@@ -1,0 +1,323 @@
+Source code: 
+
+
+static void splitReciprocal(final double[] in, final double[] result) {
+    final double b = 1.0 / 4194304.0;
+    final double a = 1.0 - b;
+
+    if (in[0] == 0.0) {
+        in[0] = in[1];
+        in[1] = 0.0;
+    }
+
+    result[0] = a / in[0];
+    result[1] = (b * in[0] - a * in[1]) / (in[0] * in[0] + in[0] * in[1]);
+
+    if (result[1] != result[1]) { // can happen if result[1] is NAN
+        result[1] = 0.0;
+    }
+
+    /* Resplit */
+    resplit(result);
+
+    for (int i = 0; i < 2; i++) {
+        /* this may be overkill, probably once is enough */
+        double err = 1.0 - result[0] * in[0] - result[0] * in[1] -
+            result[1] * in[0] - result[1] * in[1];
+        /*err = 1.0 - err; */
+        err *= result[0] + result[1];
+        /*printf("err = %16e\n", err); */
+        result[1] += err;
+    }
+}
+
+
+
+No.1 generated result --------------------------
+
+@Test
+public void splitReciprocalTest() {
+    double[] x = new double[2];
+    double[] y = new double[2];
+    
+    x[0] = 1.0;
+    resplit(x);
+    splitReciprocal(x, y);
+    assertEquals("-0.5", formatDouble(y));
+    
+    x[0] = -0.5;
+    resplit(x);
+    splitReciprocal(x, y);
+    assertEquals("2", formatDouble(y));
+}
+
+
+No.2 generated result --------------------------
+
+<FILL>
+
+---
+
+Copyright 2021 [Your Name]. All rights reserved.
+
+
+
+No.3 generated result --------------------------
+
+    
+    import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AccurateMathCalcTest {
+    @Test
+    public void splitReciprocalTest() {
+        double x[] = new double[2];
+        double y[] = new double[2];
+        x[0] = 1d;
+        x[1] = 1e-300;
+        
+        AccurateMathCalc.splitReciprocal(x, y);
+        
+        assertEquals(y[0], -1d, 0);
+        assertEquals(y[1], -1e-300, 0);
+    }
+}
+
+
+No.4 generated result --------------------------
+
+@Test
+public void splitReciprocalTest() {
+    double[] a = new double[2];
+    a[0] = -1.75;
+    a[1] = 3.5;
+
+    double[] expected = new double[2];
+    expected[0] = 0.44444444444444446;
+    expected[1] = -0.7894736842105263;
+    
+    assertArrayEquals(expected, AccurateMathCalc.splitReciprocal(a));
+}
+
+
+No.5 generated result --------------------------
+
+
+static double[] splitReciprocal(double x) {
+    double r1 = 1.0 / (x + 1);
+    double r2 = r1 - ((r1 - 1) * (x + 1));
+
+    return new double[] { r1, r2 };
+}
+
+
+
+No.6 generated result --------------------------
+
+AccurateMathCalc.java:
+package org.apache.commons.math4.core;
+
+import java.io.PrintStream;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Some accurate math calculations that are not available in the JDK.
+ */
+public class AccurateMathCalc {
+    /** Split a double into two parts.
+     *  @param x number to split
+     *  @return array containing the two parts of x, or null if x is infinite or NaN.
+     */
+    public static double[] split(double x) {
+        if (Double.isInfinite(x)) {
+            return null;
+        } else if (Double.isNaN(x)) {
+            return null;
+        }
+
+        long bits = Double.doubleToLongBits(x);
+
+        // mask off the low order 27 bits
+        bits &= ~0x3ffffffL;
+
+        double result = Double.longBitsToDouble(bits + ((1L << 52) - (1L << 27)));
+
+        return new double[] {result, x - result};
+    }
+
+    /** Split a double into two parts, and negate the second part.
+     *  @param x number to split
+     *  @return array containing the two parts of x, or null if x is infinite or NaN.
+     */
+    public static double[] splitNeg(double x) {
+        double[] result = split(x);
+        if (result != null) {
+            result[1] = -result[1];
+        }
+        return result;
+    }
+
+    /** Reassemble a split double.
+     *  @param x first part of the number
+     *  @param y second part of the number
+     *  @return the reassembled double value
+     */
+    public static double resplit(double x, double y) {
+        long bitsX = Double.doubleToLongBits(x);
+        long bitsY = Double.doubleToLongBits(y);
+
+        // mask off the high order 27 bits from X
+        bitsX &= (1L << 52) - 1;
+        bitsY &= ~0x3ffffffL;
+
+        return Double.longBitsToDouble((bitsX >> 27) + bitsY);
+    }
+
+    /** Split
+     * Compute x / y rounded towards zero.  This is done by
+     * just using the integer part of the double value, so this may not give exact results, but it should be faster than any alternative.
+     * @param x numerator
+     * @param y denominator
+     * @return x/y rounded towards zero.
+     */
+    public static int divide(int x, int y) {
+        if (x < 0 || y == 0) {
+            return x / y;
+        }
+        // normalize Y
+        while (y != Integer.MIN_VALUE && ((y & 1) << 27) == 0)) {
+            y >>= 1;
+        }
+
+        int quotient = x / y;
+        if (quotient * y == x) {
+            return quotient;
+        } else {
+            return quotient - ((x % y + y) >> 31);
+        }
+    }
+}
+    
+
+### Response:
+
+
+No.7 generated result --------------------------
+
+Timeout
+
+
+No.8 generated result --------------------------
+
+@Test
+public void splitReciprocalTest() {
+    double[] x = new double[2];
+    double[] y = new double[2];
+    
+    // Test case 1: 1.0e-6 <= x < 1/3 (inclusive)
+    x[0] = 1.0e-7;
+    x[1] = -1.0e-8;
+    AccurateMathCalc.splitReciprocal(x, y);
+    assertEquals(-1.0 / x[0], y[0]);
+    
+    // Test case 2: 1/3 <= x < 1 (inclusive)
+    x[0] = 0.4;
+    x[1] = -1.5e-6;
+    AccurateMathCalc.splitReciprocal(x, y);
+    assertEquals(-1.0 / x[0], y[0]);
+    
+    // Test case 3: 1 <= x < INF (inclusive)
+    x[0] = Double.POSITIVE_INFINITY;
+    x[1] = -1.5e-6;
+    AccurateMathCalc.splitReciprocal(x, y);
+    assertEquals(-1.0 / x[0], y[0]);
+    
+    // Test case 4: INF < x <= 1/3 (inclusive)
+    x[0] = Double.POSITIVE_INFINITY;
+    x[1] = -1.5e-6;
+    AccurateMathCalc.splitReciprocal(x, y);
+    assertEquals(-1.0 / x[0], y[0]);
+    
+    // Test case 5: x < 1/3 (inclusive)
+    x[0] = -1.5e-6;
+    x[1] = 2.0;
+    AccurateMathCalc.splitReciprocal(x, y);
+    assertEquals(-1.0 / x[0], y[0]);
+    
+    // Test case 6: 1 <= x (inclusive)
+    x[0] = Double.POSITIVE_INFINITY;
+    x[1] = -1.5e-6;
+    AccurateMathCalc.splitReciprocal(x, y);
+    assertEquals(-1.0000001 / x[0], y[1]);
+}
+
+
+No.9 generated result --------------------------
+
+package org.apache.commons.math4.core.jdkmath;
+import java.util.*;
+
+public class AccurateMathCalcTest {
+    public static void main(String[] args) {
+        splitReciprocalTest();
+    }
+
+    public static void splitReciprocalTest() {
+        double[] x = new double[2];
+        double[] a = new double[2];
+        
+        // Test 1: Split Reciprocal of x to y, x = 0.5d;
+        x[0] = 0.5d;
+        AccurateMath.splitReciprocal(x, a);
+        assertEquals(a[0], 2d);
+        
+        // Test 2: Split Reciprocal of x to y, x = 1.5d;
+        x[0] = 1.5d;
+        AccurateMath.splitReciprocal(x, a);
+        assertEquals(a[0], 0.6666666666666667d);
+    }
+}
+
+
+No.10 generated result --------------------------
+
+
+public class AccurateMathCalc {
+    public static void main(String[] args) {
+        // Generate a table of split-reciprocal values and errors
+        double[][] reciprocals = new double[5][2];
+        for (int i = 0; i < 5; i++) {
+            double[] r = splitReciprocal(Math.pow(10, -i));
+            reciprocals[i] = r;
+        }
+        
+        // Print the table using a format string that includes 14 decimal places
+        System.out.println("Reciprocal of x with error");
+        for (double[] r : reciprocals) {
+            System.out.printf("%14.12f %8.7f\n", r[0], r[1]);
+        }
+    }
+    
+    // Modified version of the splitReciprocal method to return an array of two elements: 
+    // the reciprocal and the error.
+    public static double[] splitReciprocal(double x) {
+        double hi = x;
+        double lo = 0;
+        
+        int n = (int) Math.ceil(Math.log10(x));
+        for (int i = 0; i < n; i++) {
+            double f = splitDivide(hi, lo);
+            
+            // Split the result into two parts: hi and lo
+            split(f, hi, lo);
+        }
+        
+        // Return an array of two elements: the reciprocal and the error.
+        return new double[] {hi, lo};
+    }
+}
+
+
+
